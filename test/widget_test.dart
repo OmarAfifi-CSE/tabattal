@@ -9,11 +9,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:tabattal/main.dart';
+import 'package:dio/dio.dart';
+import 'package:tabattal/features/quran_reader/domain/repositories/quran_repository.dart';
+import 'package:tabattal/features/quran_reader/data/datasources/quran_remote_data_source.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    final quranRepository = QuranRepositoryImpl(remoteDataSource: QuranRemoteDataSourceImpl(dio: Dio()));
+    await tester.pumpWidget(TabattalApp(quranRepository: quranRepository));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);
