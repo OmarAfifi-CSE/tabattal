@@ -26,7 +26,7 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF5EB),
+      backgroundColor: const Color(0xFFfdf4e0), // Warm background color to match edge
       body: SafeArea(
         child: PageView.builder(
           controller: _pageController,

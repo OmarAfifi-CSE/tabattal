@@ -9,8 +9,20 @@ import 'features/quran_reader/data/datasources/quran_remote_data_source.dart';
 import 'features/quran_reader/domain/repositories/quran_repository.dart';
 import 'core/theme/app_colors.dart';
 
+import 'package:flutter/services.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, 
+      systemNavigationBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
+  
   
   // Dependency Injection (simple manual setup for now)
   final dio = Dio();

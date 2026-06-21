@@ -126,7 +126,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
             final firstVerse = verses.first;
             final surahNumber = int.tryParse(firstVerse.verseKey.split(':').first) ?? 1;
             final surahName = QuranMetadata.getSurahName(surahNumber);
-            final juzName = QuranMetadata.getJuzName(firstVerse.juzNumber);
+            final juzName = firstVerse.juzNumber.toString(); // Use number instead of long text
 
             return QuranPageFrame(
               pageNumber: widget.pageNumber,
