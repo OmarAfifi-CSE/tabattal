@@ -64,8 +64,9 @@ class TabattalApp extends StatelessWidget {
           ),
         ],
         child: MaterialApp(
-          title: 'Tabattal',
+          title: 'تبتل',
           debugShowCheckedModeBanner: false,
+          locale: const Locale('ar'),
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: AppColors.accentGold,
@@ -73,6 +74,10 @@ class TabattalApp extends StatelessWidget {
             ),
             useMaterial3: true,
             scaffoldBackgroundColor: AppColors.background,
+          ),
+          builder: (context, child) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: child!,
           ),
           home: const QuranPageViewScreen(),
         ),

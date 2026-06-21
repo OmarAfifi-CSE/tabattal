@@ -42,9 +42,9 @@ class QuranPageFrame extends StatelessWidget {
         statusBarIconBrightness: Brightness.dark,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFfdf4e0), // The exact background color requested
-        body: LayoutBuilder(
+      child: Material(
+        color: const Color(0xFFfdf4e0), // The exact background color requested
+        child: LayoutBuilder(
           builder: (context, constraints) {
             final double W = constraints.maxWidth;
             final double H = constraints.maxHeight;
@@ -84,7 +84,7 @@ class QuranPageFrame extends StatelessWidget {
                   width: W * 0.33,
                   child: Center(
                     child: Text(
-                      'الجزء ${_toArabicNumber(int.tryParse(juzName) ?? 1)}',
+                      'الجزء $juzName',
                       style: headerStyle,
                       textAlign: TextAlign.center,
                     ),
@@ -106,14 +106,14 @@ class QuranPageFrame extends StatelessWidget {
                   ),
                 ),
 
-                // Hamburger Menu Icon in the top right corner
+                // Hamburger Menu Icon (Top Right)
                 Positioned(
-                  top: H * 0.045, // Moved UP to align with the headers
-                  right: W * 0.04, // Tucked cleanly into the corner
+                  top: H * 0.045,
+                  right: W * 0.04,
                   child: IconButton(
                     icon: const Icon(Icons.menu_rounded, color: innerColor, size: 22),
                     onPressed: () {
-                      // TODO: Open sidebar/menu
+                      Scaffold.of(context).openDrawer();
                     },
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -195,7 +195,7 @@ class QuranPageFrame extends StatelessWidget {
             );
           },
         ),
-    ), // Closes Scaffold
+      ), // Closes Material
     ); // Closes AnnotatedRegion
   }
 }

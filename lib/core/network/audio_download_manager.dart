@@ -115,6 +115,50 @@ class AudioDownloadManager {
     }
   }
 
+  /// Checks if an entire Surah is already downloaded locally
+  Future<bool> isSurahDownloaded(String reciterKey, int surah, int numAyahs) async {
+    final dirPath = await getReciterDirectory(reciterKey);
+    for (int ayah = 1; ayah <= numAyahs; ayah++) {
+      final verseId = surah * 1000 + ayah;
+      final file = File('$dirPath/$verseId.mp3');
+      if (!await file.exists()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /// Downloads an entire Surah by downloading all its ayahs sequentially
+  Future<void> downloadSurah(String reciterKey, int surah, int numAyahs, {Function(double)? onProgress}) async {
+    int downloadedCount = 0;
+    
+    // Check what's already downloaded to initialize progress properly
+    final dirPath = await getReciterDirectory(reciterKey);
+    for (int ayah = 1; ayah <= numAyahs; ayah++) {
+      final verseId = surah * 1000 + ayah;
+      if (await File('$dirPath/$verseId.mp3').exists()) {
+        downloadedCount++;
+      }
+    }
+
+    if (downloadedCount == numAyahs) {
+      if (onProgress != null) onProgress(1.0);
+      return;
+    }
+
+    // Download missing ayahs
+    for (int ayah = 1; ayah <= numAyahs; ayah++) {
+      final verseId = surah * 1000 + ayah;
+      if (!await File('$dirPath/$verseId.mp3').exists()) {
+        await downloadVerse(reciterKey, surah, ayah, null);
+        downloadedCount++;
+        if (onProgress != null) {
+          onProgress(downloadedCount / numAyahs);
+        }
+      }
+    }
+  }
+
   /// Constructs the streaming URL for a verse
   String getStreamingUrl(String reciterKey, int surah, int ayah) {
     final reciterPath = _getReciterPath(reciterKey);

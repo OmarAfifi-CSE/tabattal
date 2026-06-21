@@ -16,16 +16,66 @@ import 'quran_metadata.dart';
 
 class QuranPageWidget extends StatefulWidget {
   final int pageNumber;
+  final String? highlightVerseKey; // verseKey to highlight (from bookmarks navigation)
 
-  const QuranPageWidget({super.key, required this.pageNumber});
+  const QuranPageWidget({
+    super.key,
+    required this.pageNumber,
+    this.highlightVerseKey,
+  });
 
   @override
   State<QuranPageWidget> createState() => _QuranPageWidgetState();
 }
 
-class _QuranPageWidgetState extends State<QuranPageWidget> {
+class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProviderStateMixin {
   int? _activeVerseId;
   OverlayEntry? _overlayEntry;
+
+  // For bookmark highlight pulse animation
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnimation;
+  int? _bookmarkHighlightId; // verseId derived from widget.highlightVerseKey
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.15, end: 0.55).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+    if (widget.highlightVerseKey != null) {
+      _setBookmarkHighlight(widget.highlightVerseKey!);
+    }
+  }
+
+  @override
+  void didUpdateWidget(QuranPageWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.highlightVerseKey != oldWidget.highlightVerseKey) {
+      if (widget.highlightVerseKey != null) {
+        _setBookmarkHighlight(widget.highlightVerseKey!);
+      } else {
+        setState(() => _bookmarkHighlightId = null);
+      }
+    }
+  }
+
+  void _setBookmarkHighlight(String verseKey) {
+    final parts = verseKey.split(':');
+    if (parts.length == 2) {
+      final surah = int.tryParse(parts[0]) ?? 0;
+      final ayah = int.tryParse(parts[1]) ?? 0;
+      setState(() => _bookmarkHighlightId = surah * 1000 + ayah);
+      // Auto-clear after 5 seconds so it doesn't stay permanently
+      Future.delayed(const Duration(seconds: 5), () {
+        if (mounted) setState(() => _bookmarkHighlightId = null);
+      });
+    }
+  }
 
   void _showMenu(BuildContext context, Offset position, int verseId) {
     if (_overlayEntry != null) {
@@ -83,7 +133,9 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
 
   void _removeMenu({bool keepHighlight = false}) {
     _overlayEntry?.remove();
+    _overlayEntry?.dispose();
     _overlayEntry = null;
+    // Only call setState if the widget is still alive
     if (mounted && !keepHighlight) {
       setState(() {
         _activeVerseId = null;
@@ -93,7 +145,11 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
 
   @override
   void dispose() {
-    _removeMenu();
+    _pulseController.dispose();
+    // Remove overlay entry without calling setState (widget is being disposed)
+    _overlayEntry?.remove();
+    _overlayEntry?.dispose();
+    _overlayEntry = null;
     super.dispose();
   }
 
@@ -150,7 +206,8 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
 
             final surahNumber = int.tryParse(firstVerseKey.split(':').first) ?? 1;
             final surahName = QuranMetadata.getSurahName(surahNumber);
-            const juzName = '1'; // TODO: Update to real Juz number if added to schema
+            final juzNum = QuranMetadata.getJuzNumberByPage(widget.pageNumber);
+            final juzName = QuranMetadata.getJuzName(juzNum);
 
             return QuranPageFrame(
               pageNumber: widget.pageNumber,
@@ -216,8 +273,14 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
                                   final verseId = verseKeyToId[word.verseKey] ?? 0;
                                   final isMenuHighlighted = _activeVerseId == verseId;
                                   final isAudioHighlighted = playingVerseId == verseId;
-                                  final isActive = isMenuHighlighted || isAudioHighlighted;
-                                  final backgroundColor = isActive ? AppColors.accentGold.withValues(alpha: 0.2) : Colors.transparent;
+                                  final isBookmarkHighlighted = _bookmarkHighlightId == verseId;
+
+                                  Color backgroundColor;
+                                  if (isAudioHighlighted || isMenuHighlighted) {
+                                    backgroundColor = AppColors.accentGold.withValues(alpha: 0.2);
+                                  } else {
+                                    backgroundColor = Colors.transparent;
+                                  }
 
                                   if (word.charTypeName == 'end') {
                                     return GestureDetector(
@@ -262,6 +325,31 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
                                           ],
                                         ),
                                       ),
+                                    );
+                                  }
+
+                                  // Build the word widget with optional pulse animation
+                                  if (isBookmarkHighlighted) {
+                                    return AnimatedBuilder(
+                                      animation: _pulseAnimation,
+                                      builder: (context, _) {
+                                        return GestureDetector(
+                                          onTapDown: (details) => _showMenu(context, details.globalPosition, verseId),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFB59A53).withValues(alpha: _pulseAnimation.value),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              '${word.textUthmani} ',
+                                              style: AppTextStyles.quranText.copyWith(
+                                                color: AppColors.accentGoldDark,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     );
                                   }
 

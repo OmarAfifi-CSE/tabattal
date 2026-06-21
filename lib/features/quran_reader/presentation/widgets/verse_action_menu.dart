@@ -204,34 +204,73 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                             ),
                             Align(
                               alignment: Alignment.centerRight,
-                              child: Container(
-                                height: 36,
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                decoration: BoxDecoration(
-                                  color: AppColors.background,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
+                              child: PopupMenuButton<int>(
+                                initialValue: currentResourceId,
+                                position: PopupMenuPosition.under,
+                                color: Colors.white,
+                                elevation: 3,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.1)),
                                 ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<int>(
-                                    value: currentResourceId,
+                                constraints: const BoxConstraints(minWidth: 120, maxWidth: 120),
+                                onSelected: (int newValue) {
+                                  setState(() => currentResourceId = newValue);
+                                  context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey, resourceId: newValue));
+                                },
+                                itemBuilder: (context) {
+                                  final options = [
+                                    (16, 'الميسر'),
+                                    (14, 'ابن كثير'),
+                                    (91, 'السعدي'),
+                                  ];
+                                  return options.map((option) {
+                                    final isSelected = option.$1 == currentResourceId;
+                                    return PopupMenuItem<int>(
+                                      value: option.$1,
+                                      height: 36,
+                                      padding: EdgeInsets.zero,
+                                      child: Container(
+                                        width: double.infinity,
+                                        height: 36,
+                                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                                        alignment: Alignment.centerRight,
+                                        color: isSelected ? AppColors.accentGold.withValues(alpha: 0.1) : Colors.transparent,
+                                        child: Text(
+                                          option.$2,
+                                          textAlign: TextAlign.right,
+                                          textDirection: TextDirection.rtl,
+                                          style: AppTextStyles.menuItemText.copyWith(
+                                            color: const Color(0xFF2C2520),
+                                            fontSize: 13,
+                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList();
+                                },
+                                child: Container(
+                                  height: 36,
+                                  width: 120,
+                                  padding: const EdgeInsets.only(left: 10, right: 10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.background,
                                     borderRadius: BorderRadius.circular(16),
-                                    dropdownColor: AppColors.background,
-                                    icon: const Padding(
-                                      padding: EdgeInsets.only(left: 4.0),
-                                      child: Icon(Icons.arrow_drop_down, color: AppColors.accentGold, size: 20),
-                                    ),
-                                    style: AppTextStyles.menuItemText.copyWith(color: const Color(0xFF2C2520), fontSize: 13),
-                                    onChanged: (int? newValue) {
-                                      if (newValue != null) {
-                                        setState(() => currentResourceId = newValue);
-                                        context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey, resourceId: newValue));
-                                      }
-                                    },
-                                    items: const [
-                                      DropdownMenuItem(value: 16, child: Text('الميسر')),
-                                      DropdownMenuItem(value: 14, child: Text('ابن كثير')),
-                                      DropdownMenuItem(value: 91, child: Text('السعدي')),
+                                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.accentGold, size: 20),
+                                      Expanded(
+                                        child: Text(
+                                          currentResourceId == 16 ? 'الميسر' : currentResourceId == 14 ? 'ابن كثير' : 'السعدي',
+                                          textAlign: TextAlign.right,
+                                          textDirection: TextDirection.rtl,
+                                          style: AppTextStyles.menuItemText.copyWith(color: const Color(0xFF2C2520), fontSize: 13),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),

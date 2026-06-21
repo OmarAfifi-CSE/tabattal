@@ -1,0 +1,488 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../quran_reader/domain/repositories/quran_repository.dart';
+import '../../../../quran_reader/data/models/search_verse_model.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../quran_metadata.dart';
+
+class QuranSearchScreen extends StatefulWidget {
+  const QuranSearchScreen({super.key});
+
+  @override
+  State<QuranSearchScreen> createState() => _QuranSearchScreenState();
+}
+
+class _QuranSearchScreenState extends State<QuranSearchScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  late final QuranRepository _repository;
+
+  Timer? _debounce;
+  bool _isLoading = false;
+  List<SearchVerseModel> _results = [];
+  bool _isNumericSearch = false;
+
+  // Surah page map: surahNum -> startPage (loaded from DB)
+  Map<int, int> _surahPageMap = {};
+  bool _surahMapLoaded = false;
+
+  // Juz start pages (Madani Mushaf standard)
+  static const List<int> _juzStartPages = [
+    1, 22, 42, 62, 82, 102, 122, 142, 162, 182,
+    202, 222, 242, 262, 282, 302, 322, 342, 362, 382,
+    402, 422, 442, 462, 482, 502, 522, 542, 562, 582
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _repository = context.read<QuranRepository>();
+    _loadSurahPageMap();
+  }
+
+  Future<void> _loadSurahPageMap() async {
+    try {
+      final index = await _repository.getSurahsIndex();
+      final map = <int, int>{};
+      for (final row in index) {
+        map[row['surah'] as int] = row['start_page'] as int;
+      }
+      if (mounted) {
+        setState(() {
+          _surahPageMap = map;
+          _surahMapLoaded = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _surahMapLoaded = true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      _performSearch(query.trim());
+    });
+  }
+
+  Future<void> _performSearch(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _results = [];
+        _isNumericSearch = false;
+        _isLoading = false;
+      });
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final normalizedQuery = _normalizeArabicNumbers(query.trim());
+
+    // Check if query is numeric
+    if (int.tryParse(normalizedQuery) != null) {
+      setState(() {
+        _isNumericSearch = true;
+        _results = [];
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // Text Search
+    try {
+      final results = await _repository.searchQuran(normalizedQuery);
+      if (mounted) {
+        setState(() {
+          _isNumericSearch = false;
+          _results = results;
+          _isLoading = false;
+        });
+      }
+    } catch (e, st) {
+      print('Search Error: $e\n$st');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _results = [];
+        });
+      }
+    }
+  }
+
+  /// Pops the screen and returns the target page number and verseKey to the caller.
+  void _navigateToPage(int pageNumber, {String? verseKey}) {
+    Navigator.pop(context, {'page': pageNumber, 'verseKey': verseKey});
+  }
+
+  String _normalizeArabicNumbers(String input) {
+    const arabicNumbers = '٠١٢٣٤٥٦٧٨٩';
+    const englishNumbers = '0123456789';
+    String result = input;
+    for (int i = 0; i < arabicNumbers.length; i++) {
+      result = result.replaceAll(arabicNumbers[i], englishNumbers[i]);
+    }
+    return result;
+  }
+
+  String _smartNormalize(String text) {
+    String c = _normalizeArabicNumbers(text);
+    c = c.replaceAll(RegExp(r'[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED\u0640]'), '');
+    c = c.replaceAll('ـ', '');
+    c = c.replaceAll(RegExp(r'[اأإآٱى]'), '');
+    c = c.replaceAll(RegExp(r'ة'), 'ه');
+    c = c.replaceAll(RegExp(r'[ئ]'), 'ي');
+    c = c.replaceAll(RegExp(r'ؤ'), 'و');
+    return c;
+  }
+
+  List<TextSpan> _getHighlightedUthmani(String textClean, String textUthmani, String query) {
+    if (query.isEmpty) return [TextSpan(text: textUthmani)];
+    
+    final queryWords = query.trim().split(RegExp(r'\s+')).map(_smartNormalize).where((w) => w.isNotEmpty).toList();
+    if (queryWords.isEmpty) return [TextSpan(text: textUthmani)];
+
+    final cleanWords = textClean.split(' ');
+    final uthmaniWords = textUthmani.split(' ');
+    
+    int startWordIdx = -1;
+    int endWordIdx = -1;
+    
+    for (int i = 0; i <= cleanWords.length - queryWords.length; i++) {
+      bool match = true;
+      for (int j = 0; j < queryWords.length; j++) {
+        if (!_smartNormalize(cleanWords[i + j]).contains(queryWords[j])) {
+          match = false;
+          break;
+        }
+      }
+      if (match) {
+        startWordIdx = i;
+        endWordIdx = i + queryWords.length - 1;
+        break;
+      }
+    }
+    
+    // If exact word mapping failed, fallback to returning whole text
+    if (startWordIdx == -1) {
+      return [TextSpan(text: textUthmani)];
+    }
+
+    final spans = <TextSpan>[];
+    
+    if (startWordIdx > 0) {
+      spans.add(TextSpan(text: '${uthmaniWords.sublist(0, startWordIdx).join(' ')} '));
+    }
+    
+    spans.add(TextSpan(
+      text: uthmaniWords.sublist(startWordIdx, (endWordIdx + 1).clamp(0, uthmaniWords.length)).join(' '),
+      style: const TextStyle(backgroundColor: AppColors.accentGold, color: Colors.white),
+    ));
+    
+    if (endWordIdx < uthmaniWords.length - 1) {
+      spans.add(TextSpan(text: ' ${uthmaniWords.sublist(endWordIdx + 1).join(' ')}'));
+    }
+    
+    return spans;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAF5EB),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(context),
+            const SizedBox(height: 10),
+            Expanded(child: _buildBody()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        textDirection: TextDirection.rtl,
+        children: [
+          // Back button
+          InkWell(
+            onTap: () => Navigator.pop(context),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFE8DA),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFD6C8A9), width: 1),
+              ),
+              child: const Icon(Icons.arrow_forward_rounded, color: AppColors.textPrimary, size: 24),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Search bar
+          Expanded(
+            child: Container(
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFD6C8A9), width: 1),
+              ),
+              child: Row(
+                textDirection: TextDirection.rtl,
+                children: [
+                  const SizedBox(width: 12),
+                  const Icon(Icons.search_rounded, color: AppColors.textPrimary, size: 24),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
+                      onChanged: _onSearchChanged,
+                      textDirection: TextDirection.rtl,
+                      textAlign: TextAlign.right,
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        hintText: 'البحث بالنصوص أو الأرقام...',
+                        hintStyle: TextStyle(color: Colors.black38, fontSize: 16),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.only(bottom: 8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_searchController.text.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Spacer(),
+            Icon(Icons.search_rounded, size: 64, color: AppColors.accentGold.withValues(alpha: 0.4)),
+            const SizedBox(height: 16),
+            Center(
+              child: Text(
+                'ابحث عن طريق',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: AppColors.textPrimary.withValues(alpha: 0.6),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                'رقم الصفحة • رقم الجزء • رقم السورة\nأو النص القرآني',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  height: 1.6,
+                  color: AppColors.textPrimary.withValues(alpha: 0.45),
+                ),
+              ),
+            ),
+            const Spacer(flex: 2),
+          ],
+        ),
+      );
+    }
+
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.accentGold),
+      );
+    }
+
+    if (_isNumericSearch) {
+      return _buildNumericResults();
+    }
+
+    if (_results.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off_rounded, size: 52, color: AppColors.textPrimary.withValues(alpha: 0.3)),
+            const SizedBox(height: 12),
+            Text(
+              'لم يتم العثور على نتائج',
+              style: TextStyle(fontSize: 18, color: AppColors.textPrimary.withValues(alpha: 0.6)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: _results.length,
+      separatorBuilder: (_, _) => const Divider(color: AppColors.divider, height: 1),
+      itemBuilder: (context, index) {
+        final verse = _results[index];
+        final surahName = QuranMetadata.getSurahName(verse.surah);
+        return InkWell(
+          onTap: () => _navigateToPage(verse.page, verseKey: verse.verseKey),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'صفحة ${verse.page}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textPrimary.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    Text(
+                      'سورة $surahName - آية ${verse.ayah}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.accentGold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                RichText(
+                  textAlign: TextAlign.right,
+                  textDirection: TextDirection.rtl,
+                  text: TextSpan(
+                    style: AppTextStyles.quranText.copyWith(fontSize: 22, height: 1.5, color: AppColors.textPrimary),
+                    children: _getHighlightedUthmani(verse.textClean, verse.textUthmani, _searchController.text),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildNumericResults() {
+    final number = int.tryParse(_normalizeArabicNumbers(_searchController.text.trim())) ?? 1;
+    final cards = <Widget>[];
+
+    // Option 1: Go to page directly
+    if (number >= 1 && number <= 604) {
+      cards.add(_buildActionCard(
+        title: 'الذهاب للصفحة $number',
+        icon: Icons.menu_book_rounded,
+        onTap: () => _navigateToPage(number),
+      ));
+    }
+
+    // Option 2: Go to Juz
+    if (number >= 1 && number <= 30) {
+      final juzPage = _juzStartPages[number - 1];
+      final juzName = QuranMetadata.getJuzName(number);
+      cards.add(_buildActionCard(
+        title: 'الذهاب للجزء $juzName ($number) — صفحة $juzPage',
+        icon: Icons.pie_chart_rounded,
+        onTap: () => _navigateToPage(juzPage),
+      ));
+    }
+
+    // Option 3: Go to Surah
+    if (number >= 1 && number <= 114) {
+      final surahName = QuranMetadata.getSurahName(number);
+      final surahPage = _surahPageMap[number];
+      if (surahPage != null) {
+        cards.add(_buildActionCard(
+          title: 'الذهاب لسورة $surahName ($number) — صفحة $surahPage',
+          icon: Icons.my_library_books_rounded,
+          onTap: () => _navigateToPage(surahPage),
+        ));
+      } else if (!_surahMapLoaded) {
+        cards.add(const Center(
+          child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: CircularProgressIndicator(color: AppColors.accentGold, strokeWidth: 2),
+          ),
+        ));
+      }
+    }
+
+    if (cards.isEmpty) {
+      return Center(
+        child: Text(
+          'الرقم $number خارج النطاق المتاح',
+          style: TextStyle(fontSize: 16, color: AppColors.textPrimary.withValues(alpha: 0.6)),
+        ),
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      children: cards,
+    );
+  }
+
+  Widget _buildActionCard({
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      color: Colors.white,
+      elevation: 0,
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppColors.accentGold.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: AppColors.accentGold, size: 22),
+        ),
+        title: Text(
+          title,
+          textAlign: TextAlign.right,
+          textDirection: TextDirection.rtl,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_back_ios_rounded,
+          size: 16,
+          color: AppColors.textPrimary.withValues(alpha: 0.4),
+        ),
+      ),
+    );
+  }
+}

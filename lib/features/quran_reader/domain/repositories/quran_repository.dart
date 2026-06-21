@@ -2,11 +2,14 @@ import '../../data/datasources/quran_local_data_source.dart';
 import '../../data/models/verse_model.dart';
 import '../../data/models/tafsir_model.dart';
 import '../../data/models/translation_model.dart';
+import '../../data/models/search_verse_model.dart';
 
 abstract class QuranRepository {
   Future<List<LineData>> getLinesByPage(int pageNumber);
   Future<TafsirModel> getTafsir(String verseKey, {int resourceId = 16}); // Default Al-Muyassar
   Future<TranslationModel> getTranslation(String verseKey, {int resourceId = 20}); // Default English
+  Future<List<SearchVerseModel>> searchQuran(String query);
+  Future<List<Map<String, dynamic>>> getSurahsIndex();
 }
 
 class QuranRepositoryImpl implements QuranRepository {
@@ -54,5 +57,15 @@ class QuranRepositoryImpl implements QuranRepository {
       resourceId: resourceId,
       text: text,
     );
+  }
+
+  @override
+  Future<List<SearchVerseModel>> searchQuran(String query) async {
+    return await localDataSource.searchQuran(query);
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getSurahsIndex() async {
+    return await localDataSource.getSurahsIndex();
   }
 }
