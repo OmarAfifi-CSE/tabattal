@@ -15,15 +15,15 @@ class QuranInitial extends QuranState {}
 class QuranLoading extends QuranState {}
 
 class QuranLoaded extends QuranState {
-  final List<VerseModel> verses;
+  final List<LineData> lines;
   // We can keep track of currently viewed surah/juz or page in the state if needed
   final int? currentSurahId;
   final int? currentPage;
 
-  const QuranLoaded({required this.verses, this.currentSurahId, this.currentPage});
+  const QuranLoaded({required this.lines, this.currentSurahId, this.currentPage});
 
   @override
-  List<Object?> get props => [verses, currentSurahId, currentPage];
+  List<Object?> get props => [lines, currentSurahId, currentPage];
 }
 
 class QuranError extends QuranState {

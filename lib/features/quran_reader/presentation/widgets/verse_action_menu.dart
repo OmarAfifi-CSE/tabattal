@@ -52,13 +52,15 @@ class OverlayPositionDelegate extends SingleChildLayoutDelegate {
 }
 
 class VerseActionMenu extends StatefulWidget {
-  final VoidCallback onDismiss;
+  final void Function({bool keepHighlight}) onDismiss;
+  final VoidCallback? onClearHighlight;
   final Offset position;
   final VerseModel verse;
 
   const VerseActionMenu({
     super.key,
     required this.onDismiss,
+    this.onClearHighlight,
     required this.position,
     required this.verse,
   });
@@ -99,12 +101,14 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
     super.dispose();
   }
 
-  Widget _buildMenuItem(IconData icon, String text, VoidCallback onTap, {Color? iconColor}) {
+  Widget _buildMenuItem(IconData icon, String text, VoidCallback onTap, {Color? iconColor, bool closeMenu = true}) {
     return InkWell(
       onTap: () {
         if (_isAnimating) return; // Prevent concurrent rapid taps
         onTap();
-        _close();
+        if (closeMenu) {
+          _close();
+        }
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -130,84 +134,187 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
     );
   }
 
-  void _close() {
+  void _close({bool keepHighlight = false}) {
     if (_isAnimating) return;
     _isAnimating = true;
     _controller.reverse().then((_) {
       _isAnimating = false;
-      widget.onDismiss();
+      widget.onDismiss(keepHighlight: keepHighlight);
     });
   }
 
-  void _showOverlayContent(BuildContext context, String title, QuranState state, VoidCallback onRetry) {
+  String _stripHtml(String htmlString) {
+    // Remove superscript footnotes completely: <sup foot_note=123>1</sup>
+    String text = htmlString.replaceAll(RegExp(r'<sup[^>]*>.*?<\/sup>', multiLine: true, caseSensitive: false), '');
+    // Remove all other HTML tags
+    text = text.replaceAll(RegExp(r'<[^>]*>', multiLine: true, caseSensitive: false), '');
+    // Replace HTML entities
+    return text.replaceAll('&nbsp;', ' ').replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&').trim();
+  }
+
+  void _showOverlayContent(BuildContext context, String initialTitle, QuranState state, VoidCallback onRetry) {
+    int currentResourceId = state is TafsirLoaded ? state.tafsir.tafsirId : 16;
+    final quranBloc = context.read<QuranBloc>();
+    
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFFBF7F0), // Soft cream background
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                title,
-                style: AppTextStyles.headerText.copyWith(color: AppColors.accentGold),
+      isScrollControlled: true, // Allow it to expand nicely
+      builder: (bottomSheetContext) {
+        return BlocProvider.value(
+          value: quranBloc,
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.7, // Max 70% of screen
               ),
-              const SizedBox(height: 16),
-              if (state is TafsirLoaded)
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Text(
-                      state.tafsir.text,
-                      style: AppTextStyles.menuItemText.copyWith(height: 1.6),
-                      textAlign: TextAlign.justify,
-                      textDirection: TextDirection.rtl,
-                    ),
-                  ),
-                )
-              else if (state is TranslationLoaded)
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Text(
-                      state.translation.text,
-                      style: AppTextStyles.menuItemText.copyWith(height: 1.6),
-                    ),
-                  ),
-                )
-              else if (state is QuranOverlayError)
-                Center(
-                  child: Column(
+              padding: const EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 20.0),
+              child: BlocBuilder<QuranBloc, QuranState>(
+                builder: (context, currentState) {
+                  return Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 40),
-                      const SizedBox(height: 12),
-                      Text(state.message, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context); // Close sheet to retry safely
-                          onRetry();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accentGold,
-                          foregroundColor: AppColors.background,
+                      // Gold Drag Handle
+                      Center(
+                        child: Container(
+                          width: 48,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentGold,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
-                        child: const Text('Retry'),
                       ),
+                      if (currentState is TafsirLoaded || (currentState is QuranOverlayLoading && initialTitle.contains('التفسير')))
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Align(
+                              alignment: Alignment.center,
+                              child: Text(
+                                'التفسير',
+                                style: AppTextStyles.headerText.copyWith(color: AppColors.accentGold),
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Container(
+                                height: 36,
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.background,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<int>(
+                                    value: currentResourceId,
+                                    borderRadius: BorderRadius.circular(16),
+                                    dropdownColor: AppColors.background,
+                                    icon: const Padding(
+                                      padding: EdgeInsets.only(left: 4.0),
+                                      child: Icon(Icons.arrow_drop_down, color: AppColors.accentGold, size: 20),
+                                    ),
+                                    style: AppTextStyles.menuItemText.copyWith(color: const Color(0xFF2C2520), fontSize: 13),
+                                    onChanged: (int? newValue) {
+                                      if (newValue != null) {
+                                        setState(() => currentResourceId = newValue);
+                                        context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey, resourceId: newValue));
+                                      }
+                                    },
+                                    items: const [
+                                      DropdownMenuItem(value: 16, child: Text('الميسر')),
+                                      DropdownMenuItem(value: 14, child: Text('ابن كثير')),
+                                      DropdownMenuItem(value: 91, child: Text('السعدي')),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        Text(
+                          initialTitle,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.headerText.copyWith(color: AppColors.accentGold),
+                        ),
+                      const SizedBox(height: 16),
+                      if (currentState is QuranOverlayLoading)
+                        const Center(child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: CircularProgressIndicator(color: AppColors.accentGold),
+                        ))
+                      else if (currentState is TafsirLoaded)
+                        Flexible(
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            child: Text(
+                              _stripHtml(currentState.tafsir.text),
+                              style: AppTextStyles.menuItemText.copyWith(
+                                height: 1.8, 
+                                color: const Color(0xFF2C2520), // Dark charcoal
+                              ),
+                              textDirection: TextDirection.rtl,
+                            ),
+                          ),
+                        )
+                      else if (currentState is TranslationLoaded)
+                        Flexible(
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            child: Text(
+                              _stripHtml(currentState.translation.text),
+                              style: AppTextStyles.menuItemText.copyWith(
+                                height: 1.8,
+                                color: const Color(0xFF2C2520),
+                              ),
+                            ),
+                          ),
+                        )
+                      else if (currentState is QuranOverlayError)
+                        Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.error_outline, color: Colors.red, size: 40),
+                              const SizedBox(height: 12),
+                              Text(currentState.message, style: const TextStyle(color: Colors.red)),
+                              const SizedBox(height: 12),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(context); // Close sheet to retry safely
+                                  onRetry();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.accentGold,
+                                  foregroundColor: AppColors.background,
+                                ),
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        )
                     ],
-                  ),
-                )
-              else
-                const Center(child: CircularProgressIndicator(color: AppColors.accentGold)),
-            ],
-          ),
+                  );
+                },
+              ),
+            );
+          },
+        ),
         );
       },
-    );
+    ).then((_) {
+      if (widget.onClearHighlight != null) {
+        widget.onClearHighlight!();
+      }
+    });
   }
 
   @override
@@ -261,35 +368,24 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                     width: 1.5,
                   ),
                 ),
-                child: BlocListener<QuranBloc, QuranState>(
-                  listener: (context, state) {
-                    if (state is TafsirLoaded) {
-                      _showOverlayContent(context, 'التفسير - ابن كثير', state, () {
-                        context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey));
-                      });
-                    } else if (state is TranslationLoaded) {
-                      _showOverlayContent(context, 'Translation', state, () {
-                        context.read<QuranBloc>().add(FetchTranslation(widget.verse.verseKey));
-                      });
-                    } else if (state is QuranOverlayError) {
-                      _showOverlayContent(context, 'Error', state, () {
-                        // determine if it was tafsir or translation based on current request maybe?
-                        // For simplicity, we just provide a generic retry mechanism or require reopening menu.
-                        // Ideally we pass the last event to retry.
-                        context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey)); 
-                      });
-                    }
-                  },
-                  child: Column(
+                child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _buildMenuItem(Icons.menu_book_outlined, 'التفسير', () {
+                        _showOverlayContent(context, 'التفسير - الميسر', context.read<QuranBloc>().state, () {
+                          context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey));
+                        });
                         context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey));
-                      }),
+                        _close(keepHighlight: true);
+                      }, closeMenu: false),
                       const Divider(height: 1, thickness: 1, color: AppColors.divider),
                       _buildMenuItem(Icons.g_translate_outlined, 'الترجمة', () {
+                        _showOverlayContent(context, 'الترجمة', context.read<QuranBloc>().state, () {
+                          context.read<QuranBloc>().add(FetchTranslation(widget.verse.verseKey));
+                        });
                         context.read<QuranBloc>().add(FetchTranslation(widget.verse.verseKey));
-                      }),
+                        _close(keepHighlight: true);
+                      }, closeMenu: false),
                       const Divider(height: 1, thickness: 1, color: AppColors.divider),
                       _buildMenuItem(Icons.play_circle_outline, 'الإستماع للآيات', () {
                         context.read<AudioBloc>().add(PlayVerse(widget.verse.audioUrl, widget.verse.id));
@@ -317,7 +413,6 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
               ),
             ),
           ),
-        ),
       ],
     );
   }

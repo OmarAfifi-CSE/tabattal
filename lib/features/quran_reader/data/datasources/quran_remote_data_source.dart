@@ -8,8 +8,8 @@ import '../models/translation_model.dart';
 abstract class QuranRemoteDataSource {
   Future<List<VerseModel>> getVersesBySurah(int surahId);
   Future<List<VerseModel>> getVersesByPage(int pageNumber);
-  Future<TafsirModel> getTafsirByVerse(String verseKey, {int tafsirId = 169});
-  Future<TranslationModel> getTranslationByVerse(String verseKey, {int translationId = 131});
+  Future<TafsirModel> getTafsirByVerse(String verseKey, {int tafsirId = 16});
+  Future<TranslationModel> getTranslationByVerse(String verseKey, {int translationId = 20});
 }
 
 class QuranRemoteDataSourceImpl implements QuranRemoteDataSource {
@@ -76,7 +76,7 @@ class QuranRemoteDataSourceImpl implements QuranRemoteDataSource {
   }
 
   @override
-  Future<TafsirModel> getTafsirByVerse(String verseKey, {int tafsirId = 169}) async {
+  Future<TafsirModel> getTafsirByVerse(String verseKey, {int tafsirId = 16}) async {
     try {
       final response = await dio.get('https://api.quran.com/api/v4/tafsirs/$tafsirId/by_verse/$verseKey');
       
@@ -91,7 +91,7 @@ class QuranRemoteDataSourceImpl implements QuranRemoteDataSource {
   }
 
   @override
-  Future<TranslationModel> getTranslationByVerse(String verseKey, {int translationId = 131}) async {
+  Future<TranslationModel> getTranslationByVerse(String verseKey, {int translationId = 20}) async {
     try {
       final response = await dio.get('https://api.quran.com/api/v4/quran/translations/$translationId', queryParameters: {
         'verse_key': verseKey,

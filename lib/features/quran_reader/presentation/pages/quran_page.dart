@@ -3,7 +3,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../data/models/verse_model.dart';
 import '../bloc/quran/quran_bloc.dart';
 import '../bloc/quran/quran_state.dart';
 import '../bloc/audio/audio_bloc.dart';
@@ -12,7 +11,6 @@ import '../bloc/bookmark/bookmark_bloc.dart';
 import '../bloc/bookmark/bookmark_state.dart';
 import '../widgets/quran_page_header.dart';
 import '../widgets/quran_page_footer.dart';
-import '../widgets/verse_action_menu.dart';
 
 class QuranPage extends StatefulWidget {
   const QuranPage({super.key});
@@ -22,50 +20,7 @@ class QuranPage extends StatefulWidget {
 }
 
 class _QuranPageState extends State<QuranPage> {
-  int? _activeVerseId;
-  OverlayEntry? _overlayEntry;
 
-  void _showMenu(BuildContext context, Offset position, VerseModel verse) {
-    if (_overlayEntry != null) {
-      _removeMenu();
-    }
-
-    setState(() {
-      _activeVerseId = verse.id;
-    });
-
-    final overlay = Overlay.of(context);
-    _overlayEntry = OverlayEntry(
-      builder: (context) => VerseActionMenu(
-        position: position,
-        verse: verse,
-        onDismiss: () {
-          _removeMenu();
-          setState(() {
-            _activeVerseId = null;
-          });
-        },
-      ),
-    );
-
-    overlay.insert(_overlayEntry!);
-  }
-
-  void _removeMenu() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-  }
-
-  @override
-  void dispose() {
-    _removeMenu();
-    super.dispose();
-  }
-
-  String _toArabicNumber(int number) {
-    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return number.toString().split('').map((e) => arabicDigits[int.parse(e)]).join();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +57,6 @@ class _QuranPageState extends State<QuranPage> {
             }
           },
           buildWhen: (previous, current) {
-            // Only rebuild the main page on loaded/loading/error main states
             return current is QuranLoaded || current is QuranLoading || current is QuranError;
           },
           builder: (context, state) {
@@ -111,12 +65,13 @@ class _QuranPageState extends State<QuranPage> {
             } else if (state is QuranError) {
               return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
             } else if (state is QuranLoaded) {
-              final verses = state.verses;
+              final lines = state.lines;
+              final verses = lines.expand((line) => line.words).toList();
               return Column(
                 children: [
-                  QuranPageHeader(
-                    juzNumber: '١٢', // Hardcoded for mockup, ideally dynamic
-                    surahName: state.currentSurahId?.toString() ?? 'يُوسُف', 
+                  const QuranPageHeader(
+                    juzNumber: '١٢',
+                    surahName: 'يُوسُف', 
                   ),
                   Expanded(
                     child: Padding(
@@ -148,9 +103,7 @@ class _QuranPageState extends State<QuranPage> {
                                   child: Text.rich(
                                     TextSpan(
                                     children: verses.map((verse) {
-                                      final isMenuHighlighted = _activeVerseId == verse.id;
-                                      final isAudioHighlighted = playingVerseId == verse.id;
-                                      final isHighlighted = isMenuHighlighted || isAudioHighlighted;
+                                      final isHighlighted = playingVerseId == verse.id;
 
                                       return TextSpan(
                                         text: '${verse.textUthmani} ',
@@ -161,14 +114,14 @@ class _QuranPageState extends State<QuranPage> {
                                         ),
                                         recognizer: TapGestureRecognizer()
                                           ..onTapDown = (details) {
-                                            _showMenu(context, details.globalPosition, verse);
+                                            // _showMenu(context, details.globalPosition, verse);
                                           },
                                         children: [
-                                          WidgetSpan(
+                                          if (verse.charTypeName == 'end') WidgetSpan(
                                             alignment: PlaceholderAlignment.middle,
                                             child: GestureDetector(
                                               onTapDown: (details) {
-                                                _showMenu(context, details.globalPosition, verse);
+                                                // _showMenu(context, details.globalPosition, verse);
                                               },
                                               child: Padding(
                                                 padding: const EdgeInsets.symmetric(horizontal: 6.0),
@@ -180,8 +133,8 @@ class _QuranPageState extends State<QuranPage> {
                                                       color: AppColors.accentGold,
                                                       size: 32,
                                                     ),
-                                                    Text(
-                                                      _toArabicNumber(verse.verseNumber),
+                                                      Text(
+                                                        verse.textUthmani,
                                                       style: const TextStyle(
                                                         color: AppColors.textPrimary,
                                                         fontSize: 12,

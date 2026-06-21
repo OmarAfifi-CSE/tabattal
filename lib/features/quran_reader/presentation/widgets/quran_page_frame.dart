@@ -26,7 +26,7 @@ class QuranPageFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color innerColor = const Color(0xFF2C2520); // Dark brown matching traditional ink
+    const Color innerColor = Color(0xFF2C2520); // Dark brown matching traditional ink
 
     // Traditional typography
     final TextStyle headerStyle = GoogleFonts.amiri(
@@ -111,7 +111,7 @@ class QuranPageFrame extends StatelessWidget {
                   top: H * 0.045, // Moved UP to align with the headers
                   right: W * 0.04, // Tucked cleanly into the corner
                   child: IconButton(
-                    icon: Icon(Icons.menu_rounded, color: innerColor, size: 22),
+                    icon: const Icon(Icons.menu_rounded, color: innerColor, size: 22),
                     onPressed: () {
                       // TODO: Open sidebar/menu
                     },

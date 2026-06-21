@@ -18,7 +18,7 @@ class QuranPageFooter extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.accentGold.withOpacity(0.5), width: 1.5),
+            border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.5), width: 1.5),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(

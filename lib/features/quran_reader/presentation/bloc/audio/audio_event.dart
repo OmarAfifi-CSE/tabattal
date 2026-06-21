@@ -32,11 +32,17 @@ class PlayPlaylist extends AudioEvent {
   List<Object> get props => [audioUrls, verseIds, startIndex];
 }
 
-class PauseAudio extends AudioEvent {}
+class PauseAudio extends AudioEvent {
+  const PauseAudio();
+}
 
-class ResumeAudio extends AudioEvent {}
+class ResumeAudio extends AudioEvent {
+  const ResumeAudio();
+}
 
-class StopAudio extends AudioEvent {}
+class StopAudio extends AudioEvent {
+  const StopAudio();
+}
 
 // Internal event for state updates from player stream
 class AudioStateChanged extends AudioEvent {
@@ -56,4 +62,13 @@ class AudioErrorEvent extends AudioEvent {
 
   @override
   List<Object> get props => [message];
+}
+
+class ChangeReciter extends AudioEvent {
+  final String reciterName;
+
+  const ChangeReciter(this.reciterName);
+
+  @override
+  List<Object> get props => [reciterName];
 }

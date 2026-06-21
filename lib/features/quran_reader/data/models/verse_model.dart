@@ -63,10 +63,21 @@ class VerseModel {
   static String _buildEveryAyahUrl(String verseKey) {
     final parts = verseKey.split(':');
     if (parts.length == 2) {
-      final surah = parts[0].padLeft(3, '0');
-      final ayah = parts[1].padLeft(3, '0');
-      return 'https://everyayah.com/data/Alafasy_128kbps/$surah$ayah.mp3';
+      final surah = int.tryParse(parts[0]) ?? 1;
+      final ayah = int.tryParse(parts[1]) ?? 1;
+      final id = surah * 1000 + ayah;
+      return 'assets/audio/verses/$id.mp3';
     }
     return '';
   }
+}
+
+class LineData {
+  final int lineNumber;
+  final List<WordModel> words;
+
+  LineData({
+    required this.lineNumber,
+    required this.words,
+  });
 }

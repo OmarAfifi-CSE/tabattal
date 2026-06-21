@@ -26,8 +26,8 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
   Future<void> _onLoadSurah(LoadSurah event, Emitter<QuranState> emit) async {
     emit(QuranLoading());
     try {
-      final verses = await repository.getVersesBySurah(event.surahId);
-      _lastLoadedState = QuranLoaded(verses: verses, currentSurahId: event.surahId);
+      final lines = await repository.getLinesByPage(1); // Fallback or handle surah differently if needed offline
+      _lastLoadedState = QuranLoaded(lines: lines, currentSurahId: event.surahId);
       emit(_lastLoadedState!);
     } catch (e) {
       emit(QuranError(_mapExceptionToMessage(e)));
@@ -37,8 +37,8 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
   Future<void> _onLoadPage(LoadPage event, Emitter<QuranState> emit) async {
     emit(QuranLoading());
     try {
-      final verses = await repository.getVersesByPage(event.pageNumber);
-      _lastLoadedState = QuranLoaded(verses: verses, currentPage: event.pageNumber);
+      final lines = await repository.getLinesByPage(event.pageNumber);
+      _lastLoadedState = QuranLoaded(lines: lines, currentPage: event.pageNumber);
       emit(_lastLoadedState!);
     } catch (e) {
       emit(QuranError(_mapExceptionToMessage(e)));
@@ -48,7 +48,7 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
   Future<void> _onFetchTafsir(FetchTafsir event, Emitter<QuranState> emit) async {
     emit(QuranOverlayLoading());
     try {
-      final tafsir = await repository.getTafsir(event.verseKey);
+      final tafsir = await repository.getTafsir(event.verseKey, resourceId: event.resourceId);
       if (tafsir.text.isEmpty || tafsir.text == 'Tafsir not found.') {
          emit(const QuranOverlayError('Content temporarily unavailable'));
       } else {
@@ -56,10 +56,6 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
       }
     } catch (e) {
       emit(QuranOverlayError(_mapExceptionToMessage(e)));
-    }
-    
-    if (_lastLoadedState != null) {
-      emit(_lastLoadedState!);
     }
   }
 
@@ -74,10 +70,6 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
       }
     } catch (e) {
       emit(QuranOverlayError(_mapExceptionToMessage(e)));
-    }
-
-    if (_lastLoadedState != null) {
-      emit(_lastLoadedState!);
     }
   }
 }

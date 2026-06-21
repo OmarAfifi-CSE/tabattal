@@ -27,11 +27,12 @@ class LoadPage extends QuranEvent {
 
 class FetchTafsir extends QuranEvent {
   final String verseKey;
+  final int resourceId;
 
-  const FetchTafsir(this.verseKey);
+  const FetchTafsir(this.verseKey, {this.resourceId = 16});
 
   @override
-  List<Object> get props => [verseKey];
+  List<Object> get props => [verseKey, resourceId];
 }
 
 class FetchTranslation extends QuranEvent {

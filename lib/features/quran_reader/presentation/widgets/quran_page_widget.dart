@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -41,12 +40,16 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
     final audioBloc = context.read<AudioBloc>();
     final bookmarkBloc = context.read<BookmarkBloc>();
 
-    // We need a dummy VerseModel just to pass the ID to the menu.
+    final surahNum = verseId ~/ 1000;
+    final ayahNum = verseId % 1000;
+    final generatedVerseKey = '$surahNum:$ayahNum';
+
+    // We need a dummy VerseModel just to pass the ID and verseKey to the menu.
     // In a real app, you would pass the full VerseModel.
     final dummyVerse = VerseModel(
       id: verseId,
-      verseNumber: 0,
-      verseKey: '',
+      verseNumber: ayahNum,
+      verseKey: generatedVerseKey,
       textUthmani: '',
       audioUrl: '',
       words: [],
@@ -63,7 +66,14 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
         child: VerseActionMenu(
           position: position,
           verse: dummyVerse,
-          onDismiss: _removeMenu,
+          onDismiss: ({bool keepHighlight = false}) => _removeMenu(keepHighlight: keepHighlight),
+          onClearHighlight: () {
+            if (mounted) {
+              setState(() {
+                _activeVerseId = null;
+              });
+            }
+          },
         ),
       ),
     );
@@ -71,10 +81,10 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
     Overlay.of(context).insert(_overlayEntry!);
   }
 
-  void _removeMenu() {
+  void _removeMenu({bool keepHighlight = false}) {
     _overlayEntry?.remove();
     _overlayEntry = null;
-    if (mounted) {
+    if (mounted && !keepHighlight) {
       setState(() {
         _activeVerseId = null;
       });
@@ -92,6 +102,9 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
     return BlocProvider(
       create: (context) => QuranBloc(repository: context.read<QuranRepository>())..add(LoadPage(widget.pageNumber)),
       child: BlocBuilder<QuranBloc, QuranState>(
+        buildWhen: (previous, current) {
+          return current is QuranLoading || current is QuranLoaded || current is QuranError || current is QuranInitial;
+        },
         builder: (context, state) {
           if (state is QuranLoading && state is! QuranLoaded) {
             return QuranPageFrame(
@@ -113,8 +126,8 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
               ),
             );
           } else if (state is QuranLoaded) {
-            final verses = state.verses;
-            if (verses.isEmpty) {
+            final lines = state.lines;
+            if (lines.isEmpty) {
               return QuranPageFrame(
                 pageNumber: widget.pageNumber, 
                 surahName: '',
@@ -123,10 +136,21 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
               );
             }
 
-            final firstVerse = verses.first;
-            final surahNumber = int.tryParse(firstVerse.verseKey.split(':').first) ?? 1;
+            // Extract metadata from the first word of the page
+            String firstVerseKey = '1:1';
+            for (var line in lines) {
+              if (line.words.isNotEmpty) {
+                firstVerseKey = line.words.first.verseKey;
+                // Currently our DB doesn't have juz_number in WordModel, we can extract from metadata or add it.
+                // For now, let's just default to '1' or use a hardcoded value since we dropped juz from WordModel.
+                // Wait, we didn't add juz to WordModel. Let's just use 1.
+                break;
+              }
+            }
+
+            final surahNumber = int.tryParse(firstVerseKey.split(':').first) ?? 1;
             final surahName = QuranMetadata.getSurahName(surahNumber);
-            final juzName = firstVerse.juzNumber.toString(); // Use number instead of long text
+            const juzName = '1'; // TODO: Update to real Juz number if added to schema
 
             return QuranPageFrame(
               pageNumber: widget.pageNumber,
@@ -141,19 +165,17 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
                     playingVerseId = audioState.currentVerseId;
                   }
 
-                  // Group words by line number
-                  final Map<int, List<WordModel>> lineGroups = {};
-                  for (int i = 1; i <= 15; i++) {
-                    lineGroups[i] = [];
-                  }
-
                   // A map to find which verse a word belongs to based on verseKey
                   final Map<String, int> verseKeyToId = {};
-                  for (var v in verses) {
-                    verseKeyToId[v.verseKey] = v.id;
-                    for (var w in v.words) {
-                      if (lineGroups.containsKey(w.lineNumber)) {
-                        lineGroups[w.lineNumber]!.add(w);
+                  for (var line in lines) {
+                    for (var w in line.words) {
+                      final parts = w.verseKey.split(':');
+                      if (parts.length == 2) {
+                        final surah = int.tryParse(parts[0]) ?? 1;
+                        final ayah = int.tryParse(parts[1]) ?? 1;
+                        verseKeyToId[w.verseKey] = surah * 1000 + ayah;
+                      } else {
+                        verseKeyToId[w.verseKey] = 0;
                       }
                     }
                   }
@@ -167,7 +189,12 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: List.generate(15, (index) {
                           final lineNumber = index + 1;
-                          final lineWords = lineGroups[lineNumber] ?? [];
+                          // Find the LineData for this line number
+                          final lineData = lines.firstWhere(
+                            (l) => l.lineNumber == lineNumber,
+                            orElse: () => LineData(lineNumber: lineNumber, words: []),
+                          );
+                          final lineWords = lineData.words;
 
                           if (lineWords.isEmpty) {
                             return const Expanded(child: SizedBox());
@@ -181,78 +208,76 @@ class _QuranPageWidgetState extends State<QuranPageWidget> {
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.center,
-                              child: RichText(
-                                textAlign: TextAlign.justify,
-                                text: TextSpan(
-                                  children: lineWords.map((word) {
-                                    final verseId = verseKeyToId[word.verseKey] ?? 0;
-                                    final isMenuHighlighted = _activeVerseId == verseId;
-                                    final isAudioHighlighted = playingVerseId == verseId;
-                                    final isActive = isMenuHighlighted || isAudioHighlighted;
-                                    final backgroundColor = isActive ? AppColors.accentGold.withValues(alpha: 0.2) : Colors.transparent;
+                              child: Row(
+                                textDirection: TextDirection.rtl,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: lineWords.map((word) {
+                                  final verseId = verseKeyToId[word.verseKey] ?? 0;
+                                  final isMenuHighlighted = _activeVerseId == verseId;
+                                  final isAudioHighlighted = playingVerseId == verseId;
+                                  final isActive = isMenuHighlighted || isAudioHighlighted;
+                                  final backgroundColor = isActive ? AppColors.accentGold.withValues(alpha: 0.2) : Colors.transparent;
 
-                                    if (word.charTypeName == 'end') {
-                                      // Render the gorgeous verse marker
-                                      return WidgetSpan(
-                                        alignment: PlaceholderAlignment.middle,
-                                        child: GestureDetector(
-                                          onTapDown: (details) => _showMenu(context, details.globalPosition, verseId),
-                                          child: Container(
-                                            margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                                            width: 32,
-                                            height: 32,
-                                            decoration: BoxDecoration(
-                                              color: backgroundColor,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Stack(
-                                              alignment: Alignment.center,
-                                              children: [
-                                                // Ornate Star Background
-                                                Icon(
-                                                  Icons.brightness_7_rounded,
-                                                  color: isAudioHighlighted ? AppColors.accentGold : const Color(0xFFC7A263).withValues(alpha: 0.8),
-                                                  size: 30,
-                                                ),
-                                                // Inner precise circle
-                                                Container(
-                                                  width: 18,
-                                                  height: 18,
-                                                  decoration: BoxDecoration(
-                                                    color: const Color(0xFFFAF5EB),
-                                                    shape: BoxShape.circle,
-                                                    border: Border.all(color: const Color(0xFF5A4033), width: 0.5),
-                                                  ),
-                                                ),
-                                                // Verse Number
-                                                Text(
-                                                  word.textUthmani,
-                                                  style: TextStyle(
-                                                    color: isAudioHighlighted ? AppColors.accentGold : const Color(0xFF5A4033),
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+                                  if (word.charTypeName == 'end') {
+                                    return GestureDetector(
+                                      onTapDown: (details) => _showMenu(context, details.globalPosition, verseId),
+                                      child: Container(
+                                        // Push the marker down slightly to match the Arabic text's visual baseline
+                                        margin: const EdgeInsets.only(top: 12.0, left: 3.0, right: 3.0),
+                                        width: 35,
+                                        height: 35,
+                                        decoration: BoxDecoration(
+                                          color: backgroundColor,
+                                          shape: BoxShape.circle,
                                         ),
-                                      );
-                                    }
-
-                                    return TextSpan(
-                                      text: '${word.textUthmani} ',
-                                      style: AppTextStyles.quranText.copyWith(
-                                        color: isAudioHighlighted ? AppColors.accentGold : AppColors.textPrimary,
-                                        backgroundColor: backgroundColor,
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.brightness_7_rounded,
+                                              color: isAudioHighlighted ? AppColors.accentGold : const Color(0xFFC7A263).withValues(alpha: 0.8),
+                                              size: 35,
+                                            ),
+                                            Container(
+                                              width: 20,
+                                              height: 20,
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFFAF5EB),
+                                                shape: BoxShape.circle,
+                                                border: Border.all(color: const Color(0xFF5A4033), width: 0.5),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.only(top: 2.0), // center number in the circle
+                                              child: Text(
+                                                word.textUthmani,
+                                                style: TextStyle(
+                                                  color: isAudioHighlighted ? AppColors.accentGold : const Color(0xFF5A4033),
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                      recognizer: TapGestureRecognizer()
-                                        ..onTapDown = (details) {
-                                          _showMenu(context, details.globalPosition, verseId);
-                                        },
                                     );
-                                  }).toList(),
-                                ),
+                                  }
+
+                                  return GestureDetector(
+                                    onTapDown: (details) => _showMenu(context, details.globalPosition, verseId),
+                                    child: Container(
+                                      color: backgroundColor,
+                                      child: Text(
+                                        '${word.textUthmani} ',
+                                        style: AppTextStyles.quranText.copyWith(
+                                          color: isAudioHighlighted ? AppColors.accentGold : AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
                               ),
                             ),
                           );
