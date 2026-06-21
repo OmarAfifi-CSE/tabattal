@@ -5,10 +5,13 @@ import 'features/quran_reader/presentation/bloc/audio/audio_bloc.dart';
 import 'features/quran_reader/presentation/bloc/bookmark/bookmark_bloc.dart';
 import 'features/quran_reader/presentation/bloc/bookmark/bookmark_event.dart';
 import 'features/quran_reader/data/datasources/quran_local_data_source.dart';
+import 'features/quran_reader/data/datasources/quran_remote_data_source.dart';
 import 'features/quran_reader/domain/repositories/quran_repository.dart';
+import 'package:dio/dio.dart';
 import 'core/database/database_helper.dart';
 import 'core/theme/app_colors.dart';
 import 'core/network/audio_download_manager.dart';
+import 'core/services/audio_preferences_service.dart';
 
 import 'package:flutter/services.dart';
 
@@ -24,30 +27,44 @@ void main() async {
     ),
   );
   
-  
-  // Dependency Injection (simple manual setup for now)
+  // Dependency Injection
   final databaseHelper = DatabaseHelper();
-  // Initialize the database asynchronously before starting the app to ensure it's copied
   await databaseHelper.database;
   
   final quranLocalDataSource = QuranLocalDataSourceImpl(databaseHelper: databaseHelper);
-  final quranRepository = QuranRepositoryImpl(localDataSource: quranLocalDataSource);
+  final quranRemoteDataSource = QuranRemoteDataSourceImpl(dio: Dio());
+  final quranRepository = QuranRepositoryImpl(
+    localDataSource: quranLocalDataSource,
+    remoteDataSource: quranRemoteDataSource,
+  );
+  final audioPrefs = await AudioPreferencesService.create();
 
-  runApp(TabattalApp(quranRepository: quranRepository));
+  runApp(TabattalApp(
+    quranRepository: quranRepository,
+    localDataSource: quranLocalDataSource,
+    audioPrefs: audioPrefs,
+  ));
 }
 
 class TabattalApp extends StatelessWidget {
   final QuranRepository quranRepository;
+  final QuranLocalDataSource localDataSource;
+  final AudioPreferencesService audioPrefs;
 
-  const TabattalApp({super.key, required this.quranRepository});
+  const TabattalApp({
+    super.key,
+    required this.quranRepository,
+    required this.localDataSource,
+    required this.audioPrefs,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
-        RepositoryProvider<QuranRepository>.value(
-          value: quranRepository,
-        ),
+        RepositoryProvider<QuranRepository>.value(value: quranRepository),
+        RepositoryProvider<QuranLocalDataSource>.value(value: localDataSource),
+        RepositoryProvider<AudioPreferencesService>.value(value: audioPrefs),
         RepositoryProvider<AudioDownloadManager>(
           create: (context) => AudioDownloadManager(),
         ),
@@ -57,6 +74,7 @@ class TabattalApp extends StatelessWidget {
           BlocProvider<AudioBloc>(
             create: (context) => AudioBloc(
               context.read<AudioDownloadManager>(),
+              context.read<AudioPreferencesService>(),
             ),
           ),
           BlocProvider<BookmarkBloc>(

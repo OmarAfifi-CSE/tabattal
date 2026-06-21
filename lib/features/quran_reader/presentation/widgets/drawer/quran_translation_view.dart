@@ -11,43 +11,42 @@ import '../quran_metadata.dart';
 import '../audio_settings_sheet.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-class QuranFullTafsirView extends StatefulWidget {
+class QuranTranslationView extends StatefulWidget {
   final int pageNumber;
-  const QuranFullTafsirView({super.key, required this.pageNumber});
+  const QuranTranslationView({super.key, required this.pageNumber});
 
   @override
-  State<QuranFullTafsirView> createState() => _QuranFullTafsirViewState();
+  State<QuranTranslationView> createState() => _QuranTranslationViewState();
 }
 
-class VerseTafsirData {
+class VerseTranslationData {
   final String verseKey;
   final String textUthmani;
-  final String tafsirText;
+  final String translationText;
   final int surah;
   final int ayah;
   final int page;
   final int verseId;
 
-  VerseTafsirData({
+  VerseTranslationData({
     required this.verseKey,
     required this.textUthmani,
-    required this.tafsirText,
+    required this.translationText,
     required this.surah,
     required this.ayah,
     required this.page,
   }) : verseId = surah * 1000 + ayah;
 }
 
-class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
+class _QuranTranslationViewState extends State<QuranTranslationView> {
   late final QuranRepository _repository;
   late final QuranLocalDataSource _localDS;
   bool _isLoadingInitial = true;
   bool _isLoadingMore = false;
-  final List<VerseTafsirData> _tafsirList = [];
+  final List<VerseTranslationData> _list = [];
   int _currentSurahId = 1;
-  int _tafsirResourceId = 16; // Default: Al-Muyassar
+  final int _translationResourceId = 20; // Default: Saheeh International
 
-  // Track which verseKey the user started from, so we can return to it when popping
   String? _initialVerseKey;
 
   final ItemScrollController _itemScrollController = ItemScrollController();
@@ -59,8 +58,6 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
     _repository = context.read<QuranRepository>();
     _localDS = context.read<QuranLocalDataSource>();
     _initData();
-
-    // Infinite scroll: load next surah when near end
     _itemPositionsListener.itemPositions.addListener(_onScroll);
   }
 
@@ -74,7 +71,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
     final positions = _itemPositionsListener.itemPositions.value;
     if (positions.isNotEmpty) {
       final maxIndex = positions.map((p) => p.index).reduce((a, b) => a > b ? a : b);
-      if (maxIndex >= _tafsirList.length - 8 && !_isLoadingMore && _currentSurahId < 114) {
+      if (maxIndex >= _list.length - 8 && !_isLoadingMore && _currentSurahId < 114) {
         _loadNextSurah();
       }
     }
@@ -91,21 +88,20 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
       }
 
       await _loadSurahData(_currentSurahId);
-
       setState(() => _isLoadingInitial = false);
 
-      // Find the index of the verse and scroll to it
-      if (_initialVerseKey != null) {
-        final index = _tafsirList.indexWhere((e) => e.verseKey == _initialVerseKey);
-        if (index != -1) {
-          // Delay briefly to allow the list to build and attach
-          Future.delayed(const Duration(milliseconds: 100), () {
-            if (_itemScrollController.isAttached) {
-              _itemScrollController.jumpTo(index: index, alignment: 0.1);
-            }
-          });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_initialVerseKey != null) {
+          final index = _list.indexWhere((e) => e.verseKey == _initialVerseKey);
+          if (index != -1) {
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (_itemScrollController.isAttached) {
+                _itemScrollController.jumpTo(index: index, alignment: 0.1);
+              }
+            });
+          }
         }
-      }
+      });
     } catch (e) {
       setState(() => _isLoadingInitial = false);
     }
@@ -120,6 +116,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   }
 
   String _cleanHtml(String text) {
+    text = text.replaceAll(RegExp(r'<sup[^>]*>.*?<\/sup>', multiLine: true, caseSensitive: false), '');
     text = text.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n');
     text = text.replaceAll(RegExp(r'<[^>]*>', multiLine: true, caseSensitive: false), '');
     return text.replaceAll('&nbsp;', ' ').replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&').trim();
@@ -127,34 +124,32 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
 
   Future<void> _loadSurahData(int surahId) async {
     try {
-      // Both fetched from local DB — no network calls!
+      // Both from local DB — no network calls!
       final verses = await _repository.getVersesBySurah(surahId);
-      final tafsirRows = await _localDS.getTafsirsBySurah(surahId, _tafsirResourceId);
+      final translationRows = await _localDS.getTranslationsBySurah(surahId, _translationResourceId);
 
-      // Map verseKey -> tafsir text
-      final Map<String, String> tafsirMap = {
-        for (final row in tafsirRows)
+      final Map<String, String> translationMap = {
+        for (final row in translationRows)
           row['verse_key'] as String: _cleanHtml(row['text'] as String)
       };
 
-      final newItems = verses.map((verse) => VerseTafsirData(
+      final newItems = verses.map((verse) => VerseTranslationData(
         verseKey: verse.verseKey,
         textUthmani: verse.textUthmani,
-        tafsirText: tafsirMap[verse.verseKey] ?? 'لا يوجد تفسير متاح',
+        translationText: translationMap[verse.verseKey] ?? 'Translation not available in local database.',
         surah: verse.surah,
         ayah: verse.ayah,
         page: verse.page,
       )).toList();
 
-      _tafsirList.addAll(newItems);
+      _list.addAll(newItems);
     } catch (e) {
-      debugPrint('Error loading tafsir for surah $surahId: $e');
+      debugPrint('Error loading translation for surah $surahId: $e');
     }
   }
 
-  /// Auto-scroll to the item matching the currently playing verse, with padding so it's not under the AppBar
   void _scrollToPlayingVerse(int playingVerseId) {
-    final index = _tafsirList.indexWhere((e) => e.verseId == playingVerseId);
+    final index = _list.indexWhere((e) => e.verseId == playingVerseId);
     if (index != -1 && _itemScrollController.isAttached) {
       _itemScrollController.scrollTo(
         index: index,
@@ -163,43 +158,6 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
         alignment: 0.15, // 15% from top = clear of AppBar
       );
     }
-  }
-
-  /// Change tafsir source and reload data at the CURRENT visible position (not the beginning)
-  void _changeTafsir(int resourceId) {
-    if (_tafsirResourceId == resourceId) return;
-
-    // Remember which verse is currently at the top of the visible area
-    String? currentVerseKey;
-    final positions = _itemPositionsListener.itemPositions.value;
-    if (positions.isNotEmpty) {
-      final minIndex = positions.map((p) => p.index).reduce((a, b) => a < b ? a : b);
-      if (minIndex < _tafsirList.length) {
-        currentVerseKey = _tafsirList[minIndex].verseKey;
-      }
-    }
-    currentVerseKey ??= _initialVerseKey;
-
-    final targetSurah = int.tryParse(currentVerseKey?.split(':').first ?? '1') ?? 1;
-
-    setState(() {
-      _tafsirResourceId = resourceId;
-      _tafsirList.clear();
-      _currentSurahId = targetSurah;
-      _isLoadingInitial = true;
-    });
-
-    _loadSurahData(targetSurah).then((_) {
-      setState(() => _isLoadingInitial = false);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (currentVerseKey != null) {
-          final index = _tafsirList.indexWhere((e) => e.verseKey == currentVerseKey);
-          if (index != -1 && _itemScrollController.isAttached) {
-            _itemScrollController.jumpTo(index: index);
-          }
-        }
-      });
-    });
   }
 
   @override
@@ -211,9 +169,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
         return prev.currentVerseId != curr.currentVerseId;
       },
       listener: (context, state) {
-        if (state is AudioPlaying) {
-          _scrollToPlayingVerse(state.currentVerseId);
-        }
+        if (state is AudioPlaying) _scrollToPlayingVerse(state.currentVerseId);
       },
       child: PopScope(
         canPop: false,
@@ -224,8 +180,8 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
           final positions = _itemPositionsListener.itemPositions.value;
           if (positions.isNotEmpty) {
             final minIndex = positions.map((p) => p.index).reduce((a, b) => a < b ? a : b);
-            if (minIndex >= 0 && minIndex < _tafsirList.length) {
-              final currentVerse = _tafsirList[minIndex];
+            if (minIndex >= 0 && minIndex < _list.length) {
+              final currentVerse = _list[minIndex];
               pageToReturn = currentVerse.page;
               verseKeyToReturn = currentVerse.verseKey;
             }
@@ -239,7 +195,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
           elevation: 0,
           centerTitle: true,
           title: const Text(
-            'التفسير الشامل',
+            'الترجمة الإنجليزية',
             style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
           ),
           leading: IconButton(
@@ -250,8 +206,8 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
               final positions = _itemPositionsListener.itemPositions.value;
               if (positions.isNotEmpty) {
                 final minIndex = positions.map((p) => p.index).reduce((a, b) => a < b ? a : b);
-                if (minIndex >= 0 && minIndex < _tafsirList.length) {
-                  final currentVerse = _tafsirList[minIndex];
+                if (minIndex >= 0 && minIndex < _list.length) {
+                  final currentVerse = _list[minIndex];
                   pageToReturn = currentVerse.page;
                   verseKeyToReturn = currentVerse.verseKey;
                 }
@@ -259,27 +215,11 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
               Navigator.pop(context, {'page': pageToReturn, 'verseKey': verseKeyToReturn});
             },
           ),
-          actions: [
-            // Tafsir source picker
-            PopupMenuButton<int>(
-              position: PopupMenuPosition.under,
-              color: Colors.white,
-              elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              icon: const Icon(Icons.tune_rounded, color: AppColors.accentGold),
-              onSelected: _changeTafsir,
-              itemBuilder: (context) => [
-                _tafsirOption(16, 'الميسر'),
-                _tafsirOption(14, 'ابن كثير'),
-                _tafsirOption(91, 'السعدي'),
-              ],
-            ),
-          ],
         ),
         body: _isLoadingInitial
             ? const Center(child: CircularProgressIndicator(color: AppColors.accentGold))
-            : _tafsirList.isEmpty
-                ? const Center(child: Text('لا يوجد بيانات في قاعدة البيانات المحلية', style: TextStyle(fontSize: 16, color: AppColors.textPrimary)))
+            : _list.isEmpty
+                ? const Center(child: Text('لا يوجد ترجمة في قاعدة البيانات المحلية', style: TextStyle(fontSize: 16, color: AppColors.textPrimary)))
                 : BlocBuilder<AudioBloc, AudioState>(
                     builder: (context, audioState) {
                       int? playingVerseId;
@@ -290,10 +230,10 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                         itemScrollController: _itemScrollController,
                         itemPositionsListener: _itemPositionsListener,
                         padding: const EdgeInsets.all(16),
-                        itemCount: _tafsirList.length + 1,
+                        itemCount: _list.length + 1,
                         separatorBuilder: (context, index) => const SizedBox(height: 20),
                         itemBuilder: (context, index) {
-                          if (index == _tafsirList.length) {
+                          if (index == _list.length) {
                             return _isLoadingMore
                                 ? const Padding(
                                     padding: EdgeInsets.all(16),
@@ -302,24 +242,20 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                 : const SizedBox.shrink();
                           }
 
-                          final item = _tafsirList[index];
+                          final item = _list[index];
                           final isPlaying = playingVerseId == item.verseId;
-                          final isActive = isPlaying;
 
                           return GestureDetector(
-                            onTap: () {
-                              // Navigate back to this verse in the Quran
-                              Navigator.pop(context, {'page': item.page, 'verseKey': item.verseKey});
-                            },
+                            onTap: () => Navigator.pop(context, {'page': item.page, 'verseKey': item.verseKey}),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: isActive ? AppColors.accentGold.withValues(alpha: 0.08) : Colors.white,
+                                color: isPlaying ? AppColors.accentGold.withValues(alpha: 0.08) : Colors.white,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: isActive ? AppColors.accentGold : const Color(0xFFEFE8DA),
-                                  width: isActive ? 2 : 1,
+                                  color: isPlaying ? AppColors.accentGold : const Color(0xFFEFE8DA),
+                                  width: isPlaying ? 2 : 1,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
@@ -332,7 +268,6 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  // Header row: surah name, ayah number, play button
                                   Row(
                                     textDirection: TextDirection.rtl,
                                     children: [
@@ -347,36 +282,27 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                           children: [
                                             Text(
                                               'سورة ${QuranMetadata.getSurahName(item.surah)}',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.accentGold,
-                                                fontSize: 13,
-                                              ),
+                                              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold, fontSize: 13),
                                             ),
                                             const SizedBox(width: 6),
                                             Text(
                                               '﴿${item.ayah}﴾',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.accentGold,
-                                                fontSize: 13,
-                                              ),
+                                              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold, fontSize: 13),
                                             ),
                                           ],
                                         ),
                                       ),
                                       const Spacer(),
-                                      // Play button → opens audio settings sheet
-                                       GestureDetector(
-                                         onTap: () {
-                                           if (isPlaying && audioState is AudioPlaying) {
-                                             context.read<AudioBloc>().add(const PauseAudio());
-                                           } else if (isPlaying && audioState is AudioPaused) {
-                                             context.read<AudioBloc>().add(const ResumeAudio());
-                                           } else {
+                                      GestureDetector(
+                                        onTap: () {
+                                          if (isPlaying && audioState is AudioPlaying) {
+                                            context.read<AudioBloc>().add(const PauseAudio());
+                                          } else if (isPlaying && audioState is AudioPaused) {
+                                            context.read<AudioBloc>().add(const ResumeAudio());
+                                          } else {
                                              showAudioSettingsSheet(context, verseId: item.verseId);
-                                           }
-                                         },
+                                          }
+                                        },
                                         child: Icon(
                                           isPlaying && audioState is AudioPlaying
                                               ? Icons.pause_circle_filled_rounded
@@ -388,30 +314,20 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                     ],
                                   ),
                                   const SizedBox(height: 14),
-                                  // Quranic text
                                   Text(
                                     '${item.textUthmani} ﴿${item.ayah}﴾',
                                     textAlign: TextAlign.right,
                                     textDirection: TextDirection.rtl,
-                                    style: AppTextStyles.quranText.copyWith(
-                                      fontSize: 23,
-                                      height: 1.9,
-                                      color: AppColors.textPrimary,
-                                    ),
+                                    style: AppTextStyles.quranText.copyWith(fontSize: 23, height: 1.9, color: AppColors.textPrimary),
                                   ),
                                   const SizedBox(height: 12),
                                   const Divider(color: AppColors.divider),
                                   const SizedBox(height: 10),
-                                  // Tafsir text
                                   Text(
-                                    item.tafsirText,
-                                    textAlign: TextAlign.right,
-                                    textDirection: TextDirection.rtl,
-                                    style: TextStyle(
-                                      fontSize: 17,
-                                      height: 1.7,
-                                      color: AppColors.textPrimary.withValues(alpha: 0.82),
-                                    ),
+                                    item.translationText,
+                                    textAlign: TextAlign.left,
+                                    textDirection: TextDirection.ltr,
+                                    style: TextStyle(fontSize: 17, height: 1.7, color: AppColors.textPrimary.withValues(alpha: 0.82)),
                                   ),
                                 ],
                               ),
@@ -421,30 +337,6 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                       );
                     },
                   ),
-        ),
-      ),
-    );
-  }
-
-  PopupMenuItem<int> _tafsirOption(int id, String label) {
-    return PopupMenuItem<int>(
-      value: id,
-      height: 40,
-      padding: EdgeInsets.zero,
-      child: Container(
-        width: double.infinity,
-        height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        alignment: Alignment.centerRight,
-        color: _tafsirResourceId == id ? AppColors.accentGold.withValues(alpha: 0.1) : Colors.transparent,
-        child: Text(
-          label,
-          textDirection: TextDirection.rtl,
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.textPrimary,
-            fontWeight: _tafsirResourceId == id ? FontWeight.bold : FontWeight.normal,
-          ),
         ),
       ),
     );

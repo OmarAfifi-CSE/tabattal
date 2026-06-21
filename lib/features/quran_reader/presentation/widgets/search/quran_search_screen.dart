@@ -107,8 +107,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
           _isLoading = false;
         });
       }
-    } catch (e, st) {
-      print('Search Error: $e\n$st');
+    } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;

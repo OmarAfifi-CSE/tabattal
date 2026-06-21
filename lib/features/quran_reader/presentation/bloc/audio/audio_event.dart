@@ -72,3 +72,23 @@ class ChangeReciter extends AudioEvent {
   @override
   List<Object> get props => [reciterName];
 }
+
+class ChangeRepeatCount extends AudioEvent {
+  final int repeatCount;
+  const ChangeRepeatCount(this.repeatCount);
+  @override
+  List<Object> get props => [repeatCount];
+}
+
+class SetSleepTimer extends AudioEvent {
+  final Duration duration;
+  const SetSleepTimer(this.duration);
+  @override
+  List<Object> get props => [duration];
+}
+
+class CancelSleepTimer extends AudioEvent {
+  const CancelSleepTimer();
+  @override
+  List<Object> get props => [];
+}

@@ -10,6 +10,8 @@ abstract class QuranRemoteDataSource {
   Future<List<VerseModel>> getVersesByPage(int pageNumber);
   Future<TafsirModel> getTafsirByVerse(String verseKey, {int tafsirId = 16});
   Future<TranslationModel> getTranslationByVerse(String verseKey, {int translationId = 20});
+  Future<List<TafsirModel>> getTafsirsByChapter(int chapterId, {int tafsirId = 16, int page = 1});
+  Future<List<TranslationModel>> getTranslationsByChapter(int chapterId, {int translationId = 20});
 }
 
 class QuranRemoteDataSourceImpl implements QuranRemoteDataSource {
@@ -105,6 +107,43 @@ class QuranRemoteDataSourceImpl implements QuranRemoteDataSource {
         throw ServerException('Translation empty');
       } else {
         throw ServerException('Failed to load translation');
+      }
+    } catch (e) {
+      throw _handleException(e);
+    }
+  }
+
+  @override
+  Future<List<TafsirModel>> getTafsirsByChapter(int chapterId, {int tafsirId = 16, int page = 1}) async {
+    try {
+      final response = await dio.get('https://api.quran.com/api/v4/tafsirs/$tafsirId/by_chapter/$chapterId', queryParameters: {
+        'per_page': 300,
+        'page': page,
+      });
+      
+      if (response.statusCode == 200) {
+        final List tafsirs = response.data['tafsirs'] ?? [];
+        return tafsirs.map((json) => TafsirModel.fromJson(json)).toList();
+      } else {
+        throw ServerException('Failed to load tafsirs for chapter');
+      }
+    } catch (e) {
+      throw _handleException(e);
+    }
+  }
+
+  @override
+  Future<List<TranslationModel>> getTranslationsByChapter(int chapterId, {int translationId = 20}) async {
+    try {
+      final response = await dio.get('https://api.quran.com/api/v4/quran/translations/$translationId', queryParameters: {
+        'chapter_number': chapterId,
+      });
+      
+      if (response.statusCode == 200) {
+        final List translations = response.data['translations'] ?? [];
+        return translations.map((json) => TranslationModel.fromJson(json)).toList();
+      } else {
+        throw ServerException('Failed to load translations for chapter');
       }
     } catch (e) {
       throw _handleException(e);

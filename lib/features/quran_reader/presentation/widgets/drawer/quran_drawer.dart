@@ -6,6 +6,7 @@ import '../../bloc/bookmark/bookmark_state.dart';
 import '../search/quran_search_screen.dart';
 import 'quran_index_view.dart';
 import 'quran_full_tafsir_view.dart';
+import 'quran_translation_view.dart';
 import 'quran_audio_manager_view.dart';
 import 'quran_bookmarks_view.dart';
 
@@ -99,11 +100,18 @@ class QuranDrawer extends StatelessWidget {
                     subtitle: 'السور والأجزاء',
                     onTap: () async {
                       Navigator.pop(context);
-                      final result = await Navigator.push<int>(
+                      final result = await Navigator.push<dynamic>(
                         context,
                         MaterialPageRoute(builder: (_) => const QuranIndexView()),
                       );
-                      if (result != null) onNavigateToPage(result);
+                      if (result != null && result is Map<String, dynamic>) {
+                        onNavigateToPage(
+                          result['page'] as int,
+                          verseKey: result['verseKey'] as String?,
+                        );
+                      } else if (result != null && result is int) {
+                        onNavigateToPage(result);
+                      }
                     },
                   ),
                   _divider(),
@@ -147,16 +155,48 @@ class QuranDrawer extends StatelessWidget {
                   _buildDrawerItem(
                     context,
                     icon: Icons.menu_book_rounded,
-                    title: 'التفسير كامل',
-                    subtitle: 'تفسير الصفحة الحالية',
-                    onTap: () {
+                    title: 'التفسير الكامل',
+                    subtitle: 'تفسير لجميع الآيات والسور',
+                    onTap: () async {
                       Navigator.pop(context);
-                      Navigator.push(
+                      final result = await Navigator.push<dynamic>(
                         context,
                         MaterialPageRoute(
                           builder: (_) => QuranFullTafsirView(pageNumber: currentPage),
                         ),
                       );
+                      if (result != null && result is Map<String, dynamic>) {
+                        onNavigateToPage(
+                          result['page'] as int,
+                          verseKey: result['verseKey'] as String?,
+                        );
+                      } else if (result != null && result is int) {
+                        onNavigateToPage(result);
+                      }
+                    },
+                  ),
+                  _divider(),
+                  _buildDrawerItem(
+                    context,
+                    icon: Icons.translate_rounded,
+                    title: 'الترجمة الإنجليزية',
+                    subtitle: 'ترجمة لمعاني القرآن',
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final result = await Navigator.push<dynamic>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => QuranTranslationView(pageNumber: currentPage),
+                        ),
+                      );
+                      if (result != null && result is Map<String, dynamic>) {
+                        onNavigateToPage(
+                          result['page'] as int,
+                          verseKey: result['verseKey'] as String?,
+                        );
+                      } else if (result != null && result is int) {
+                        onNavigateToPage(result);
+                      }
                     },
                   ),
                   _divider(),

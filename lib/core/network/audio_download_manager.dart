@@ -128,6 +128,19 @@ class AudioDownloadManager {
     return true;
   }
 
+  /// Returns download progress for a surah (0.0 to 1.0).
+  /// Counts how many ayahs are already on disk vs total.
+  Future<double> getSurahDownloadProgress(String reciterKey, int surah, int numAyahs) async {
+    if (numAyahs == 0) return 0.0;
+    final dirPath = await getReciterDirectory(reciterKey);
+    int count = 0;
+    for (int ayah = 1; ayah <= numAyahs; ayah++) {
+      final verseId = surah * 1000 + ayah;
+      if (await File('$dirPath/$verseId.mp3').exists()) count++;
+    }
+    return count / numAyahs;
+  }
+
   /// Downloads an entire Surah by downloading all its ayahs sequentially
   Future<void> downloadSurah(String reciterKey, int surah, int numAyahs, {Function(double)? onProgress}) async {
     int downloadedCount = 0;

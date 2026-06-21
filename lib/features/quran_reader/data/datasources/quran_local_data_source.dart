@@ -10,6 +10,9 @@ abstract class QuranLocalDataSource {
   Future<String> getTranslationForVerse(String verseKey, int resourceId);
   Future<List<SearchVerseModel>> searchQuran(String query);
   Future<List<Map<String, dynamic>>> getSurahsIndex();
+  Future<List<SearchVerseModel>> getVersesBySurah(int surahId);
+  Future<List<Map<String, dynamic>>> getTafsirsBySurah(int surahId, int resourceId);
+  Future<List<Map<String, dynamic>>> getTranslationsBySurah(int surahId, int resourceId);
 }
 
 class QuranLocalDataSourceImpl implements QuranLocalDataSource {
@@ -131,7 +134,6 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   Future<List<Map<String, dynamic>>> getSurahsIndex() async {
     try {
       final db = await databaseHelper.database;
-      // We group by surah to get the first page of each surah
       final List<Map<String, dynamic>> maps = await db.query(
         'quran_search',
         columns: ['surah', 'MIN(page) as start_page'],
@@ -141,6 +143,54 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       return maps;
     } catch (e) {
       throw CacheException('Failed to fetch surah index: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<SearchVerseModel>> getVersesBySurah(int surahId) async {
+    try {
+      final db = await databaseHelper.database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        'quran_search',
+        where: 'surah = ?',
+        whereArgs: [surahId],
+        orderBy: 'ayah ASC',
+      );
+      return maps.map((map) => SearchVerseModel.fromMap(map)).toList();
+    } catch (e) {
+      throw CacheException('Failed to fetch verses by surah: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getTafsirsBySurah(int surahId, int resourceId) async {
+    try {
+      final db = await databaseHelper.database;
+      // Build verse keys for the surah: "surahId:1", "surahId:2", ...
+      // We use a LIKE query: verse_key LIKE 'surahId:%'
+      return await db.query(
+        'tafsir',
+        where: 'verse_key LIKE ? AND resource_id = ?',
+        whereArgs: ['$surahId:%', resourceId],
+        orderBy: 'rowid ASC',
+      );
+    } catch (e) {
+      return []; // Return empty on error, caller falls back to 'not available'
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getTranslationsBySurah(int surahId, int resourceId) async {
+    try {
+      final db = await databaseHelper.database;
+      return await db.query(
+        'translation',
+        where: 'verse_key LIKE ? AND resource_id = ?',
+        whereArgs: ['$surahId:%', resourceId],
+        orderBy: 'rowid ASC',
+      );
+    } catch (e) {
+      return [];
     }
   }
 }

@@ -49,8 +49,11 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
     for (int i = 1; i <= 114; i++) {
       if (!mounted) return;
       final numAyahs = QuranMetadata.surahLengths[i - 1];
-      final isDownloaded = await _downloadManager.isSurahDownloaded(_selectedReciter, i, numAyahs);
-      if (isDownloaded) _surahProgress[i]!.value = 1.0;
+      // Use progress (0.0 to 1.0) instead of just bool so partial downloads are shown
+      final progress = await _downloadManager.getSurahDownloadProgress(_selectedReciter, i, numAyahs);
+      if (progress > 0) {
+        _surahProgress[i]!.value = progress; // 1.0=complete, 0.01-0.99=partial
+      }
     }
 
     if (mounted) setState(() => _isLoadingStatus = false);

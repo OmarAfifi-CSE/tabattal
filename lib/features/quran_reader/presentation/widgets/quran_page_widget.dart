@@ -7,6 +7,7 @@ import '../bloc/quran/quran_bloc.dart';
 import '../bloc/quran/quran_event.dart';
 import '../bloc/quran/quran_state.dart';
 import '../bloc/audio/audio_bloc.dart';
+import '../bloc/audio/audio_event.dart';
 import '../bloc/audio/audio_state.dart';
 import '../bloc/bookmark/bookmark_bloc.dart';
 import '../../domain/repositories/quran_repository.dart';
@@ -31,6 +32,7 @@ class QuranPageWidget extends StatefulWidget {
 class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProviderStateMixin {
   int? _activeVerseId;
   OverlayEntry? _overlayEntry;
+  final GlobalKey _columnKey = GlobalKey();
 
   // For bookmark highlight pulse animation
   late final AnimationController _pulseController;
@@ -106,6 +108,33 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
       juzNumber: 1,
     );
 
+    Rect verseRect = Rect.fromCenter(center: position, width: 0, height: 0);
+    if (quranBloc.state is QuranLoaded) {
+      final state = quranBloc.state as QuranLoaded;
+      int minLine = 16;
+      int maxLine = 0;
+      for (var line in state.lines) {
+        for (var word in line.words) {
+          if (word.verseKey == generatedVerseKey) {
+            if (line.lineNumber < minLine) minLine = line.lineNumber;
+            if (line.lineNumber > maxLine) maxLine = line.lineNumber;
+          }
+        }
+      }
+
+      if (minLine <= 15) {
+        final renderBox = _columnKey.currentContext?.findRenderObject() as RenderBox?;
+        if (renderBox != null) {
+          final columnTop = renderBox.localToGlobal(Offset.zero).dy;
+          final columnHeight = renderBox.size.height;
+          final lineHeight = columnHeight / 15;
+          final topY = columnTop + (minLine - 1) * lineHeight;
+          final bottomY = columnTop + maxLine * lineHeight;
+          verseRect = Rect.fromLTRB(0, topY, MediaQuery.of(context).size.width, bottomY);
+        }
+      }
+    }
+
     _overlayEntry = OverlayEntry(
       builder: (overlayContext) => MultiBlocProvider(
         providers: [
@@ -115,6 +144,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
         ],
         child: VerseActionMenu(
           position: position,
+          verseRect: verseRect,
           verse: dummyVerse,
           onDismiss: ({bool keepHighlight = false}) => _removeMenu(keepHighlight: keepHighlight),
           onClearHighlight: () {
@@ -242,6 +272,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                     child: Directionality(
                       textDirection: TextDirection.rtl,
                       child: Column(
+                        key: _columnKey,
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: List.generate(15, (index) {
@@ -282,10 +313,16 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                                     backgroundColor = Colors.transparent;
                                   }
 
-                                  if (word.charTypeName == 'end') {
-                                    return GestureDetector(
-                                      onTapDown: (details) => _showMenu(context, details.globalPosition, verseId),
-                                      child: Container(
+                                    if (word.charTypeName == 'end') {
+                                      return GestureDetector(
+                                        onTapDown: (details) {
+                                          if (audioState is AudioPlaying || audioState is AudioPaused) {
+                                            context.read<AudioBloc>().add(PlayVerse('', verseId));
+                                          } else {
+                                            _showMenu(context, details.globalPosition, verseId);
+                                          }
+                                        },
+                                        child: Container(
                                         // Push the marker down slightly to match the Arabic text's visual baseline
                                         margin: const EdgeInsets.only(top: 12.0, left: 3.0, right: 3.0),
                                         width: 35,
@@ -333,9 +370,15 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                                     return AnimatedBuilder(
                                       animation: _pulseAnimation,
                                       builder: (context, _) {
-                                        return GestureDetector(
-                                          onTapDown: (details) => _showMenu(context, details.globalPosition, verseId),
-                                          child: Container(
+                                      return GestureDetector(
+                                        onTapDown: (details) {
+                                          if (audioState is AudioPlaying || audioState is AudioPaused) {
+                                            context.read<AudioBloc>().add(PlayVerse('', verseId));
+                                          } else {
+                                            _showMenu(context, details.globalPosition, verseId);
+                                          }
+                                        },
+                                        child: Container(
                                             decoration: BoxDecoration(
                                               color: const Color(0xFFB59A53).withValues(alpha: _pulseAnimation.value),
                                               borderRadius: BorderRadius.circular(4),
@@ -354,7 +397,13 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                                   }
 
                                   return GestureDetector(
-                                    onTapDown: (details) => _showMenu(context, details.globalPosition, verseId),
+                                    onTapDown: (details) {
+                                      if (audioState is AudioPlaying || audioState is AudioPaused) {
+                                        context.read<AudioBloc>().add(PlayVerse('', verseId));
+                                      } else {
+                                        _showMenu(context, details.globalPosition, verseId);
+                                      }
+                                    },
                                     child: Container(
                                       color: backgroundColor,
                                       child: Text(

@@ -1,4 +1,5 @@
 import '../../data/datasources/quran_local_data_source.dart';
+import '../../data/datasources/quran_remote_data_source.dart';
 import '../../data/models/verse_model.dart';
 import '../../data/models/tafsir_model.dart';
 import '../../data/models/translation_model.dart';
@@ -8,14 +9,18 @@ abstract class QuranRepository {
   Future<List<LineData>> getLinesByPage(int pageNumber);
   Future<TafsirModel> getTafsir(String verseKey, {int resourceId = 16}); // Default Al-Muyassar
   Future<TranslationModel> getTranslation(String verseKey, {int resourceId = 20}); // Default English
+  Future<List<TafsirModel>> getTafsirsByChapter(int chapterId, {int resourceId = 16, int page = 1});
+  Future<List<TranslationModel>> getTranslationsByChapter(int chapterId, {int resourceId = 20});
   Future<List<SearchVerseModel>> searchQuran(String query);
   Future<List<Map<String, dynamic>>> getSurahsIndex();
+  Future<List<SearchVerseModel>> getVersesBySurah(int surahId);
 }
 
 class QuranRepositoryImpl implements QuranRepository {
   final QuranLocalDataSource localDataSource;
+  final QuranRemoteDataSource remoteDataSource;
 
-  QuranRepositoryImpl({required this.localDataSource});
+  QuranRepositoryImpl({required this.localDataSource, required this.remoteDataSource});
 
   @override
   Future<List<LineData>> getLinesByPage(int pageNumber) async {
@@ -60,6 +65,16 @@ class QuranRepositoryImpl implements QuranRepository {
   }
 
   @override
+  Future<List<TafsirModel>> getTafsirsByChapter(int chapterId, {int resourceId = 16, int page = 1}) async {
+    return await remoteDataSource.getTafsirsByChapter(chapterId, tafsirId: resourceId, page: page);
+  }
+
+  @override
+  Future<List<TranslationModel>> getTranslationsByChapter(int chapterId, {int resourceId = 20}) async {
+    return await remoteDataSource.getTranslationsByChapter(chapterId, translationId: resourceId);
+  }
+
+  @override
   Future<List<SearchVerseModel>> searchQuran(String query) async {
     return await localDataSource.searchQuran(query);
   }
@@ -67,5 +82,10 @@ class QuranRepositoryImpl implements QuranRepository {
   @override
   Future<List<Map<String, dynamic>>> getSurahsIndex() async {
     return await localDataSource.getSurahsIndex();
+  }
+
+  @override
+  Future<List<SearchVerseModel>> getVersesBySurah(int surahId) async {
+    return await localDataSource.getVersesBySurah(surahId);
   }
 }

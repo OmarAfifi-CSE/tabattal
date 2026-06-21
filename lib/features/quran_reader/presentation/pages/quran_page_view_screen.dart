@@ -5,6 +5,8 @@ import '../bloc/audio/audio_bloc.dart';
 import '../bloc/audio/audio_state.dart';
 import '../widgets/media_control_bar.dart';
 import '../widgets/drawer/quran_drawer.dart';
+import '../../../../core/services/audio_preferences_service.dart';
+import '../../domain/repositories/quran_repository.dart';
 
 class QuranPageViewScreen extends StatefulWidget {
   const QuranPageViewScreen({super.key});
@@ -21,10 +23,11 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
   @override
   void initState() {
     super.initState();
+    _currentPage = context.read<AudioPreferencesService>().lastReadPage;
     // PageView with reverse:true means:
     // - User swipes LEFT to go to NEXT page (higher number) = correct RTL reading
     // - index 0 = page 1 (displayed on the right side)
-    _pageController = PageController(initialPage: 0);
+    _pageController = PageController(initialPage: _currentPage - 1);
   }
 
   @override
@@ -35,14 +38,23 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
 
   /// Navigates to a specific Quran page (1-indexed).
   /// Optional [verseKey] will highlight that specific verse after navigation.
-  void _jumpToPage(int pageNumber, {String? verseKey}) {
+  void _jumpToPage(int pageNumber, {String? verseKey, bool animate = false}) {
     final targetPage = pageNumber.clamp(1, 604);
     final targetIndex = targetPage - 1;
-    _pageController.jumpToPage(targetIndex);
+    if (animate) {
+      _pageController.animateToPage(
+        targetIndex,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      _pageController.jumpToPage(targetIndex);
+    }
     setState(() {
       _currentPage = targetPage;
       _highlightVerseKey = verseKey;
     });
+    context.read<AudioPreferencesService>().saveLastReadPage(_currentPage);
   }
 
   @override
@@ -72,6 +84,16 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
                   margin: const EdgeInsets.all(16),
                 ),
               );
+            } else if (state is AudioPlaying) {
+              final surah = state.currentVerseId ~/ 1000;
+              final ayah = state.currentVerseId % 1000;
+              final repository = context.read<QuranRepository>();
+              repository.getVersesBySurah(surah).then((verses) {
+                final verse = verses.firstWhere((v) => v.ayah == ayah);
+                if (verse.page != _currentPage) {
+                  _jumpToPage(verse.page, verseKey: verse.verseKey, animate: true);
+                }
+              }).catchError((_) {});
             }
           },
           child: Stack(
@@ -86,6 +108,7 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
                   setState(() {
                     _currentPage = index + 1;
                   });
+                  context.read<AudioPreferencesService>().saveLastReadPage(_currentPage);
                 },
                 itemBuilder: (context, index) {
                   final pageNumber = index + 1;

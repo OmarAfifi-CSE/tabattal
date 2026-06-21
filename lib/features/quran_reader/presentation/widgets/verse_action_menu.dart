@@ -6,17 +6,16 @@ import '../../data/models/verse_model.dart';
 import '../bloc/quran/quran_bloc.dart';
 import '../bloc/quran/quran_event.dart';
 import '../bloc/quran/quran_state.dart';
-import '../bloc/audio/audio_bloc.dart';
-import '../bloc/audio/audio_event.dart';
+import 'audio_settings_sheet.dart';
 import '../bloc/bookmark/bookmark_bloc.dart';
 import '../bloc/bookmark/bookmark_event.dart';
 import '../bloc/bookmark/bookmark_state.dart';
-
 class OverlayPositionDelegate extends SingleChildLayoutDelegate {
   final Offset tapPosition;
+  final Rect? verseRect;
   final Size menuSize;
 
-  OverlayPositionDelegate({required this.tapPosition, required this.menuSize});
+  OverlayPositionDelegate({required this.tapPosition, this.verseRect, required this.menuSize});
 
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
@@ -25,18 +24,19 @@ class OverlayPositionDelegate extends SingleChildLayoutDelegate {
 
   @override
   Offset getPositionForChild(Size size, Size childSize) {
-    // 16 is padding from edge
     double left = tapPosition.dx;
-    double top = tapPosition.dy;
+    // If verseRect is provided, use its bottom boundary, otherwise fallback to tapPosition + 35
+    double top = (verseRect != null && verseRect!.height > 0) ? verseRect!.bottom + 10 : tapPosition.dy + 35; 
 
     if (left + childSize.width > size.width - 16) {
       left = size.width - childSize.width - 16;
     }
     if (top + childSize.height > size.height - 16) {
-      // If we clip at the bottom, we try to open it ABOVE the tap position
-      top = tapPosition.dy - childSize.height - 24; 
+      // If opening below goes off-screen, try opening ABOVE the verse
+      top = (verseRect != null && verseRect!.height > 0) ? verseRect!.top - childSize.height - 10 : tapPosition.dy - childSize.height - 35; 
       if (top < 16) {
-        top = 16; // Extreme edge case: screen too small, clamp to top
+        // Extreme edge case: screen too small to fit above or below, clamp to top
+        top = 16; 
       }
     }
     
@@ -55,6 +55,7 @@ class VerseActionMenu extends StatefulWidget {
   final void Function({bool keepHighlight}) onDismiss;
   final VoidCallback? onClearHighlight;
   final Offset position;
+  final Rect? verseRect;
   final VerseModel verse;
 
   const VerseActionMenu({
@@ -62,6 +63,7 @@ class VerseActionMenu extends StatefulWidget {
     required this.onDismiss,
     this.onClearHighlight,
     required this.position,
+    this.verseRect,
     required this.verse,
   });
 
@@ -113,20 +115,21 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Text(
-              text,
-              style: AppTextStyles.menuItemText.copyWith(
-                color: const Color(0xFF2C2520), // Dark brown text
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(width: 12),
             Icon(
               icon,
               color: iconColor ?? const Color(0xFF8C7355), // Faded brown icon
               size: 22,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                text,
+                style: AppTextStyles.menuItemText.copyWith(
+                  color: const Color(0xFF2C2520), // Dark brown text
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -373,6 +376,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
         CustomSingleChildLayout(
           delegate: OverlayPositionDelegate(
             tapPosition: widget.position,
+            verseRect: widget.verseRect,
             menuSize: menuSize,
           ),
           child: AnimatedBuilder(
@@ -407,9 +411,11 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                     width: 1.5,
                   ),
                 ),
-                child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+                child: Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                       _buildMenuItem(Icons.menu_book_outlined, 'التفسير', () {
                         _showOverlayContent(context, 'التفسير - الميسر', context.read<QuranBloc>().state, () {
                           context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey));
@@ -427,7 +433,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                       }, closeMenu: false),
                       const Divider(height: 1, thickness: 1, color: AppColors.divider),
                       _buildMenuItem(Icons.play_circle_outline, 'الإستماع للآيات', () {
-                        context.read<AudioBloc>().add(PlayVerse(widget.verse.audioUrl, widget.verse.id));
+                        showAudioSettingsSheet(context, verseId: widget.verse.id);
                       }),
                       const Divider(height: 1, thickness: 1, color: AppColors.divider),
                       BlocBuilder<BookmarkBloc, BookmarkState>(
@@ -448,6 +454,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                       }),
                     ],
                   ),
+                ),
                 ),
               ),
             ),
