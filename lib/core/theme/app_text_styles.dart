@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTextStyles {
-  static TextStyle quranText = GoogleFonts.amiriQuran(
+  static const TextStyle quranText = TextStyle(
+    fontFamily: 'AmiriQuran',
     color: AppColors.textPrimary,
     fontSize: 26,
     height: 1.9,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'quran_border_painter.dart';
 
@@ -30,7 +29,8 @@ class QuranPageFrame extends StatelessWidget {
     const Color innerColor = Color(0xFF2C2520); // Dark brown matching traditional ink
 
     // Traditional typography
-    final TextStyle headerStyle = GoogleFonts.amiri(
+    const TextStyle headerStyle = TextStyle(
+      fontFamily: 'Amiri',
       color: innerColor, 
       fontSize: 16, 
       fontWeight: FontWeight.bold,
@@ -123,7 +123,7 @@ class QuranPageFrame extends StatelessWidget {
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          'سورة $surahName',
+                          surahName,
                           style: headerStyle,
                           textAlign: TextAlign.center,
                           maxLines: 1,
@@ -182,7 +182,8 @@ class QuranPageFrame extends StatelessWidget {
                         fit: BoxFit.scaleDown,
                         child: Text(
                           _toArabicNumber(pageNumber),
-                          style: GoogleFonts.amiri(
+                          style: const TextStyle(
+                            fontFamily: 'Amiri',
                             color: QuranBorderPainter.innerColor,
                             fontSize: 15,
                             fontWeight: FontWeight.w900,

@@ -14,6 +14,7 @@ import '../../domain/repositories/quran_repository.dart';
 import 'quran_page_frame.dart';
 import 'verse_action_menu.dart';
 import 'quran_metadata.dart';
+import 'surah_header_widget.dart';
 
 class QuranPageWidget extends StatefulWidget {
   final int pageNumber;
@@ -284,6 +285,35 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                           final lineWords = lineData.words;
 
                           if (lineWords.isEmpty) {
+                            // Find which Surah is starting!
+                            // Look at subsequent lines to find the next verseKey
+                            int? nextSurahId;
+                            for (int nextLine = lineNumber + 1; nextLine <= 15; nextLine++) {
+                              final nl = lines.firstWhere((l) => l.lineNumber == nextLine, orElse: () => LineData(lineNumber: nextLine, words: []));
+                              if (nl.words.isNotEmpty) {
+                                final vk = nl.words.first.verseKey;
+                                nextSurahId = int.tryParse(vk.split(':').first);
+                                break;
+                              }
+                            }
+
+                            // Check if the previous line was also empty to avoid duplicating the header
+                            bool isFirstEmpty = true;
+                            if (lineNumber > 1) {
+                              final prevLine = lines.firstWhere((l) => l.lineNumber == lineNumber - 1, orElse: () => LineData(lineNumber: lineNumber - 1, words: []));
+                              if (prevLine.words.isEmpty) {
+                                isFirstEmpty = false;
+                              }
+                            }
+
+                            if (isFirstEmpty && nextSurahId != null) {
+                              final surahName = QuranMetadata.getSurahName(nextSurahId);
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                                child: SurahHeaderWidget(surahName: surahName, surahNumber: nextSurahId),
+                              );
+                            }
+
                             return const Expanded(child: SizedBox());
                           }
 
