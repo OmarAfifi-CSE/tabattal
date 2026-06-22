@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/database/database_helper.dart';
 import '../models/verse_model.dart';
 import '../models/search_verse_model.dart';
@@ -19,6 +20,7 @@ abstract class QuranLocalDataSource {
   Future<double> getTafsirDownloadProgress(int resourceId);
   Future<int> getMaxDownloadedChapter(int resourceId);
   Future<int> getDownloadedVerseCount(int resourceId);
+  Future<void> markTafsirAsCompleted(int resourceId);
 }
 
 class QuranLocalDataSourceImpl implements QuranLocalDataSource {
@@ -219,11 +221,25 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       final db = await databaseHelper.database;
       final result = await db.rawQuery('SELECT COUNT(*) as count FROM tafsir WHERE resource_id = ?', [resourceId]);
       final count = Sqflite.firstIntValue(result) ?? 0;
+      
+      // Some tafsirs (like Al-Tabari) combine verses, so their row count isn't exactly 6236.
+      // If SharedPreferences marks it as completed and the count is reasonably high (> 6000), consider it 100%.
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool('tafsir_completed_$resourceId') == true && count > 6000) {
+        return 1.0;
+      }
+
       final progress = count / QuranConstants.totalVerses;
       return progress > 1.0 ? 1.0 : progress;
     } catch (e) {
       return 0.0;
     }
+  }
+
+  @override
+  Future<void> markTafsirAsCompleted(int resourceId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('tafsir_completed_$resourceId', true);
   }
 
   @override

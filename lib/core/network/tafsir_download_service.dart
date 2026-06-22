@@ -115,6 +115,7 @@ class TafsirDownloadService {
         await Future.wait(workers);
 
         if (!hasError && !controller.isClosed) {
+          await localDataSource.markTafsirAsCompleted(resourceId);
           controller.add(const Completed());
           controller.close();
         }
