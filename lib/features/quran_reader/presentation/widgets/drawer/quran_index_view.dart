@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../quran_reader/domain/repositories/quran_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../quran_metadata.dart'; // for Surah names
+import '../quran_metadata.dart';
 
 class QuranIndexView extends StatefulWidget {
   const QuranIndexView({super.key});
@@ -34,15 +34,20 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
   }
 
   Future<void> _loadIndex() async {
-    try {
-      final index = await _repository.getSurahsIndex();
-      setState(() {
-        _surahIndex = index;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-    }
+    final indexResult = await _repository.getSurahsIndex();
+    indexResult.fold(
+      (failure) {
+        if (mounted) setState(() => _isLoading = false);
+      },
+      (index) {
+        if (mounted) {
+          setState(() {
+            _surahIndex = index;
+            _isLoading = false;
+          });
+        }
+      },
+    );
   }
 
   @override

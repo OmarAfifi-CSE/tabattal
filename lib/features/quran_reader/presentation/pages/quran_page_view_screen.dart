@@ -7,6 +7,8 @@ import '../widgets/media_control_bar.dart';
 import '../widgets/drawer/quran_drawer.dart';
 import '../../../../core/services/audio_preferences_service.dart';
 import '../../domain/repositories/quran_repository.dart';
+import '../../../../core/utils/verse_ref.dart';
+import '../../../../core/constants/quran_constants.dart';
 
 class QuranPageViewScreen extends StatefulWidget {
   const QuranPageViewScreen({super.key});
@@ -18,15 +20,12 @@ class QuranPageViewScreen extends StatefulWidget {
 class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
   late PageController _pageController;
   int _currentPage = 1;
-  String? _highlightVerseKey; // set when navigating from bookmarks
+  String? _highlightVerseKey;
 
   @override
   void initState() {
     super.initState();
     _currentPage = context.read<AudioPreferencesService>().lastReadPage;
-    // PageView with reverse:true means:
-    // - User swipes LEFT to go to NEXT page (higher number) = correct RTL reading
-    // - index 0 = page 1 (displayed on the right side)
     _pageController = PageController(initialPage: _currentPage - 1);
   }
 
@@ -36,10 +35,8 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
     super.dispose();
   }
 
-  /// Navigates to a specific Quran page (1-indexed).
-  /// Optional [verseKey] will highlight that specific verse after navigation.
   void _jumpToPage(int pageNumber, {String? verseKey, bool animate = false}) {
-    final targetPage = pageNumber.clamp(1, 604);
+    final targetPage = pageNumber.clamp(1, QuranConstants.totalPages);
     final targetIndex = targetPage - 1;
     if (animate) {
       _pageController.animateToPage(
@@ -61,7 +58,6 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFfdf4e0),
-      // In RTL, 'drawer' opens from the RIGHT side.
       drawer: QuranDrawer(
         currentPage: _currentPage,
         onNavigateToPage: (page, {String? verseKey}) => _jumpToPage(page, verseKey: verseKey),
@@ -85,24 +81,27 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
                 ),
               );
             } else if (state is AudioPlaying) {
-              final surah = state.currentVerseId ~/ 1000;
-              final ayah = state.currentVerseId % 1000;
+              final verse = VerseRef.fromId(state.currentVerseId);
               final repository = context.read<QuranRepository>();
-              repository.getVersesBySurah(surah).then((verses) {
-                final verse = verses.firstWhere((v) => v.ayah == ayah);
-                if (verse.page != _currentPage) {
-                  _jumpToPage(verse.page, verseKey: verse.verseKey, animate: true);
-                }
-              }).catchError((_) {});
+              repository.getVersesBySurah(verse.surah).then((result) {
+                result.fold(
+                  (f) => null,
+                  (verses) {
+                    final v = verses.firstWhere((v) => v.ayah == verse.ayah);
+                    if (v.page != _currentPage) {
+                      _jumpToPage(v.page, verseKey: v.verseKey, animate: true);
+                    }
+                  },
+                );
+              });
             }
           },
           child: Stack(
             children: [
               PageView.builder(
                 controller: _pageController,
-                itemCount: 604,
+                itemCount: QuranConstants.totalPages,
                 scrollDirection: Axis.horizontal,
-                // In RTL, reverse: false means index 0 is on the right, swiping left goes to index 1 (page 2)
                 reverse: false,
                 onPageChanged: (index) {
                   setState(() {
@@ -112,7 +111,6 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
                 },
                 itemBuilder: (context, index) {
                   final pageNumber = index + 1;
-                  // Only pass the highlight verseKey to the currently-visible page
                   final highlight = (pageNumber == _currentPage) ? _highlightVerseKey : null;
                   return QuranPageWidget(
                     key: ValueKey(pageNumber),
@@ -121,7 +119,6 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
                   );
                 },
               ),
-              // Overlay Media Control Bar
               BlocBuilder<AudioBloc, AudioState>(
                 builder: (context, state) {
                   final isVisible = state is! AudioIdle && state is! AudioError;
@@ -142,4 +139,3 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
     );
   }
 }
-

@@ -3,6 +3,8 @@ import '../../../../core/database/database_helper.dart';
 import '../models/verse_model.dart';
 import '../models/search_verse_model.dart';
 import '../../../../core/error/exceptions.dart';
+import '../../../../core/utils/arabic_text_utils.dart';
+import '../../../../core/constants/quran_constants.dart';
 
 abstract class QuranLocalDataSource {
   Future<List<WordModel>> getWordsByPage(int pageNumber);
@@ -41,7 +43,6 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
 
       return maps.map((map) => WordModel(
         id: map['id'] as int,
-        position: map['id'] as int, // approximate position
         textUthmani: map['text_uthmani'] as String,
         lineNumber: map['line_number'] as int,
         charTypeName: map['char_type_name'] as String,
@@ -57,13 +58,13 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
     try {
       final db = await databaseHelper.database;
       final parts = verseKey.split(':');
-      if (parts.length != 2) return 'تفسير هذه الآية غير متوفر. الرجاء التأكد من تحديث قاعدة البيانات.';
+      if (parts.length != 2) return '';
       
       final chapterId = int.tryParse(parts[0]) ?? 1;
       int verseNumber = int.tryParse(parts[1]) ?? 1;
       
-      // Look backwards up to 15 verses to find grouped tafsir
-      for (int i = 0; i < 15 && verseNumber > 0; i++) {
+      // Look backwards to find grouped tafsir
+      for (int i = 0; i < QuranConstants.linesPerPage && verseNumber > 0; i++) {
         final searchKey = '$chapterId:$verseNumber';
         final List<Map<String, dynamic>> maps = await db.query(
           'tafsir',
@@ -77,9 +78,9 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
         verseNumber--;
       }
       
-      return 'تفسير هذه الآية غير متوفر. الرجاء التأكد من تحديث قاعدة البيانات.';
+      return '';
     } catch (e) {
-      return 'حدث خطأ أثناء جلب التفسير.';
+      throw CacheException('Error fetching tafsir: ${e.toString()}');
     }
   }
 
@@ -96,9 +97,9 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       if (maps.isNotEmpty && maps.first['text'] != null) {
         return maps.first['text'] as String;
       }
-      return 'Translation is not available. Please update the database.';
+      return '';
     } catch (e) {
-      return 'Error fetching translation.';
+      throw CacheException('Error fetching translation: ${e.toString()}');
     }
   }
 
@@ -111,29 +112,18 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
     return _allVersesCache!;
   }
 
-  String _smartNormalize(String text) {
-    var c = text.replaceAll(RegExp(r'[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED\u0640]'), '');
-    c = c.replaceAll('ـ', ''); // Remove Tatweel explicitly just in case
-    c = c.replaceAll(RegExp(r'[اأإآٱى]'), '');
-    c = c.replaceAll(RegExp(r'ة'), 'ه');
-    c = c.replaceAll(RegExp(r'[ئ]'), 'ي');
-    c = c.replaceAll(RegExp(r'ؤ'), 'و');
-    return c;
-  }
-
   @override
   Future<List<SearchVerseModel>> searchQuran(String query) async {
     try {
       final db = await databaseHelper.database;
       final allVerses = await _getAllVerses(db);
       
-      final smartQuery = _smartNormalize(query).replaceAll(' ', '');
+      final smartQuery = ArabicTextUtils.normalizeArabicDiacritics(query).replaceAll(' ', '');
       if (smartQuery.isEmpty) return [];
 
       final results = <SearchVerseModel>[];
       for (final verse in allVerses) {
-        final smartVerse = _smartNormalize(verse.textClean);
-        // Remove spaces from verse just for matching substrings across words
+        final smartVerse = ArabicTextUtils.normalizeArabicDiacritics(verse.textClean);
         if (smartVerse.replaceAll(' ', '').contains(smartQuery)) {
           results.add(verse);
           if (results.length >= 100) break;
@@ -182,8 +172,6 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   Future<List<Map<String, dynamic>>> getTafsirsBySurah(int surahId, int resourceId) async {
     try {
       final db = await databaseHelper.database;
-      // Build verse keys for the surah: "surahId:1", "surahId:2", ...
-      // We use a LIKE query: verse_key LIKE 'surahId:%'
       return await db.query(
         'tafsir',
         where: 'verse_key LIKE ? AND resource_id = ?',
@@ -191,7 +179,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
         orderBy: 'rowid ASC',
       );
     } catch (e) {
-      return []; // Return empty on error, caller falls back to 'not available'
+      return [];
     }
   }
 
@@ -231,7 +219,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       final db = await databaseHelper.database;
       final result = await db.rawQuery('SELECT COUNT(*) as count FROM tafsir WHERE resource_id = ?', [resourceId]);
       final count = Sqflite.firstIntValue(result) ?? 0;
-      final progress = count / 6236; // Total verses in Quran
+      final progress = count / QuranConstants.totalVerses;
       return progress > 1.0 ? 1.0 : progress;
     } catch (e) {
       return 0.0;

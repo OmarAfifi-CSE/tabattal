@@ -14,4 +14,14 @@ class AppColors {
 
   // Soft divider color
   static const Color divider = Color(0xFFE8E0D0);
+
+  // Core thematic colors
+  static const Color surfaceCream = Color(0xFFFAF5EB);
+  static const Color pageBackground = Color(0xFFfdf4e0);
+  static const Color cardCream = Color(0xFFFBF7F0);
+  static const Color inkBrown = Color(0xFF2C2520);
+  static const Color bronzeIcon = Color(0xFF8C7355);
+  static const Color bronzeDark = Color(0xFFB48A5E);
+  static const Color verseMarkerBrown = Color(0xFF5A4033);
+  static const Color verseMarkerGold = Color(0xFFC7A263);
 }

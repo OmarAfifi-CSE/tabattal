@@ -35,10 +35,20 @@ class QuranMetadata {
     "الحادي والعشرون", "الثاني والعشرون", "الثالث والعشرون", "الرابع والعشرون", "الخامس والعشرون", "السادس والعشرون", "السابع والعشرون", "الثامن والعشرون", "التاسع والعشرون", "الثلاثون"
   ];
 
-  static const List<int> _juzStartPages = [
+  static const List<int> juzStartPages = [
     1, 22, 42, 62, 82, 102, 122, 142, 162, 182, 
     202, 222, 242, 262, 282, 302, 322, 342, 362, 382, 
     402, 422, 442, 462, 482, 502, 522, 542, 562, 582
+  ];
+
+  static const List<(int, String)> tafsirOptions = [
+    (16, 'الميسر'),
+    (14, 'ابن كثير'),
+    (91, 'السعدي'),
+    (15, 'الطبري'),
+    (90, 'القرطبي'),
+    (93, 'الوسيط'),
+    (94, 'البغوي'),
   ];
 
   static String getSurahName(int surahNumber) {
@@ -46,6 +56,13 @@ class QuranMetadata {
       return surahNames[surahNumber - 1];
     }
     return '';
+  }
+
+  static int surahLengthOf(int surahNumber) {
+    if (surahNumber >= 1 && surahNumber <= 114) {
+      return surahLengths[surahNumber - 1];
+    }
+    return 0;
   }
 
   static String getJuzName(int juzNumber) {
@@ -56,11 +73,18 @@ class QuranMetadata {
   }
 
   static int getJuzNumberByPage(int pageNumber) {
-    for (int i = _juzStartPages.length - 1; i >= 0; i--) {
-      if (pageNumber >= _juzStartPages[i]) {
+    for (int i = juzStartPages.length - 1; i >= 0; i--) {
+      if (pageNumber >= juzStartPages[i]) {
         return i + 1;
       }
     }
     return 1;
+  }
+
+  static String getTafsirName(int tafsirId) {
+    for (final option in tafsirOptions) {
+      if (option.$1 == tafsirId) return option.$2;
+    }
+    return 'تفسير';
   }
 }

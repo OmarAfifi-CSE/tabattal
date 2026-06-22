@@ -23,11 +23,9 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   List<SearchVerseModel> _results = [];
   bool _isNumericSearch = false;
 
-  // Surah page map: surahNum -> startPage (loaded from DB)
   Map<int, int> _surahPageMap = {};
   bool _surahMapLoaded = false;
 
-  // Juz start pages (Madani Mushaf standard)
   static const List<int> _juzStartPages = [
     1, 22, 42, 62, 82, 102, 122, 142, 162, 182,
     202, 222, 242, 262, 282, 302, 322, 342, 362, 382,
@@ -42,21 +40,24 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   }
 
   Future<void> _loadSurahPageMap() async {
-    try {
-      final index = await _repository.getSurahsIndex();
-      final map = <int, int>{};
-      for (final row in index) {
-        map[row['surah'] as int] = row['start_page'] as int;
-      }
-      if (mounted) {
-        setState(() {
-          _surahPageMap = map;
-          _surahMapLoaded = true;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _surahMapLoaded = true);
-    }
+    final indexResult = await _repository.getSurahsIndex();
+    indexResult.fold(
+      (f) {
+        if (mounted) setState(() => _surahMapLoaded = true);
+      },
+      (index) {
+        final map = <int, int>{};
+        for (final row in index) {
+          map[row['surah'] as int] = row['start_page'] as int;
+        }
+        if (mounted) {
+          setState(() {
+            _surahPageMap = map;
+            _surahMapLoaded = true;
+          });
+        }
+      },
+    );
   }
 
   @override
@@ -87,7 +88,6 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
 
     final normalizedQuery = _normalizeArabicNumbers(query.trim());
 
-    // Check if query is numeric
     if (int.tryParse(normalizedQuery) != null) {
       setState(() {
         _isNumericSearch = true;
@@ -97,27 +97,28 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
       return;
     }
 
-    // Text Search
-    try {
-      final results = await _repository.searchQuran(normalizedQuery);
-      if (mounted) {
-        setState(() {
-          _isNumericSearch = false;
-          _results = results;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _results = [];
-        });
-      }
-    }
+    final searchResult = await _repository.searchQuran(normalizedQuery);
+    searchResult.fold(
+      (f) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _results = [];
+          });
+        }
+      },
+      (results) {
+        if (mounted) {
+          setState(() {
+            _isNumericSearch = false;
+            _results = results;
+            _isLoading = false;
+          });
+        }
+      },
+    );
   }
 
-  /// Pops the screen and returns the target page number and verseKey to the caller.
   void _navigateToPage(int pageNumber, {String? verseKey}) {
     Navigator.pop(context, {'page': pageNumber, 'verseKey': verseKey});
   }
@@ -170,7 +171,6 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
       }
     }
     
-    // If exact word mapping failed, fallback to returning whole text
     if (startWordIdx == -1) {
       return [TextSpan(text: textUthmani)];
     }
@@ -215,7 +215,6 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
       child: Row(
         textDirection: TextDirection.rtl,
         children: [
-          // Back button
           InkWell(
             onTap: () => Navigator.pop(context),
             borderRadius: BorderRadius.circular(12),
@@ -230,7 +229,6 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          // Search bar
           Expanded(
             child: Container(
               height: 50,
@@ -389,7 +387,6 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
     final number = int.tryParse(_normalizeArabicNumbers(_searchController.text.trim())) ?? 1;
     final cards = <Widget>[];
 
-    // Option 1: Go to page directly
     if (number >= 1 && number <= 604) {
       cards.add(_buildActionCard(
         title: 'الذهاب للصفحة $number',
@@ -398,7 +395,6 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
       ));
     }
 
-    // Option 2: Go to Juz
     if (number >= 1 && number <= 30) {
       final juzPage = _juzStartPages[number - 1];
       final juzName = QuranMetadata.getJuzName(number);
@@ -409,7 +405,6 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
       ));
     }
 
-    // Option 3: Go to Surah
     if (number >= 1 && number <= 114) {
       final surahName = QuranMetadata.getSurahName(number);
       final surahPage = _surahPageMap[number];

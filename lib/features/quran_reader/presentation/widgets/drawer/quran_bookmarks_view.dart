@@ -5,6 +5,7 @@ import '../../bloc/bookmark/bookmark_bloc.dart';
 import '../../bloc/bookmark/bookmark_event.dart';
 import '../../bloc/bookmark/bookmark_state.dart';
 import '../../../../quran_reader/domain/repositories/quran_repository.dart';
+import '../../../../../core/utils/verse_ref.dart';
 import '../quran_metadata.dart';
 
 class QuranBookmarksView extends StatelessWidget {
@@ -71,17 +72,14 @@ class QuranBookmarksView extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final verseKey = state.bookmarkedVerseKeys[index];
-              final parts = verseKey.split(':');
-              final surahNum = int.tryParse(parts.isNotEmpty ? parts[0] : '1') ?? 1;
-              final ayahNum = int.tryParse(parts.length > 1 ? parts[1] : '1') ?? 1;
-              final surahName = QuranMetadata.getSurahName(surahNum);
+              final verseRef = VerseRef.fromKey(verseKey);
+              final surahName = QuranMetadata.getSurahName(verseRef.surah);
 
               return _BookmarkCard(
                 verseKey: verseKey,
                 surahName: surahName,
-                surahNum: surahNum,
-                ayahNum: ayahNum,
-                // Pop with a Map so the drawer can read page + verseKey
+                surahNum: verseRef.surah,
+                ayahNum: verseRef.ayah,
                 onNavigate: (page) => Navigator.pop(
                   context,
                   {'page': page, 'verseKey': verseKey},
@@ -125,22 +123,25 @@ class _BookmarkCardState extends State<_BookmarkCard> {
   }
 
   Future<void> _loadSurahPage() async {
-    try {
-      final repo = context.read<QuranRepository>();
-      final index = await repo.getSurahsIndex();
-      final surahData = index.firstWhere(
-        (r) => r['surah'] == widget.surahNum,
-        orElse: () => {'start_page': 1},
-      );
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _surahStartPage = surahData['start_page'] as int? ?? 1;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    final repo = context.read<QuranRepository>();
+    final indexResult = await repo.getSurahsIndex();
+    indexResult.fold(
+      (f) {
+        if (mounted) setState(() => _isLoading = false);
+      },
+      (index) {
+        final surahData = index.firstWhere(
+          (r) => r['surah'] == widget.surahNum,
+          orElse: () => <String, dynamic>{'start_page': 1},
+        );
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _surahStartPage = surahData['start_page'] as int? ?? 1;
+          });
+        }
+      },
+    );
   }
 
   @override

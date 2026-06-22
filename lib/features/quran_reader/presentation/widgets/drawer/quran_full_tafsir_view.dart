@@ -11,6 +11,7 @@ import '../../bloc/audio/audio_event.dart';
 import '../../bloc/audio/audio_state.dart';
 import '../quran_metadata.dart';
 import '../audio_settings_sheet.dart';
+import '../../../domain/entities/download_state.dart';
 
 class QuranFullTafsirView extends StatefulWidget {
   final int pageNumber;
@@ -58,7 +59,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   final ItemScrollController _itemScrollController = ItemScrollController();
   final ItemPositionsListener _itemPositionsListener = ItemPositionsListener.create();
 
-  Set<int> _downloadedTafsirs = {16, 14, 91};
+  final Set<int> _downloadedTafsirs = {16, 14, 91};
 
   @override
   void initState() {
@@ -75,14 +76,17 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   Future<void> _checkDownloadedTafsirs() async {
     final toCheck = [15, 90, 93, 94];
     for (int id in toCheck) {
-      final progress = await _repository.getTafsirDownloadProgress(id);
-      if (progress == 1.0) {
-        if (mounted) {
-          setState(() {
-            _downloadedTafsirs.add(id);
-          });
-        }
-      }
+      final progressResult = await _repository.getTafsirDownloadProgress(id);
+      progressResult.fold(
+        (f) => null,
+        (progress) {
+          if (progress == 1.0 && mounted) {
+            setState(() {
+              _downloadedTafsirs.add(id);
+            });
+          }
+        },
+      );
     }
   }
 
@@ -113,34 +117,37 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   }
 
   Future<void> _initData() async {
-    try {
-      final lines = await _repository.getLinesByPage(widget.pageNumber);
-      if (lines.isNotEmpty && lines.first.words.isNotEmpty) {
-        final firstVerseKey = lines.first.words.first.verseKey;
-        final parts = firstVerseKey.split(':');
-        _currentSurahId = int.tryParse(parts[0]) ?? 1;
-        _initialVerseKey = firstVerseKey;
-      }
-
-      await _loadSurahData(_currentSurahId);
-
-      setState(() => _isLoadingInitial = false);
-
-      // Find the index of the verse and scroll to it
-      if (_initialVerseKey != null) {
-        final index = _tafsirList.indexWhere((e) => e.verseKey == _initialVerseKey);
-        if (index != -1) {
-          // Delay briefly to allow the list to build and attach
-          Future.delayed(const Duration(milliseconds: 100), () {
-            if (_itemScrollController.isAttached) {
-              _itemScrollController.jumpTo(index: index, alignment: 0.1);
-            }
-          });
+    final linesResult = await _repository.getLinesByPage(widget.pageNumber);
+    linesResult.fold(
+      (f) {
+        if (mounted) setState(() => _isLoadingInitial = false);
+      },
+      (lines) async {
+        if (lines.isNotEmpty && lines.first.words.isNotEmpty) {
+          final firstVerseKey = lines.first.words.first.verseKey;
+          final parts = firstVerseKey.split(':');
+          _currentSurahId = int.tryParse(parts[0]) ?? 1;
+          _initialVerseKey = firstVerseKey;
         }
-      }
-    } catch (e) {
-      setState(() => _isLoadingInitial = false);
-    }
+
+        await _loadSurahData(_currentSurahId);
+
+        if (mounted) {
+          setState(() => _isLoadingInitial = false);
+        }
+
+        if (_initialVerseKey != null) {
+          final index = _tafsirList.indexWhere((e) => e.verseKey == _initialVerseKey);
+          if (index != -1) {
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (_itemScrollController.isAttached) {
+                _itemScrollController.jumpTo(index: index, alignment: 0.1);
+              }
+            });
+          }
+        }
+      },
+    );
   }
 
   Future<void> _loadNextSurah() async {
@@ -165,30 +172,32 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   }
 
   Future<void> _loadSurahData(int surahId) async {
-    try {
-      // Both fetched from local DB — no network calls!
-      final verses = await _repository.getVersesBySurah(surahId);
-      final tafsirRows = await _localDS.getTafsirsBySurah(surahId, _tafsirResourceId);
+    final versesResult = await _repository.getVersesBySurah(surahId);
+    await versesResult.fold(
+      (f) async => null,
+      (verses) async {
+        final tafsirRows = await _localDS.getTafsirsBySurah(surahId, _tafsirResourceId);
+        final Map<String, String> tafsirMap = {
+          for (final row in tafsirRows)
+            row['verse_key'] as String: _cleanHtml(row['text'] as String)
+        };
 
-      // Map verseKey -> tafsir text
-      final Map<String, String> tafsirMap = {
-        for (final row in tafsirRows)
-          row['verse_key'] as String: _cleanHtml(row['text'] as String)
-      };
+        final newItems = verses.map((verse) => VerseTafsirData(
+          verseKey: verse.verseKey,
+          textUthmani: verse.textUthmani,
+          tafsirText: tafsirMap[verse.verseKey] ?? 'لا يوجد تفسير متاح',
+          surah: verse.surah,
+          ayah: verse.ayah,
+          page: verse.page,
+        )).toList();
 
-      final newItems = verses.map((verse) => VerseTafsirData(
-        verseKey: verse.verseKey,
-        textUthmani: verse.textUthmani,
-        tafsirText: tafsirMap[verse.verseKey] ?? 'لا يوجد تفسير متاح',
-        surah: verse.surah,
-        ayah: verse.ayah,
-        page: verse.page,
-      )).toList();
-
-      _tafsirList.addAll(newItems);
-    } catch (e) {
-      debugPrint('Error loading tafsir for surah $surahId: $e');
-    }
+        if (mounted) {
+          setState(() {
+            _tafsirList.addAll(newItems);
+          });
+        }
+      },
+    );
   }
 
   /// Auto-scroll to the item matching the currently playing verse, with padding so it's not under the AppBar
@@ -259,19 +268,27 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
     });
 
     try {
-      await for (final progress in _repository.downloadTafsir(resourceId)) {
+      await for (final state in _repository.downloadTafsir(resourceId)) {
         if (!mounted) return;
-        setState(() {
-          _downloadProgress = progress;
-        });
-      }
-
-      if (mounted) {
-        setState(() {
-          _isDownloading = false;
-          _downloadedTafsirs.add(resourceId);
-        });
-        _changeTafsir(resourceId); // Now proceed to select it
+        switch (state) {
+          case Progressing(:final progress):
+            setState(() {
+              _downloadProgress = progress;
+            });
+          case Completed():
+            setState(() {
+              _isDownloading = false;
+              _downloadedTafsirs.add(resourceId);
+            });
+            _changeTafsir(resourceId);
+            return;
+          case Failed(:final failure):
+            setState(() {
+              _isDownloading = false;
+              _downloadError = failure.message;
+            });
+            return;
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -579,30 +596,6 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
           ],
         ),
       ),
-      ),
-    );
-  }
-
-  PopupMenuItem<int> _tafsirOption(int id, String label) {
-    return PopupMenuItem<int>(
-      value: id,
-      height: 40,
-      padding: EdgeInsets.zero,
-      child: Container(
-        width: double.infinity,
-        height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        alignment: Alignment.centerRight,
-        color: _tafsirResourceId == id ? AppColors.accentGold.withValues(alpha: 0.1) : Colors.transparent,
-        child: Text(
-          label,
-          textDirection: TextDirection.rtl,
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.textPrimary,
-            fontWeight: _tafsirResourceId == id ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
       ),
     );
   }

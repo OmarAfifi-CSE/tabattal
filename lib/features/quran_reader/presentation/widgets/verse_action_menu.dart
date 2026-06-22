@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -76,7 +75,6 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-  late Animation<double> _animation;
   bool _isAnimating = false;
   final Map<int, double> _tafsirProgress = {16: 1.0, 14: 1.0, 91: 1.0};
 
@@ -86,11 +84,6 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 250),
-    );
-
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
     );
 
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
@@ -111,12 +104,17 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
     final repo = context.read<QuranBloc>().repository;
     final toCheck = [15, 90, 93, 94]; // Add all non-bundled tafsirs
     for (int id in toCheck) {
-      final progress = await repo.getTafsirDownloadProgress(id);
-      if (progress > 0.0) {
-        setState(() {
-          _tafsirProgress[id] = progress;
-        });
-      }
+      final progressResult = await repo.getTafsirDownloadProgress(id);
+      progressResult.fold(
+        (f) => null,
+        (progress) {
+          if (progress > 0.0 && mounted) {
+            setState(() {
+              _tafsirProgress[id] = progress;
+            });
+          }
+        },
+      );
     }
   }
 
@@ -404,7 +402,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                       if (currentState is QuranOverlayLoading)
                         const Center(child: Padding(
                           padding: EdgeInsets.all(32.0),
-                          child: const CircularProgressIndicator(color: AppColors.accentGold),
+                          child: CircularProgressIndicator(color: AppColors.accentGold),
                         ))
                       else if (currentState is TafsirDownloading)
                         Center(

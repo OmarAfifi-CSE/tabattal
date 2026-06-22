@@ -103,7 +103,6 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
       verseNumber: ayahNum,
       verseKey: generatedVerseKey,
       textUthmani: '',
-      audioUrl: '',
       words: [],
       juzNumber: 1,
     );

@@ -78,33 +78,38 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
   }
 
   Future<void> _initData() async {
-    try {
-      final lines = await _repository.getLinesByPage(widget.pageNumber);
-      if (lines.isNotEmpty && lines.first.words.isNotEmpty) {
-        final firstVerseKey = lines.first.words.first.verseKey;
-        final parts = firstVerseKey.split(':');
-        _currentSurahId = int.tryParse(parts[0]) ?? 1;
-        _initialVerseKey = firstVerseKey;
-      }
-
-      await _loadSurahData(_currentSurahId);
-      setState(() => _isLoadingInitial = false);
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_initialVerseKey != null) {
-          final index = _list.indexWhere((e) => e.verseKey == _initialVerseKey);
-          if (index != -1) {
-            Future.delayed(const Duration(milliseconds: 100), () {
-              if (_itemScrollController.isAttached) {
-                _itemScrollController.jumpTo(index: index, alignment: 0.1);
-              }
-            });
-          }
+    final linesResult = await _repository.getLinesByPage(widget.pageNumber);
+    linesResult.fold(
+      (f) {
+        if (mounted) setState(() => _isLoadingInitial = false);
+      },
+      (lines) async {
+        if (lines.isNotEmpty && lines.first.words.isNotEmpty) {
+          final firstVerseKey = lines.first.words.first.verseKey;
+          final parts = firstVerseKey.split(':');
+          _currentSurahId = int.tryParse(parts[0]) ?? 1;
+          _initialVerseKey = firstVerseKey;
         }
-      });
-    } catch (e) {
-      setState(() => _isLoadingInitial = false);
-    }
+
+        await _loadSurahData(_currentSurahId);
+        
+        if (mounted) {
+          setState(() => _isLoadingInitial = false);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_initialVerseKey != null) {
+              final index = _list.indexWhere((e) => e.verseKey == _initialVerseKey);
+              if (index != -1) {
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  if (_itemScrollController.isAttached) {
+                    _itemScrollController.jumpTo(index: index, alignment: 0.1);
+                  }
+                });
+              }
+            }
+          });
+        }
+      },
+    );
   }
 
   Future<void> _loadNextSurah() async {
@@ -129,29 +134,33 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
   }
 
   Future<void> _loadSurahData(int surahId) async {
-    try {
-      // Both from local DB — no network calls!
-      final verses = await _repository.getVersesBySurah(surahId);
-      final translationRows = await _localDS.getTranslationsBySurah(surahId, _translationResourceId);
+    final versesResult = await _repository.getVersesBySurah(surahId);
+    await versesResult.fold(
+      (f) async => null,
+      (verses) async {
+        final translationRows = await _localDS.getTranslationsBySurah(surahId, _translationResourceId);
 
-      final Map<String, String> translationMap = {
-        for (final row in translationRows)
-          row['verse_key'] as String: _cleanHtml(row['text'] as String)
-      };
+        final Map<String, String> translationMap = {
+          for (final row in translationRows)
+            row['verse_key'] as String: _cleanHtml(row['text'] as String)
+        };
 
-      final newItems = verses.map((verse) => VerseTranslationData(
-        verseKey: verse.verseKey,
-        textUthmani: verse.textUthmani,
-        translationText: translationMap[verse.verseKey] ?? 'Translation not available in local database.',
-        surah: verse.surah,
-        ayah: verse.ayah,
-        page: verse.page,
-      )).toList();
+        final newItems = verses.map((verse) => VerseTranslationData(
+          verseKey: verse.verseKey,
+          textUthmani: verse.textUthmani,
+          translationText: translationMap[verse.verseKey] ?? 'Translation not available in local database.',
+          surah: verse.surah,
+          ayah: verse.ayah,
+          page: verse.page,
+        )).toList();
 
-      _list.addAll(newItems);
-    } catch (e) {
-      debugPrint('Error loading translation for surah $surahId: $e');
-    }
+        if (mounted) {
+          setState(() {
+            _list.addAll(newItems);
+          });
+        }
+      },
+    );
   }
 
   void _scrollToPlayingVerse(int playingVerseId) {
