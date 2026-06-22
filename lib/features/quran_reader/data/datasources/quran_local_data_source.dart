@@ -52,15 +52,27 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   Future<String> getTafsirForVerse(String verseKey, int resourceId) async {
     try {
       final db = await databaseHelper.database;
-      final List<Map<String, dynamic>> maps = await db.query(
-        'tafsir',
-        where: 'verse_key = ? AND resource_id = ?',
-        whereArgs: [verseKey, resourceId],
-        limit: 1,
-      );
-      if (maps.isNotEmpty && maps.first['text'] != null) {
-        return maps.first['text'] as String;
+      final parts = verseKey.split(':');
+      if (parts.length != 2) return 'تفسير هذه الآية غير متوفر. الرجاء التأكد من تحديث قاعدة البيانات.';
+      
+      final chapterId = int.tryParse(parts[0]) ?? 1;
+      int verseNumber = int.tryParse(parts[1]) ?? 1;
+      
+      // Look backwards up to 15 verses to find grouped tafsir
+      for (int i = 0; i < 15 && verseNumber > 0; i++) {
+        final searchKey = '$chapterId:$verseNumber';
+        final List<Map<String, dynamic>> maps = await db.query(
+          'tafsir',
+          where: 'verse_key = ? AND resource_id = ?',
+          whereArgs: [searchKey, resourceId],
+          limit: 1,
+        );
+        if (maps.isNotEmpty && maps.first['text'] != null) {
+          return maps.first['text'] as String;
+        }
+        verseNumber--;
       }
+      
       return 'تفسير هذه الآية غير متوفر. الرجاء التأكد من تحديث قاعدة البيانات.';
     } catch (e) {
       return 'حدث خطأ أثناء جلب التفسير.';

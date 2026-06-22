@@ -117,9 +117,15 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
 
   String _cleanHtml(String text) {
     text = text.replaceAll(RegExp(r'<sup[^>]*>.*?<\/sup>', multiLine: true, caseSensitive: false), '');
-    text = text.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n');
+    text = text.replaceAll(RegExp(r'</p>|</li>|<br\s*/?>', caseSensitive: false), '\n\n');
     text = text.replaceAll(RegExp(r'<[^>]*>', multiLine: true, caseSensitive: false), '');
-    return text.replaceAll('&nbsp;', ' ').replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&').trim();
+    // Remove printed page number annotations from digitized texts e.g. < 1-599 > or &lt; 1-599 &gt;
+    text = text.replaceAll(RegExp(r'(<|&lt;)\s*\d+-\d+\s*(>|&gt;)', caseSensitive: false), '');
+    text = text.replaceAll('&nbsp;', ' ').replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&').replaceAll('&lt;', '<').replaceAll('&gt;', '>');
+    text = text.replaceAll('\\"', '"').replaceAll("\\'", "'");
+    // Remove invisible unicode characters and fix non-breaking spaces
+    text = text.replaceAll('\u200d', '').replaceAll('\u200c', '').replaceAll('\u200f', '').replaceAll('\u200e', '').replaceAll('\xa0', ' ');
+    return text.replaceAll(RegExp(r' {3,}'), '  •  ').trim();
   }
 
   Future<void> _loadSurahData(int surahId) async {

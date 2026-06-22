@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
@@ -24,9 +25,16 @@ class DatabaseHelper {
 
     // Check if the database exists
     bool exists = await databaseExists(path);
+    
+    // Check version to force update if we ship a new DB
+    final prefs = await SharedPreferences.getInstance();
+    final dbVersion = prefs.getInt('db_version') ?? 0;
+    
+    // Increment this whenever we update quran.db in assets
+    const currentDbVersion = 4;
 
-    if (!exists) {
-      // Should happen only the first time you launch your application
+    if (!exists || dbVersion < currentDbVersion) {
+      // Should happen only the first time you launch your application or when DB is updated
 
       // Make sure the parent directory exists
       try {
@@ -40,6 +48,7 @@ class DatabaseHelper {
 
       // Write and flush the bytes written
       await File(path).writeAsBytes(bytes, flush: true);
+      await prefs.setInt('db_version', currentDbVersion);
     }
 
     // Open the database

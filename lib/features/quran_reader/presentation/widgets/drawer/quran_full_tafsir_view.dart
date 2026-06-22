@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../quran_reader/domain/repositories/quran_repository.dart';
@@ -9,7 +11,6 @@ import '../../bloc/audio/audio_event.dart';
 import '../../bloc/audio/audio_state.dart';
 import '../quran_metadata.dart';
 import '../audio_settings_sheet.dart';
-import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class QuranFullTafsirView extends StatefulWidget {
   final int pageNumber;
@@ -58,10 +59,20 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
     super.initState();
     _repository = context.read<QuranRepository>();
     _localDS = context.read<QuranLocalDataSource>();
-    _initData();
+    _loadPreferences();
 
     // Infinite scroll: load next surah when near end
     _itemPositionsListener.itemPositions.addListener(_onScroll);
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _tafsirResourceId = prefs.getInt('tafsir_id') ?? 16;
+      });
+      _initData();
+    }
   }
 
   @override
@@ -120,9 +131,16 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   }
 
   String _cleanHtml(String text) {
-    text = text.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n');
+    text = text.replaceAll(RegExp(r'<sup[^>]*>.*?<\/sup>', multiLine: true, caseSensitive: false), '');
+    text = text.replaceAll(RegExp(r'</p>|</li>|<br\s*/?>', caseSensitive: false), '\n\n');
     text = text.replaceAll(RegExp(r'<[^>]*>', multiLine: true, caseSensitive: false), '');
-    return text.replaceAll('&nbsp;', ' ').replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&').trim();
+    // Remove printed page number annotations from digitized texts e.g. < 1-599 > or &lt; 1-599 &gt;
+    text = text.replaceAll(RegExp(r'(<|&lt;)\s*\d+-\d+\s*(>|&gt;)', caseSensitive: false), '');
+    text = text.replaceAll('&nbsp;', ' ').replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&').replaceAll('&lt;', '<').replaceAll('&gt;', '>');
+    text = text.replaceAll('\\"', '"').replaceAll("\\'", "'");
+    // Remove invisible unicode characters and fix non-breaking spaces
+    text = text.replaceAll('\u200d', '').replaceAll('\u200c', '').replaceAll('\u200f', '').replaceAll('\u200e', '').replaceAll('\xa0', ' ');
+    return text.replaceAll(RegExp(r' {3,}'), '  •  ').trim();
   }
 
   Future<void> _loadSurahData(int surahId) async {
@@ -166,8 +184,10 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   }
 
   /// Change tafsir source and reload data at the CURRENT visible position (not the beginning)
-  void _changeTafsir(int resourceId) {
+  void _changeTafsir(int resourceId) async {
     if (_tafsirResourceId == resourceId) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('tafsir_id', resourceId);
 
     // Remember which verse is currently at the top of the visible area
     String? currentVerseKey;

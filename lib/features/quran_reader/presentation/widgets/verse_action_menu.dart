@@ -149,14 +149,21 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
   String _stripHtml(String htmlString) {
     // Remove superscript footnotes completely: <sup foot_note=123>1</sup>
     String text = htmlString.replaceAll(RegExp(r'<sup[^>]*>.*?<\/sup>', multiLine: true, caseSensitive: false), '');
+    // Replace block tags with newlines to prevent words from squishing
+    text = text.replaceAll(RegExp(r'</p>|</li>|<br\s*/?>', caseSensitive: false), '\n\n');
     // Remove all other HTML tags
     text = text.replaceAll(RegExp(r'<[^>]*>', multiLine: true, caseSensitive: false), '');
-    // Replace HTML entities
-    return text.replaceAll('&nbsp;', ' ').replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&').trim();
+    // Remove printed page number annotations from digitized texts e.g. < 1-599 > or &lt; 1-599 &gt;
+    text = text.replaceAll(RegExp(r'(<|&lt;)\s*\d+-\d+\s*(>|&gt;)', caseSensitive: false), '');
+    // Replace HTML entities and preserve poetry spaces
+    text = text.replaceAll('&nbsp;', ' ').replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&').replaceAll('&lt;', '<').replaceAll('&gt;', '>');
+    text = text.replaceAll('\\"', '"').replaceAll("\\'", "'");
+    // Remove invisible unicode characters and fix non-breaking spaces
+    text = text.replaceAll('\u200d', '').replaceAll('\u200c', '').replaceAll('\u200f', '').replaceAll('\u200e', '').replaceAll('\xa0', ' ');
+    return text.replaceAll(RegExp(r' {3,}'), '  •  ').trim();
   }
 
   void _showOverlayContent(BuildContext context, String initialTitle, QuranState state, VoidCallback onRetry) {
-    int currentResourceId = state is TafsirLoaded ? state.tafsir.tafsirId : 16;
     final quranBloc = context.read<QuranBloc>();
     
     showModalBottomSheet(
@@ -207,76 +214,82 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                             ),
                             Align(
                               alignment: Alignment.centerRight,
-                              child: PopupMenuButton<int>(
-                                initialValue: currentResourceId,
-                                position: PopupMenuPosition.under,
-                                color: Colors.white,
-                                elevation: 3,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.1)),
-                                ),
-                                constraints: const BoxConstraints(minWidth: 120, maxWidth: 120),
-                                onSelected: (int newValue) {
-                                  setState(() => currentResourceId = newValue);
-                                  context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey, resourceId: newValue));
-                                },
-                                itemBuilder: (context) {
-                                  final options = [
-                                    (16, 'الميسر'),
-                                    (14, 'ابن كثير'),
-                                    (91, 'السعدي'),
-                                  ];
-                                  return options.map((option) {
-                                    final isSelected = option.$1 == currentResourceId;
-                                    return PopupMenuItem<int>(
-                                      value: option.$1,
-                                      height: 36,
-                                      padding: EdgeInsets.zero,
-                                      child: Container(
-                                        width: double.infinity,
-                                        height: 36,
-                                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                                        alignment: Alignment.centerRight,
-                                        color: isSelected ? AppColors.accentGold.withValues(alpha: 0.1) : Colors.transparent,
-                                        child: Text(
-                                          option.$2,
-                                          textAlign: TextAlign.right,
-                                          textDirection: TextDirection.rtl,
-                                          style: AppTextStyles.menuItemText.copyWith(
-                                            color: const Color(0xFF2C2520),
-                                            fontSize: 13,
-                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              child: Builder(
+                                builder: (context) {
+                                  int displayResourceId = currentState is TafsirLoaded ? currentState.tafsir.tafsirId : 16;
+                                  return PopupMenuButton<int>(
+                                    initialValue: displayResourceId,
+                                    position: PopupMenuPosition.under,
+                                    color: Colors.white,
+                                    elevation: 3,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.1)),
+                                    ),
+                                    constraints: const BoxConstraints(minWidth: 120, maxWidth: 120),
+                                    onSelected: (int newValue) {
+                                      quranBloc.add(FetchTafsir(widget.verse.verseKey, resourceId: newValue));
+                                    },
+                                    itemBuilder: (context) {
+                                      final options = [
+                                        (16, 'الميسر'),
+                                        (14, 'ابن كثير'),
+                                        (91, 'السعدي'),
+                                      ];
+                                      return options.map((option) {
+                                        final isSelected = option.$1 == displayResourceId;
+                                        return PopupMenuItem<int>(
+                                          value: option.$1,
+                                          height: 36,
+                                          padding: EdgeInsets.zero,
+                                          child: Container(
+                                            width: double.infinity,
+                                            height: 36,
+                                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                                            alignment: Alignment.centerRight,
+                                            color: isSelected ? AppColors.accentGold.withValues(alpha: 0.1) : Colors.transparent,
+                                            child: Text(
+                                              option.$2,
+                                              textAlign: TextAlign.right,
+                                              textDirection: TextDirection.rtl,
+                                              style: AppTextStyles.menuItemText.copyWith(
+                                                color: const Color(0xFF2C2520),
+                                                fontSize: 13,
+                                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                              ),
+                                            ),
                                           ),
-                                        ),
+                                        );
+                                      }).toList();
+                                    },
+                                    child: Container(
+                                      height: 36,
+                                      width: 120,
+                                      padding: const EdgeInsets.only(left: 10, right: 10),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.background,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                                       ),
-                                    );
-                                  }).toList();
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.accentGold, size: 20),
+                                          Expanded(
+                                            child: Text(
+                                              displayResourceId == 16 ? 'الميسر' : displayResourceId == 14 ? 'ابن كثير' : 'السعدي',
+                                              textAlign: TextAlign.right,
+                                              style: AppTextStyles.menuItemText.copyWith(
+                                                color: AppColors.accentGold,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
                                 },
-                                child: Container(
-                                  height: 36,
-                                  width: 120,
-                                  padding: const EdgeInsets.only(left: 10, right: 10),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.background,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.accentGold, size: 20),
-                                      Expanded(
-                                        child: Text(
-                                          currentResourceId == 16 ? 'الميسر' : currentResourceId == 14 ? 'ابن كثير' : 'السعدي',
-                                          textAlign: TextAlign.right,
-                                          textDirection: TextDirection.rtl,
-                                          style: AppTextStyles.menuItemText.copyWith(color: const Color(0xFF2C2520), fontSize: 13),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
                               ),
                             ),
                           ],

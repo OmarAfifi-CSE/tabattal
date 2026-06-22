@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../domain/repositories/quran_repository.dart';
 import '../../../../../core/error/exceptions.dart';
 import 'quran_event.dart';
@@ -48,7 +49,13 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
   Future<void> _onFetchTafsir(FetchTafsir event, Emitter<QuranState> emit) async {
     emit(QuranOverlayLoading());
     try {
-      final tafsir = await repository.getTafsir(event.verseKey, resourceId: event.resourceId);
+      final prefs = await SharedPreferences.getInstance();
+      int currentId = event.resourceId ?? prefs.getInt('tafsir_id') ?? 16;
+      if (event.resourceId != null) {
+        await prefs.setInt('tafsir_id', currentId);
+      }
+
+      final tafsir = await repository.getTafsir(event.verseKey, resourceId: currentId);
       if (tafsir.text.isEmpty || tafsir.text == 'Tafsir not found.') {
          emit(const QuranOverlayError('Content temporarily unavailable'));
       } else {
