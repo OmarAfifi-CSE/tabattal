@@ -40,11 +40,13 @@ class QuranOverlayLoading extends QuranState {}
 
 class TafsirLoaded extends QuranState {
   final TafsirModel tafsir;
+  final bool isDownloading;
+  final double downloadProgress;
 
-  const TafsirLoaded(this.tafsir);
+  const TafsirLoaded(this.tafsir, {this.isDownloading = false, this.downloadProgress = 0.0});
 
   @override
-  List<Object> get props => [tafsir];
+  List<Object> get props => [tafsir, isDownloading, downloadProgress];
 }
 
 class TranslationLoaded extends QuranState {
@@ -63,4 +65,43 @@ class QuranOverlayError extends QuranState {
 
   @override
   List<Object> get props => [message];
+}
+
+class TafsirDownloading extends QuranState {
+  final int resourceId;
+  final double progress;
+
+  const TafsirDownloading(this.resourceId, this.progress);
+
+  @override
+  List<Object> get props => [resourceId, progress];
+}
+
+class TafsirDownloaded extends QuranState {
+  final int resourceId;
+
+  const TafsirDownloaded(this.resourceId);
+
+  @override
+  List<Object> get props => [resourceId];
+}
+
+class TafsirDownloadError extends QuranState {
+  final String message;
+  final int resourceId;
+
+  const TafsirDownloadError(this.message, this.resourceId);
+
+  @override
+  List<Object> get props => [message, resourceId];
+}
+
+class TafsirPartialDownloadError extends QuranState {
+  final int resourceId;
+  final double progress;
+
+  const TafsirPartialDownloadError(this.resourceId, this.progress);
+
+  @override
+  List<Object> get props => [resourceId, progress];
 }

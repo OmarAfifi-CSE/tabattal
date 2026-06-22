@@ -13,6 +13,10 @@ abstract class QuranLocalDataSource {
   Future<List<SearchVerseModel>> getVersesBySurah(int surahId);
   Future<List<Map<String, dynamic>>> getTafsirsBySurah(int surahId, int resourceId);
   Future<List<Map<String, dynamic>>> getTranslationsBySurah(int surahId, int resourceId);
+  Future<void> insertTafsirs(List<Map<String, dynamic>> tafsirs);
+  Future<double> getTafsirDownloadProgress(int resourceId);
+  Future<int> getMaxDownloadedChapter(int resourceId);
+  Future<int> getDownloadedVerseCount(int resourceId);
 }
 
 class QuranLocalDataSourceImpl implements QuranLocalDataSource {
@@ -195,14 +199,67 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   Future<List<Map<String, dynamic>>> getTranslationsBySurah(int surahId, int resourceId) async {
     try {
       final db = await databaseHelper.database;
-      return await db.query(
+      final List<Map<String, dynamic>> maps = await db.query(
         'translation',
-        where: 'verse_key LIKE ? AND resource_id = ?',
-        whereArgs: ['$surahId:%', resourceId],
-        orderBy: 'rowid ASC',
+        where: 'CAST(substr(verse_key, 1, instr(verse_key, ":") - 1) AS INTEGER) = ? AND resource_id = ?',
+        whereArgs: [surahId, resourceId],
+        orderBy: 'CAST(substr(verse_key, instr(verse_key, ":") + 1) AS INTEGER) ASC',
       );
+      return maps;
     } catch (e) {
       return [];
+    }
+  }
+
+  @override
+  Future<void> insertTafsirs(List<Map<String, dynamic>> rows) async {
+    final db = await databaseHelper.database;
+    final batch = db.batch();
+    for (var row in rows) {
+      batch.insert(
+        'tafsir', 
+        row, 
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
+  }
+
+  @override
+  Future<double> getTafsirDownloadProgress(int resourceId) async {
+    try {
+      final db = await databaseHelper.database;
+      final result = await db.rawQuery('SELECT COUNT(*) as count FROM tafsir WHERE resource_id = ?', [resourceId]);
+      final count = Sqflite.firstIntValue(result) ?? 0;
+      final progress = count / 6236; // Total verses in Quran
+      return progress > 1.0 ? 1.0 : progress;
+    } catch (e) {
+      return 0.0;
+    }
+  }
+
+  @override
+  Future<int> getMaxDownloadedChapter(int resourceId) async {
+    try {
+      final db = await databaseHelper.database;
+      final result = await db.rawQuery(
+        'SELECT MAX(CAST(substr(verse_key, 1, instr(verse_key, ":") - 1) AS INTEGER)) as max_chap FROM tafsir WHERE resource_id = ?', 
+        [resourceId]
+      );
+      return Sqflite.firstIntValue(result) ?? 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  @override
+  Future<int> getDownloadedVerseCount(int resourceId) async {
+    try {
+      final db = await databaseHelper.database;
+      final result = await db.rawQuery('SELECT COUNT(*) as count FROM tafsir WHERE resource_id = ?', [resourceId]);
+      return Sqflite.firstIntValue(result) ?? 0;
+    } catch (e) {
+      return 0;
     }
   }
 }

@@ -16,6 +16,7 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
     on<LoadPage>(_onLoadPage, transformer: restartable());
     on<FetchTafsir>(_onFetchTafsir, transformer: restartable());
     on<FetchTranslation>(_onFetchTranslation, transformer: restartable());
+    on<DownloadTafsir>(_onDownloadTafsir, transformer: restartable());
   }
 
   String _mapExceptionToMessage(Object e) {
@@ -56,13 +57,77 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
       }
 
       final tafsir = await repository.getTafsir(event.verseKey, resourceId: currentId);
-      if (tafsir.text.isEmpty || tafsir.text == 'Tafsir not found.') {
-         emit(const QuranOverlayError('Content temporarily unavailable'));
+      if (tafsir.text.isEmpty || 
+          tafsir.text == 'Tafsir not found.' || 
+          tafsir.text.contains('تفسير هذه الآية غير متوفر') ||
+          tafsir.text.contains('حدث خطأ')) {
+         final progress = await repository.getTafsirDownloadProgress(currentId);
+         if (progress < 1.0) {
+           // Fetch the specific verse dynamically
+           await repository.downloadSingleVerseTafsir(currentId, event.verseKey);
+           final fetchedTafsir = await repository.getTafsir(event.verseKey, resourceId: currentId);
+           
+           if (fetchedTafsir.text.isNotEmpty && 
+               fetchedTafsir.text != 'Tafsir not found.' && 
+               !fetchedTafsir.text.contains('تفسير هذه الآية غير متوفر') &&
+               !fetchedTafsir.text.contains('حدث خطأ')) {
+             emit(TafsirLoaded(fetchedTafsir, isDownloading: true, downloadProgress: progress));
+             // Start background download automatically
+             add(DownloadTafsir(currentId));
+           } else {
+             emit(TafsirPartialDownloadError(currentId, progress));
+           }
+         } else {
+           emit(const QuranOverlayError('Content temporarily unavailable'));
+         }
       } else {
-         emit(TafsirLoaded(tafsir));
+         final progress = await repository.getTafsirDownloadProgress(currentId);
+         emit(TafsirLoaded(tafsir, isDownloading: progress < 1.0, downloadProgress: progress));
       }
     } catch (e) {
       emit(QuranOverlayError(_mapExceptionToMessage(e)));
+    }
+  }
+
+  Future<void> _onDownloadTafsir(DownloadTafsir event, Emitter<QuranState> emit) async {
+    try {
+      final progress = await repository.getTafsirDownloadProgress(event.resourceId);
+      if (progress == 1.0) {
+        emit(TafsirDownloaded(event.resourceId));
+        return;
+      }
+
+      // Emit initial progress to provide immediate UI feedback
+      if (state is TafsirLoaded) {
+        emit(TafsirLoaded((state as TafsirLoaded).tafsir, isDownloading: true, downloadProgress: progress));
+      } else {
+        emit(TafsirDownloading(event.resourceId, progress));
+      }
+
+      bool hasError = false;
+      await emit.forEach<double>(
+        repository.downloadTafsir(event.resourceId),
+        onData: (streamProgress) {
+          if (state is TafsirLoaded) {
+            return TafsirLoaded((state as TafsirLoaded).tafsir, isDownloading: true, downloadProgress: streamProgress);
+          }
+          return TafsirDownloading(event.resourceId, streamProgress);
+        },
+        onError: (error, stackTrace) {
+          hasError = true;
+          return TafsirDownloadError(_mapExceptionToMessage(error), event.resourceId);
+        },
+      );
+
+      if (!hasError) {
+        if (state is TafsirLoaded) {
+          emit(TafsirLoaded((state as TafsirLoaded).tafsir, isDownloading: false, downloadProgress: 1.0));
+        } else {
+          emit(TafsirDownloaded(event.resourceId));
+        }
+      }
+    } catch (e) {
+      emit(TafsirDownloadError(_mapExceptionToMessage(e), event.resourceId));
     }
   }
 

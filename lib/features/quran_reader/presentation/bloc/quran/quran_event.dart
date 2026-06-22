@@ -43,3 +43,12 @@ class FetchTranslation extends QuranEvent {
   @override
   List<Object> get props => [verseKey];
 }
+
+class DownloadTafsir extends QuranEvent {
+  final int resourceId;
+
+  const DownloadTafsir(this.resourceId);
+
+  @override
+  List<Object> get props => [resourceId];
+}

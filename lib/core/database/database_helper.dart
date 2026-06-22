@@ -52,6 +52,6 @@ class DatabaseHelper {
     }
 
     // Open the database
-    return await openDatabase(path, readOnly: true);
+    return await openDatabase(path, readOnly: false);
   }
 }

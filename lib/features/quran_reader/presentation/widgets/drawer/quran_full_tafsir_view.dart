@@ -48,11 +48,17 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   int _currentSurahId = 1;
   int _tafsirResourceId = 16; // Default: Al-Muyassar
 
+  bool _isDownloading = false;
+  double _downloadProgress = 0.0;
+  String? _downloadError;
+
   // Track which verseKey the user started from, so we can return to it when popping
   String? _initialVerseKey;
 
   final ItemScrollController _itemScrollController = ItemScrollController();
   final ItemPositionsListener _itemPositionsListener = ItemPositionsListener.create();
+
+  Set<int> _downloadedTafsirs = {16, 14, 91};
 
   @override
   void initState() {
@@ -60,9 +66,24 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
     _repository = context.read<QuranRepository>();
     _localDS = context.read<QuranLocalDataSource>();
     _loadPreferences();
+    _checkDownloadedTafsirs();
 
     // Infinite scroll: load next surah when near end
     _itemPositionsListener.itemPositions.addListener(_onScroll);
+  }
+
+  Future<void> _checkDownloadedTafsirs() async {
+    final toCheck = [15, 90, 93, 94];
+    for (int id in toCheck) {
+      final progress = await _repository.getTafsirDownloadProgress(id);
+      if (progress == 1.0) {
+        if (mounted) {
+          setState(() {
+            _downloadedTafsirs.add(id);
+          });
+        }
+      }
+    }
   }
 
   Future<void> _loadPreferences() async {
@@ -186,6 +207,12 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   /// Change tafsir source and reload data at the CURRENT visible position (not the beginning)
   void _changeTafsir(int resourceId) async {
     if (_tafsirResourceId == resourceId) return;
+
+    if (!_downloadedTafsirs.contains(resourceId)) {
+      _startDownload(resourceId);
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('tafsir_id', resourceId);
 
@@ -210,16 +237,50 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
     });
 
     _loadSurahData(targetSurah).then((_) {
-      setState(() => _isLoadingInitial = false);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (currentVerseKey != null) {
-          final index = _tafsirList.indexWhere((e) => e.verseKey == currentVerseKey);
-          if (index != -1 && _itemScrollController.isAttached) {
-            _itemScrollController.jumpTo(index: index);
+      if (mounted) {
+        setState(() => _isLoadingInitial = false);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (currentVerseKey != null) {
+            final index = _tafsirList.indexWhere((e) => e.verseKey == currentVerseKey);
+            if (index != -1 && _itemScrollController.isAttached) {
+              _itemScrollController.jumpTo(index: index);
+            }
           }
-        }
-      });
+        });
+      }
     });
+  }
+
+  Future<void> _startDownload(int resourceId) async {
+    setState(() {
+      _isDownloading = true;
+      _downloadProgress = 0.0;
+      _downloadError = null;
+    });
+
+    try {
+      await for (final progress in _repository.downloadTafsir(resourceId)) {
+        if (!mounted) return;
+        setState(() {
+          _downloadProgress = progress;
+        });
+      }
+
+      if (mounted) {
+        setState(() {
+          _isDownloading = false;
+          _downloadedTafsirs.add(resourceId);
+        });
+        _changeTafsir(resourceId); // Now proceed to select it
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isDownloading = false;
+          _downloadError = 'فشل تحميل التفسير. يرجى التأكد من اتصالك بالإنترنت.';
+        });
+      }
+    }
   }
 
   @override
@@ -280,7 +341,6 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
             },
           ),
           actions: [
-            // Tafsir source picker
             PopupMenuButton<int>(
               position: PopupMenuPosition.under,
               color: Colors.white,
@@ -288,20 +348,94 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               icon: const Icon(Icons.tune_rounded, color: AppColors.accentGold),
               onSelected: _changeTafsir,
-              itemBuilder: (context) => [
-                _tafsirOption(16, 'الميسر'),
-                _tafsirOption(14, 'ابن كثير'),
-                _tafsirOption(91, 'السعدي'),
-              ],
+              itemBuilder: (context) {
+                final options = [
+                  (16, 'الميسر'),
+                  (14, 'ابن كثير'),
+                  (91, 'السعدي'),
+                  (15, 'الطبري'),
+                  (90, 'القرطبي'),
+                  (93, 'الوسيط'),
+                  (94, 'البغوي'),
+                ];
+                return options.map((option) {
+                  final isSelected = option.$1 == _tafsirResourceId;
+                  final isDownloaded = _downloadedTafsirs.contains(option.$1);
+                  return PopupMenuItem<int>(
+                    value: option.$1,
+                    height: 36,
+                    padding: EdgeInsets.zero,
+                    child: Container(
+                      width: double.infinity,
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      alignment: Alignment.centerRight,
+                      color: isSelected ? AppColors.accentGold.withValues(alpha: 0.1) : Colors.transparent,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (!isDownloaded)
+                            Icon(Icons.download_rounded, size: 16, color: AppColors.accentGold.withValues(alpha: 0.7))
+                          else
+                            const SizedBox.shrink(),
+                          Text(
+                            option.$2,
+                            style: AppTextStyles.menuItemText.copyWith(
+                              fontSize: 14,
+                              color: isSelected ? AppColors.accentGold : const Color(0xFF2C2520),
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList();
+              },
             ),
           ],
         ),
-        body: _isLoadingInitial
-            ? const Center(child: CircularProgressIndicator(color: AppColors.accentGold))
-            : _tafsirList.isEmpty
-                ? const Center(child: Text('لا يوجد بيانات في قاعدة البيانات المحلية', style: TextStyle(fontSize: 16, color: AppColors.textPrimary)))
-                : BlocBuilder<AudioBloc, AudioState>(
-                    builder: (context, audioState) {
+        body: Column(
+          children: [
+            if (_isDownloading || _downloadError != null)
+              Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _downloadError != null ? Colors.red.withValues(alpha: 0.1) : AppColors.accentGold.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    if (_isDownloading)
+                      SizedBox(
+                        width: 16, height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, value: _downloadProgress, color: AppColors.accentGold),
+                      )
+                    else
+                      const Icon(Icons.error_outline, size: 16, color: Colors.red),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _isDownloading
+                            ? 'جاري تحميل التفسير... ${(_downloadProgress * 100).toInt()}%'
+                            : _downloadError!,
+                        style: AppTextStyles.menuItemText.copyWith(
+                          fontSize: 12,
+                          color: _downloadError != null ? Colors.red : AppColors.accentGold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            Expanded(
+              child: _isLoadingInitial
+                  ? const Center(child: CircularProgressIndicator(color: AppColors.accentGold))
+                  : _tafsirList.isEmpty
+                      ? const Center(child: Text('لا يوجد بيانات في قاعدة البيانات المحلية', style: TextStyle(fontSize: 16, color: AppColors.textPrimary)))
+                      : BlocBuilder<AudioBloc, AudioState>(
+                          builder: (context, audioState) {
                       int? playingVerseId;
                       if (audioState is AudioPlaying) playingVerseId = audioState.currentVerseId;
                       if (audioState is AudioPaused) playingVerseId = audioState.currentVerseId;
@@ -441,7 +575,10 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                       );
                     },
                   ),
+            ),
+          ],
         ),
+      ),
       ),
     );
   }
