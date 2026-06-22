@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
+import 'quran_border_painter.dart';
 
 class QuranPageFrame extends StatelessWidget {
   final Widget child;
@@ -53,98 +54,140 @@ class QuranPageFrame extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 // ----------------------------------------------------
-                // LAYER 1: The Master Background Asset
+                // LAYER 1: Procedural Custom Painter Background
                 // ----------------------------------------------------
-                Image.asset(
-                  'assets/images/quran_frame.webp',
-                  fit: BoxFit.fill,
+                CustomPaint(
+                  painter: QuranBorderPainter(),
+                  size: Size.infinite,
                 ),
 
                 // ----------------------------------------------------
                 // LAYER 2: The Interactive Content
                 // Adjusted top constraint to clear the banners (pushed down ~24dp)
                 // ----------------------------------------------------
+                // Content constraints
                 Positioned(
-                  top: H * 0.12, // Pushed down further to clear the banners perfectly
-                  bottom: H * 0.09, // Clears the bottom border and emblem
-                  left: W * 0.09, // Side breathing room
-                  right: W * 0.09, 
+                  top: H * 0.08, 
+                  bottom: H * 0.08, 
+                  left: W * 0.08, 
+                  right: W * 0.08, 
                   child: child,
                 ),
 
                 // ----------------------------------------------------
-                // LAYER 3: Seamless Header Overlay
-                // Banners are at the very top of the asset
+                // LAYER 3: Texts aligned with the frame cuts
                 // ----------------------------------------------------
-                // Left Banner (Juz Name)
+                // Juz Name
                 Positioned(
-                  top: H * 0.055, // Moved UP significantly to sit inside the banner
-                  height: H * 0.05, 
-                  left: W * 0.11, // Perfectly aligned horizontally inside the left banner
-                  width: W * 0.33,
-                  child: Center(
-                    child: Text(
-                      'الجزء $juzName',
-                      style: headerStyle,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-
-                // Right Banner (Surah Name)
-                Positioned(
-                  top: H * 0.055, // Moved UP significantly to sit inside the banner
-                  height: H * 0.05,
-                  right: W * 0.18, // Perfectly aligned horizontally inside the right banner
-                  width: W * 0.33,
-                  child: Center(
-                    child: Text(
-                      'سورة $surahName',
-                      style: headerStyle,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-
-                // Hamburger Menu Icon (Top Right)
-                Positioned(
-                  top: H * 0.045,
-                  right: W * 0.04,
-                  child: IconButton(
-                    icon: const Icon(Icons.menu_rounded, color: innerColor, size: 22),
-                    onPressed: () {
-                      Scaffold.of(context).openDrawer();
-                    },
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    splashRadius: 24,
-                  ),
-                ),
-
-                // ----------------------------------------------------
-                // LAYER 4: Styled & Repositioned Page Number
-                // Nudged lower to perfectly center in the bottom space
-                // ----------------------------------------------------
-                Positioned(
-                  bottom: H * 0.025, // Nudged downward to hit the exact center of the footer
-                  left: 0,
-                  right: 0,
-                  height: H * 0.04,
-                  child: Center(
+                  top: H * 0.05, // Pin exactly to the line
+                  left: W * 0.08, // Match Cut 1 left
+                  width: W * 0.35, // Wider for Juz name
+                  child: FractionalTranslation(
+                    translation: const Offset(0.0, -0.5), // Center vertically regardless of lines
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.0),
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                      alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFBF7F0).withValues(alpha: 0.8), // Cream tint
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFC7A263).withValues(alpha: 0.6), width: 1),
+                        border: Border.all(color: QuranBorderPainter.gold.withValues(alpha: 0.6), width: 1.0),
+                        borderRadius: BorderRadius.circular(12),
+                        color: QuranBorderPainter.background,
                       ),
                       child: Text(
-                        _toArabicNumber(pageNumber),
-                        style: GoogleFonts.amiri(
-                          color: innerColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          height: 1.2, // Fix vertical alignment of Amiri font inside container
+                        'الجزء $juzName',
+                        style: headerStyle,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Surah Name
+                Positioned(
+                  top: H * 0.05,
+                  left: W * 0.46, // Match Cut 2 left
+                  width: W * 0.33,
+                  child: FractionalTranslation(
+                    translation: const Offset(0.0, -0.5),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: QuranBorderPainter.gold.withValues(alpha: 0.6), width: 1.0),
+                        borderRadius: BorderRadius.circular(12),
+                        color: QuranBorderPainter.background,
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          'سورة $surahName',
+                          style: headerStyle,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Hamburger Menu Icon
+                Positioned(
+                  top: H * 0.05,
+                  right: W * 0.07, // Match Cut 3 right (0.93 means right is 0.07)
+                  width: W * 0.11, // Cut width is 0.11 (from 0.82 to 0.93)
+                  child: FractionalTranslation(
+                    translation: const Offset(0.0, -0.5),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: QuranBorderPainter.gold.withValues(alpha: 0.6), width: 1.0),
+                        borderRadius: BorderRadius.circular(12),
+                        color: QuranBorderPainter.background,
+                      ),
+                      child: InkWell(
+                        onTap: () {
+                          Scaffold.of(context).openDrawer();
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: const Icon(Icons.menu_rounded, color: QuranBorderPainter.gold, size: 24),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ----------------------------------------------------
+                // LAYER 4: Page Number (Bottom Cut)
+                // ----------------------------------------------------
+                Positioned(
+                  bottom: H * 0.03, // Pin exactly to bottom line (1 - 0.97 = 0.03)
+                  left: W * 0.42,
+                  width: W * 0.16,
+                  child: FractionalTranslation(
+                    translation: const Offset(0.0, 0.5), // Center vertically
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: QuranBorderPainter.gold.withValues(alpha: 0.6), width: 1.0),
+                        borderRadius: BorderRadius.circular(12),
+                        color: QuranBorderPainter.background,
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          _toArabicNumber(pageNumber),
+                          style: GoogleFonts.amiri(
+                            color: QuranBorderPainter.innerColor,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            height: 1.1,
+                          ),
                         ),
                       ),
                     ),
