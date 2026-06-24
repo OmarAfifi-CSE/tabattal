@@ -15,6 +15,7 @@ import 'quran_page_frame.dart';
 import 'verse_action_menu.dart';
 import 'quran_metadata.dart';
 import 'surah_header_widget.dart';
+import '../../../../core/services/font_service.dart';
 
 class QuranPageWidget extends StatefulWidget {
   final int pageNumber;
@@ -43,6 +44,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
   @override
   void initState() {
     super.initState();
+    _loadPageFont();
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
@@ -58,6 +60,9 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
   @override
   void didUpdateWidget(QuranPageWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.pageNumber != oldWidget.pageNumber) {
+      _loadPageFont();
+    }
     if (widget.highlightVerseKey != oldWidget.highlightVerseKey) {
       if (widget.highlightVerseKey != null) {
         _setBookmarkHighlight(widget.highlightVerseKey!);
@@ -78,6 +83,11 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
         if (mounted) setState(() => _bookmarkHighlightId = null);
       });
     }
+  }
+
+  Future<void> _loadPageFont() async {
+    await FontService.loadFontForPage(widget.pageNumber);
+    if (mounted) setState(() {});
   }
 
   void _showMenu(BuildContext context, Offset position, int verseId) {
@@ -173,6 +183,99 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
     }
   }
 
+  Widget _buildEmptyLineWidget(int lineNumber, List<LineData> lines) {
+    // Scan forward to find if a Surah starts on this page after this line
+    int? ayah1Line;
+    int? nextSurahId;
+    for (int l = lineNumber + 1; l <= 15; l++) {
+      final lineData = lines.firstWhere((element) => element.lineNumber == l, orElse: () => LineData(lineNumber: l, words: []));
+      if (lineData.words.isNotEmpty) {
+        final vk = lineData.words.first.verseKey;
+        final parts = vk.split(':');
+        if (parts.length == 2 && parts[1] == '1') {
+          ayah1Line = l;
+          nextSurahId = int.tryParse(parts[0]);
+        }
+        break;
+      }
+    }
+
+    if (ayah1Line != null && nextSurahId != null) {
+      final header = Padding(padding: const EdgeInsets.symmetric(vertical: 2.0), child: SurahHeaderWidget(surahNumber: nextSurahId));
+      const basmala = Center(child: Text('1 2 3', style: TextStyle(fontFamily: 'QCF_BSML', fontSize: 26, color: Color(0xFF2C2520), height: 1.0)));
+
+      if (nextSurahId == 9) {
+        if (lineNumber == ayah1Line - 1) return header;
+        return const SizedBox(height: 45);
+      }
+
+      if (nextSurahId == 1) {
+        // Al-Fatihah's Basmala is verse 1, so no separate decorative Basmala is needed
+        if (lineNumber == ayah1Line - 1) return header;
+        return const SizedBox(height: 45);
+      }
+
+      bool needsHeaderHere = false;
+      if (ayah1Line == 2 && widget.pageNumber == 1) {
+        needsHeaderHere = true;
+      } else if (ayah1Line > 2) {
+        final prevLine = lines.firstWhere((l) => l.lineNumber == ayah1Line! - 2, orElse: () => LineData(lineNumber: ayah1Line! - 2, words: []));
+        if (prevLine.words.isNotEmpty) {
+          needsHeaderHere = true;
+        }
+      }
+
+      if (lineNumber == ayah1Line - 1) {
+        if (needsHeaderHere) {
+          return Column(mainAxisSize: MainAxisSize.min, children: [header, basmala]);
+        }
+        return basmala;
+      } else if (lineNumber == ayah1Line - 2 && !needsHeaderHere) {
+        return header;
+      }
+      return const SizedBox(height: 45);
+    }
+
+    // Scan backward to see if this is a trailing empty line for a Surah starting on the NEXT page
+    // For pages 1 and 2, the bottom empty lines are just padding for the large decorative frames.
+    if (widget.pageNumber == 1 || widget.pageNumber == 2) {
+      return const SizedBox(height: 45);
+    }
+
+    int? lastSurahId;
+    for (int l = lineNumber - 1; l >= 1; l--) {
+      final lineData = lines.firstWhere((element) => element.lineNumber == l, orElse: () => LineData(lineNumber: l, words: []));
+      if (lineData.words.isNotEmpty) {
+        final vk = lineData.words.last.verseKey;
+        lastSurahId = int.tryParse(vk.split(':').first);
+        break;
+      }
+    }
+
+    if (lastSurahId != null) {
+      int upcomingSurahId = lastSurahId + 1;
+      if (upcomingSurahId <= 114) {
+        int emptyLinesBefore = 0;
+        for (int l = lineNumber - 1; l >= 1; l--) {
+          final lineData = lines.firstWhere((element) => element.lineNumber == l, orElse: () => LineData(lineNumber: l, words: []));
+          if (lineData.words.isEmpty) {
+            emptyLinesBefore++;
+          } else {
+            break;
+          }
+        }
+
+        final header = Padding(padding: const EdgeInsets.symmetric(vertical: 2.0), child: SurahHeaderWidget(surahNumber: upcomingSurahId));
+        const basmala = Center(child: Text('1 2 3', style: TextStyle(fontFamily: 'QCF_BSML', fontSize: 26, color: Color(0xFF2C2520), height: 1.0)));
+
+        if (emptyLinesBefore == 0) return header;
+        if (emptyLinesBefore == 1 && upcomingSurahId != 9) return basmala;
+      }
+    }
+
+    return const SizedBox(height: 45);
+  }
+
   @override
   void dispose() {
     _pulseController.dispose();
@@ -235,12 +338,12 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
             }
 
             final surahNumber = int.tryParse(firstVerseKey.split(':').first) ?? 1;
-            final surahName = QuranMetadata.getSurahName(surahNumber);
+            final surahName = QuranMetadata.getSurahNameWithTashkeel(surahNumber);
             final juzNum = QuranMetadata.getJuzNumberByPage(widget.pageNumber);
-            final juzName = QuranMetadata.getJuzName(juzNum);
+            final juzName = QuranMetadata.getJuzNameWithTashkeel(juzNum);
 
             return QuranPageFrame(
-              pageNumber: widget.pageNumber,
+              pageNumber: widget.pageNumber, 
               surahName: surahName,
               juzName: juzName,
               child: BlocBuilder<AudioBloc, AudioState>(
@@ -271,11 +374,22 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                     data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
                     child: Directionality(
                       textDirection: TextDirection.rtl,
-                      child: Column(
-                        key: _columnKey,
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: List.generate(15, (index) {
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        alignment: Alignment.center,
+                        child: IntrinsicWidth(
+                          child: ConstrainedBox(
+                            // Adding minWidth: 460 forces the intrinsic aspect ratio to always trigger 
+                            // scale-by-width (or proportional scale) in the FittedBox. This mathematically
+                            // ensures that stretched elements (like Surah Frames) will have EXACTLY the same
+                            // visual height on Page 1 as they do on dense pages like Page 76.
+                            constraints: const BoxConstraints(minWidth: 460, minHeight: 1020),
+                          child: Column(
+                            key: _columnKey,
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: List.generate(15, (index) {
                           final lineNumber = index + 1;
                           // Find the LineData for this line number
                           final lineData = lines.firstWhere(
@@ -285,172 +399,140 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                           final lineWords = lineData.words;
 
                           if (lineWords.isEmpty) {
-                            // Find which Surah is starting!
-                            // Look at subsequent lines to find the next verseKey
-                            int? nextSurahId;
-                            for (int nextLine = lineNumber + 1; nextLine <= 15; nextLine++) {
-                              final nl = lines.firstWhere((l) => l.lineNumber == nextLine, orElse: () => LineData(lineNumber: nextLine, words: []));
-                              if (nl.words.isNotEmpty) {
-                                final vk = nl.words.first.verseKey;
-                                nextSurahId = int.tryParse(vk.split(':').first);
-                                break;
-                              }
-                            }
-
-                            // Check if the previous line was also empty to avoid duplicating the header
-                            bool isFirstEmpty = true;
-                            if (lineNumber > 1) {
-                              final prevLine = lines.firstWhere((l) => l.lineNumber == lineNumber - 1, orElse: () => LineData(lineNumber: lineNumber - 1, words: []));
-                              if (prevLine.words.isEmpty) {
-                                isFirstEmpty = false;
-                              }
-                            }
-
-                            if (isFirstEmpty && nextSurahId != null) {
-                              final surahName = QuranMetadata.getSurahName(nextSurahId);
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 2.0),
-                                child: SurahHeaderWidget(surahName: surahName, surahNumber: nextSurahId),
-                              );
-                            }
-
-                            return const Expanded(child: SizedBox());
+                            return _buildEmptyLineWidget(lineNumber, lines);
                           }
 
-                          // If it's not a full line (like the end of a Surah), it might not need justification.
-                          // But to match exactly, usually all lines except the last line of a Surah are justified.
-                          // We will justify all lines. If it looks weird, we can check if it's the last line.
-                          
-                          return Expanded(
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.center,
-                              child: Row(
-                                textDirection: TextDirection.rtl,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: lineWords.map((word) {
-                                  final verseId = verseKeyToId[word.verseKey] ?? 0;
-                                  final isMenuHighlighted = _activeVerseId == verseId;
-                                  final isAudioHighlighted = playingVerseId == verseId;
-                                  final isBookmarkHighlighted = _bookmarkHighlightId == verseId;
+                          // The King Fahd text layout handles word spacing naturally, so we just use center alignment.
 
-                                  Color backgroundColor;
-                                  if (isAudioHighlighted || isMenuHighlighted) {
-                                    backgroundColor = AppColors.accentGold.withValues(alpha: 0.2);
-                                  } else {
-                                    backgroundColor = Colors.transparent;
-                                  }
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2.0),
+                            child: Row(
+                              textDirection: TextDirection.rtl,
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                                children: () {
+                                  final List<Widget> widgets = [];
+                                  bool fatihahBasmalaAdded = false;
 
-                                    if (word.charTypeName == 'end') {
-                                      return GestureDetector(
-                                        onTapDown: (details) {
-                                          if (audioState is AudioPlaying || audioState is AudioPaused) {
-                                            context.read<AudioBloc>().add(PlayVerse('', verseId));
-                                          } else {
-                                            _showMenu(context, details.globalPosition, verseId);
-                                          }
-                                        },
-                                        child: Container(
-                                        // Push the marker down slightly to match the Arabic text's visual baseline
-                                        margin: const EdgeInsets.only(top: 12.0, left: 3.0, right: 3.0),
-                                        width: 35,
-                                        height: 35,
-                                        decoration: BoxDecoration(
-                                          color: backgroundColor,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.brightness_7_rounded,
-                                              color: isAudioHighlighted ? AppColors.accentGold : const Color(0xFFC7A263).withValues(alpha: 0.8),
-                                              size: 35,
-                                            ),
-                                            Container(
-                                              width: 20,
-                                              height: 20,
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFFAF5EB),
-                                                shape: BoxShape.circle,
-                                                border: Border.all(color: const Color(0xFF5A4033), width: 0.5),
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.only(top: 2.0), // center number in the circle
+                                  for (final word in lineWords) {
+                                    final verseId = verseKeyToId[word.verseKey] ?? 0;
+                                    
+                                    if (word.verseKey == '1:1' && word.charTypeName != 'end') {
+                                      if (!fatihahBasmalaAdded) {
+                                        widgets.add(
+                                          GestureDetector(
+                                            onTapDown: (details) {
+                                              if (audioState is AudioPlaying || audioState is AudioPaused) {
+                                                context.read<AudioBloc>().add(PlayVerse('', verseId));
+                                              } else {
+                                                _showMenu(context, details.globalPosition, verseId);
+                                              }
+                                            },
+                                            child: const Padding(
+                                              padding: EdgeInsets.symmetric(horizontal: 4.0),
                                               child: Text(
-                                                word.textUthmani,
+                                                '1 2 3',
                                                 style: TextStyle(
-                                                  color: isAudioHighlighted ? AppColors.accentGold : const Color(0xFF5A4033),
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold,
+                                                  fontFamily: 'QCF_BSML',
+                                                  fontSize: 26,
+                                                  color: Color(0xFF2C2520),
+                                                  height: 1.0,
                                                 ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  }
-
-                                  // Build the word widget with optional pulse animation
-                                  if (isBookmarkHighlighted) {
-                                    return AnimatedBuilder(
-                                      animation: _pulseAnimation,
-                                      builder: (context, _) {
-                                      return GestureDetector(
-                                        onTapDown: (details) {
-                                          if (audioState is AudioPlaying || audioState is AudioPaused) {
-                                            context.read<AudioBloc>().add(PlayVerse('', verseId));
-                                          } else {
-                                            _showMenu(context, details.globalPosition, verseId);
-                                          }
-                                        },
-                                        child: Container(
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFB59A53).withValues(alpha: _pulseAnimation.value),
-                                              borderRadius: BorderRadius.circular(4),
-                                            ),
-                                            child: Text(
-                                              '${word.textUthmani} ',
-                                              style: AppTextStyles.quranText.copyWith(
-                                                color: AppColors.accentGoldDark,
-                                                fontWeight: FontWeight.bold,
                                               ),
                                             ),
                                           ),
                                         );
-                                      },
-                                    );
-                                  }
-
-                                  return GestureDetector(
-                                    onTapDown: (details) {
-                                      if (audioState is AudioPlaying || audioState is AudioPaused) {
-                                        context.read<AudioBloc>().add(PlayVerse('', verseId));
-                                      } else {
-                                        _showMenu(context, details.globalPosition, verseId);
+                                        fatihahBasmalaAdded = true;
                                       }
-                                    },
-                                    child: Container(
-                                      color: backgroundColor,
-                                      child: Text(
-                                        '${word.textUthmani} ',
-                                        style: AppTextStyles.quranText.copyWith(
-                                          color: isAudioHighlighted ? AppColors.accentGold : AppColors.textPrimary,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
+                                      continue; // Skip the individual QCF_P001 words
+                                    }
+
+                                    final isMenuHighlighted = _activeVerseId == verseId;
+                                    final isAudioHighlighted = playingVerseId == verseId;
+                                    final isBookmarkHighlighted = _bookmarkHighlightId == verseId;
+
+                                    Color backgroundColor;
+                                    if (isAudioHighlighted || isMenuHighlighted) {
+                                      backgroundColor = AppColors.accentGold.withValues(alpha: 0.2);
+                                    } else {
+                                      backgroundColor = Colors.transparent;
+                                    }
+
+                                    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+                                    final customFontFamily = 'QCF_P$pageStr';
+                                    final displayText = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
+
+                                    if (isBookmarkHighlighted) {
+                                      widgets.add(
+                                        AnimatedBuilder(
+                                          animation: _pulseAnimation,
+                                          builder: (context, _) {
+                                          return GestureDetector(
+                                            onTapDown: (details) {
+                                              if (audioState is AudioPlaying || audioState is AudioPaused) {
+                                                context.read<AudioBloc>().add(PlayVerse('', verseId));
+                                              } else {
+                                                _showMenu(context, details.globalPosition, verseId);
+                                              }
+                                            },
+                                            child: Container(
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFB59A53).withValues(alpha: _pulseAnimation.value),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  displayText,
+                                                  style: AppTextStyles.quranText.copyWith(
+                                                    fontFamily: customFontFamily,
+                                                    fontSize: 32,
+                                                    height: 1.5,
+                                                    color: AppColors.accentGoldDark,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        )
+                                      );
+                                    } else {
+                                      widgets.add(
+                                        GestureDetector(
+                                          onTapDown: (details) {
+                                            if (audioState is AudioPlaying || audioState is AudioPaused) {
+                                              context.read<AudioBloc>().add(PlayVerse('', verseId));
+                                            } else {
+                                              _showMenu(context, details.globalPosition, verseId);
+                                            }
+                                          },
+                                          child: Container(
+                                            color: backgroundColor,
+                                            child: Text(
+                                              displayText,
+                                              style: AppTextStyles.quranText.copyWith(
+                                                fontFamily: customFontFamily,
+                                                fontSize: 32,
+                                                height: 1.5,
+                                                color: isAudioHighlighted ? AppColors.accentGold : AppColors.textPrimary,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      );
+                                    }
+                                  }
+                                  return widgets;
+                                }(),
                               ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                  );
+                            );
+                          }),
+                          ), // Column
+                          ), // ConstrainedBox
+                        ), // IntrinsicWidth
+                      ), // FittedBox
+                    ), // Directionality
+                  ); // MediaQuery
                 },
               ),
             );

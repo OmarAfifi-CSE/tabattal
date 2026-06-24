@@ -30,9 +30,9 @@ class QuranPageFrame extends StatelessWidget {
 
     // Traditional typography
     const TextStyle headerStyle = TextStyle(
-      fontFamily: 'Amiri',
+      fontFamily: 'KFGQPC Uthmanic Script HAFS',
       color: innerColor, 
-      fontSize: 16, 
+      fontSize: 10, 
       fontWeight: FontWeight.bold,
     );
 
@@ -68,7 +68,7 @@ class QuranPageFrame extends StatelessWidget {
                 // Content constraints
                 Positioned(
                   top: H * 0.08, 
-                  bottom: H * 0.08, 
+                  bottom: H * 0.05, 
                   left: W * 0.08, 
                   right: W * 0.08, 
                   child: child,
@@ -94,7 +94,7 @@ class QuranPageFrame extends StatelessWidget {
                         color: QuranBorderPainter.background,
                       ),
                       child: Text(
-                        'الجزء $juzName',
+                        juzName,
                         style: headerStyle,
                         textAlign: TextAlign.center,
                         maxLines: 2,

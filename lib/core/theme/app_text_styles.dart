@@ -4,7 +4,7 @@ import 'app_colors.dart';
 
 class AppTextStyles {
   static const TextStyle quranText = TextStyle(
-    fontFamily: 'AmiriQuran',
+    fontFamily: 'KFGQPC Uthmanic Script HAFS', // Default fallback font
     color: AppColors.textPrimary,
     fontSize: 26,
     height: 1.9,

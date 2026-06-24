@@ -1,150 +1,147 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/theme/app_colors.dart';
+import 'quran_metadata.dart';
 
 class SurahHeaderWidget extends StatelessWidget {
-  final String surahName;
   final int surahNumber;
 
   const SurahHeaderWidget({
     super.key,
-    required this.surahName,
     required this.surahNumber,
   });
 
+  String _toArabicNumbers(String input) {
+    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    for (int i = 0; i < english.length; i++) {
+      input = input.replaceAll(english[i], arabic[i]);
+    }
+    return input;
+  }
+
+  String _getSurahNameChar(int surahNumber) {
+    // The surah_names.ttf font has a non-sequential mapping.
+    // This array maps Surah 1-114 to their exact index from 0xE900.
+    const fontMapping = <int>[
+      0, // 0 (unused)
+      4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, // 1-20
+      26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 46, 47, 48, 49, 9, 10, 39, // 21-40
+      40, 41, 42, 43, 44, 45, 50, 2, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 0, 1, // 41-60
+      65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 61, 62, // 61-80
+      63, 64, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, // 81-100
+      101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114 // 101-114
+    ];
+    if (surahNumber < 1 || surahNumber > 114) return '';
+    return String.fromCharCode(0xE900 + fontMapping[surahNumber]);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final versesCount = QuranMetadata.surahLengthOf(surahNumber);
+    final revelationPlace = QuranMetadata.getRevelationPlace(surahNumber);
+
+    // We use the device screen width as our "Virtual Canvas" coordinate space.
+    // This perfectly matches the dimensions you originally calibrated right/left/top on!
+    final canvasWidth = MediaQuery.sizeOf(context).width;
+
     return Container(
       width: double.infinity,
-      height: 75, // Slightly reduced from 85
-      margin: const EdgeInsets.only(left: 24.0, right: 24.0, top: 12.0, bottom: 4.0),
-      child: CustomPaint(
-        painter: _SurahHeaderPainter(),
-        child: Center(
-          child: SvgPicture.asset(
-            'assets/surah_names/$surahNumber.svg',
-            height: 42,
-            colorFilter: const ColorFilter.mode(Color(0xFF2C2520), BlendMode.srcIn),
-            clipBehavior: Clip.none, // Prevent cropping of Arabic diacritics
-            placeholderBuilder: (BuildContext context) => Text(
-              surahName,
-              style: const TextStyle(
-                fontFamily: 'Amiri',
-                fontSize: 26,
-                fontWeight: FontWeight.w900,
-                color: Color(0xFF2C2520),
-                height: 1.0,
+      margin: const EdgeInsets.symmetric(vertical: 12.0),
+      child: FittedBox(
+        fit: BoxFit.fitWidth,
+        child: SizedBox(
+          width: canvasWidth, 
+          height: 85,
+          child: Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              // 1. The decorative frame from QCF_BSML
+              SizedBox(
+                width: canvasWidth,
+                child: Transform.scale(
+                  scaleX: 1.0, // Fixed unified scale for all pages
+                  scaleY: 1.8,
+                  child: const FittedBox(
+                    fit: BoxFit.fitWidth,
+                    child: Text(
+                      '\u00F2', 
+                      style: TextStyle(
+                        fontFamily: 'QCF_BSML',
+                        fontSize: 60, 
+                        color: AppColors.accentGold, 
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
+              
+              // 2. The Surah Name from QCF_Surah
+              Transform.translate(
+                offset: const Offset(-5, 11), // User's manual center tweak
+                child: Text(
+                  '${_getSurahNameChar(surahNumber)}${String.fromCharCode(0xE903)}',
+                  style: const TextStyle(
+                    fontFamily: 'QCF_Surah',
+                    fontSize: 46, 
+                    color: AppColors.accentGold,
+                    height: 1.0,
+                  ),
+                ),
+              ),
+
+              // 3. Right Oval Text (Verses count)
+              Positioned(
+                right: 66.0,
+                top: 34,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'آياتها',
+                      style: TextStyle(
+                        fontFamily: 'Amiri',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppColors.accentGold,
+                        height: 1.0,
+                      ),
+                    ),
+                    Text(
+                      _toArabicNumbers(versesCount.toString()),
+                      style: const TextStyle(
+                        fontFamily: 'Amiri',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: AppColors.accentGold,
+                        height: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 4. Left Oval Text (Revelation place)
+              Positioned(
+                left: 63.0,
+                top: 38,
+                child: Text(
+                  revelationPlace,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: 'Amiri',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: AppColors.accentGold,
+                    height: 1.0,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-}
-
-class _SurahHeaderPainter extends CustomPainter {
-  static const Color gold = Color(0xFFC7A263);
-  static const Color background = Color(0xFFEAD8BA); // Matches the thick band color
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final double w = size.width;
-    final double h = size.height;
-
-    // Outer cartouche
-    final Path outerPath = Path();
-    final double pointWidth = h * 0.4;
-    
-    outerPath.moveTo(pointWidth, 0);
-    outerPath.lineTo(w - pointWidth, 0);
-    outerPath.lineTo(w, h / 2);
-    outerPath.lineTo(w - pointWidth, h);
-    outerPath.lineTo(pointWidth, h);
-    outerPath.lineTo(0, h / 2);
-    outerPath.close();
-
-    // Inner cartouche
-    const double inset = 6.0;
-    final Path innerPath = Path();
-    innerPath.moveTo(pointWidth + inset / 2, inset);
-    innerPath.lineTo(w - pointWidth - inset / 2, inset);
-    innerPath.lineTo(w - inset, h / 2);
-    innerPath.lineTo(w - pointWidth - inset / 2, h - inset);
-    innerPath.lineTo(pointWidth + inset / 2, h - inset);
-    innerPath.lineTo(inset, h / 2);
-    innerPath.close();
-
-    // 1. Fill the entire inner cartouche with subtle background
-    canvas.drawPath(
-      outerPath,
-      Paint()
-        ..color = background.withValues(alpha: 0.5)
-        ..style = PaintingStyle.fill,
-    );
-
-    // 2. Draw thick outer gold border
-    canvas.drawPath(
-      outerPath,
-      Paint()
-        ..color = gold
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.0
-        ..strokeJoin = StrokeJoin.miter,
-    );
-
-    // 3. Draw thin inner gold border (double border effect)
-    canvas.drawPath(
-      innerPath,
-      Paint()
-        ..color = gold
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.0
-        ..strokeJoin = StrokeJoin.miter,
-    );
-
-    // 4. Draw geometric corner decorations
-    final Paint fillPaint = Paint()..color = gold..style = PaintingStyle.fill;
-    
-    // Draw small diamonds at the 6 inner vertices
-    void drawSmallDiamond(Offset center) {
-      final Path d = Path();
-      d.moveTo(center.dx + 3, center.dy);
-      d.lineTo(center.dx, center.dy + 3);
-      d.lineTo(center.dx - 3, center.dy);
-      d.lineTo(center.dx, center.dy - 3);
-      d.close();
-      canvas.drawPath(d, fillPaint);
-    }
-
-    drawSmallDiamond(Offset(pointWidth + inset / 2, inset));
-    drawSmallDiamond(Offset(w - pointWidth - inset / 2, inset));
-    drawSmallDiamond(Offset(pointWidth + inset / 2, h - inset));
-    drawSmallDiamond(Offset(w - pointWidth - inset / 2, h - inset));
-
-    // 5. Intricate tip decorations (Nested triangles/diamonds)
-    // Left tip
-    canvas.drawCircle(Offset(inset * 2.5, h / 2), 2.0, fillPaint);
-    drawSmallDiamond(Offset(inset * 4, h / 2));
-    
-    // Right tip
-    canvas.drawCircle(Offset(w - inset * 2.5, h / 2), 2.0, fillPaint);
-    drawSmallDiamond(Offset(w - inset * 4, h / 2));
-
-    // 6. Engraved lines inside the tips
-    final Paint thinLine = Paint()
-      ..color = gold
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
-      
-    // Left tip lines
-    canvas.drawLine(Offset(inset, h / 2), Offset(pointWidth + inset / 2, inset), thinLine);
-    canvas.drawLine(Offset(inset, h / 2), Offset(pointWidth + inset / 2, h - inset), thinLine);
-
-    // Right tip lines
-    canvas.drawLine(Offset(w - inset, h / 2), Offset(w - pointWidth - inset / 2, inset), thinLine);
-    canvas.drawLine(Offset(w - inset, h / 2), Offset(w - pointWidth - inset / 2, h - inset), thinLine);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

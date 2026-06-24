@@ -46,7 +46,7 @@ dependencies:
   path_provider: ^2.1.5
   path: ^1.9.0
   scrollable_positioned_list: ^0.3.8
-  flutter_svg: ^2.3.0
+  qcf_quran: ^0.0.5
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -73,7 +73,7 @@ flutter:
   assets:
     - assets/images/
     - assets/data/
-    - assets/surah_names/
+    - assets/fonts/v1/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -92,16 +92,17 @@ flutter:
         - asset: assets/fonts/Amiri-Regular.ttf
         - asset: assets/fonts/Amiri-Bold.ttf
           weight: 700
-    - family: AmiriQuran
+    - family: QCF_BSML
       fonts:
-        - asset: assets/fonts/AmiriQuran-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
+        - asset: "assets/fonts/v1/QCF_BSML.TTF"
+    - family: KFGQPC Uthmanic Script HAFS
+      fonts:
+        - asset: "assets/fonts/KFGQPC Uthmanic Script HAFS.otf"
+    - family: QCF_Surah
+      fonts:
+        - asset: "assets/fonts/v1/surah_names.ttf"
+dependency_overrides:
+  audio_session:
+    git:
+      url: https://github.com/ryanheise/audio_session.git
+      ref: feature/agp9
