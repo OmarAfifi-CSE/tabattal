@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'quran_border_painter.dart';
+import 'hizb_data.dart';
 
 class QuranPageFrame extends StatelessWidget {
   final Widget child;
@@ -24,9 +25,53 @@ class QuranPageFrame extends StatelessWidget {
     return number.toString().split('').map((e) => englishToArabicDigits[e] ?? e).join('');
   }
 
+  List<TextSpan> _buildHizbTextSpans(String text, TextStyle baseStyle) {
+    final RegExp digitRegExp = RegExp(r'[0-9٠-٩]+');
+    final spans = <TextSpan>[];
+    
+    text.splitMapJoin(
+      digitRegExp,
+      onMatch: (Match match) {
+        spans.add(TextSpan(
+          text: '\n${match.group(0)}', // Insert newline before the number
+          style: baseStyle.copyWith(
+            fontSize: baseStyle.fontSize! * 1.25, 
+            fontWeight: FontWeight.w900,
+            fontFamily: 'Amiri', // Amiri numbers look great and thick
+          ),
+        ));
+        return '';
+      },
+      onNonMatch: (String nonMatch) {
+        if (nonMatch.isNotEmpty) {
+          // Trim any trailing space so the newline works perfectly
+          String text = nonMatch;
+          if (text.endsWith(' ')) {
+            text = text.substring(0, text.length - 1);
+          }
+          spans.add(TextSpan(text: text, style: baseStyle));
+        }
+        return '';
+      },
+    );
+    return spans;
+  }
+
+  double _calculateHizbYPosition(int line, double H) {
+    double rawY = H * 0.05 + (H * 0.90) * ((line - 0.5) / 15.0);
+    final minCenter = H * 0.05 + H * 0.095 + H * 0.01; // top padding + top cut radius + padding
+    final maxCenter = H * 0.97 - H * 0.125 - H * 0.01; // bottom padding - bottom cut radius - padding
+    if (rawY < minCenter) rawY = minCenter;
+    if (rawY > maxCenter) rawY = maxCenter;
+    return rawY;
+  }
+
   @override
   Widget build(BuildContext context) {
     const Color innerColor = Color(0xFF2C2520); // Dark brown matching traditional ink
+    
+    final hizbMarkers = HizbData.pageHizbs[pageNumber];
+    final isLeftPage = pageNumber % 2 == 0;
 
     // Traditional typography
     const TextStyle headerStyle = TextStyle(
@@ -57,7 +102,12 @@ class QuranPageFrame extends StatelessWidget {
                 // LAYER 1: Procedural Custom Painter Background
                 // ----------------------------------------------------
                 CustomPaint(
-                  painter: QuranBorderPainter(),
+                  painter: QuranBorderPainter(
+                    pageNumber: pageNumber,
+                    hizbCutCenters: hizbMarkers != null 
+                        ? hizbMarkers.map((m) => _calculateHizbYPosition(m['line'] as int, H)).toList() 
+                        : [],
+                  ),
                   size: Size.infinite,
                 ),
 
@@ -195,8 +245,65 @@ class QuranPageFrame extends StatelessWidget {
                   ),
                 ),
 
-                // LAYER 5: Blending Gradients (تسييح)
-                // Top Gradient to melt into SafeArea
+                // ----------------------------------------------------
+                // LAYER 5: Hizb Marker (Side Margin)
+                // ----------------------------------------------------
+                // According to the Mushaf, the margin marker is on the outer edge.
+                if (hizbMarkers != null)
+                  for (final marker in hizbMarkers)
+                    Positioned(
+                      top: _calculateHizbYPosition(marker['line'] as int, H),
+                      left: isLeftPage ? W * 0.055 : null,
+                      right: !isLeftPage ? W * 0.045 : null,
+                      width: W * 0.12,
+                      child: FractionalTranslation(
+                        translation: Offset(isLeftPage ? -0.5 : 0.5, -0.5),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                          // The Ornament Glyph from QCF_BSML
+                          Transform.scale(
+                            scaleX: 1.0, // Adjusted back to normal
+                            scaleY: 1.0,
+                            child: const Text(
+                              '\u00F5', // The selected Hizb frame
+                              style: TextStyle(
+                                fontFamily: 'QCF_BSML',
+                                fontSize: 65, // Keep size
+                                color: QuranBorderPainter.gold,
+                                height: 1.0,
+                              ),
+                            ),
+                          ),
+                          // The Text inside the ornament
+                          Transform.translate(
+                            offset: const Offset(-1.5, 12), // Shift the text downwards to center it visually inside the ornament
+                            child: SizedBox(
+                              width: W * 0.06, // slightly wider to fit bigger numbers
+                              child: Text.rich(
+                                TextSpan(
+                                  children: _buildHizbTextSpans(
+                                    marker['text'] as String, 
+                                    headerStyle.copyWith(
+                                      fontSize: 6, 
+                                      height: 1.2,
+                                      color: QuranBorderPainter.innerColor,
+                                    )
+                                  ),
+                                ),
+                                textAlign: TextAlign.center,
+                                textDirection: TextDirection.rtl,
+                              ),
+                            ),
+                          ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                // ----------------------------------------------------
+                // LAYER 6: Blending Gradients (تسييح)
+                // ----------------------------------------------------
                 Positioned(
                   top: 0,
                   left: 0,

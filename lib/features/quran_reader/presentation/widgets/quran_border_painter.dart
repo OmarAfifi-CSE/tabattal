@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 
 class QuranBorderPainter extends CustomPainter {
+  final int pageNumber;
+  final List<double> hizbCutCenters;
+
+  QuranBorderPainter({required this.pageNumber, required this.hizbCutCenters});
+
   static const Color gold = Color(0xFFC7A263); 
   static const Color innerColor = Color(0xFF2C2520);
   static const Color background = Color(0xFFFBF7F0);
@@ -10,6 +15,8 @@ class QuranBorderPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final W = size.width;
     final H = size.height;
+    
+    final bool isLeftPage = pageNumber % 2 == 0;
 
     // 1. Paint Background
     _drawBackground(canvas, size);
@@ -26,12 +33,34 @@ class QuranBorderPainter extends CustomPainter {
     // Path 1: From Juz cut (left), around the left and bottom, to Page Number cut (left)
     framePath.moveTo(W * 0.08, top); // Juz Left Cut
     framePath.lineTo(left, top); // Top Left Corner
+    
+    // Left Edge
+    if (isLeftPage && hizbCutCenters.isNotEmpty) {
+      // Sort in descending order of Y to draw from top to bottom
+      final sortedCenters = List<double>.from(hizbCutCenters)..sort((a, b) => a.compareTo(b));
+      for (final cy in sortedCenters) {
+        framePath.lineTo(left, cy - H * 0.095); // Top Cut (smaller gap above)
+        framePath.moveTo(left, cy + H * 0.125); // Bottom Cut (larger gap below)
+      }
+    }
+    
     framePath.lineTo(left, bottom); // Bottom Left Corner
     framePath.lineTo(W * 0.42, bottom); // Page Number Left Cut
 
     // Path 2: From Page Number cut (right), around the bottom and right, to Menu cut (right)
     framePath.moveTo(W * 0.58, bottom); // Page Number Right Cut
     framePath.lineTo(right, bottom); // Bottom Right Corner
+    
+    // Right Edge
+    if (!isLeftPage && hizbCutCenters.isNotEmpty) {
+      // For right edge, we draw from bottom to top, so sort in descending order of Y
+      final sortedCenters = List<double>.from(hizbCutCenters)..sort((a, b) => b.compareTo(a));
+      for (final cy in sortedCenters) {
+        framePath.lineTo(right, cy + H * 0.125); // Bottom Cut (larger gap below)
+        framePath.moveTo(right, cy - H * 0.095); // Top Cut (smaller gap above)
+      }
+    }
+    
     framePath.lineTo(right, top); // Top Right Corner
     framePath.lineTo(W * 0.93, top); // Menu Right Cut
 
@@ -113,7 +142,7 @@ class QuranBorderPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
+  bool shouldRepaint(covariant QuranBorderPainter oldDelegate) {
+    return oldDelegate.pageNumber != pageNumber || oldDelegate.hizbCutCenters.toString() != hizbCutCenters.toString();
   }
 }
