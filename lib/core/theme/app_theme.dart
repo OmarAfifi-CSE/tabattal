@@ -17,8 +17,11 @@ ThemeData appTheme() {
 const SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(
   statusBarColor: Colors.transparent,
   systemNavigationBarColor: Colors.transparent,
+  systemNavigationBarDividerColor: Colors.transparent,
   statusBarIconBrightness: Brightness.dark,
   systemNavigationBarIconBrightness: Brightness.dark,
+  systemNavigationBarContrastEnforced: false,
+  systemStatusBarContrastEnforced: false,
 );
 
 Widget appDirectionalityBuilder(BuildContext context, Widget? child) {

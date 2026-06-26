@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../bloc/bookmark/bookmark_bloc.dart';
 import '../../bloc/bookmark/bookmark_event.dart';
 import '../../bloc/bookmark/bookmark_state.dart';
 import '../../../../quran_reader/domain/repositories/quran_repository.dart';
 import '../../../../../core/utils/verse_ref.dart';
+import '../../../../../core/utils/arabic_text_utils.dart';
 import '../quran_metadata.dart';
 
 class QuranBookmarksView extends StatelessWidget {
@@ -14,76 +16,38 @@ class QuranBookmarksView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF5EB),
+      backgroundColor: AppColors.surfaceCream,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFAF5EB),
+        backgroundColor: AppColors.surfaceCream,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'العلامات المرجعية',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-          ),
+          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22.sp),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary, size: 24.sp),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: BlocBuilder<BookmarkBloc, BookmarkState>(
         builder: (context, state) {
-          if (state.bookmarkedVerseKeys.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.bookmark_border_rounded,
-                    size: 72,
-                    color: AppColors.accentGold.withValues(alpha: 0.4),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'لا توجد علامات مرجعية',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'اضغط على أي آية لإضافتها للمفضلة',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: AppColors.textPrimary.withValues(alpha: 0.4),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
+          if (state.bookmarkedVerseKeys.isEmpty) return _buildEmptyState();
 
           return ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.r),
             itemCount: state.bookmarkedVerseKeys.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            separatorBuilder: (context, index) => SizedBox(height: 12.h),
             itemBuilder: (context, index) {
               final verseKey = state.bookmarkedVerseKeys[index];
               final verseRef = VerseRef.fromKey(verseKey);
-              final surahName = QuranMetadata.getSurahName(verseRef.surah);
 
               return _BookmarkCard(
                 verseKey: verseKey,
-                surahName: surahName,
+                surahName: QuranMetadata.getSurahName(verseRef.surah),
                 surahNum: verseRef.surah,
                 ayahNum: verseRef.ayah,
-                onNavigate: (page) => Navigator.pop(
-                  context,
-                  {'page': page, 'verseKey': verseKey},
-                ),
+                onNavigate: (page) => Navigator.pop(context, {'page': page, 'verseKey': verseKey}),
               );
             },
           );
@@ -91,7 +55,32 @@ class QuranBookmarksView extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.bookmark_border_rounded, size: 72.sp, color: AppColors.accentGold.withValues(alpha: 0.4)),
+          SizedBox(height: 16.h),
+          Text(
+            'لا توجد علامات مرجعية',
+            style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'اضغط على أي آية لإضافتها كعلامة مرجعية',
+            style: TextStyle(fontSize: 15.sp, color: AppColors.textPrimary.withValues(alpha: 0.4)),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
+// ---------------------------------------------------------------------------
+// Bookmark Card
+// ---------------------------------------------------------------------------
 
 class _BookmarkCard extends StatefulWidget {
   final String verseKey;
@@ -113,31 +102,27 @@ class _BookmarkCard extends StatefulWidget {
 }
 
 class _BookmarkCardState extends State<_BookmarkCard> {
-  bool _isLoading = true;
+  bool _isLoadingPage = true;
+  bool _hasError = false;
   int _surahStartPage = 1;
 
   @override
   void initState() {
     super.initState();
-    _loadSurahPage();
+    _loadVersePage();
   }
 
-  Future<void> _loadSurahPage() async {
-    final repo = context.read<QuranRepository>();
-    final indexResult = await repo.getSurahsIndex();
-    indexResult.fold(
-      (f) {
-        if (mounted) setState(() => _isLoading = false);
+  Future<void> _loadVersePage() async {
+    final result = await context.read<QuranRepository>().getPageForVerse(widget.verseKey);
+    result.fold(
+      (failure) {
+        if (mounted) setState(() { _isLoadingPage = false; _hasError = true; });
       },
-      (index) {
-        final surahData = index.firstWhere(
-          (r) => r['surah'] == widget.surahNum,
-          orElse: () => <String, dynamic>{'start_page': 1},
-        );
+      (page) {
         if (mounted) {
           setState(() {
-            _isLoading = false;
-            _surahStartPage = surahData['start_page'] as int? ?? 1;
+            _isLoadingPage = false;
+            _surahStartPage = page;
           });
         }
       },
@@ -149,66 +134,53 @@ class _BookmarkCardState extends State<_BookmarkCard> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.2)),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        onTap: _isLoading
-            ? null
-            : () => widget.onNavigate(_surahStartPage),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+        onTap: (_isLoadingPage || _hasError) ? null : () => widget.onNavigate(_surahStartPage),
         leading: Container(
-          width: 48,
-          height: 48,
+          width: 48.r,
+          height: 48.r,
           decoration: BoxDecoration(
             color: AppColors.accentGold.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.bookmark_rounded, color: AppColors.accentGold, size: 24),
+          child: Icon(Icons.bookmark_rounded, color: AppColors.accentGold, size: 24.sp),
         ),
         title: Text(
           'سورة ${widget.surahName}',
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
+          style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
         ),
         subtitle: Padding(
-          padding: const EdgeInsets.only(top: 2),
+          padding: EdgeInsets.only(top: 2.h),
           child: Text(
-            'الآية ${widget.ayahNum}  •  صفحة $_surahStartPage',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.textPrimary.withValues(alpha: 0.55),
-            ),
+            'الآية ${widget.ayahNum.toArabicDigits}  •  صفحة ${_hasError ? '—' : _surahStartPage.toArabicDigits}',
+            style: TextStyle(fontSize: 13.sp, color: AppColors.textPrimary.withValues(alpha: 0.55)),
           ),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (_isLoading)
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accentGold),
+            if (_isLoadingPage)
+              SizedBox(
+                width: 20.r,
+                height: 20.r,
+                child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.accentGold),
               )
             else
               Icon(
-                Icons.arrow_back_ios_rounded,
-                size: 16,
-                color: AppColors.textPrimary.withValues(alpha: 0.3),
+                _hasError ? Icons.error_outline : Icons.arrow_back_ios_rounded,
+                size: 16.sp,
+                color: _hasError ? Colors.red.withValues(alpha: 0.6) : AppColors.textPrimary.withValues(alpha: 0.3),
               ),
-            const SizedBox(width: 4),
+            SizedBox(width: 4.w),
             IconButton(
-              icon: Icon(Icons.delete_outline_rounded, color: Colors.red.withValues(alpha: 0.65), size: 22),
+              icon: Icon(Icons.delete_outline_rounded, color: Colors.red.withValues(alpha: 0.65), size: 22.sp),
               onPressed: () => context.read<BookmarkBloc>().add(ToggleBookmark(widget.verseKey)),
             ),
           ],

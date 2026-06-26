@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../../core/utils/arabic_text_utils.dart';
 import '../../../../quran_reader/domain/repositories/quran_repository.dart';
 import '../../../../quran_reader/data/datasources/quran_local_data_source.dart';
 import '../../bloc/audio/audio_bloc.dart';
@@ -48,6 +49,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   final List<VerseTafsirData> _tafsirList = [];
   int _currentSurahId = 1;
   int _tafsirResourceId = 16; // Default: Al-Muyassar
+  int _initialScrollIndex = 0;
 
   bool _isDownloading = false;
   double _downloadProgress = 0.0;
@@ -132,19 +134,15 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
 
         await _loadSurahData(_currentSurahId);
 
-        if (mounted) {
-          setState(() => _isLoadingInitial = false);
-        }
-
         if (_initialVerseKey != null) {
           final index = _tafsirList.indexWhere((e) => e.verseKey == _initialVerseKey);
           if (index != -1) {
-            Future.delayed(const Duration(milliseconds: 100), () {
-              if (_itemScrollController.isAttached) {
-                _itemScrollController.jumpTo(index: index, alignment: 0.1);
-              }
-            });
+            _initialScrollIndex = index;
           }
+        }
+
+        if (mounted) {
+          setState(() => _isLoadingInitial = false);
         }
       },
     );
@@ -208,7 +206,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
         index: index,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
-        alignment: 0.15, // 15% from top = clear of AppBar
+        alignment: 0.0,
       );
     }
   }
@@ -252,7 +250,8 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
           if (currentVerseKey != null) {
             final index = _tafsirList.indexWhere((e) => e.verseKey == currentVerseKey);
             if (index != -1 && _itemScrollController.isAttached) {
-              _itemScrollController.jumpTo(index: index);
+              // EDIT THIS VALUE: 0.0 means exactly at the top.
+              _itemScrollController.jumpTo(index: index, alignment: 0.0);
             }
           }
         });
@@ -331,9 +330,9 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
           Navigator.pop(context, {'page': pageToReturn, 'verseKey': verseKeyToReturn});
         },
         child: Scaffold(
-          backgroundColor: const Color(0xFFFAF5EB),
+          backgroundColor: AppColors.surfaceCream,
           appBar: AppBar(
-          backgroundColor: const Color(0xFFFAF5EB),
+          backgroundColor: AppColors.surfaceCream,
           elevation: 0,
           centerTitle: true,
           title: const Text(
@@ -399,7 +398,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                             option.$2,
                             style: AppTextStyles.menuItemText.copyWith(
                               fontSize: 14,
-                              color: isSelected ? AppColors.accentGold : const Color(0xFF2C2520),
+                              color: isSelected ? AppColors.accentGold : AppColors.textPrimary,
                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                             ),
                           ),
@@ -460,6 +459,8 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                       return ScrollablePositionedList.separated(
                         itemScrollController: _itemScrollController,
                         itemPositionsListener: _itemPositionsListener,
+                        initialScrollIndex: _initialScrollIndex,
+                        initialAlignment: 0.01,
                         padding: const EdgeInsets.all(16),
                         itemCount: _tafsirList.length + 1,
                         separatorBuilder: (context, index) => const SizedBox(height: 20),
@@ -489,7 +490,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                 color: isActive ? AppColors.accentGold.withValues(alpha: 0.08) : Colors.white,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: isActive ? AppColors.accentGold : const Color(0xFFEFE8DA),
+                                  color: isActive ? AppColors.accentGold : AppColors.borderLight,
                                   width: isActive ? 2 : 1,
                                 ),
                                 boxShadow: [
@@ -517,20 +518,21 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
-                                              'سورة ${QuranMetadata.getSurahName(item.surah)}',
+                                              QuranMetadata.getSurahNameWithTashkeel(item.surah),
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 color: AppColors.accentGold,
-                                                fontSize: 13,
+                                                fontSize: 16,
                                               ),
                                             ),
                                             const SizedBox(width: 6),
                                             Text(
-                                              '﴿${item.ayah}﴾',
+                                              '﴿${item.ayah.toArabicDigits}﴾',
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 color: AppColors.accentGold,
-                                                fontSize: 13,
+                                                fontSize: 14,
+                                                fontFamily: 'Amiri',
                                               ),
                                             ),
                                           ],
@@ -560,15 +562,30 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                   ),
                                   const SizedBox(height: 14),
                                   // Quranic text
-                                  Text(
-                                    '${item.textUthmani} ﴿${item.ayah}﴾',
+                                  Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: '${ArabicTextUtils.removeExtendedUthmaniChars(item.textUthmani)} ',
+                                          style: AppTextStyles.quranText.copyWith(
+                                            fontSize: 23,
+                                            height: 1.9,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: '﴿${item.ayah.toArabicDigits}﴾',
+                                          style: AppTextStyles.quranText.copyWith(
+                                            fontFamily: 'Amiri',
+                                            fontSize: 21,
+                                            height: 1.9,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                     textAlign: TextAlign.right,
                                     textDirection: TextDirection.rtl,
-                                    style: AppTextStyles.quranText.copyWith(
-                                      fontSize: 23,
-                                      height: 1.9,
-                                      color: AppColors.textPrimary,
-                                    ),
                                   ),
                                   const SizedBox(height: 12),
                                   const Divider(color: AppColors.divider),

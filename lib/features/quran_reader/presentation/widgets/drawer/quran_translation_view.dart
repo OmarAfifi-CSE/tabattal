@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../../core/utils/arabic_text_utils.dart';
 import '../../../../quran_reader/domain/repositories/quran_repository.dart';
 import '../../../../quran_reader/data/datasources/quran_local_data_source.dart';
 import '../../bloc/audio/audio_bloc.dart';
@@ -46,6 +47,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
   final List<VerseTranslationData> _list = [];
   int _currentSurahId = 1;
   final int _translationResourceId = 20; // Default: Saheeh International
+  int _initialScrollIndex = 0;
 
   String? _initialVerseKey;
 
@@ -93,20 +95,15 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
 
         await _loadSurahData(_currentSurahId);
         
+        if (_initialVerseKey != null) {
+          final index = _list.indexWhere((e) => e.verseKey == _initialVerseKey);
+          if (index != -1) {
+            _initialScrollIndex = index;
+          }
+        }
+
         if (mounted) {
           setState(() => _isLoadingInitial = false);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (_initialVerseKey != null) {
-              final index = _list.indexWhere((e) => e.verseKey == _initialVerseKey);
-              if (index != -1) {
-                Future.delayed(const Duration(milliseconds: 100), () {
-                  if (_itemScrollController.isAttached) {
-                    _itemScrollController.jumpTo(index: index, alignment: 0.1);
-                  }
-                });
-              }
-            }
-          });
         }
       },
     );
@@ -170,7 +167,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
         index: index,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
-        alignment: 0.15, // 15% from top = clear of AppBar
+        alignment: 0.0,
       );
     }
   }
@@ -204,9 +201,9 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
           Navigator.pop(context, {'page': pageToReturn, 'verseKey': verseKeyToReturn});
         },
         child: Scaffold(
-          backgroundColor: const Color(0xFFFAF5EB),
+          backgroundColor: AppColors.surfaceCream,
           appBar: AppBar(
-          backgroundColor: const Color(0xFFFAF5EB),
+          backgroundColor: AppColors.surfaceCream,
           elevation: 0,
           centerTitle: true,
           title: const Text(
@@ -244,6 +241,8 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
                       return ScrollablePositionedList.separated(
                         itemScrollController: _itemScrollController,
                         itemPositionsListener: _itemPositionsListener,
+                        initialScrollIndex: _initialScrollIndex,
+                        initialAlignment: 0.01,
                         padding: const EdgeInsets.all(16),
                         itemCount: _list.length + 1,
                         separatorBuilder: (context, index) => const SizedBox(height: 20),
@@ -269,7 +268,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
                                 color: isPlaying ? AppColors.accentGold.withValues(alpha: 0.08) : Colors.white,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: isPlaying ? AppColors.accentGold : const Color(0xFFEFE8DA),
+                                  color: isPlaying ? AppColors.accentGold : AppColors.borderLight,
                                   width: isPlaying ? 2 : 1,
                                 ),
                                 boxShadow: [
@@ -296,13 +295,22 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
-                                              'سورة ${QuranMetadata.getSurahName(item.surah)}',
-                                              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold, fontSize: 13),
+                                              QuranMetadata.getSurahNameWithTashkeel(item.surah),
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.accentGold,
+                                                fontSize: 16,
+                                              ),
                                             ),
                                             const SizedBox(width: 6),
                                             Text(
-                                              '﴿${item.ayah}﴾',
-                                              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold, fontSize: 13),
+                                              '﴿${item.ayah.toArabicDigits}﴾',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.accentGold,
+                                                fontSize: 14,
+                                                fontFamily: 'Amiri',
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -329,11 +337,21 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
                                     ],
                                   ),
                                   const SizedBox(height: 14),
-                                  Text(
-                                    '${item.textUthmani} ﴿${item.ayah}﴾',
+                                  Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: '${ArabicTextUtils.removeExtendedUthmaniChars(item.textUthmani)} ',
+                                          style: AppTextStyles.quranText.copyWith(fontSize: 23, height: 1.9, color: AppColors.textPrimary),
+                                        ),
+                                        TextSpan(
+                                          text: '﴿${item.ayah.toArabicDigits}﴾',
+                                          style: AppTextStyles.quranText.copyWith(fontFamily: 'Amiri', fontSize: 21, height: 1.9, color: AppColors.textPrimary),
+                                        ),
+                                      ],
+                                    ),
                                     textAlign: TextAlign.right,
                                     textDirection: TextDirection.rtl,
-                                    style: AppTextStyles.quranText.copyWith(fontSize: 23, height: 1.9, color: AppColors.textPrimary),
                                   ),
                                   const SizedBox(height: 12),
                                   const Divider(color: AppColors.divider),

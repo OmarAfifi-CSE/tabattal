@@ -17,11 +17,13 @@ class AppColors {
 
   // Core thematic colors
   static const Color surfaceCream = Color(0xFFFAF5EB);
-  static const Color pageBackground = Color(0xFFfdf4e0);
   static const Color cardCream = Color(0xFFFBF7F0);
   static const Color inkBrown = Color(0xFF2C2520);
   static const Color bronzeIcon = Color(0xFF8C7355);
   static const Color bronzeDark = Color(0xFFB48A5E);
   static const Color verseMarkerBrown = Color(0xFF5A4033);
   static const Color verseMarkerGold = Color(0xFFC7A263);
+  static const Color borderInnerGold = Color(0xFFEAD8BA);
+  static const Color borderLight = Color(0xFFEFE8DA);
+  static const Color borderMedium = Color(0xFFD6C8A9);
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../widgets/quran_page_widget.dart';
 import '../bloc/audio/audio_bloc.dart';
@@ -7,8 +8,10 @@ import '../widgets/media_control_bar.dart';
 import '../widgets/drawer/quran_drawer.dart';
 import '../../../../core/services/audio_preferences_service.dart';
 import '../../domain/repositories/quran_repository.dart';
+import '../../data/models/search_verse_model.dart';
 import '../../../../core/utils/verse_ref.dart';
 import '../../../../core/constants/quran_constants.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class QuranPageViewScreen extends StatefulWidget {
   const QuranPageViewScreen({super.key});
@@ -54,48 +57,56 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
     context.read<AudioPreferencesService>().saveLastReadPage(_currentPage);
   }
 
+  void _handleAudioStateChange(BuildContext context, AudioState state) {
+    if (state is AudioError) {
+      _showErrorSnackBar(state.message);
+    } else if (state is AudioPlaying) {
+      _navigateToPlayingVerse(context, state.currentVerseId);
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14.sp),
+        ),
+        backgroundColor: AppColors.verseMarkerGold,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(16.r),
+      ),
+    );
+  }
+
+  void _navigateToPlayingVerse(BuildContext context, int verseId) {
+    final verse = VerseRef.fromId(verseId);
+    context.read<QuranRepository>().getVersesBySurah(verse.surah).then((result) {
+      result.fold(
+        (failure) => debugPrint('[AudioBloc] Failed to resolve verse page: ${failure.toString()}'),
+        (verses) {
+          final SearchVerseModel? matchingVerse = verses.cast<SearchVerseModel>().where((v) => v.ayah == verse.ayah).firstOrNull;
+          final targetPage = matchingVerse?.page;
+          if (targetPage != null && targetPage != _currentPage) {
+            _jumpToPage(targetPage, verseKey: matchingVerse?.verseKey, animate: true);
+          }
+        },
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFfdf4e0),
+      backgroundColor: AppColors.background,
       drawer: QuranDrawer(
         currentPage: _currentPage,
         onNavigateToPage: (page, {String? verseKey}) => _jumpToPage(page, verseKey: verseKey),
       ),
       body: SafeArea(
         child: BlocListener<AudioBloc, AudioState>(
-          listener: (context, state) {
-            if (state is AudioError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    state.message,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                  backgroundColor: const Color(0xFFC7B698),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  behavior: SnackBarBehavior.floating,
-                  margin: const EdgeInsets.all(16),
-                ),
-              );
-            } else if (state is AudioPlaying) {
-              final verse = VerseRef.fromId(state.currentVerseId);
-              final repository = context.read<QuranRepository>();
-              repository.getVersesBySurah(verse.surah).then((result) {
-                result.fold(
-                  (f) => null,
-                  (verses) {
-                    final v = verses.firstWhere((v) => v.ayah == verse.ayah);
-                    if (v.page != _currentPage) {
-                      _jumpToPage(v.page, verseKey: v.verseKey, animate: true);
-                    }
-                  },
-                );
-              });
-            }
-          },
+          listener: _handleAudioStateChange,
           child: Stack(
             children: [
               PageView.builder(
@@ -104,18 +115,15 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
                 scrollDirection: Axis.horizontal,
                 reverse: false,
                 onPageChanged: (index) {
-                  setState(() {
-                    _currentPage = index + 1;
-                  });
+                  setState(() => _currentPage = index + 1);
                   context.read<AudioPreferencesService>().saveLastReadPage(_currentPage);
                 },
                 itemBuilder: (context, index) {
                   final pageNumber = index + 1;
-                  final highlight = (pageNumber == _currentPage) ? _highlightVerseKey : null;
                   return QuranPageWidget(
                     key: ValueKey(pageNumber),
                     pageNumber: pageNumber,
-                    highlightVerseKey: highlight,
+                    highlightVerseKey: pageNumber == _currentPage ? _highlightVerseKey : null,
                   );
                 },
               ),
@@ -125,9 +133,9 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
                   return AnimatedPositioned(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOutCubic,
-                    bottom: isVisible ? 16.0 : -200.0,
-                    left: 16.0,
-                    right: 16.0,
+                    bottom: isVisible ? 16.h : -200.h,
+                    left: 16.w,
+                    right: 16.w,
                     child: const MediaControlBar(),
                   );
                 },

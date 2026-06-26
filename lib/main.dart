@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'features/quran_reader/presentation/pages/quran_page_view_screen.dart';
 import 'features/quran_reader/presentation/bloc/audio/audio_bloc.dart';
@@ -17,6 +18,7 @@ import 'core/services/audio_preferences_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   
   final container = await configureDependencies();
 
@@ -49,13 +51,20 @@ class TabattalApp extends StatelessWidget {
             create: (_) => BookmarkBloc(repository: container.bookmarkRepository)..add(LoadBookmarks()),
           ),
         ],
-        child: MaterialApp(
-          title: 'تبتل',
-          debugShowCheckedModeBanner: false,
-          locale: const Locale('ar'),
-          theme: appTheme(),
-          builder: appDirectionalityBuilder,
-          home: const QuranPageViewScreen(),
+        child: ScreenUtilInit(
+          // Design reference: OnePlus 13R logical pixel dimensions (412×917 dp).
+          // All .sp/.w/.h values are calibrated against this reference.
+          designSize: const Size(412, 917),
+          minTextAdapt: true,
+          splitScreenMode: true,
+          child: MaterialApp(
+            title: 'تبتل',
+            debugShowCheckedModeBanner: false,
+            locale: const Locale('ar'),
+            theme: appTheme(),
+            builder: appDirectionalityBuilder,
+            home: const QuranPageViewScreen(),
+          ),
         ),
       ),
     );

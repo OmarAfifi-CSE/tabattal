@@ -13,6 +13,7 @@ abstract class QuranLocalDataSource {
   Future<String> getTranslationForVerse(String verseKey, int resourceId);
   Future<List<SearchVerseModel>> searchQuran(String query);
   Future<List<Map<String, dynamic>>> getSurahsIndex();
+  Future<int> getPageForVerse(String verseKey);
   Future<List<SearchVerseModel>> getVersesBySurah(int surahId);
   Future<List<Map<String, dynamic>>> getTafsirsBySurah(int surahId, int resourceId);
   Future<List<Map<String, dynamic>>> getTranslationsBySurah(int surahId, int resourceId);
@@ -53,6 +54,26 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       )).toList();
     } catch (e) {
       throw CacheException('Database error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<int> getPageForVerse(String verseKey) async {
+    try {
+      final db = await databaseHelper.database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        'quran_words',
+        columns: ['page'],
+        where: 'verse_key = ?',
+        whereArgs: [verseKey],
+        limit: 1,
+      );
+      if (maps.isNotEmpty) {
+        return maps.first['page'] as int;
+      }
+      return 1;
+    } catch (e) {
+      return 1;
     }
   }
 

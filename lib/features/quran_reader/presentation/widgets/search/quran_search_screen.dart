@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../../core/utils/arabic_text_utils.dart';
 import '../../../../quran_reader/domain/repositories/quran_repository.dart';
 import '../../../../quran_reader/data/models/search_verse_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -196,7 +197,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF5EB),
+      backgroundColor: AppColors.surfaceCream,
       body: SafeArea(
         child: Column(
           children: [
@@ -221,9 +222,9 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFEFE8DA),
+                color: AppColors.borderLight,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFD6C8A9), width: 1),
+                border: Border.all(color: AppColors.borderMedium, width: 1),
               ),
               child: const Icon(Icons.arrow_forward_rounded, color: AppColors.textPrimary, size: 24),
             ),
@@ -235,7 +236,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFD6C8A9), width: 1),
+                border: Border.all(color: AppColors.borderMedium, width: 1),
               ),
               child: Row(
                 textDirection: TextDirection.rtl,
@@ -350,14 +351,14 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'صفحة ${verse.page}',
+                      'صفحة ${verse.page.toArabicDigits}',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppColors.textPrimary.withValues(alpha: 0.6),
                       ),
                     ),
                     Text(
-                      'سورة $surahName - آية ${verse.ayah}',
+                      'سورة $surahName - آية ${verse.ayah.toArabicDigits}',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -372,7 +373,11 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                   textDirection: TextDirection.rtl,
                   text: TextSpan(
                     style: AppTextStyles.quranText.copyWith(fontSize: 22, height: 1.5, color: AppColors.textPrimary),
-                    children: _getHighlightedUthmani(verse.textClean, verse.textUthmani, _searchController.text),
+                    children: _getHighlightedUthmani(
+                      verse.textClean,
+                      ArabicTextUtils.removeExtendedUthmaniChars(verse.textUthmani),
+                      _searchController.text,
+                    ),
                   ),
                 ),
               ],
@@ -427,7 +432,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
     if (cards.isEmpty) {
       return Center(
         child: Text(
-          'الرقم $number خارج النطاق المتاح',
+          'الرقم ${number.toArabicDigits} خارج النطاق المتاح',
           style: TextStyle(fontSize: 16, color: AppColors.textPrimary.withValues(alpha: 0.6)),
         ),
       );

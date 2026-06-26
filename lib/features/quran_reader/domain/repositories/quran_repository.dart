@@ -20,6 +20,7 @@ abstract class QuranRepository {
   Future<Either<Failure, List<TranslationModel>>> getTranslationsByChapter(int chapterId, {int resourceId = 20});
   Future<Either<Failure, List<SearchVerseModel>>> searchQuran(String query);
   Future<Either<Failure, List<Map<String, dynamic>>>> getSurahsIndex();
+  Future<Either<Failure, int>> getPageForVerse(String verseKey);
   Future<Either<Failure, List<SearchVerseModel>>> getVersesBySurah(int surahId);
   Future<Either<Failure, void>> downloadSingleVerseTafsir(int resourceId, String verseKey);
   Stream<DownloadState> downloadTafsir(int resourceId);
@@ -106,6 +107,11 @@ class QuranRepositoryImpl implements QuranRepository {
   @override
   Future<Either<Failure, List<Map<String, dynamic>>>> getSurahsIndex() {
     return _execute(() => localDataSource.getSurahsIndex());
+  }
+
+  @override
+  Future<Either<Failure, int>> getPageForVerse(String verseKey) {
+    return _execute(() => localDataSource.getPageForVerse(verseKey));
   }
 
   @override

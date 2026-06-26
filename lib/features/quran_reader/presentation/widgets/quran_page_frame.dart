@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import 'quran_border_painter.dart';
 import 'hizb_data.dart';
+import '../../../../core/utils/arabic_text_utils.dart';
 
 class QuranPageFrame extends StatelessWidget {
   final Widget child;
@@ -17,39 +19,28 @@ class QuranPageFrame extends StatelessWidget {
     required this.juzName,
   });
 
-  String _toArabicNumber(int number) {
-    const englishToArabicDigits = {
-      '0': '٠', '1': '١', '2': '٢', '3': '٣', '4': '٤',
-      '5': '٥', '6': '٦', '7': '٧', '8': '٨', '9': '٩'
-    };
-    return number.toString().split('').map((e) => englishToArabicDigits[e] ?? e).join('');
-  }
-
-  List<TextSpan> _buildHizbTextSpans(String text, TextStyle baseStyle) {
-    final RegExp digitRegExp = RegExp(r'[0-9٠-٩]+');
+  /// Builds inline text spans for a Hizb label, making the digit larger and on a new line.
+  List<TextSpan> buildHizbLabelTextSpans(String text, TextStyle baseStyle) {
+    final digitRegExp = RegExp(r'[0-9٠-٩]+');
     final spans = <TextSpan>[];
-    
+
     text.splitMapJoin(
       digitRegExp,
       onMatch: (Match match) {
         spans.add(TextSpan(
-          text: '\n${match.group(0)}', // Insert newline before the number
+          text: '\n${match.group(0)}',
           style: baseStyle.copyWith(
-            fontSize: baseStyle.fontSize! * 1.25, 
+            fontSize: baseStyle.fontSize! * 1.25,
             fontWeight: FontWeight.w900,
-            fontFamily: 'Amiri', // Amiri numbers look great and thick
+            fontFamily: 'Amiri',
           ),
         ));
         return '';
       },
       onNonMatch: (String nonMatch) {
-        if (nonMatch.isNotEmpty) {
-          // Trim any trailing space so the newline works perfectly
-          String text = nonMatch;
-          if (text.endsWith(' ')) {
-            text = text.substring(0, text.length - 1);
-          }
-          spans.add(TextSpan(text: text, style: baseStyle));
+        if (nonMatch.trim().isNotEmpty) {
+          final replaced = nonMatch.trim().replaceAll(' ', '\n');
+          spans.add(TextSpan(text: replaced, style: baseStyle));
         }
         return '';
       },
@@ -57,95 +48,100 @@ class QuranPageFrame extends StatelessWidget {
     return spans;
   }
 
-  double _calculateHizbYPosition(int line, double H) {
-    double rawY = H * 0.05 + (H * 0.90) * ((line - 0.5) / 15.0);
-    final minCenter = H * 0.05 + H * 0.095 + H * 0.01; // top padding + top cut radius + padding
-    final maxCenter = H * 0.97 - H * 0.125 - H * 0.01; // bottom padding - bottom cut radius - padding
-    if (rawY < minCenter) rawY = minCenter;
-    if (rawY > maxCenter) rawY = maxCenter;
-    return rawY;
+  /// Calculates the Y-position of a Hizb marker from its line number (1–15),
+  /// clamped so the frame cut never overflows the border corners.
+  double calculateHizbMarkerYPosition(int lineNumber, double pageHeight) {
+    final double topPadding = pageHeight * 0.04;
+    final double textHeight = pageHeight * 0.89;
+    double rawY = topPadding + textHeight * ((lineNumber - 0.5) / 15.0);
+
+    final minY = pageHeight * 0.02 + pageHeight * 0.095 + pageHeight * 0.01;
+    final maxY = pageHeight * 0.97 - pageHeight * 0.125 - pageHeight * 0.01;
+    if (minY >= maxY) return rawY; // Safeguard against small layout constraints
+    return rawY.clamp(minY, maxY);
+  }
+
+  /// Builds a styled info box used in the frame header cuts (Juz, Surah, Menu).
+  Widget _buildFrameInfoBox({required Widget child, EdgeInsetsGeometry? margin}) {
+    return Container(
+      margin: margin ?? EdgeInsets.symmetric(horizontal: 6.w),
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        border: Border.all(color: QuranBorderPainter.gold.withValues(alpha: 0.6), width: 1.0),
+        borderRadius: BorderRadius.circular(12.r),
+        color: QuranBorderPainter.background,
+      ),
+      child: child,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    const Color innerColor = Color(0xFF2C2520); // Dark brown matching traditional ink
-    
     final hizbMarkers = HizbData.pageHizbs[pageNumber];
     final isLeftPage = pageNumber % 2 == 0;
 
-    // Traditional typography
     const TextStyle headerStyle = TextStyle(
       fontFamily: 'KFGQPC Uthmanic Script HAFS',
-      color: innerColor, 
-      fontSize: 10, 
+      color: QuranBorderPainter.innerColor,
       fontWeight: FontWeight.bold,
     );
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent, // Let Scaffold background show through
+        statusBarColor: Colors.transparent,
         systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
         systemNavigationBarIconBrightness: Brightness.dark,
+        systemNavigationBarContrastEnforced: false,
+        systemStatusBarContrastEnforced: false,
       ),
       child: Material(
-        color: const Color(0xFFfdf4e0), // The exact background color requested
+        color: Colors.transparent,
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final double W = constraints.maxWidth;
-            final double H = constraints.maxHeight;
+            final double pageWidth = constraints.maxWidth;
+            final double pageHeight = constraints.maxHeight;
 
             return Stack(
               fit: StackFit.expand,
               children: [
-                // ----------------------------------------------------
-                // LAYER 1: Procedural Custom Painter Background
-                // ----------------------------------------------------
+                // ── LAYER 1: Procedural border painter ─────────────────────
                 CustomPaint(
                   painter: QuranBorderPainter(
                     pageNumber: pageNumber,
-                    hizbCutCenters: hizbMarkers != null 
-                        ? hizbMarkers.map((m) => _calculateHizbYPosition(m['line'] as int, H)).toList() 
+                    hizbCutCenters: hizbMarkers != null
+                        ? hizbMarkers
+                            .map((m) => calculateHizbMarkerYPosition(m['line'] as int, pageHeight))
+                            .toList()
                         : [],
                   ),
                   size: Size.infinite,
                 ),
 
-                // ----------------------------------------------------
-                // LAYER 2: The Interactive Content
-                // Adjusted top constraint to clear the banners (pushed down ~24dp)
-                // ----------------------------------------------------
-                // Content constraints
+                // ── LAYER 2: Quran text content ─────────────────────────────
                 Positioned(
-                  top: H * 0.08, 
-                  bottom: H * 0.05, 
-                  left: W * 0.08, 
-                  right: W * 0.08, 
+                  top: pageHeight * 0.04, // Moved up to match the higher border
+                  bottom: pageHeight * 0.05,
+                  left: pageWidth * 0.08,
+                  right: pageWidth * 0.08,
                   child: child,
                 ),
 
-                // ----------------------------------------------------
-                // LAYER 3: Texts aligned with the frame cuts
-                // ----------------------------------------------------
+                // ── LAYER 3: Header frame cuts ──────────────────────────────
+
                 // Juz Name
                 Positioned(
-                  top: H * 0.05, // Pin exactly to the line
-                  left: W * 0.08, // Match Cut 1 left
-                  width: W * 0.35, // Wider for Juz name
+                  top: pageHeight * 0.02,
+                  left: pageWidth * 0.08,
+                  width: pageWidth * 0.35,
                   child: FractionalTranslation(
-                    translation: const Offset(0.0, -0.5), // Center vertically regardless of lines
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: QuranBorderPainter.gold.withValues(alpha: 0.6), width: 1.0),
-                        borderRadius: BorderRadius.circular(12),
-                        color: QuranBorderPainter.background,
-                      ),
+                    translation: const Offset(0.0, -0.5),
+                    child: _buildFrameInfoBox(
                       child: Text(
                         juzName,
-                        style: headerStyle,
+                        style: headerStyle.copyWith(fontSize: 10.sp),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -156,25 +152,17 @@ class QuranPageFrame extends StatelessWidget {
 
                 // Surah Name
                 Positioned(
-                  top: H * 0.05,
-                  left: W * 0.46, // Match Cut 2 left
-                  width: W * 0.33,
+                  top: pageHeight * 0.02,
+                  left: pageWidth * 0.46,
+                  width: pageWidth * 0.33,
                   child: FractionalTranslation(
                     translation: const Offset(0.0, -0.5),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: QuranBorderPainter.gold.withValues(alpha: 0.6), width: 1.0),
-                        borderRadius: BorderRadius.circular(12),
-                        color: QuranBorderPainter.background,
-                      ),
+                    child: _buildFrameInfoBox(
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
                           surahName,
-                          style: headerStyle,
+                          style: headerStyle.copyWith(fontSize: 10.sp),
                           textAlign: TextAlign.center,
                           maxLines: 1,
                         ),
@@ -183,59 +171,40 @@ class QuranPageFrame extends StatelessWidget {
                   ),
                 ),
 
-                // Hamburger Menu Icon
+                // Hamburger Menu
                 Positioned(
-                  top: H * 0.05,
-                  right: W * 0.07, // Match Cut 3 right (0.93 means right is 0.07)
-                  width: W * 0.11, // Cut width is 0.11 (from 0.82 to 0.93)
+                  top: pageHeight * 0.02,
+                  right: pageWidth * 0.07,
+                  width: pageWidth * 0.11,
                   child: FractionalTranslation(
                     translation: const Offset(0.0, -0.5),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: QuranBorderPainter.gold.withValues(alpha: 0.6), width: 1.0),
-                        borderRadius: BorderRadius.circular(12),
-                        color: QuranBorderPainter.background,
-                      ),
+                    child: _buildFrameInfoBox(
+                      margin: EdgeInsets.symmetric(horizontal: 6.w),
                       child: InkWell(
-                        onTap: () {
-                          Scaffold.of(context).openDrawer();
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: const Icon(Icons.menu_rounded, color: QuranBorderPainter.gold, size: 24),
+                        onTap: () => Scaffold.of(context).openDrawer(),
+                        borderRadius: BorderRadius.circular(12.r),
+                        child: Icon(Icons.segment_rounded, color: QuranBorderPainter.gold, size: 24.sp),
                       ),
                     ),
                   ),
                 ),
 
-                // ----------------------------------------------------
-                // LAYER 4: Page Number (Bottom Cut)
-                // ----------------------------------------------------
+                // ── LAYER 4: Page Number (bottom cut) ──────────────────────
                 Positioned(
-                  bottom: H * 0.03, // Pin exactly to bottom line (1 - 0.97 = 0.03)
-                  left: W * 0.42,
-                  width: W * 0.16,
+                  bottom: pageHeight * 0.03,
+                  left: pageWidth * 0.42,
+                  width: pageWidth * 0.16,
                   child: FractionalTranslation(
-                    translation: const Offset(0.0, 0.5), // Center vertically
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: QuranBorderPainter.gold.withValues(alpha: 0.6), width: 1.0),
-                        borderRadius: BorderRadius.circular(12),
-                        color: QuranBorderPainter.background,
-                      ),
+                    translation: const Offset(0.0, 0.5),
+                    child: _buildFrameInfoBox(
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          _toArabicNumber(pageNumber),
-                          style: const TextStyle(
+                          pageNumber.toArabicDigits,
+                          style: TextStyle(
                             fontFamily: 'Amiri',
                             color: QuranBorderPainter.innerColor,
-                            fontSize: 15,
+                            fontSize: 15.sp,
                             fontWeight: FontWeight.w900,
                             height: 1.1,
                           ),
@@ -245,108 +214,67 @@ class QuranPageFrame extends StatelessWidget {
                   ),
                 ),
 
-                // ----------------------------------------------------
-                // LAYER 5: Hizb Marker (Side Margin)
-                // ----------------------------------------------------
-                // According to the Mushaf, the margin marker is on the outer edge.
+                // ── LAYER 5: Hizb markers (side margin) ────────────────────
+                // The marker appears on the outer edge (left for even/left pages, right for odd).
                 if (hizbMarkers != null)
                   for (final marker in hizbMarkers)
                     Positioned(
-                      top: _calculateHizbYPosition(marker['line'] as int, H),
-                      left: isLeftPage ? W * 0.055 : null,
-                      right: !isLeftPage ? W * 0.045 : null,
-                      width: W * 0.12,
+                      top: calculateHizbMarkerYPosition(marker['line'] as int, pageHeight),
+                      left: isLeftPage ? pageWidth * 0.057 : null,
+                      right: !isLeftPage ? pageWidth * 0.043 : null,
+                      width: pageWidth * 0.12,
                       child: FractionalTranslation(
                         translation: Offset(isLeftPage ? -0.5 : 0.5, -0.5),
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                          // The Ornament Glyph from QCF_BSML
-                          Transform.scale(
-                            scaleX: 1.0, // Adjusted back to normal
-                            scaleY: 1.0,
-                            child: const Text(
-                              '\u00F5', // The selected Hizb frame
-                              style: TextStyle(
-                                fontFamily: 'QCF_BSML',
-                                fontSize: 65, // Keep size
-                                color: QuranBorderPainter.gold,
-                                height: 1.0,
-                              ),
-                            ),
-                          ),
-                          // The Text inside the ornament
-                          Transform.translate(
-                            offset: const Offset(-1.5, 12), // Shift the text downwards to center it visually inside the ornament
-                            child: SizedBox(
-                              width: W * 0.06, // slightly wider to fit bigger numbers
-                              child: Text.rich(
-                                TextSpan(
-                                  children: _buildHizbTextSpans(
-                                    marker['text'] as String, 
-                                    headerStyle.copyWith(
-                                      fontSize: 6, 
-                                      height: 1.2,
-                                      color: QuranBorderPainter.innerColor,
-                                    )
-                                  ),
+                            // Ornament glyph from QCF_BSML
+                            Transform.scale(
+                              scaleX: 0.55,
+                              scaleY: 1.0,
+                              child: Text(
+                                '\u00F5',
+                                style: TextStyle(
+                                  fontFamily: 'QCF_BSML',
+                                  fontSize: 65.sp,
+                                  color: QuranBorderPainter.gold,
+                                  height: 1.0,
                                 ),
-                                textAlign: TextAlign.center,
-                                textDirection: TextDirection.rtl,
                               ),
                             ),
-                          ),
+                            // Label text centred inside the ornament
+                            Transform.translate(
+                              offset: Offset(-3.2.w, 12.h),
+                              child: SizedBox(
+                                width: pageWidth * 0.06,
+                                child: Text.rich(
+                                  TextSpan(
+                                    children: buildHizbLabelTextSpans(
+                                      (marker['text'] as String).toArabicDigits,
+                                      TextStyle(
+                                        fontFamily: 'KFGQPC Uthmanic Script HAFS',
+                                        fontSize: 6.sp,
+                                        height: 1.2,
+                                        color: QuranBorderPainter.innerColor,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  textDirection: TextDirection.rtl,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ),
 
-                // ----------------------------------------------------
-                // LAYER 6: Blending Gradients (تسييح)
-                // ----------------------------------------------------
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 10, // Shrunk from 40 to 10 to protect the ornaments
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          const Color(0xFFfdf4e0),
-                          const Color(0xFFfdf4e0).withValues(alpha: 0.0),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                
-                // Bottom Gradient to melt into SafeArea
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 10, // Shrunk from 40 to 10 to protect the ornaments
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          const Color(0xFFfdf4e0),
-                          const Color(0xFFfdf4e0).withValues(alpha: 0.0),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
               ],
             );
           },
         ),
-      ), // Closes Material
-    ); // Closes AnnotatedRegion
+      ),
+    );
   }
 }

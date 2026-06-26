@@ -100,9 +100,9 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
     final reciters = AudioDownloadManager.reciterCategories[_selectedCategory]!.keys.toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF5EB),
+      backgroundColor: AppColors.surfaceCream,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFAF5EB),
+        backgroundColor: AppColors.surfaceCream,
         elevation: 0,
         centerTitle: true,
         title: const Text(
@@ -125,7 +125,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFEFE8DA)),
+              border: Border.all(color: AppColors.borderLight),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.04),
@@ -254,7 +254,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFEFE8DA)),
+        border: Border.all(color: AppColors.borderLight),
       ),
       child: ValueListenableBuilder<double>(
         valueListenable: notifier,
@@ -372,7 +372,7 @@ class _InlineDropdown extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.only(left: 14, right: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFFAF5EB),
+          color: AppColors.surfaceCream,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
         ),

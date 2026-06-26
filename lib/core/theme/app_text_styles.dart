@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'app_colors.dart';
 
-
 class AppTextStyles {
-  static const TextStyle quranText = TextStyle(
-    fontFamily: 'KFGQPC Uthmanic Script HAFS', // Default fallback font
+  const AppTextStyles._();
+
+  static TextStyle get quranText => TextStyle(
+    fontFamily: 'KFGQPC Uthmanic Script HAFS',
     color: AppColors.textPrimary,
-    fontSize: 26,
+    fontSize: 26.sp,
     height: 1.9,
   );
 
-  static const TextStyle headerText = TextStyle(
+  static TextStyle get headerText => TextStyle(
     color: AppColors.textPrimary,
-    fontSize: 16,
+    fontSize: 16.sp,
     fontWeight: FontWeight.w600,
   );
-  
-  static const TextStyle menuItemText = TextStyle(
+
+  static TextStyle get menuItemText => TextStyle(
     color: AppColors.textPrimary,
-    fontSize: 16,
+    fontSize: 16.sp,
     fontWeight: FontWeight.w500,
   );
 }

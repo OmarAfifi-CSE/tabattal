@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import '../../../../core/theme/app_colors.dart';
 
 class QuranBorderPainter extends CustomPainter {
   final int pageNumber;
@@ -7,9 +8,9 @@ class QuranBorderPainter extends CustomPainter {
 
   QuranBorderPainter({required this.pageNumber, required this.hizbCutCenters});
 
-  static const Color gold = Color(0xFFC7A263); 
-  static const Color innerColor = Color(0xFF2C2520);
-  static const Color background = Color(0xFFFBF7F0);
+  static const Color gold = AppColors.verseMarkerGold; 
+  static const Color innerColor = AppColors.inkBrown;
+  static const Color background = AppColors.background;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -24,7 +25,7 @@ class QuranBorderPainter extends CustomPainter {
     // 2. Constants for positioning
     final double left = W * 0.05;
     final double right = W * 0.95;
-    final double top = H * 0.05;
+    final double top = H * 0.02;
     final double bottom = H * 0.97;
 
     // 3. Build the exact continuous wireframe of the border with cuts
@@ -39,8 +40,8 @@ class QuranBorderPainter extends CustomPainter {
       // Sort in descending order of Y to draw from top to bottom
       final sortedCenters = List<double>.from(hizbCutCenters)..sort((a, b) => a.compareTo(b));
       for (final cy in sortedCenters) {
-        framePath.lineTo(left, cy - H * 0.095); // Top Cut (smaller gap above)
-        framePath.moveTo(left, cy + H * 0.125); // Bottom Cut (larger gap below)
+        framePath.lineTo(left, cy - H * 0.083); // Top Cut (smaller gap above)
+        framePath.moveTo(left, cy + H * 0.112); // Bottom Cut (larger gap below)
       }
     }
     
@@ -56,8 +57,8 @@ class QuranBorderPainter extends CustomPainter {
       // For right edge, we draw from bottom to top, so sort in descending order of Y
       final sortedCenters = List<double>.from(hizbCutCenters)..sort((a, b) => b.compareTo(a));
       for (final cy in sortedCenters) {
-        framePath.lineTo(right, cy + H * 0.125); // Bottom Cut (larger gap below)
-        framePath.moveTo(right, cy - H * 0.095); // Top Cut (smaller gap above)
+        framePath.lineTo(right, cy + H * 0.112); // Bottom Cut (larger gap below)
+        framePath.moveTo(right, cy - H * 0.083); // Top Cut (smaller gap above)
       }
     }
     
@@ -86,7 +87,7 @@ class QuranBorderPainter extends CustomPainter {
     // 5. Inner fill (light opaque gold)
     // By drawing this slightly thinner line over the outer bound, it creates two perfect 1px parallel lines!
     final Paint innerFill = Paint()
-      ..color = const Color(0xFFEAD8BA)
+      ..color = AppColors.borderInnerGold
       ..style = PaintingStyle.stroke
       ..strokeWidth = 10.0
       ..strokeJoin = StrokeJoin.miter
@@ -131,14 +132,6 @@ class QuranBorderPainter extends CustomPainter {
   void _drawBackground(Canvas canvas, Size size) {
     final Paint bgPaint = Paint()..color = background;
     canvas.drawRect(Offset.zero & size, bgPaint);
-
-    final Rect bgRect = Offset.zero & size;
-    final Paint vignettePaint = Paint()
-      ..shader = RadialGradient(
-        colors: [Colors.transparent, const Color(0xFFE6DBC3).withValues(alpha: 0.5)],
-        radius: 0.8,
-      ).createShader(bgRect);
-    canvas.drawRect(bgRect, vignettePaint);
   }
 
   @override

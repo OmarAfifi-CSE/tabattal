@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../data/models/verse_model.dart';
@@ -127,27 +128,21 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
   Widget _buildMenuItem(IconData icon, String text, VoidCallback onTap, {Color? iconColor, bool closeMenu = true}) {
     return InkWell(
       onTap: () {
-        if (_isAnimating) return; // Prevent concurrent rapid taps
+        if (_isAnimating) return;
         onTap();
-        if (closeMenu) {
-          _close();
-        }
+        if (closeMenu) _close();
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         child: Row(
           children: [
-            Icon(
-              icon,
-              color: iconColor ?? const Color(0xFF8C7355), // Faded brown icon
-              size: 22,
-            ),
-            const SizedBox(width: 12),
+            Icon(icon, color: iconColor ?? AppColors.bronzeIcon, size: 22.sp),
+            SizedBox(width: 12.w),
             Expanded(
               child: Text(
                 text,
                 style: AppTextStyles.menuItemText.copyWith(
-                  color: const Color(0xFF2C2520), // Dark brown text
+                  color: AppColors.inkBrown,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -202,7 +197,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
     
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFFFBF7F0), // Soft cream background
+      backgroundColor: AppColors.background, // Soft cream background
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -238,18 +233,18 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Gold Drag Handle
-                      Center(
-                        child: Container(
-                          width: 48,
-                          height: 4,
-                          margin: const EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentGold,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
+                  // Gold Drag Handle
+                  Center(
+                    child: Container(
+                      width: 48.w,
+                      height: 4.h,
+                      margin: EdgeInsets.only(bottom: 16.h),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentGold,
+                        borderRadius: BorderRadius.circular(2.r),
                       ),
+                    ),
+                  ),
                       if (currentState is TafsirLoaded || 
                           currentState is TafsirDownloading || 
                           currentState is TafsirDownloadError || 
@@ -333,7 +328,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                                         '${option.$2}$progressStr',
                                                         style: AppTextStyles.menuItemText.copyWith(
                                                           fontSize: 14,
-                                                          color: isSelected ? AppColors.accentGold : const Color(0xFF2C2520),
+                                                          color: isSelected ? AppColors.accentGold : AppColors.textPrimary,
                                                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                                                         ),
                                                       ),
@@ -549,7 +544,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                     _stripHtml(currentState.tafsir.text),
                                     style: AppTextStyles.menuItemText.copyWith(
                                       height: 1.8, 
-                                      color: const Color(0xFF2C2520), // Dark charcoal
+                                      color: AppColors.textPrimary, // Dark charcoal
                                     ),
                                     textDirection: TextDirection.rtl,
                                   ),
@@ -566,7 +561,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                               _stripHtml(currentState.translation.text),
                               style: AppTextStyles.menuItemText.copyWith(
                                 height: 1.8,
-                                color: const Color(0xFF2C2520),
+                                color: AppColors.textPrimary,
                               ),
                             ),
                           ),
@@ -612,17 +607,14 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    const menuSize = Size(220.0, 280.0);
+    final menuSize = Size(220.w, 280.h);
 
     return Stack(
       children: [
         GestureDetector(
           onTap: _close,
           behavior: HitTestBehavior.opaque,
-          child: const SizedBox(
-            width: double.infinity,
-            height: double.infinity,
-          ),
+          child: SizedBox(width: MediaQuery.sizeOf(context).width, height: MediaQuery.sizeOf(context).height),
         ),
         CustomSingleChildLayout(
           delegate: OverlayPositionDelegate(
@@ -648,19 +640,16 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                 width: menuSize.width,
                 height: menuSize.height,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFBF4E8), // Cream beige from design
-                  borderRadius: BorderRadius.circular(16),
+                  color: AppColors.cardCream,
+                  borderRadius: BorderRadius.circular(16.r),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 20,
-                      offset: const Offset(0, 8),
+                      offset: Offset(0, 8.h),
                     ),
                   ],
-                  border: Border.all(
-                    color: const Color(0xFFC7B698), // Gold/Brown border
-                    width: 1.5,
-                  ),
+                  border: Border.all(color: AppColors.verseMarkerGold, width: 1.5),
                 ),
                 child: Directionality(
                   textDirection: TextDirection.rtl,
@@ -692,7 +681,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                           final isBookmarked = state.isBookmarked(widget.verse.verseKey);
                           return _buildMenuItem(
                             isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                            'أضف للمفضلة',
+                            isBookmarked ? 'إزالة العلامة المرجعية' : 'إضافة علامة مرجعية',
                             () {
                               context.read<BookmarkBloc>().add(ToggleBookmark(widget.verse.verseKey));
                             },
