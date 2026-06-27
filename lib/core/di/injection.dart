@@ -9,6 +9,9 @@ import '../../features/quran_reader/data/datasources/quran_remote_data_source.da
 import '../../features/quran_reader/domain/repositories/quran_repository.dart';
 import '../../features/quran_reader/domain/repositories/bookmark_repository.dart';
 
+import '../services/quran_audio_handler.dart';
+import 'package:audio_service/audio_service.dart';
+
 class DependencyContainer {
   final DatabaseHelper databaseHelper;
   final ApiClient apiClient;
@@ -18,6 +21,7 @@ class DependencyContainer {
   final QuranRepository quranRepository;
   final BookmarkRepository bookmarkRepository;
   final AudioPreferencesService audioPrefs;
+  final QuranAudioHandler audioHandler;
 
   const DependencyContainer({
     required this.databaseHelper,
@@ -28,6 +32,7 @@ class DependencyContainer {
     required this.quranRepository,
     required this.bookmarkRepository,
     required this.audioPrefs,
+    required this.audioHandler,
   });
 }
 
@@ -55,6 +60,16 @@ Future<DependencyContainer> configureDependencies() async {
   
   final audioPrefs = await AudioPreferencesService.create();
 
+  final audioHandler = await AudioService.init<QuranAudioHandler>(
+    builder: () => QuranAudioHandler(),
+    config: const AudioServiceConfig(
+      androidNotificationChannelId: 'com.tabattal.channel.audio',
+      androidNotificationChannelName: 'تلاوات القرآن',
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: true,
+    ),
+  );
+
   return DependencyContainer(
     databaseHelper: databaseHelper,
     apiClient: apiClient,
@@ -64,5 +79,6 @@ Future<DependencyContainer> configureDependencies() async {
     quranRepository: quranRepository,
     bookmarkRepository: bookmarkRepository,
     audioPrefs: audioPrefs,
+    audioHandler: audioHandler,
   );
 }

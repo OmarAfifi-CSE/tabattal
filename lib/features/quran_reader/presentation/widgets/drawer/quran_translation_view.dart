@@ -80,6 +80,32 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
   }
 
   Future<void> _initData() async {
+    final audioState = context.read<AudioBloc>().state;
+    int? playingVerseId;
+    if (audioState is AudioPlaying) playingVerseId = audioState.currentVerseId;
+    if (audioState is AudioPaused) playingVerseId = audioState.currentVerseId;
+
+    if (playingVerseId != null) {
+      final surah = playingVerseId ~/ 1000;
+      final ayah = playingVerseId % 1000;
+      _currentSurahId = surah;
+      _initialVerseKey = '$surah:$ayah';
+
+      await _loadSurahData(_currentSurahId);
+
+      if (_initialVerseKey != null) {
+        final index = _list.indexWhere((e) => e.verseKey == _initialVerseKey);
+        if (index != -1) {
+          _initialScrollIndex = index;
+        }
+      }
+
+      if (mounted) {
+        setState(() => _isLoadingInitial = false);
+      }
+      return;
+    }
+
     final linesResult = await _repository.getLinesByPage(widget.pageNumber);
     linesResult.fold(
       (f) {
@@ -167,7 +193,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
         index: index,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
-        alignment: 0.0,
+        alignment: 0.02,
       );
     }
   }

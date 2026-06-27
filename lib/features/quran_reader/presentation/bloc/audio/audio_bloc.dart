@@ -8,7 +8,13 @@ import '../../../../../core/utils/verse_ref.dart';
 import 'audio_event.dart';
 import 'audio_state.dart';
 
+import '../../../../../core/services/quran_audio_handler.dart';
+import 'package:audio_service/audio_service.dart';
+import '../../../../../core/utils/arabic_text_utils.dart';
+import '../../widgets/quran_metadata.dart';
+
 class AudioBloc extends Bloc<AudioEvent, AudioState> {
+  final QuranAudioHandler _audioHandler;
   final AudioPlayer _audioPlayer;
   final AudioDownloadManager _downloadManager;
   final AudioPreferencesService _prefs;
@@ -22,13 +28,14 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   StreamSubscription? _playerStateSubscription;
   StreamSubscription? _currentIndexSubscription;
   StreamSubscription? _playbackEventSubscription;
+  StreamSubscription? _actionSubscription;
   Timer? _sleepTimer;
 
   String get currentReciter => _currentReciter;
   int get currentRepeatCount => _currentRepeatCount;
 
-  AudioBloc(this._downloadManager, this._prefs)
-      : _audioPlayer = AudioPlayer(),
+  AudioBloc(this._audioHandler, this._downloadManager, this._prefs)
+      : _audioPlayer = _audioHandler.player,
         super(AudioIdle()) {
     _currentReciter = _prefs.reciter;
     _currentRepeatCount = _prefs.repeatCount;
@@ -38,6 +45,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     on<PauseAudio>(_onPauseAudio);
     on<ResumeAudio>(_onResumeAudio);
     on<StopAudio>(_onStopAudio);
+    on<NextAyah>(_onNextAyah);
+    on<PreviousAyah>(_onPreviousAyah);
+    on<NextSurah>(_onNextSurah);
+    on<PreviousSurah>(_onPreviousSurah);
     on<AudioStateChanged>(_onStateChanged);
     on<ChangeReciter>(_onChangeReciter);
     on<ChangeRepeatCount>(_onChangeRepeatCount);
@@ -49,6 +60,35 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   }
 
   void _initStreams() {
+    _actionSubscription = _audioHandler.actions.listen((action) {
+      if (_currentVerseIds.isEmpty) return;
+      final currentVerse = _currentVerseIds[_currentIndex];
+      switch (action) {
+        case QuranAudioAction.nextAyah:
+          final next = currentVerse.next;
+          if (next != null) add(PlayVerse('', next.verseId));
+          break;
+        case QuranAudioAction.prevAyah:
+          final prev = currentVerse.previous;
+          if (prev != null) add(PlayVerse('', prev.verseId));
+          break;
+        case QuranAudioAction.nextSurah:
+          if (currentVerse.surah < 114) add(PlayVerse('', VerseRef(currentVerse.surah + 1, 1).verseId));
+          break;
+        case QuranAudioAction.prevSurah:
+          if (currentVerse.surah > 1) add(PlayVerse('', VerseRef(currentVerse.surah - 1, 1).verseId));
+          break;
+        case QuranAudioAction.stop:
+          _currentVerseIds = [];
+          _currentIndex = 0;
+          _playedCount = 0;
+          add(const StopAudio());
+          break;
+        case QuranAudioAction.timer:
+          break;
+      }
+    });
+
     _playerStateSubscription = _audioPlayer.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
         if (_currentVerseIds.isNotEmpty) {
@@ -104,6 +144,12 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
   Future<void> _playLocalOrStream(VerseRef verse) async {
     final localPath = await _downloadManager.getLocalVersePath(_currentReciter, verse.verseId);
+
+    await _audioHandler.updateItem(MediaItem(
+      id: verse.verseId.toString(),
+      title: '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - الآية ${verse.ayah.toArabicDigits}',
+      artist: _currentReciter,
+    ));
 
     if (localPath != null) {
       await _audioPlayer.setFilePath(localPath);
@@ -177,11 +223,35 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   }
 
   Future<void> _onStopAudio(StopAudio event, Emitter<AudioState> emit) async {
-    await _audioPlayer.stop();
     _currentVerseIds = [];
     _currentIndex = 0;
     _playedCount = 0;
+    await _audioHandler.stop();
     emit(AudioIdle());
+  }
+
+  Future<void> _onNextAyah(NextAyah event, Emitter<AudioState> emit) async {
+    if (_currentVerseIds.isEmpty) return;
+    final next = _currentVerseIds[_currentIndex].next;
+    if (next != null) add(PlayVerse('', next.verseId));
+  }
+
+  Future<void> _onPreviousAyah(PreviousAyah event, Emitter<AudioState> emit) async {
+    if (_currentVerseIds.isEmpty) return;
+    final prev = _currentVerseIds[_currentIndex].previous;
+    if (prev != null) add(PlayVerse('', prev.verseId));
+  }
+
+  Future<void> _onNextSurah(NextSurah event, Emitter<AudioState> emit) async {
+    if (_currentVerseIds.isEmpty) return;
+    final currentSurah = _currentVerseIds[_currentIndex].surah;
+    if (currentSurah < 114) add(PlayVerse('', VerseRef(currentSurah + 1, 1).verseId));
+  }
+
+  Future<void> _onPreviousSurah(PreviousSurah event, Emitter<AudioState> emit) async {
+    if (_currentVerseIds.isEmpty) return;
+    final currentSurah = _currentVerseIds[_currentIndex].surah;
+    if (currentSurah > 1) add(PlayVerse('', VerseRef(currentSurah - 1, 1).verseId));
   }
 
   void _onStateChanged(AudioStateChanged event, Emitter<AudioState> emit) {
@@ -237,6 +307,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     _playerStateSubscription?.cancel();
     _currentIndexSubscription?.cancel();
     _playbackEventSubscription?.cancel();
+    _actionSubscription?.cancel();
     _sleepTimer?.cancel();
     _audioPlayer.dispose();
     return super.close();

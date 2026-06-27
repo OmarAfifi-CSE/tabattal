@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -9,7 +10,14 @@ import 'audio_settings_sheet.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MediaControlBar extends StatefulWidget {
-  const MediaControlBar({super.key});
+  final bool isExpanded;
+  final VoidCallback onToggleExpanded;
+
+  const MediaControlBar({
+    super.key,
+    required this.isExpanded,
+    required this.onToggleExpanded,
+  });
 
   @override
   State<MediaControlBar> createState() => _MediaControlBarState();
@@ -17,6 +25,14 @@ class MediaControlBar extends StatefulWidget {
 
 class _MediaControlBarState extends State<MediaControlBar> {
   int? _sleepTimerMinutes;
+  DateTime? _timerEndTime;
+  Timer? _countdownTimer;
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
 
   void _showTimerConfirmationSnackBar(String message) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -43,11 +59,35 @@ class _MediaControlBarState extends State<MediaControlBar> {
   }
 
   void _handleSleepTimerSelection(int minutes) {
-    setState(() => _sleepTimerMinutes = minutes == 0 ? null : minutes);
+    _countdownTimer?.cancel();
     if (minutes == 0) {
+      setState(() {
+        _sleepTimerMinutes = null;
+        _timerEndTime = null;
+      });
       context.read<AudioBloc>().add(const CancelSleepTimer());
       _showTimerConfirmationSnackBar('تم إلغاء المؤقت');
     } else {
+      setState(() {
+        _sleepTimerMinutes = minutes;
+        _timerEndTime = DateTime.now().add(Duration(minutes: minutes));
+      });
+      _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (_timerEndTime != null) {
+          final remaining = _timerEndTime!.difference(DateTime.now());
+          if (remaining.isNegative) {
+            timer.cancel();
+            setState(() {
+              _sleepTimerMinutes = null;
+              _timerEndTime = null;
+            });
+          } else {
+            setState(() {}); // trigger rebuild to update countdown text
+          }
+        } else {
+          timer.cancel();
+        }
+      });
       context.read<AudioBloc>().add(SetSleepTimer(Duration(minutes: minutes)));
       _showTimerConfirmationSnackBar('سيتم إيقاف التلاوة بعد $minutes دقائق');
     }
@@ -55,6 +95,15 @@ class _MediaControlBarState extends State<MediaControlBar> {
 
   @override
   Widget build(BuildContext context) {
+    return AnimatedCrossFade(
+      duration: const Duration(milliseconds: 300),
+      crossFadeState: widget.isExpanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+      firstChild: _buildExpandedPlayer(context),
+      secondChild: _buildMiniPlayer(context),
+    );
+  }
+
+  Widget _buildExpandedPlayer(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
@@ -80,10 +129,71 @@ class _MediaControlBarState extends State<MediaControlBar> {
     );
   }
 
+  Widget _buildMiniPlayer(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onToggleExpanded,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: AppColors.cardCream,
+          borderRadius: BorderRadius.circular(30.r),
+          border: Border.all(color: AppColors.bronzeIcon, width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: BlocBuilder<AudioBloc, AudioState>(
+          builder: (context, state) {
+            final isPlaying = state is AudioPlaying;
+            final isLoading = state is AudioLoading;
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.multitrack_audio_rounded, color: AppColors.bronzeIcon, size: 24.sp),
+                    SizedBox(width: 8.w),
+                    Text(
+                      context.read<AudioBloc>().currentReciter,
+                      style: AppTextStyles.menuItemText.copyWith(
+                        color: AppColors.inkBrown,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildPlayPauseButton(context, isPlaying: isPlaying, isLoading: isLoading, size: 40.r, iconSize: 24.sp),
+                    SizedBox(width: 8.w),
+                    Icon(Icons.keyboard_arrow_up_rounded, color: AppColors.inkBrown, size: 28.sp),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildTopRow(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.inkBrown, size: 28.sp),
+          onPressed: widget.onToggleExpanded,
+        ),
         Expanded(child: _buildReciterButton(context)),
         _buildTimerAndCloseButtons(context),
       ],
@@ -153,9 +263,9 @@ class _MediaControlBarState extends State<MediaControlBar> {
                   color: _sleepTimerMinutes != null ? AppColors.bronzeDark : AppColors.inkBrown,
                   size: 24.sp,
                 ),
-                if (_sleepTimerMinutes != null)
+                if (_timerEndTime != null)
                   Text(
-                    '${_sleepTimerMinutes}m',
+                    _formatRemainingTime(_timerEndTime!.difference(DateTime.now())),
                     style: TextStyle(fontSize: 10.sp, color: AppColors.bronzeDark, fontWeight: FontWeight.bold),
                   ),
               ],
@@ -178,6 +288,13 @@ class _MediaControlBarState extends State<MediaControlBar> {
     );
   }
 
+  String _formatRemainingTime(Duration duration) {
+    if (duration.isNegative) return '00:00';
+    final m = duration.inMinutes.toString().padLeft(2, '0');
+    final s = (duration.inSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
   Widget _buildPlaybackRow() {
     return BlocBuilder<AudioBloc, AudioState>(
       builder: (context, state) {
@@ -187,31 +304,44 @@ class _MediaControlBarState extends State<MediaControlBar> {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(width: 32.w),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.skip_previous_rounded, color: AppColors.inkBrown, size: 32.sp),
-                  onPressed: () {}, // Previous verse — placeholder
-                ),
-                SizedBox(width: 16.w),
-                _buildPlayPauseButton(context, isPlaying: isPlaying, isLoading: isLoading),
-                SizedBox(width: 16.w),
-                IconButton(
-                  icon: Icon(Icons.skip_next_rounded, color: AppColors.inkBrown, size: 32.sp),
-                  onPressed: () {}, // Next verse — placeholder
-                ),
-              ],
+            SizedBox(width: 8.w),
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.fast_rewind_rounded, color: AppColors.inkBrown, size: 30.sp),
+                    onPressed: () => context.read<AudioBloc>().add(const PreviousSurah()),
+                  ),
+                  SizedBox(width: 4.w),
+                  IconButton(
+                    icon: Icon(Icons.skip_previous_rounded, color: AppColors.inkBrown, size: 32.sp),
+                    onPressed: () => context.read<AudioBloc>().add(const PreviousAyah()),
+                  ),
+                  SizedBox(width: 8.w),
+                  _buildPlayPauseButton(context, isPlaying: isPlaying, isLoading: isLoading, size: 56.r, iconSize: 32.sp),
+                  SizedBox(width: 8.w),
+                  IconButton(
+                    icon: Icon(Icons.skip_next_rounded, color: AppColors.inkBrown, size: 32.sp),
+                    onPressed: () => context.read<AudioBloc>().add(const NextAyah()),
+                  ),
+                  SizedBox(width: 4.w),
+                  IconButton(
+                    icon: Icon(Icons.fast_forward_rounded, color: AppColors.inkBrown, size: 30.sp),
+                    onPressed: () => context.read<AudioBloc>().add(const NextSurah()),
+                  ),
+                ],
+              ),
             ),
-            SizedBox(width: 32.w),
+            SizedBox(width: 8.w),
           ],
         );
       },
     );
   }
 
-  Widget _buildPlayPauseButton(BuildContext context, {required bool isPlaying, required bool isLoading}) {
+  Widget _buildPlayPauseButton(BuildContext context, {required bool isPlaying, required bool isLoading, required double size, required double iconSize}) {
     return GestureDetector(
       onTap: () {
         if (isPlaying) {
@@ -221,8 +351,8 @@ class _MediaControlBarState extends State<MediaControlBar> {
         }
       },
       child: Container(
-        width: 56.r,
-        height: 56.r,
+        width: size,
+        height: size,
         decoration: const BoxDecoration(
           color: AppColors.bronzeDark,
           shape: BoxShape.circle,
@@ -230,14 +360,14 @@ class _MediaControlBarState extends State<MediaControlBar> {
         child: Center(
           child: isLoading
               ? SizedBox(
-                  width: 24.r,
-                  height: 24.r,
+                  width: iconSize * 0.75,
+                  height: iconSize * 0.75,
                   child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                 )
               : Icon(
                   isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                   color: Colors.white,
-                  size: 32.sp,
+                  size: iconSize,
                 ),
         ),
       ),

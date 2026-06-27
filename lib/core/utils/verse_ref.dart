@@ -26,6 +26,15 @@ class VerseRef {
     return null; // end of Quran
   }
 
+  VerseRef? get previous {
+    if (ayah > 1) return VerseRef(surah, ayah - 1);
+    if (surah > 1) {
+      final prevSurahLength = QuranMetadata.surahLengthOf(surah - 1);
+      return VerseRef(surah - 1, prevSurahLength);
+    }
+    return null; // beginning of Quran
+  }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

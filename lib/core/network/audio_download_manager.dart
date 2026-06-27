@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../features/quran_reader/presentation/widgets/quran_metadata.dart';
 
 class AudioDownloadManager {
   final Dio _dio = Dio();
@@ -188,8 +189,10 @@ class AudioDownloadManager {
 
     for (int i = 0; i < lookaheadCount; i++) {
       ayah++;
-      // Simple bound checking (A true implementation would check Surah lengths from DB)
-      if (ayah > 286) { 
+      
+      // Use QuranMetadata for accurate bound checking
+      final maxAyah = QuranMetadata.surahLengthOf(surah);
+      if (ayah > maxAyah) { 
         surah++;
         ayah = 1;
       }
@@ -204,8 +207,8 @@ class AudioDownloadManager {
       final localPath = await getLocalVersePath(reciterKey, verseId);
       if (localPath != null) continue;
 
-      // Launch background download task
-      final downloadTask = downloadVerse(reciterKey, surah, ayah, null).whenComplete(() {
+      // Launch background download task and catch errors silently since it's just prefetching
+      final downloadTask = downloadVerse(reciterKey, surah, ayah, null).catchError((_) => '').whenComplete(() {
         _activePrefetches.remove(verseId);
       });
       

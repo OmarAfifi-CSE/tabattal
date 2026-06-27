@@ -43,6 +43,7 @@ class TabattalApp extends StatelessWidget {
         providers: [
           BlocProvider<AudioBloc>(
             create: (context) => AudioBloc(
+              container.audioHandler,
               context.read<AudioDownloadManager>(),
               context.read<AudioPreferencesService>(),
             ),

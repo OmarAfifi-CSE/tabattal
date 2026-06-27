@@ -9,7 +9,6 @@ import '../bloc/quran/quran_bloc.dart';
 import '../bloc/quran/quran_event.dart';
 import '../bloc/quran/quran_state.dart';
 import '../bloc/audio/audio_bloc.dart';
-import '../bloc/audio/audio_event.dart';
 import '../bloc/audio/audio_state.dart';
 import '../bloc/bookmark/bookmark_bloc.dart';
 import '../bloc/bookmark/bookmark_state.dart';
@@ -326,11 +325,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
     final displayText = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
 
     void handleTap(TapDownDetails details) {
-      if (audioState is AudioPlaying || audioState is AudioPaused) {
-        context.read<AudioBloc>().add(PlayVerse('', verseId));
-      } else {
-        _showVerseMenu(context, details.globalPosition, verseId, lines);
-      }
+      _showVerseMenu(context, details.globalPosition, verseId, lines);
     }
 
     final wordTextStyle = AppTextStyles.quranText.copyWith(
@@ -374,13 +369,17 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
 
     return GestureDetector(
       onTapDown: handleTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
         color: backgroundColor,
-        child: Text(
-          displayText,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
           style: wordTextStyle.copyWith(
             color: textColor,
           ),
+          child: Text(displayText),
         ),
       ),
     );
@@ -407,11 +406,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
           wordWidgets.add(
             GestureDetector(
               onTapDown: (details) {
-                if (audioState is AudioPlaying || audioState is AudioPaused) {
-                  context.read<AudioBloc>().add(PlayVerse('', verseId));
-                } else {
-                  _showVerseMenu(context, details.globalPosition, verseId, lines);
-                }
+                _showVerseMenu(context, details.globalPosition, verseId, lines);
               },
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4.0),

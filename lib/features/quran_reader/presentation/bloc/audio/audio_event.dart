@@ -92,3 +92,19 @@ class CancelSleepTimer extends AudioEvent {
   @override
   List<Object> get props => [];
 }
+
+class NextAyah extends AudioEvent {
+  const NextAyah();
+}
+
+class PreviousAyah extends AudioEvent {
+  const PreviousAyah();
+}
+
+class NextSurah extends AudioEvent {
+  const NextSurah();
+}
+
+class PreviousSurah extends AudioEvent {
+  const PreviousSurah();
+}

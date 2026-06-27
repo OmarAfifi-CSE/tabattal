@@ -24,6 +24,7 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
   late PageController _pageController;
   int _currentPage = 1;
   String? _highlightVerseKey;
+  bool _isAudioExpanded = true;
 
   @override
   void initState() {
@@ -62,6 +63,8 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
       _showErrorSnackBar(state.message);
     } else if (state is AudioPlaying) {
       _navigateToPlayingVerse(context, state.currentVerseId);
+    } else if (state is AudioIdle) {
+      _isAudioExpanded = true; // reset to expanded for next time
     }
   }
 
@@ -109,21 +112,32 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
           listener: _handleAudioStateChange,
           child: Stack(
             children: [
-              PageView.builder(
-                controller: _pageController,
-                itemCount: QuranConstants.totalPages,
-                scrollDirection: Axis.horizontal,
-                reverse: false,
-                onPageChanged: (index) {
-                  setState(() => _currentPage = index + 1);
-                  context.read<AudioPreferencesService>().saveLastReadPage(_currentPage);
-                },
-                itemBuilder: (context, index) {
-                  final pageNumber = index + 1;
-                  return QuranPageWidget(
-                    key: ValueKey(pageNumber),
-                    pageNumber: pageNumber,
-                    highlightVerseKey: pageNumber == _currentPage ? _highlightVerseKey : null,
+              BlocBuilder<AudioBloc, AudioState>(
+                builder: (context, state) {
+                  final isVisible = state is! AudioIdle && state is! AudioError;
+                  final double paddingBottom = isVisible ? (_isAudioExpanded ? 170.h : 80.h) : 0;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    padding: EdgeInsets.only(bottom: paddingBottom),
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: QuranConstants.totalPages,
+                      scrollDirection: Axis.horizontal,
+                      reverse: false,
+                      onPageChanged: (index) {
+                        setState(() => _currentPage = index + 1);
+                        context.read<AudioPreferencesService>().saveLastReadPage(_currentPage);
+                      },
+                      itemBuilder: (context, index) {
+                        final pageNumber = index + 1;
+                        return QuranPageWidget(
+                          key: ValueKey(pageNumber),
+                          pageNumber: pageNumber,
+                          highlightVerseKey: pageNumber == _currentPage ? _highlightVerseKey : null,
+                        );
+                      },
+                    ),
                   );
                 },
               ),
@@ -136,7 +150,12 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
                     bottom: isVisible ? 16.h : -200.h,
                     left: 16.w,
                     right: 16.w,
-                    child: const MediaControlBar(),
+                    child: MediaControlBar(
+                      isExpanded: _isAudioExpanded,
+                      onToggleExpanded: () {
+                        setState(() => _isAudioExpanded = !_isAudioExpanded);
+                      },
+                    ),
                   );
                 },
               ),

@@ -11,6 +11,9 @@ import 'audio_settings_sheet.dart';
 import '../bloc/bookmark/bookmark_bloc.dart';
 import '../bloc/bookmark/bookmark_event.dart';
 import '../bloc/bookmark/bookmark_state.dart';
+import '../bloc/audio/audio_bloc.dart';
+import '../bloc/audio/audio_state.dart';
+import '../bloc/audio/audio_event.dart';
 class OverlayPositionDelegate extends SingleChildLayoutDelegate {
   final Offset tapPosition;
   final Rect? verseRect;
@@ -20,7 +23,10 @@ class OverlayPositionDelegate extends SingleChildLayoutDelegate {
 
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
-    return BoxConstraints.tight(menuSize);
+    return BoxConstraints(
+      minWidth: menuSize.width,
+      maxWidth: menuSize.width,
+    );
   }
 
   @override
@@ -607,7 +613,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final menuSize = Size(220.w, 280.h);
+    final menuSize = Size(240.w, 280.h);
 
     return Stack(
       children: [
@@ -638,7 +644,6 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
               color: Colors.transparent,
               child: Container(
                 width: menuSize.width,
-                height: menuSize.height,
                 decoration: BoxDecoration(
                   color: AppColors.cardCream,
                   borderRadius: BorderRadius.circular(16.r),
@@ -672,9 +677,22 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                         _close(keepHighlight: true);
                       }, closeMenu: false),
                       const Divider(height: 1, thickness: 1, color: AppColors.divider),
-                      _buildMenuItem(Icons.play_circle_outline, 'الإستماع للآيات', () {
-                        showAudioSettingsSheet(context, verseId: widget.verse.id);
-                      }),
+                      BlocBuilder<AudioBloc, AudioState>(
+                        builder: (context, audioState) {
+                          final isAudioActive = audioState is! AudioIdle && audioState is! AudioError;
+                          return _buildMenuItem(
+                            Icons.play_circle_outline,
+                            isAudioActive ? 'انتقال التلاوة لهذه الآية' : 'الإستماع للآيات',
+                            () {
+                              if (isAudioActive) {
+                                context.read<AudioBloc>().add(PlayVerse('', widget.verse.id));
+                              } else {
+                                showAudioSettingsSheet(context, verseId: widget.verse.id);
+                              }
+                            },
+                          );
+                        },
+                      ),
                       const Divider(height: 1, thickness: 1, color: AppColors.divider),
                       BlocBuilder<BookmarkBloc, BookmarkState>(
                         builder: (context, state) {
