@@ -10,11 +10,12 @@ abstract class AudioEvent extends Equatable {
 class PlayVerse extends AudioEvent {
   final String audioUrl;
   final int verseId; // Used for highlighting
+  final bool skipBasmalah;
 
-  const PlayVerse(this.audioUrl, this.verseId);
+  const PlayVerse(this.audioUrl, this.verseId, {this.skipBasmalah = false});
 
   @override
-  List<Object> get props => [audioUrl, verseId];
+  List<Object> get props => [audioUrl, verseId, skipBasmalah];
 }
 
 class PlayPlaylist extends AudioEvent {

@@ -46,21 +46,19 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
   late String _selectedReciter;
   late int _selectedRepeatCount;
 
-  static const List<int> _repeatOptions = [0, 1, 2, 3, -1];
+  static const List<int> _repeatOptions = [0, 2, 3, -1];
   String _getRepeatLabel(int count) {
     switch (count) {
+      case -1:
+        return 'تكرار مستمر للآية';
       case 0:
-        return 'استمرار التلاوة';
-      case 1:
-        return 'تكرار مرة واحدة';
+        return 'بدون تكرار (استمرار)';
       case 2:
         return 'تكرار مرتين';
       case 3:
         return 'تكرار 3 مرات';
-      case -1:
-        return 'تكرار مستمر للآية';
       default:
-        return 'استمرار التلاوة';
+        return 'بدون تكرار (استمرار)';
     }
   }
 
@@ -69,6 +67,9 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
     super.initState();
     final bloc = context.read<AudioBloc>();
     _selectedRepeatCount = bloc.currentRepeatCount;
+    if (!_repeatOptions.contains(_selectedRepeatCount)) {
+      _selectedRepeatCount = 0; // Fallback to default if saved value was removed
+    }
 
     // Find category for current reciter
     final currentReciter = bloc.currentReciter;

@@ -89,10 +89,11 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
       result.fold(
         (failure) => debugPrint('[AudioBloc] Failed to resolve verse page: ${failure.toString()}'),
         (verses) {
-          final SearchVerseModel? matchingVerse = verses.cast<SearchVerseModel>().where((v) => v.ayah == verse.ayah).firstOrNull;
+          final int searchAyah = verse.ayah == 0 ? 1 : verse.ayah;
+          final SearchVerseModel? matchingVerse = verses.cast<SearchVerseModel>().where((v) => v.ayah == searchAyah).firstOrNull;
           final targetPage = matchingVerse?.page;
           if (targetPage != null && targetPage != _currentPage) {
-            _jumpToPage(targetPage, verseKey: matchingVerse?.verseKey, animate: true);
+            _jumpToPage(targetPage, verseKey: null, animate: true);
           }
         },
       );

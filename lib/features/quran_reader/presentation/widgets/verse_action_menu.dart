@@ -85,6 +85,19 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
   bool _isAnimating = false;
   final Map<int, double> _tafsirProgress = {16: 1.0, 14: 1.0, 91: 1.0};
 
+  // Helper to detect if text is primarily RTL (e.g., Arabic, Urdu, Persian)
+  bool _isRtl(String text) {
+    final RegExp arabicRegex = RegExp(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]');
+    final RegExp englishRegex = RegExp(r'[a-zA-Z]');
+    
+    for (int i = 0; i < text.length; i++) {
+      final char = text[i];
+      if (arabicRegex.hasMatch(char)) return true;
+      if (englishRegex.hasMatch(char)) return false;
+    }
+    return true; // Default to RTL
+  }
+
   @override
   void initState() {
     super.initState();
@@ -560,17 +573,28 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                           ),
                         )
                       else if (currentState is TranslationLoaded)
-                        Flexible(
-                          child: SingleChildScrollView(
-                            physics: const BouncingScrollPhysics(),
-                            child: Text(
-                              _stripHtml(currentState.translation.text),
-                              style: AppTextStyles.menuItemText.copyWith(
-                                height: 1.8,
-                                color: AppColors.textPrimary,
+                        Builder(
+                          builder: (context) {
+                            final strippedText = _stripHtml(currentState.translation.text);
+                            final isRtl = _isRtl(strippedText);
+                            return Flexible(
+                              child: SingleChildScrollView(
+                                physics: const BouncingScrollPhysics(),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: Text(
+                                    strippedText,
+                                    textAlign: isRtl ? TextAlign.right : TextAlign.left,
+                                    textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+                                    style: AppTextStyles.menuItemText.copyWith(
+                                      height: 1.8,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         )
                       else if (currentState is QuranOverlayError)
                         Center(

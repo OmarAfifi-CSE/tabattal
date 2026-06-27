@@ -2,6 +2,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:just_audio/just_audio.dart';
 import 'dart:async';
+import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../../../core/network/audio_download_manager.dart';
 import '../../../../../core/services/audio_preferences_service.dart';
 import '../../../../../core/utils/verse_ref.dart';
@@ -20,7 +23,26 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   final AudioPreferencesService _prefs;
   List<VerseRef> _currentVerseIds = [];
   int _currentIndex = 0;
-  int _playedCount = 0; 
+  // ignore: unused_field — kept for compatibility with existing event handlers
+  int _playedCount = 0;
+
+  static Uri? _cachedArtUri;
+
+  Future<Uri> _getArtUri() async {
+    if (_cachedArtUri != null) return _cachedArtUri!;
+    try {
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/app_icon.png');
+      if (!await file.exists()) {
+        final byteData = await rootBundle.load('assets/images/app_icon.png');
+        await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+      }
+      _cachedArtUri = Uri.parse('file://${file.path}');
+    } catch (e) {
+      _cachedArtUri = Uri.parse('asset:///assets/images/app_icon.png');
+    }
+    return _cachedArtUri!;
+  }
 
   late String _currentReciter;
   late int _currentRepeatCount;
@@ -33,6 +55,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
   String get currentReciter => _currentReciter;
   int get currentRepeatCount => _currentRepeatCount;
+
+  // Used to cancel in-progress background prefill when a new verse is played.
+  // ignore: deprecated_member_use
+  ConcatenatingAudioSource? _activePrefillPlaylist;
 
   AudioBloc(this._audioHandler, this._downloadManager, this._prefs)
       : _audioPlayer = _audioHandler.player,
@@ -70,7 +96,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           break;
         case QuranAudioAction.prevAyah:
           final prev = currentVerse.previous;
-          if (prev != null) add(PlayVerse('', prev.verseId));
+          if (prev != null) add(PlayVerse('', prev.verseId, skipBasmalah: true));
           break;
         case QuranAudioAction.nextSurah:
           if (currentVerse.surah < 114) add(PlayVerse('', VerseRef(currentVerse.surah + 1, 1).verseId));
@@ -91,26 +117,14 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
     _playerStateSubscription = _audioPlayer.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
-        if (_currentVerseIds.isNotEmpty) {
+        // The entire surah playlist finished — advance to the next surah
+        if (_currentVerseIds.isNotEmpty && _currentRepeatCount != -1) {
           final currentVerse = _currentVerseIds[_currentIndex];
-
-          bool shouldRepeat = false;
-          if (_currentRepeatCount == -1) {
-            shouldRepeat = true;
-          } else if (_currentRepeatCount > 0 && _playedCount < _currentRepeatCount) {
-            shouldRepeat = true;
-          }
-
-          if (shouldRepeat) {
-            _playedCount++;
-            _playLocalOrStream(currentVerse);
+          final nextSurah = currentVerse.surah + 1;
+          if (nextSurah <= 114) {
+            add(PlayVerse('', VerseRef(nextSurah, 1).verseId));
           } else {
-            final nextVerse = currentVerse.next;
-            if (nextVerse != null) {
-              add(PlayVerse('', nextVerse.verseId));
-            } else {
-              add(const AudioStateChanged(isPlaying: false));
-            }
+            add(const AudioStateChanged(isPlaying: false));
           }
         } else {
           add(const AudioStateChanged(isPlaying: false));
@@ -120,9 +134,23 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       }
     });
 
-    _currentIndexSubscription = _audioPlayer.currentIndexStream.listen((index) {
+    _currentIndexSubscription = _audioPlayer.currentIndexStream.listen((index) async {
       if (index != null && _currentVerseIds.isNotEmpty && index < _currentVerseIds.length) {
         _currentIndex = index;
+        final verse = _currentVerseIds[index];
+        final title = verse.ayah == 0
+            ? '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - البسملة'
+            : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - الآية ${verse.ayah.toArabicDigits}';
+        
+        final artUri = await _getArtUri();
+        
+        _audioHandler.updateItem(MediaItem(
+          id: verse.verseId.toString(),
+          title: title,
+          artist: _currentReciter,
+          duration: _audioPlayer.duration,
+          artUri: artUri,
+        ));
         add(AudioStateChanged(isPlaying: _audioPlayer.playing));
       }
     });
@@ -142,45 +170,178 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     );
   }
 
-  Future<void> _playLocalOrStream(VerseRef verse) async {
-    final localPath = await _downloadManager.getLocalVersePath(_currentReciter, verse.verseId);
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
 
-    await _audioHandler.updateItem(MediaItem(
-      id: verse.verseId.toString(),
-      title: '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - الآية ${verse.ayah.toArabicDigits}',
-      artist: _currentReciter,
-    ));
-
-    if (localPath != null) {
-      await _audioPlayer.setFilePath(localPath);
-    } else {
-      final url = _downloadManager.getStreamingUrl(_currentReciter, verse.surah, verse.ayah);
-      await _audioPlayer.setUrl(url);
-      _downloadManager.downloadVerse(_currentReciter, verse.surah, verse.ayah, null).catchError((_) => '');
-    }
-    _audioPlayer.play();
+  /// Returns the local path, downloading first if not yet cached.
+  Future<String> _ensureLocalPath(int surah, int ayah, int verseId) async {
+    final existing = await _downloadManager.getLocalVersePath(_currentReciter, verseId);
+    if (existing != null) return existing;
+    return _downloadManager.downloadVerse(_currentReciter, surah, ayah, null);
   }
 
+  /// Returns up to [count] consecutive VerseRefs starting from [startVerse].
+  List<VerseRef> _nextVerses(VerseRef startVerse, int count) {
+    final result = <VerseRef>[];
+    VerseRef? cur = startVerse;
+    for (int i = 0; i < count; i++) {
+      if (cur == null) break;
+      result.add(cur);
+      cur = cur.next;
+    }
+    return result;
+  }
+
+  // ---------------------------------------------------------------------------
+  // _onPlayVerse — Gapless Surah Playlist Strategy
+  //
+  // 1. Download the starting ayah (+ Basmalah if needed) first → begin playback.
+  // 2. In the background, download the next 5 ayahs sequentially (one at a time)
+  //    and append each to the live ConcatenatingAudioSource as it becomes ready.
+  // 3. Repeat: after each download completes, start the next one, for up to 5
+  //    ayahs ahead of the currently-playing ayah.
+  //
+  // This gives true gapless playback (no stop/start between ayahs) while
+  // keeping network usage minimal (sequential, one file at a time).
+  // ---------------------------------------------------------------------------
   Future<void> _onPlayVerse(PlayVerse event, Emitter<AudioState> emit) async {
     emit(AudioLoading());
     try {
-      _playedCount = 0; 
+      _playedCount = 0;
       final verse = VerseRef.fromId(event.verseId);
-      _currentVerseIds = [verse];
+      final bool needsBasmalah = !event.skipBasmalah &&
+          verse.ayah == 1 &&
+          verse.surah != 1 &&
+          verse.surah != 9;
+      final int repeat = _currentRepeatCount > 0 ? _currentRepeatCount : 1;
+
+      // --- Step 1: Pre-download first 3 ayahs (+ Basmalah) in PARALLEL ---
+      // This ensures ExoPlayer has items buffered from the start, eliminating
+      // the audio click that occurs when items are added after playback starts.
+      final List<Future<String>> downloadFutures = [];
+      if (needsBasmalah) {
+        downloadFutures.add(_ensureLocalPath(1, 1, 1001));
+      }
+      final List<VerseRef> versesToPreload = _nextVerses(verse, 3);
+      for (final v in versesToPreload) {
+        downloadFutures.add(_ensureLocalPath(v.surah, v.ayah, v.verseId));
+      }
+      final List<String> prePaths = await Future.wait(downloadFutures);
+
+      // --- Step 2: Build initial playlist from pre-downloaded files ---
+      final List<VerseRef> verseQueue = [];
+      final List<AudioSource> initialSources = [];
+      int pathIdx = 0;
+
+      if (needsBasmalah) {
+        verseQueue.add(VerseRef(verse.surah, 0));
+        initialSources.add(AudioSource.file(prePaths[pathIdx++]));
+      }
+
+      for (final v in versesToPreload) {
+        final path = prePaths[pathIdx++];
+        for (int r = 0; r < repeat; r++) {
+          verseQueue.add(v);
+          initialSources.add(AudioSource.file(path));
+        }
+      }
+
+      _currentVerseIds = verseQueue;
       _currentIndex = 0;
 
-      await _playLocalOrStream(verse);
+      // ignore: deprecated_member_use
+      final playlist = ConcatenatingAudioSource(children: initialSources);
+      _activePrefillPlaylist = playlist;
 
-      emit(AudioPlaying(verse.verseId));
+      final initialTitle = verseQueue.first.ayah == 0
+          ? '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - البسملة'
+          : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - الآية ${verse.ayah.toArabicDigits}';
 
-      _downloadManager.prefetchVerses(_currentReciter, verse.surah, verse.ayah);
+      final artUri = await _getArtUri();
+
+      await _audioHandler.updateItem(MediaItem(
+        id: verseQueue.first.verseId.toString(),
+        title: initialTitle,
+        artist: _currentReciter,
+        duration: _audioPlayer.duration,
+        artUri: artUri,
+      ));
+
+      await _audioPlayer.setAudioSource(playlist);
+      await _audioPlayer.setLoopMode(_currentRepeatCount == -1 ? LoopMode.one : LoopMode.off);
+      _audioPlayer.play();
+      emit(AudioPlaying(_currentVerseIds.first.verseId));
+
+      // --- Step 3: Background-append remaining ayahs sequentially ---
+      if (_currentRepeatCount != -1 && versesToPreload.isNotEmpty) {
+        final afterPreload = versesToPreload.last.next;
+        if (afterPreload != null) {
+          _backgroundPrefill(
+            playlist: playlist,
+            reciter: _currentReciter,
+            surah: afterPreload.surah,
+            startAyah: afterPreload.ayah,
+            repeat: repeat,
+            lookahead: 5,
+          );
+        }
+      }
 
     } on PlayerException catch (_) {
       emit(const AudioError("الملف الصوتي غير متوفر."));
     } on PlayerInterruptedException catch (_) {
-      // Interrupted by a new play request
+      // Interrupted by a new play request — expected
     } catch (_) {
       emit(const AudioError("حدث خطأ أثناء تشغيل التلاوة."));
+    }
+  }
+
+  /// Downloads the next ayahs sequentially and appends them to [playlist].
+  /// Downloads one at a time (low network footprint), up to [lookahead] ahead
+  /// of the CURRENTLY playing index, not from the starting ayah.
+  Future<void> _backgroundPrefill({
+    // ignore: deprecated_member_use
+    required ConcatenatingAudioSource playlist,
+    required String reciter,
+    required int surah,
+    required int startAyah,
+    required int repeat,
+    required int lookahead,
+  }) async {
+    final surahLength = QuranMetadata.surahLengthOf(surah);
+
+    for (int a = startAyah; a <= surahLength; a++) {
+      // Stop if this playlist was replaced by a new PlayVerse call
+      if (_activePrefillPlaylist != playlist) return;
+
+      // Only prefetch if we're within [lookahead] ayahs of the current position
+      final currentAyah = _currentVerseIds.isNotEmpty
+          ? _currentVerseIds[_currentIndex].ayah
+          : startAyah;
+      if (a > currentAyah + lookahead) {
+        // Too far ahead — wait until the player catches up
+        await Future.delayed(const Duration(milliseconds: 500));
+        // Retry this same ayah
+        a--;
+        continue;
+      }
+
+      final v = VerseRef(surah, a);
+      final String path;
+      try {
+        path = await _ensureLocalPath(v.surah, v.ayah, v.verseId);
+      } catch (_) {
+        continue; // skip if download fails, player will handle the missing item
+      }
+
+      if (_activePrefillPlaylist != playlist) return;
+
+      for (int r = 0; r < repeat; r++) {
+        _currentVerseIds = [..._currentVerseIds, v];
+        // ignore: deprecated_member_use
+        await playlist.add(AudioSource.file(path));
+      }
     }
   }
 
@@ -223,6 +384,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   }
 
   Future<void> _onStopAudio(StopAudio event, Emitter<AudioState> emit) async {
+    _activePrefillPlaylist = null;
     _currentVerseIds = [];
     _currentIndex = 0;
     _playedCount = 0;
@@ -239,7 +401,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   Future<void> _onPreviousAyah(PreviousAyah event, Emitter<AudioState> emit) async {
     if (_currentVerseIds.isEmpty) return;
     final prev = _currentVerseIds[_currentIndex].previous;
-    if (prev != null) add(PlayVerse('', prev.verseId));
+    if (prev != null) add(PlayVerse('', prev.verseId, skipBasmalah: true));
   }
 
   Future<void> _onNextSurah(NextSurah event, Emitter<AudioState> emit) async {
@@ -274,7 +436,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     _prefs.saveReciter(event.reciterName);
     if (state is AudioPlaying || state is AudioPaused) {
       if (_currentVerseIds.isNotEmpty) {
-        _playedCount = 0; 
+        _playedCount = 0;
         add(PlayVerse('', _currentVerseIds[_currentIndex].verseId));
       }
     }

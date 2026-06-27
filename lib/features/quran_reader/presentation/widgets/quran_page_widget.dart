@@ -23,16 +23,7 @@ import '../../../../core/services/font_service.dart';
 // Constants
 // ---------------------------------------------------------------------------
 
-/// The decorative Basmala rendered via QCF_BSML font.
-const Widget _kBasmalaWidget = Text(
-  '1 2 3',
-  style: TextStyle(
-    fontFamily: 'QCF_BSML',
-    fontSize: 26, // Virtual canvas size — scaled by FittedBox, not screen pixels
-    color: AppColors.inkBrown,
-    height: 1.0,
-  ),
-);
+// Removed _kBasmalaWidget constant. It is now a method in _QuranPageWidgetState.
 
 // ---------------------------------------------------------------------------
 // Widget
@@ -256,7 +247,17 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
         padding: EdgeInsets.symmetric(vertical: 2.h),
         child: SurahHeaderWidget(surahNumber: surahId),
       );
-      const basmala = Center(child: _kBasmalaWidget);
+      const basmala = Center(
+        child: Text(
+          '1 2 3',
+          style: TextStyle(
+            fontFamily: 'QCF_BSML',
+            fontSize: 26,
+            color: AppColors.inkBrown,
+            height: 1.0,
+          ),
+        ),
+      );
 
       // Surah 9 (At-Tawbah) has no Basmala
       if (surahId == 9 || surahId == 1) {
@@ -295,7 +296,17 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
           padding: EdgeInsets.symmetric(vertical: 2.h),
           child: SurahHeaderWidget(surahNumber: upcomingSurahId),
         );
-        const basmala = Center(child: _kBasmalaWidget);
+        const basmala = Center(
+          child: Text(
+            '1 2 3',
+            style: TextStyle(
+              fontFamily: 'QCF_BSML',
+              fontSize: 26,
+              color: AppColors.inkBrown,
+              height: 1.0,
+            ),
+          ),
+        );
 
         if (emptyLinesBefore == 0) return header;
         if (emptyLinesBefore == 1 && upcomingSurahId != 9) return basmala;
@@ -403,14 +414,69 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
       // Al-Fatiha Basmala: replace individual QCF_P001 glyphs with a single unified widget
       if (word.verseKey == '1:1' && word.charTypeName != 'end') {
         if (!fatihahBasmalaAdded) {
+          final isMenuHighlighted = _activeVerseId == verseId;
+          final isAudioHighlighted = playingVerseId == verseId;
+          final isBookmarkHighlighted = _bookmarkHighlightVerseId == verseId;
+          final isBookmarked = bookmarkState.isBookmarked(word.verseKey);
+
+          final backgroundColor = (isAudioHighlighted || isMenuHighlighted)
+              ? AppColors.accentGold.withValues(alpha: 0.2)
+              : Colors.transparent;
+
+          Color textColor = AppColors.textPrimary;
+          if (isAudioHighlighted) {
+            textColor = AppColors.accentGold;
+          } else if (isBookmarked) {
+            textColor = AppColors.accentGold;
+          }
+
+          Widget basmala = AnimatedContainer(
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+            color: backgroundColor,
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOut,
+              style: TextStyle(
+                fontFamily: 'QCF_BSML',
+                fontSize: 26,
+                color: textColor,
+                height: 1.0,
+              ),
+              child: const Text('1 2 3'),
+            ),
+          );
+
+          if (isBookmarkHighlighted) {
+            basmala = AnimatedBuilder(
+              animation: _bookmarkPulseAnimation,
+              builder: (context, _) => Container(
+                decoration: BoxDecoration(
+                  color: AppColors.accentGold.withValues(alpha: _bookmarkPulseAnimation.value),
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+                child: const Text(
+                  '1 2 3',
+                  style: TextStyle(
+                    fontFamily: 'QCF_BSML',
+                    fontSize: 26,
+                    color: AppColors.accentGoldDark,
+                    fontWeight: FontWeight.bold,
+                    height: 1.0,
+                  ),
+                ),
+              ),
+            );
+          }
+
           wordWidgets.add(
             GestureDetector(
               onTapDown: (details) {
                 _showVerseMenu(context, details.globalPosition, verseId, lines);
               },
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.0),
-                child: _kBasmalaWidget,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: basmala,
               ),
             ),
           );
