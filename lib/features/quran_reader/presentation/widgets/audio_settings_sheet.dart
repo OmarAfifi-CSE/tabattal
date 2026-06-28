@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/web_safe_size.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/network/audio_download_manager.dart';
 import '../../../../core/services/audio_preferences_service.dart';
@@ -17,7 +18,8 @@ void showAudioSettingsSheet(BuildContext context, {int? verseId}) {
   showModalBottomSheet(
     context: context,
     backgroundColor: AppColors.cardCream,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24.r))),
+    constraints: kIsWeb ? const BoxConstraints(maxWidth: 450) : null,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24.wR))),
     isScrollControlled: true,
     builder: (_) => MultiBlocProvider(
       providers: [BlocProvider.value(value: context.read<AudioBloc>())],
@@ -125,7 +127,7 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 28.h),
+        padding: EdgeInsets.fromLTRB(20.wW, 10.wH, 20.wW, 28.wH),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -133,11 +135,11 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
             // ── Drag handle
             Center(
               child: Container(
-                width: 48.w, height: 4.h,
-                margin: EdgeInsets.only(bottom: 14.h),
+                width: 48.wW, height: 4.wH,
+                margin: EdgeInsets.only(bottom: 14.wH),
                 decoration: BoxDecoration(
                   color: AppColors.accentGold,
-                  borderRadius: BorderRadius.circular(2.r),
+                  borderRadius: BorderRadius.circular(2.wR),
                 ),
               ),
             ),
@@ -145,10 +147,10 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
             Center(
               child: Text(
                 'إعدادات الاستماع',
-                style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                style: TextStyle(fontSize: 20.wSp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
               ),
             ),
-            SizedBox(height: 18.h),
+            SizedBox(height: 18.wH),
 
             // ── Category Selector
             _SelectorButton(
@@ -158,7 +160,7 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
               items: categories,
               onChanged: _onCategoryChanged,
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 12.wH),
 
             // ── Reciter Selector
             _SelectorButton(
@@ -168,18 +170,18 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
               items: reciters,
               onChanged: _onReciterChanged,
             ),
-            SizedBox(height: 20.h),
+            SizedBox(height: 20.wH),
 
             // ── Repeat Selector
             const _SectionLabel(icon: Icons.repeat_rounded, label: 'تكرار الآية'),
-            SizedBox(height: 8.h),
+            SizedBox(height: 8.wH),
             Align(
               alignment: Alignment.centerRight,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceCream,
-                  borderRadius: BorderRadius.circular(10.r),
+                  borderRadius: BorderRadius.circular(10.wR),
                   border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                 ),
                 child: DropdownButtonHideUnderline(
@@ -217,21 +219,21 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
               ),
             ),
             ),
-            SizedBox(height: 24.h),
+            SizedBox(height: 24.wH),
 
             // ── Play / Apply button
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accentGold,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 14.h),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                padding: EdgeInsets.symmetric(vertical: 14.wH),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.wR)),
                 elevation: 0,
               ),
-              icon: Icon(widget.verseId != null ? Icons.play_arrow_rounded : Icons.check_rounded, size: 24.sp),
+              icon: Icon(widget.verseId != null ? Icons.play_arrow_rounded : Icons.check_rounded, size: 24.wSp),
               label: Text(
                 widget.verseId != null ? 'ابدأ الاستماع' : 'حفظ الإعدادات',
-                style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 17.wSp, fontWeight: FontWeight.bold),
               ),
               onPressed: _applyAndPlay,
             ),
@@ -255,11 +257,11 @@ class _SectionLabel extends StatelessWidget {
     return Row(
       textDirection: TextDirection.rtl,
       children: [
-        Icon(icon, color: AppColors.accentGold, size: 18.sp),
-        SizedBox(width: 6.w),
+        Icon(icon, color: AppColors.accentGold, size: 18.wSp),
+        SizedBox(width: 6.wW),
         Text(
           label,
-          style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+          style: TextStyle(fontSize: 14.wSp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           textDirection: TextDirection.rtl,
         ),
       ],
@@ -335,18 +337,18 @@ class _SelectorButton extends StatelessWidget {
         );
       }).toList(),
       child: Container(
-        height: 52.h,
+        height: kIsWeb ? null : 52.wH,
         width: MediaQuery.sizeOf(context).width,
-        padding: EdgeInsets.symmetric(horizontal: 12.w),
+        padding: kIsWeb ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8) : EdgeInsets.symmetric(horizontal: 12.wW),
         decoration: BoxDecoration(
           color: AppColors.surfaceCream,
-          borderRadius: BorderRadius.circular(10.r),
+          borderRadius: BorderRadius.circular(10.wR),
           border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.accentGold, size: 18.sp),
-            SizedBox(width: 8.w),
+            Icon(icon, color: AppColors.accentGold, size: 18.wSp),
+            SizedBox(width: 8.wW),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -354,7 +356,7 @@ class _SelectorButton extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(fontSize: 10.sp, color: AppColors.accentGold, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 10.wSp, color: AppColors.accentGold, fontWeight: FontWeight.w600),
                     textDirection: TextDirection.rtl,
                   ),
                   Text(
@@ -362,12 +364,12 @@ class _SelectorButton extends StatelessWidget {
                     textAlign: TextAlign.right,
                     textDirection: TextDirection.rtl,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 14.wSp, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.accentGold, size: 20.sp),
+            Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.accentGold, size: 20.wSp),
           ],
         ),
       ),

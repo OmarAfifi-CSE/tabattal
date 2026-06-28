@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -152,11 +153,11 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
         if (closeMenu) _close();
       },
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        padding: EdgeInsets.symmetric(horizontal: kIsWeb ? 16 : 16.w, vertical: kIsWeb ? 12 : 12.h),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? AppColors.bronzeIcon, size: 22.sp),
-            SizedBox(width: 12.w),
+            Icon(icon, color: iconColor ?? AppColors.bronzeIcon, size: kIsWeb ? 22 : 22.sp),
+            SizedBox(width: kIsWeb ? 12 : 12.w),
             Expanded(
               child: Text(
                 text,
@@ -217,6 +218,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.background, // Soft cream background
+      constraints: kIsWeb ? const BoxConstraints(maxWidth: 500) : null,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -376,12 +378,12 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                     },
                                     child: Container(
                                       height: 36,
-                                      width: 100,
-                                      padding: const EdgeInsets.only(left: 10, right: 10),
+                                      width: 140,
+                                      padding: EdgeInsets.symmetric(horizontal: kIsWeb ? 8 : 16.w, vertical: kIsWeb ? 8 : 12.h),
                                       decoration: BoxDecoration(
-                                        color: AppColors.background,
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
+                                        color: AppColors.surfaceCream,
+                                        borderRadius: BorderRadius.circular(kIsWeb ? 12 : 12.r),
+                                        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.2)),
                                       ),
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -392,8 +394,9 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                               _getTafsirName(displayResourceId),
                                               textAlign: TextAlign.right,
                                               style: AppTextStyles.menuItemText.copyWith(
+                                                fontSize: kIsWeb ? 12 : 12.sp,
                                                 color: AppColors.accentGold,
-                                                fontWeight: FontWeight.bold,
+                                                fontWeight: FontWeight.w700,
                                               ),
                                             ),
                                           ),
@@ -430,14 +433,18 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                   duration: const Duration(milliseconds: 500),
                                   curve: Curves.easeOut,
                                   builder: (context, value, child) {
-                                    return Column(
-                                      mainAxisSize: MainAxisSize.min,
+                                    return Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        CircularProgressIndicator(
-                                          value: value == 0.0 ? null : value,
-                                          color: AppColors.accentGold,
+                                        SizedBox(
+                                          width: kIsWeb ? 24 : 24.sp,
+                                          height: kIsWeb ? 24 : 24.sp,
+                                          child: CircularProgressIndicator(
+                                            value: value == 0.0 ? null : value,
+                                            color: AppColors.bronzeIcon,
+                                          ),
                                         ),
-                                        const SizedBox(height: 16),
+                                        SizedBox(width: kIsWeb ? 12 : 12.w),
                                         Text(
                                           'جاري تحميل التفسير... ${(value * 100).toStringAsFixed(1)}%',
                                           style: AppTextStyles.menuItemText.copyWith(fontSize: 14, color: AppColors.accentGold),
@@ -532,10 +539,10 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                       return Row(
                                         textDirection: TextDirection.rtl,
                                         children: [
-                                          const SizedBox(
-                                            width: 16,
-                                            height: 16,
-                                            child: CircularProgressIndicator(
+                                          SizedBox(
+                                            width: kIsWeb ? 20 : 20.sp,
+                                            height: kIsWeb ? 20 : 20.sp,
+                                            child: const CircularProgressIndicator(
                                               strokeWidth: 2,
                                               color: AppColors.accentGold,
                                             ),
@@ -665,12 +672,13 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
               );
             },
             child: Material(
+              borderRadius: BorderRadius.circular(kIsWeb ? 16 : 16.r),
               color: Colors.transparent,
               child: Container(
-                width: menuSize.width,
+                width: kIsWeb ? 280 : 250.w,
                 decoration: BoxDecoration(
-                  color: AppColors.cardCream,
-                  borderRadius: BorderRadius.circular(16.r),
+                  color: AppColors.surfaceCream,
+                  borderRadius: BorderRadius.circular(kIsWeb ? 16 : 16.r),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.15),

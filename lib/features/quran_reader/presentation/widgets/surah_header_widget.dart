@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'quran_metadata.dart';
 import '../../../../core/utils/arabic_text_utils.dart';
@@ -139,18 +138,19 @@ class SurahHeaderWidget extends StatelessWidget {
     final versesCount = QuranMetadata.surahLengthOf(surahNumber);
     final revelationPlace = QuranMetadata.getRevelationPlace(surahNumber);
 
-    // We use the device screen width as our "Virtual Canvas" coordinate space.
-    // This perfectly matches the dimensions originally calibrated for right/left/top.
-    final canvasWidth = MediaQuery.sizeOf(context).width;
+    // We use a fixed reference width for the internal drawing canvas.
+    // The parent FittedBox will scale this entire drawing up/down proportionally.
+    // 412 is a standard mobile screen width used for calibration.
+    const double canvasWidth = 412.0;
 
     return Container(
-      width: MediaQuery.sizeOf(context).width,
-      margin: EdgeInsets.symmetric(vertical: 12.h),
+      width: canvasWidth,
+      margin: const EdgeInsets.symmetric(vertical: 12.0),
       child: FittedBox(
         fit: BoxFit.fitWidth,
         child: SizedBox(
           width: canvasWidth,
-          height: 85.h,
+          height: 85.0,
           child: Stack(
             alignment: Alignment.center,
             clipBehavior: Clip.none,
@@ -159,15 +159,15 @@ class SurahHeaderWidget extends StatelessWidget {
               SizedBox(
                 width: canvasWidth,
                 child: Transform.scale(
-                  scaleX: 1.0, // Fixed unified scale for all pages
+                  scaleX: 1.0, 
                   scaleY: 1.8,
-                  child: FittedBox(
+                  child: const FittedBox(
                     fit: BoxFit.fitWidth,
                     child: Text(
                       '\u00F2',
                       style: TextStyle(
                         fontFamily: 'QCF_BSML',
-                        fontSize: 60.sp,
+                        fontSize: 60.0,
                         color: AppColors.accentGold,
                         height: 1.0,
                       ),
@@ -178,15 +178,12 @@ class SurahHeaderWidget extends StatelessWidget {
 
               // 2. The Surah Name from QCF_Surah
               Transform.translate(
-                offset: Offset(
-                  -10.w,
-                  11.h,
-                ), // Calibrated center tweak for this ornament
+                offset: const Offset(-10.0, 11.0), // Calibrated center tweak for this ornament
                 child: Text(
                   '${_getSurahNameGlyph(surahNumber)}${String.fromCharCode(0xE903)}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'QCF_Surah',
-                    fontSize: 46.sp,
+                    fontSize: 46.0,
                     color: AppColors.accentGold,
                     height: 1.0,
                   ),
@@ -195,27 +192,27 @@ class SurahHeaderWidget extends StatelessWidget {
 
               // 3. Right Oval Text (Verses count)
               Positioned(
-                right: 77.w, // Calibrated position within virtual canvas
-                top: 34.h,
+                right: 77.0, // Calibrated position within virtual canvas
+                top: 34.0,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
+                    const Text(
                       'آياتها',
                       style: TextStyle(
                         fontFamily: 'Amiri',
                         fontWeight: FontWeight.bold,
-                        fontSize: 14.sp,
+                        fontSize: 14.0,
                         color: AppColors.accentGold,
                         height: 1.0,
                       ),
                     ),
                     Text(
                       versesCount.toArabicDigits,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Amiri',
                         fontWeight: FontWeight.bold,
-                        fontSize: 12.sp,
+                        fontSize: 12.0,
                         color: AppColors.accentGold,
                         height: 1.0,
                       ),
@@ -226,15 +223,15 @@ class SurahHeaderWidget extends StatelessWidget {
 
               // 4. Left Oval Text (Revelation place)
               Positioned(
-                left: 74.w, // Calibrated position within virtual canvas
-                top: 38.h,
+                left: 74.0, // Calibrated position within virtual canvas
+                top: 38.0,
                 child: Text(
                   revelationPlace,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Amiri',
                     fontWeight: FontWeight.bold,
-                    fontSize: 14.sp,
+                    fontSize: 14.0,
                     color: AppColors.accentGold,
                     height: 1.0,
                   ),

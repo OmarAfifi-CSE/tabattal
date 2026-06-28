@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../features/quran_reader/presentation/widgets/quran_metadata.dart';
@@ -60,6 +61,7 @@ class AudioDownloadManager {
 
   /// Returns the base directory for a specific reciter
   Future<String> getReciterDirectory(String reciterKey) async {
+    if (kIsWeb) return ''; // Not supported on web
     final dir = await getApplicationDocumentsDirectory();
     final reciterPath = reciterKey.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
     final targetDir = Directory('${dir.path}/audio/$reciterPath');
@@ -71,12 +73,34 @@ class AudioDownloadManager {
 
   /// Returns the local path for a specific verse if it exists, otherwise null
   Future<String?> getLocalVersePath(String reciterKey, int verseId) async {
+    if (kIsWeb) return null;
     final dirPath = await getReciterDirectory(reciterKey);
     final file = File('$dirPath/$verseId.mp3');
     if (await file.exists()) {
       return file.path;
     }
     return null;
+  }
+
+  /// Returns the local path for a specific verse if it exists, otherwise null
+  Future<String> getVerseAudioPath(String reciterKey, int surah, int ayah) async {
+    final reciterPath = _getReciterPath(reciterKey);
+    final surahStr = surah.toString().padLeft(3, '0');
+    final ayahStr = ayah.toString().padLeft(3, '0');
+    
+    final url = 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
+
+    if (kIsWeb) return url;
+
+    final dirPath = await getReciterDirectory(reciterKey);
+    final verseId = surah * 1000 + ayah;
+    final savePath = '$dirPath/$verseId.mp3';
+
+    if (await File(savePath).exists()) {
+      return savePath;
+    }
+
+    return url;
   }
 
   /// Downloads a specific verse audio file
@@ -86,6 +110,9 @@ class AudioDownloadManager {
     final ayahStr = ayah.toString().padLeft(3, '0');
     
     final url = 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
+    
+    if (kIsWeb) return url;
+
     final dirPath = await getReciterDirectory(reciterKey);
     final verseId = surah * 1000 + ayah;
     final savePath = '$dirPath/$verseId.mp3';
@@ -118,6 +145,7 @@ class AudioDownloadManager {
 
   /// Checks if an entire Surah is already downloaded locally
   Future<bool> isSurahDownloaded(String reciterKey, int surah, int numAyahs) async {
+    if (kIsWeb) return false;
     final dirPath = await getReciterDirectory(reciterKey);
     for (int ayah = 1; ayah <= numAyahs; ayah++) {
       final verseId = surah * 1000 + ayah;
@@ -129,10 +157,23 @@ class AudioDownloadManager {
     return true;
   }
 
+  /// Deletes all downloaded audio for a specific surah
+  Future<void> deleteSurah(String reciterKey, int surah, int numAyahs) async {
+    if (kIsWeb) return;
+    final dirPath = await getReciterDirectory(reciterKey);
+    for (int ayah = 1; ayah <= numAyahs; ayah++) {
+      final verseId = surah * 1000 + ayah;
+      final file = File('$dirPath/$verseId.mp3');
+      if (await file.exists()) {
+        await file.delete();
+      }
+    }
+  }
+
   /// Returns download progress for a surah (0.0 to 1.0).
   /// Counts how many ayahs are already on disk vs total.
   Future<double> getSurahDownloadProgress(String reciterKey, int surah, int numAyahs) async {
-    if (numAyahs == 0) return 0.0;
+    if (kIsWeb || numAyahs == 0) return 0.0;
     final dirPath = await getReciterDirectory(reciterKey);
     int count = 0;
     for (int ayah = 1; ayah <= numAyahs; ayah++) {

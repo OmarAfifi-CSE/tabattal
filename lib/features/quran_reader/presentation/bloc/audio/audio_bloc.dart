@@ -3,6 +3,7 @@ import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:just_audio/just_audio.dart';
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../../../core/network/audio_download_manager.dart';
@@ -30,6 +31,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
   Future<Uri> _getArtUri() async {
     if (_cachedArtUri != null) return _cachedArtUri!;
+    if (kIsWeb) {
+      _cachedArtUri = Uri.parse('/assets/images/app_icon.png');
+      return _cachedArtUri!;
+    }
     try {
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/app_icon.png');
@@ -117,14 +122,21 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
     _playerStateSubscription = _audioPlayer.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
-        // The entire surah playlist finished — advance to the next surah
+        // The playlist finished
         if (_currentVerseIds.isNotEmpty && _currentRepeatCount != -1) {
-          final currentVerse = _currentVerseIds[_currentIndex];
-          final nextSurah = currentVerse.surah + 1;
-          if (nextSurah <= 114) {
-            add(PlayVerse('', VerseRef(nextSurah, 1).verseId));
+          if (kIsWeb) {
+            // On web, we only load 1 ayah at a time (to avoid browser DOM limits and ConcatenatingAudioSource bugs).
+            // So when it completes, we advance to the next Ayah.
+            add(const NextAyah());
           } else {
-            add(const AudioStateChanged(isPlaying: false));
+            // On mobile, the entire surah playlist finished — advance to the next surah
+            final currentVerse = _currentVerseIds[_currentIndex];
+            final nextSurah = currentVerse.surah + 1;
+            if (nextSurah <= 114) {
+              add(PlayVerse('', VerseRef(nextSurah, 1).verseId));
+            } else {
+              add(const AudioStateChanged(isPlaying: false));
+            }
           }
         } else {
           add(const AudioStateChanged(isPlaying: false));
@@ -223,7 +235,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       if (needsBasmalah) {
         downloadFutures.add(_ensureLocalPath(1, 1, 1001));
       }
-      final List<VerseRef> versesToPreload = _nextVerses(verse, 3);
+      const int preloadCount = kIsWeb ? 1 : 3;
+      final List<VerseRef> versesToPreload = _nextVerses(verse, preloadCount);
       for (final v in versesToPreload) {
         downloadFutures.add(_ensureLocalPath(v.surah, v.ayah, v.verseId));
       }
@@ -236,14 +249,14 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
       if (needsBasmalah) {
         verseQueue.add(VerseRef(verse.surah, 0));
-        initialSources.add(AudioSource.file(prePaths[pathIdx++]));
+        initialSources.add(_createAudioSource(prePaths[pathIdx++]));
       }
 
       for (final v in versesToPreload) {
         final path = prePaths[pathIdx++];
         for (int r = 0; r < repeat; r++) {
           verseQueue.add(v);
-          initialSources.add(AudioSource.file(path));
+          initialSources.add(_createAudioSource(path));
         }
       }
 
@@ -268,13 +281,14 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         artUri: artUri,
       ));
 
+      await _audioPlayer.stop();
       await _audioPlayer.setAudioSource(playlist);
       await _audioPlayer.setLoopMode(_currentRepeatCount == -1 ? LoopMode.one : LoopMode.off);
       _audioPlayer.play();
       emit(AudioPlaying(_currentVerseIds.first.verseId));
 
       // --- Step 3: Background-append remaining ayahs sequentially ---
-      if (_currentRepeatCount != -1 && versesToPreload.isNotEmpty) {
+      if (!kIsWeb && _currentRepeatCount != -1 && versesToPreload.isNotEmpty) {
         final afterPreload = versesToPreload.last.next;
         if (afterPreload != null) {
           _backgroundPrefill(
@@ -340,7 +354,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       for (int r = 0; r < repeat; r++) {
         _currentVerseIds = [..._currentVerseIds, v];
         // ignore: deprecated_member_use
-        await playlist.add(AudioSource.file(path));
+        await playlist.add(_createAudioSource(path));
       }
     }
   }
@@ -352,8 +366,9 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       _currentVerseIds = event.verseIds.map((id) => VerseRef.fromId(id)).toList();
       _currentIndex = event.startIndex;
 
-      final playlist = event.audioUrls.map((path) => AudioSource.file(path)).toList();
+      final playlist = event.audioUrls.map((path) => _createAudioSource(path)).toList();
 
+      await _audioPlayer.stop();
       // ignore: deprecated_member_use
       await _audioPlayer.setAudioSource(ConcatenatingAudioSource(children: playlist), initialIndex: event.startIndex);
       _audioPlayer.play();
@@ -474,4 +489,15 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     _audioPlayer.dispose();
     return super.close();
   }
+  // ---------------------------------------------------------------------------
+  // Web-safe AudioSource helper
+  // ---------------------------------------------------------------------------
+  AudioSource _createAudioSource(String path) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return AudioSource.uri(Uri.parse(path));
+    } else {
+      return AudioSource.file(path);
+    }
+  }
+
 }

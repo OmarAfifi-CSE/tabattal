@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
@@ -196,7 +197,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final content = Scaffold(
       backgroundColor: AppColors.surfaceCream,
       body: SafeArea(
         child: Column(
@@ -208,6 +209,18 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
         ),
       ),
     );
+    if (kIsWeb) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: content,
+          ),
+        ),
+      );
+    }
+    return content;
   }
 
   Widget _buildHeader(BuildContext context) {

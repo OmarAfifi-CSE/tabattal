@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -15,7 +16,7 @@ class QuranBookmarksView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final content = Scaffold(
       backgroundColor: AppColors.surfaceCream,
       appBar: AppBar(
         backgroundColor: AppColors.surfaceCream,
@@ -54,6 +55,18 @@ class QuranBookmarksView extends StatelessWidget {
         },
       ),
     );
+    if (kIsWeb) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: content,
+          ),
+        ),
+      );
+    }
+    return content;
   }
 
   Widget _buildEmptyState() {

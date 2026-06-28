@@ -26,6 +26,7 @@ dependencies:
   qcf_quran: ^0.0.5
   flutter_screenutil: ^5.9.3
   sqflite_common_ffi: ^2.4.2
+  sqflite_common_ffi_web: ^1.1.2
 
 dev_dependencies:
   flutter_test:
@@ -38,6 +39,7 @@ flutter:
   assets:
     - assets/images/
     - assets/data/
+    - assets/data/quran.db
     - assets/fonts/v1/
 
   fonts:

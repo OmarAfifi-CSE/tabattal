@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -23,34 +24,36 @@ class QuranDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(top: 200.h, bottom: 200.h),
-      child: Drawer(
-        width: 280.w,
-        backgroundColor: AppColors.surfaceCream,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24.r),
-            bottomLeft: Radius.circular(24.r),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(child: _buildMenuItems(context)),
-          ],
+    final drawer = Drawer(
+      width: kIsWeb ? 300 : 280.w,
+      backgroundColor: AppColors.surfaceCream,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(kIsWeb ? 24 : 24.r),
+          bottomLeft: Radius.circular(kIsWeb ? 24 : 24.r),
         ),
       ),
+      child: SafeArea(
+        child: _buildMenuItems(context),
+      ),
+    );
+    // On mobile, float the drawer with vertical padding for the visual effect.
+    // On web, fill the full height to avoid overflow on smaller viewports.
+    if (kIsWeb) return drawer;
+    return Padding(
+      padding: EdgeInsets.only(top: 200.h, bottom: 200.h),
+      child: drawer,
     );
   }
 
 
   Widget _buildMenuItems(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _buildDrawerItem(
-          context,
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildDrawerItem(
+            context,
           icon: Icons.search_rounded,
           title: 'البحث المتقدم',
           subtitle: 'بحث في النصوص والأرقام',
@@ -156,21 +159,24 @@ class QuranDrawer extends StatelessWidget {
             }
           },
         ),
-        _divider(),
-        _buildDrawerItem(
-          context,
-          icon: Icons.headphones_rounded,
-          title: 'مدير الصوتيات',
-          subtitle: 'تحميل وإدارة التلاوات',
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const QuranAudioManagerView()),
-            );
-          },
-        ),
-      ],
+        if (!kIsWeb) ...[
+          _divider(),
+          _buildDrawerItem(
+            context,
+            icon: Icons.headphones_rounded,
+            title: 'مدير الصوتيات',
+            subtitle: 'تحميل وإدارة التلاوات',
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const QuranAudioManagerView()),
+              );
+            },
+          ),
+        ],
+        ],
+      ),
     );
   }
 
@@ -179,16 +185,16 @@ class QuranDrawer extends StatelessWidget {
       builder: (context, state) {
         if (state.bookmarkedVerseKeys.isEmpty) return const SizedBox.shrink();
         return Container(
-          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
             color: AppColors.accentGold,
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
             '${state.bookmarkedVerseKeys.length}',
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
-              fontSize: 12.sp,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -216,20 +222,20 @@ class QuranDrawer extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 13.h),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Row(
           textDirection: TextDirection.rtl,
           children: [
             Container(
-              width: 46.r,
-              height: 46.r,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: AppColors.accentGold.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: AppColors.accentGold, size: 24.sp),
+              child: Icon(icon, color: AppColors.accentGold, size: 22),
             ),
-            SizedBox(width: 14.w),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,19 +244,19 @@ class QuranDrawer extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: TextStyle(
-                          fontSize: 16.sp,
+                        style: const TextStyle(
+                          fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      if (badge != null) ...[SizedBox(width: 8.w), badge],
+                      if (badge != null) ...[const SizedBox(width: 8), badge],
                     ],
                   ),
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 13.sp,
+                      fontSize: 12,
                       color: AppColors.textPrimary.withValues(alpha: 0.45),
                     ),
                   ),
@@ -260,7 +266,7 @@ class QuranDrawer extends StatelessWidget {
             Icon(
               Icons.chevron_left_rounded,
               color: AppColors.textPrimary.withValues(alpha: 0.25),
-              size: 22.sp,
+              size: 20,
             ),
           ],
         ),

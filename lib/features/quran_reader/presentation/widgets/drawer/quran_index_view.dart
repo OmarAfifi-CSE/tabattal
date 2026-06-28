@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/utils/arabic_text_utils.dart';
@@ -58,7 +59,7 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final content = Scaffold(
       backgroundColor: AppColors.surfaceCream,
       appBar: AppBar(
         backgroundColor: AppColors.surfaceCream,
@@ -83,6 +84,18 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
       ),
       body: _buildBody(),
     );
+    if (kIsWeb) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: content,
+          ),
+        ),
+      );
+    }
+    return content;
   }
 
   Widget _buildBody() {

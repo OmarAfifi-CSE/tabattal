@@ -123,6 +123,7 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
                     padding: EdgeInsets.only(bottom: paddingBottom),
                     child: PageView.builder(
                       controller: _pageController,
+                      allowImplicitScrolling: true,
                       itemCount: QuranConstants.totalPages,
                       scrollDirection: Axis.horizontal,
                       reverse: false,

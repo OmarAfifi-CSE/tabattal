@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
@@ -61,15 +62,14 @@ class QuranPageFrame extends StatelessWidget {
     return rawY.clamp(minY, maxY);
   }
 
-  /// Builds a styled info box used in the frame header cuts (Juz, Surah, Menu).
-  Widget _buildFrameInfoBox({required Widget child, EdgeInsetsGeometry? margin}) {
+  Widget _buildFrameInfoBox({required Widget child, EdgeInsetsGeometry? margin, EdgeInsetsGeometry? padding}) {
     return Container(
-      margin: margin ?? EdgeInsets.symmetric(horizontal: 6.w),
-      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+      margin: margin ?? (kIsWeb ? const EdgeInsets.symmetric(horizontal: 6) : EdgeInsets.symmetric(horizontal: 6.w)),
+      padding: padding ?? (kIsWeb ? const EdgeInsets.symmetric(horizontal: 4, vertical: 4) : EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h)),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         border: Border.all(color: QuranBorderPainter.gold.withValues(alpha: 0.6), width: 1.0),
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(kIsWeb ? 12 : 12.r),
         color: QuranBorderPainter.background,
       ),
       child: child,
@@ -108,16 +108,18 @@ class QuranPageFrame extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 // ── LAYER 1: Procedural border painter ─────────────────────
-                CustomPaint(
-                  painter: QuranBorderPainter(
-                    pageNumber: pageNumber,
-                    hizbCutCenters: hizbMarkers != null
-                        ? hizbMarkers
-                            .map((m) => calculateHizbMarkerYPosition(m['line'] as int, pageHeight))
-                            .toList()
-                        : [],
+                RepaintBoundary(
+                  child: CustomPaint(
+                    painter: QuranBorderPainter(
+                      pageNumber: pageNumber,
+                      hizbCutCenters: hizbMarkers != null
+                          ? hizbMarkers
+                              .map((m) => calculateHizbMarkerYPosition(m['line'] as int, pageHeight))
+                              .toList()
+                          : [],
+                    ),
+                    size: Size.infinite,
                   ),
-                  size: Size.infinite,
                 ),
 
                 // ── LAYER 2: Quran text content ─────────────────────────────
@@ -126,7 +128,7 @@ class QuranPageFrame extends StatelessWidget {
                   bottom: pageHeight * 0.05,
                   left: pageWidth * 0.08,
                   right: pageWidth * 0.08,
-                  child: child,
+                  child: RepaintBoundary(child: child),
                 ),
 
                 // ── LAYER 3: Header frame cuts ──────────────────────────────
@@ -141,7 +143,7 @@ class QuranPageFrame extends StatelessWidget {
                     child: _buildFrameInfoBox(
                       child: Text(
                         juzName,
-                        style: headerStyle.copyWith(fontSize: 10.sp),
+                        style: headerStyle.copyWith(fontSize: kIsWeb ? 12 : 10.sp),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -162,7 +164,7 @@ class QuranPageFrame extends StatelessWidget {
                         fit: BoxFit.scaleDown,
                         child: Text(
                           surahName,
-                          style: headerStyle.copyWith(fontSize: 10.sp),
+                          style: headerStyle.copyWith(fontSize: kIsWeb ? 12 : 10.sp),
                           textAlign: TextAlign.center,
                           maxLines: 1,
                         ),
@@ -175,15 +177,14 @@ class QuranPageFrame extends StatelessWidget {
                 Positioned(
                   top: pageHeight * 0.02,
                   right: pageWidth * 0.07,
-                  width: pageWidth * 0.11,
                   child: FractionalTranslation(
                     translation: const Offset(0.0, -0.5),
                     child: _buildFrameInfoBox(
-                      margin: EdgeInsets.symmetric(horizontal: 6.w),
+                      margin: kIsWeb ? const EdgeInsets.symmetric(horizontal: 6) : EdgeInsets.symmetric(horizontal: 6.w),
                       child: InkWell(
                         onTap: () => Scaffold.of(context).openDrawer(),
                         borderRadius: BorderRadius.circular(12.r),
-                        child: Icon(Icons.segment_rounded, color: QuranBorderPainter.gold, size: 24.sp),
+                        child: Icon(Icons.segment_rounded, color: QuranBorderPainter.gold, size: kIsWeb ? 24 : 24.sp),
                       ),
                     ),
                   ),
@@ -204,7 +205,7 @@ class QuranPageFrame extends StatelessWidget {
                           style: TextStyle(
                             fontFamily: 'Amiri',
                             color: QuranBorderPainter.innerColor,
-                            fontSize: 15.sp,
+                            fontSize: kIsWeb ? 15 : 15.sp,
                             fontWeight: FontWeight.w900,
                             height: 1.1,
                           ),
@@ -220,8 +221,8 @@ class QuranPageFrame extends StatelessWidget {
                   for (final marker in hizbMarkers)
                     Positioned(
                       top: calculateHizbMarkerYPosition(marker['line'] as int, pageHeight),
-                      left: isLeftPage ? pageWidth * 0.057 : null,
-                      right: !isLeftPage ? pageWidth * 0.043 : null,
+                      left: isLeftPage ? (kIsWeb ? pageWidth * 0.05 + 8.5 : pageWidth * 0.057) : null,
+                      right: !isLeftPage ? (kIsWeb ? pageWidth * 0.05 - 7.8 : pageWidth * 0.043) : null,
                       width: pageWidth * 0.12,
                       child: FractionalTranslation(
                         translation: Offset(isLeftPage ? -0.5 : 0.5, -0.5),
@@ -236,7 +237,7 @@ class QuranPageFrame extends StatelessWidget {
                                 '\u00F5',
                                 style: TextStyle(
                                   fontFamily: 'QCF_BSML',
-                                  fontSize: 65.sp,
+                                  fontSize: kIsWeb ? 55 : 65.sp,
                                   color: QuranBorderPainter.gold,
                                   height: 1.0,
                                 ),
@@ -244,7 +245,7 @@ class QuranPageFrame extends StatelessWidget {
                             ),
                             // Label text centred inside the ornament
                             Transform.translate(
-                              offset: Offset(-3.2.w, 12.h),
+                              offset: kIsWeb ? const Offset(-6, 10) : Offset(-3.2.w, 12.h),
                               child: SizedBox(
                                 width: pageWidth * 0.06,
                                 child: Text.rich(
@@ -253,7 +254,7 @@ class QuranPageFrame extends StatelessWidget {
                                       (marker['text'] as String).toArabicDigits,
                                       TextStyle(
                                         fontFamily: 'KFGQPC Uthmanic Script HAFS',
-                                        fontSize: 6.sp,
+                                        fontSize: kIsWeb ? 8 : 6.sp,
                                         height: 1.2,
                                         color: QuranBorderPainter.innerColor,
                                         fontWeight: FontWeight.bold,

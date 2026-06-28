@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -47,6 +48,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
   int? _activeVerseId;
   OverlayEntry? _activeOverlayEntry;
   final GlobalKey _pageColumnKey = GlobalKey();
+  bool _isFontLoaded = false;
 
   late final AnimationController _bookmarkPulseController;
   late final Animation<double> _bookmarkPulseAnimation;
@@ -99,8 +101,13 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
   // ---------------------------------------------------------------------------
 
   Future<void> _loadPageFont() async {
+    setState(() => _isFontLoaded = false);
+    // On Web, FontLoader.load() blocks the main thread. We delay it slightly
+    // so it doesn't drop frames during the PageView swipe animation.
+    if (kIsWeb) await Future.delayed(const Duration(milliseconds: 350));
+    if (!mounted) return;
     await FontService.loadFontForPage(widget.pageNumber);
-    if (mounted) setState(() {});
+    if (mounted) setState(() => _isFontLoaded = true);
   }
 
   void _activateBookmarkHighlight(String verseKey) {
@@ -341,8 +348,8 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
 
     final wordTextStyle = AppTextStyles.quranText.copyWith(
       fontFamily: customFontFamily,
-      fontSize: 32, // Virtual canvas size — scaled by FittedBox
-      height: 1.5,
+      fontSize: kIsWeb ? 42 : 32, // Larger base font size for web
+      height: kIsWeb ? 1.2 : 1.5, // Tighter height to prevent vertical overflow on larger fonts
     );
 
     if (isBookmarkHighlighted) {
@@ -556,17 +563,15 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
               child: FittedBox(
                 fit: BoxFit.contain,
                 alignment: Alignment.center,
-                child: IntrinsicWidth(
-                  child: ConstrainedBox(
-                    // These are VIRTUAL CANVAS coordinates, not screen pixels.
-                    // They must NOT use ScreenUtil — they define the intrinsic aspect ratio
-                    // for the FittedBox to scale correctly on all screen sizes.
-                    constraints: const BoxConstraints(minWidth: 460, minHeight: 1020),
-                    child: Column(
-                      key: _pageColumnKey,
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: SizedBox(
+                  // Use a fixed virtual canvas size instead of expensive IntrinsicWidth
+                  width: kIsWeb ? 650 : 460, 
+                  height: kIsWeb ? 950 : 1020,
+                  child: Column(
+                    key: _pageColumnKey,
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: List.generate(15, (index) {
                         final lineNumber = index + 1;
                         final lineData = lines.firstWhere(
@@ -591,7 +596,6 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                   ),
                 ),
               ),
-            ),
           );
         },
       );
@@ -620,7 +624,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
         buildWhen: (_, current) =>
             current is QuranLoading || current is QuranLoaded || current is QuranError || current is QuranInitial,
         builder: (context, state) {
-          if (state is QuranLoading) {
+          if (state is QuranLoading || (kIsWeb && !_isFontLoaded)) {
             return QuranPageFrame(
               pageNumber: widget.pageNumber,
               surahName: '',

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'app_colors.dart';
@@ -8,19 +9,19 @@ class AppTextStyles {
   static TextStyle get quranText => TextStyle(
     fontFamily: 'KFGQPC Uthmanic Script HAFS',
     color: AppColors.textPrimary,
-    fontSize: 26.sp,
+    fontSize: kIsWeb ? 26 : 26.sp,
     height: 1.9,
   );
 
   static TextStyle get headerText => TextStyle(
     color: AppColors.textPrimary,
-    fontSize: 16.sp,
+    fontSize: kIsWeb ? 16 : 16.sp,
     fontWeight: FontWeight.w600,
   );
 
   static TextStyle get menuItemText => TextStyle(
     color: AppColors.textPrimary,
-    fontSize: 16.sp,
+    fontSize: kIsWeb ? 16 : 16.sp,
     fontWeight: FontWeight.w500,
   );
 }
