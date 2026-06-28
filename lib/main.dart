@@ -62,7 +62,11 @@ class TabattalApp extends StatelessWidget {
             minTextAdapt: true,
             splitScreenMode: false,
             child: MaterialApp(
-              title: 'تبتل',
+              onGenerateTitle: (context) {
+                // Read the actual OS locale, not the forced Flutter locale
+                final osLocale = View.of(context).platformDispatcher.locale;
+                return osLocale.languageCode == 'ar' ? 'تبتل' : 'Tabattal';
+              },
               debugShowCheckedModeBanner: false,
               locale: const Locale('ar'),
               theme: appTheme(),
@@ -76,7 +80,11 @@ class TabattalApp extends StatelessWidget {
             minTextAdapt: true,
             splitScreenMode: true,
             child: MaterialApp(
-              title: 'تبتل',
+              onGenerateTitle: (context) {
+                // Read the actual OS locale, not the forced Flutter locale
+                final osLocale = View.of(context).platformDispatcher.locale;
+                return osLocale.languageCode == 'ar' ? 'تبتل' : 'Tabattal';
+              },
               debugShowCheckedModeBanner: false,
               locale: const Locale('ar'),
               theme: appTheme(),
