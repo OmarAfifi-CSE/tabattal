@@ -45,7 +45,7 @@ class DatabaseHelper {
     final dbVersion = prefs.getInt('db_version') ?? 0;
     
     // Increment this whenever we update quran.db in assets
-    const currentDbVersion = 6; // bumped to 6 to force overwrite on Web
+    const currentDbVersion = 10; // bumped to force overwrite with original db
 
     if (!exists || dbVersion < currentDbVersion) {
       if (!kIsWeb) {

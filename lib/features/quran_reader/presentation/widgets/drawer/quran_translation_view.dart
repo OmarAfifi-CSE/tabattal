@@ -55,6 +55,8 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
   final ItemScrollController _itemScrollController = ItemScrollController();
   final ItemPositionsListener _itemPositionsListener = ItemPositionsListener.create();
 
+  late String _noTranslationText;
+
   @override
   void initState() {
     super.initState();
@@ -62,6 +64,12 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
     _localDS = context.read<QuranLocalDataSource>();
     _initData();
     _itemPositionsListener.itemPositions.addListener(_onScroll);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _noTranslationText = AppLocalizations.of(context)!.noLocalTranslation;
   }
 
   @override
@@ -158,7 +166,6 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
   }
 
   Future<void> _loadSurahData(int surahId) async {
-    final l10n = AppLocalizations.of(context)!;
     final versesResult = await _repository.getVersesBySurah(surahId);
     await versesResult.fold(
       (f) async => null,
@@ -173,7 +180,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
         final newItems = verses.map((verse) => VerseTranslationData(
           verseKey: verse.verseKey,
           textUthmani: verse.textUthmani,
-          translationText: translationMap[verse.verseKey] ?? l10n.noLocalTranslation,
+          translationText: translationMap[verse.verseKey] ?? _noTranslationText,
           surah: verse.surah,
           ayah: verse.ayah,
           page: verse.page,
@@ -324,7 +331,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
-                                              QuranMetadata.getSurahNameWithTashkeel(item.surah),
+                                              Localizations.localeOf(context).languageCode == 'en' ? QuranMetadata.getSurahNameEnglish(item.surah) : QuranMetadata.getSurahNameWithTashkeel(item.surah),
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 color: AppColors.accentGold,
@@ -333,7 +340,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
                                             ),
                                             const SizedBox(width: 6),
                                             Text(
-                                              '﴿${item.ayah.toArabicDigits}﴾',
+                                              Localizations.localeOf(context).languageCode == 'en' ? '(${item.ayah})' : '﴿${item.ayah.toArabicDigits}﴾',
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 color: AppColors.accentGold,

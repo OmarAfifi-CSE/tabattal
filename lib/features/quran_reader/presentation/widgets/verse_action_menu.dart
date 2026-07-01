@@ -306,10 +306,10 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                     color: Colors.white,
                                     elevation: 3,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(kIsWeb ? 12 : 12.r),
                                       side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.1)),
                                     ),
-                                    constraints: const BoxConstraints(minWidth: 150, maxWidth: 200),
+                                    constraints: BoxConstraints(minWidth: kIsWeb ? 150 : 150.w, maxWidth: kIsWeb ? 200 : 200.w),
                                     onSelected: (int newValue) {
                                       quranBloc.add(FetchTafsir(widget.verse.verseKey, resourceId: newValue));
                                     },
@@ -333,7 +333,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                         
                                         return PopupMenuItem<int>(
                                           value: option.$1,
-                                          height: 36,
+                                          height: kIsWeb ? 36 : 36.h,
                                           padding: EdgeInsets.zero,
                                           child: StatefulBuilder(
                                             builder: (context, setPopupState) {
@@ -341,8 +341,8 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                                 textDirection: TextDirection.rtl,
                                                 child: Container(
                                                   width: double.infinity,
-                                                  height: 36,
-                                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                                  height: kIsWeb ? 36 : 36.h,
+                                                  padding: EdgeInsets.symmetric(horizontal: kIsWeb ? 12 : 12.w),
                                                   alignment: Alignment.centerRight,
                                                   color: isSelected ? AppColors.accentGold.withValues(alpha: 0.1) : Colors.transparent,
                                                   child: Row(
@@ -351,15 +351,15 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                                       Text(
                                                         '${option.$2}$progressStr',
                                                         style: AppTextStyles.menuItemText.copyWith(
-                                                          fontSize: 14,
+                                                          fontSize: kIsWeb ? 14 : 14.sp,
                                                           color: isSelected ? AppColors.accentGold : AppColors.textPrimary,
                                                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                                                         ),
                                                       ),
                                                       if (!isDownloaded && currentState is TafsirDownloading && currentState.resourceId == option.$1)
                                                         SizedBox(
-                                                          width: 14,
-                                                          height: 14,
+                                                          width: kIsWeb ? 14 : 14.w,
+                                                          height: kIsWeb ? 14 : 14.w,
                                                           child: CircularProgressIndicator(
                                                             strokeWidth: 2,
                                                             value: currentState.progress == 0.0 ? null : currentState.progress,
@@ -367,7 +367,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                                           ),
                                                         )
                                                       else if (!isDownloaded)
-                                                        Icon(Icons.download_rounded, size: 16, color: AppColors.accentGold.withValues(alpha: 0.7))
+                                                        Icon(Icons.download_rounded, size: kIsWeb ? 16 : 16.sp, color: AppColors.accentGold.withValues(alpha: 0.7))
                                                       else
                                                         const SizedBox.shrink(),
                                                     ],
@@ -380,24 +380,24 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                       }).toList();
                                     },
                                       child: Container(
-                                        height: 36,
-                                        width: 100,
-                                        padding: const EdgeInsets.only(left: 10, right: 10),
+                                        height: kIsWeb ? 36 : 36.h,
+                                        width: kIsWeb ? 100 : 100.w,
+                                        padding: EdgeInsets.symmetric(horizontal: kIsWeb ? 10 : 10.w),
                                         decoration: BoxDecoration(
                                           color: AppColors.background,
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius: BorderRadius.circular(kIsWeb ? 16 : 16.r),
                                           border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                                         ),
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.accentGold, size: 20),
+                                          Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.accentGold, size: kIsWeb ? 20 : 20.sp),
                                           Expanded(
                                             child: Text(
                                               _getTafsirName(displayResourceId),
                                               textAlign: TextAlign.right,
                                               style: AppTextStyles.menuItemText.copyWith(
-                                                fontSize: 12,
+                                                fontSize: kIsWeb ? 12 : 12.sp,
                                                 color: AppColors.accentGold,
                                                 fontWeight: FontWeight.w700,
                                               ),
@@ -418,11 +418,11 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                           textAlign: TextAlign.center,
                           style: AppTextStyles.headerText.copyWith(color: AppColors.accentGold),
                         ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: kIsWeb ? 16 : 16.h),
                       if (currentState is QuranOverlayLoading)
-                        const Center(child: Padding(
-                          padding: EdgeInsets.all(32.0),
-                          child: CircularProgressIndicator(color: AppColors.accentGold),
+                        Center(child: Padding(
+                          padding: EdgeInsets.all(kIsWeb ? 32.0 : 32.0.r),
+                          child: const CircularProgressIndicator(color: AppColors.accentGold),
                         ))
                       else if (currentState is TafsirDownloading)
                         Center(
@@ -460,14 +460,14 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                       else if (currentState is TafsirDownloadError)
                         Center(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16.0),
+                            padding: EdgeInsets.symmetric(vertical: kIsWeb ? 16.0 : 16.0.h),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.error_outline, color: Colors.red, size: 40),
-                                const SizedBox(height: 12),
+                                Icon(Icons.error_outline, color: Colors.red, size: kIsWeb ? 40 : 40.sp),
+                                SizedBox(height: kIsWeb ? 12 : 12.h),
                                 Text(currentState.message, style: const TextStyle(color: Colors.red)),
-                                const SizedBox(height: 12),
+                                SizedBox(height: kIsWeb ? 12 : 12.h),
                                 ElevatedButton(
                                   onPressed: () {
                                     quranBloc.add(DownloadTafsir(currentState.resourceId));
@@ -485,18 +485,18 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                       else if (currentState is TafsirPartialDownloadError)
                         Center(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 24.0),
+                            padding: EdgeInsets.symmetric(vertical: kIsWeb ? 24.0 : 24.0.h),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.downloading_rounded, color: AppColors.accentGold.withValues(alpha: 0.8), size: 48),
-                                const SizedBox(height: 16),
+                                Icon(Icons.downloading_rounded, color: AppColors.accentGold.withValues(alpha: 0.8), size: kIsWeb ? 48 : 48.sp),
+                                SizedBox(height: kIsWeb ? 16 : 16.h),
                                 Text(
                                   l10n.tafsirNotAvailableLocally,
                                   style: AppTextStyles.menuItemText.copyWith(fontWeight: FontWeight.bold),
                                   textAlign: TextAlign.center,
                                 ),
-                                const SizedBox(height: 8),
+                                SizedBox(height: kIsWeb ? 8 : 8.h),
                                 Text(
                                   l10n.tafsirPartialDownloadHint(((_tafsirProgress[currentState.resourceId] ?? 0.0) * 100).toInt()),
                                   style: AppTextStyles.menuItemText.copyWith(fontSize: 14, color: Colors.grey[700]),

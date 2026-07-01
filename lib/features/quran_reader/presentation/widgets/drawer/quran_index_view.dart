@@ -123,54 +123,62 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
   }
 
   Widget _buildSurahList(AppLocalizations l10n) {
-    return ListView.separated(
-      padding: EdgeInsets.all(16.r),
-      itemCount: _surahIndex.length,
-      separatorBuilder: (context, index) => const Divider(color: AppColors.divider, height: 1),
-      itemBuilder: (context, index) {
-        final surahData = _surahIndex[index];
-        final surahNum = surahData['surah'] as int;
-        final startPage = surahData['start_page'] as int;
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    return Directionality(
+      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+      child: ListView.separated(
+        padding: EdgeInsets.all(16.r),
+        itemCount: _surahIndex.length,
+        separatorBuilder: (context, index) => const Divider(color: AppColors.divider, height: 1),
+        itemBuilder: (context, index) {
+          final surahData = _surahIndex[index];
+          final surahNum = surahData['surah'] as int;
+          final startPage = surahData['start_page'] as int;
 
-        return ListTile(
-          onTap: () => _navigateToPage(startPage),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-          leading: _buildCircleNumberBadge('$surahNum'),
-          title: Text(
-            l10n.surahListItem(QuranMetadata.getSurahName(surahNum)),
-            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-          ),
-          trailing: Text(
-            l10n.pageListItem(startPage.toArabicDigits),
-            style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary.withValues(alpha: 0.6)),
-          ),
-        );
-      },
+          return ListTile(
+            onTap: () => _navigateToPage(startPage),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+            leading: _buildCircleNumberBadge('$surahNum'),
+            title: Text(
+              l10n.surahListItem(isEn ? QuranMetadata.getSurahNameEnglish(surahNum) : QuranMetadata.getSurahName(surahNum)),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            ),
+            trailing: Text(
+              l10n.pageListItem(isEn ? startPage.toString() : startPage.toArabicDigits),
+              style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary.withValues(alpha: 0.6)),
+            ),
+          );
+        },
+      ),
     );
   }
 
   Widget _buildJuzList(AppLocalizations l10n) {
-    return ListView.separated(
-      padding: EdgeInsets.all(16.r),
-      itemCount: 30,
-      separatorBuilder: (context, index) => const Divider(color: AppColors.divider, height: 1),
-      itemBuilder: (context, index) {
-        final juzNum = index + 1;
-        final startPage = _juzStartPages[index];
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    return Directionality(
+      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+      child: ListView.separated(
+        padding: EdgeInsets.all(16.r),
+        itemCount: 30,
+        separatorBuilder: (context, index) => const Divider(color: AppColors.divider, height: 1),
+        itemBuilder: (context, index) {
+          final juzNum = index + 1;
+          final startPage = _juzStartPages[index];
 
-        return ListTile(
-          onTap: () => _navigateToPage(startPage),
-          leading: _buildCircleNumberBadge('$juzNum', filled: false),
-          title: Text(
-            l10n.juzListItem(QuranMetadata.getJuzName(juzNum)),
-            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-          ),
-          trailing: Text(
-            l10n.pageListItem(startPage.toArabicDigits),
-            style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary.withValues(alpha: 0.6)),
-          ),
-        );
-      },
+          return ListTile(
+            onTap: () => _navigateToPage(startPage),
+            leading: _buildCircleNumberBadge('$juzNum', filled: false),
+            title: Text(
+              l10n.juzListItem(isEn ? juzNum.toString() : QuranMetadata.getJuzName(juzNum)),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            ),
+            trailing: Text(
+              l10n.pageListItem(isEn ? startPage.toString() : startPage.toArabicDigits),
+              style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary.withValues(alpha: 0.6)),
+            ),
+          );
+        },
+      ),
     );
   }
 

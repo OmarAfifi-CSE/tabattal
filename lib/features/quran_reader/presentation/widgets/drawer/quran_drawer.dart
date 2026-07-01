@@ -27,7 +27,7 @@ class QuranDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final drawer = Drawer(
-      width: kIsWeb ? 320 : 310.w,
+      width: kIsWeb ? 320 : 300.w,
       backgroundColor: AppColors.surfaceCream,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
@@ -41,7 +41,7 @@ class QuranDrawer extends StatelessWidget {
     // On web, fill the full height to avoid overflow on smaller viewports.
     if (kIsWeb) return drawer;
     return Padding(
-      padding: EdgeInsets.only(top: 75.h, bottom: 75.h),
+      padding: EdgeInsets.only(top: 100.h, bottom: 100.h),
       child: drawer,
     );
   }
@@ -233,8 +233,8 @@ class QuranDrawer extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.cardCream,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(kIsWeb ? 24 : 24.r)),
       ),
       builder: (ctx) => BlocProvider.value(
         value: cubit,
@@ -248,16 +248,16 @@ class QuranDrawer extends StatelessWidget {
       builder: (context, state) {
         if (state.bookmarkedVerseKeys.isEmpty) return const SizedBox.shrink();
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          padding: EdgeInsets.symmetric(horizontal: kIsWeb ? 8 : 8.w, vertical: kIsWeb ? 2 : 2.h),
           decoration: BoxDecoration(
             color: AppColors.accentGold,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(kIsWeb ? 10 : 10.r),
           ),
           child: Text(
             '${state.bookmarkedVerseKeys.length}',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 12,
+              fontSize: kIsWeb ? 12 : 12.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -267,11 +267,11 @@ class QuranDrawer extends StatelessWidget {
   }
 
 
-  Widget _divider() => const Divider(
+  Widget _divider() => Divider(
     color: AppColors.divider,
     height: 1,
-    indent: 20,
-    endIndent: 20,
+    indent: kIsWeb ? 20 : 20.w,
+    endIndent: kIsWeb ? 20 : 20.w,
   );
 
   Widget _buildDrawerItem(
@@ -285,19 +285,19 @@ class QuranDrawer extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: kIsWeb ? 20 : 20.w, vertical: kIsWeb ? 12 : 12.h),
         child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: kIsWeb ? 44 : 44.w,
+              height: kIsWeb ? 44 : 44.w,
               decoration: BoxDecoration(
                 color: AppColors.accentGold.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(kIsWeb ? 12 : 12.r),
               ),
-              child: Icon(icon, color: AppColors.accentGold, size: 22),
+              child: Icon(icon, color: AppColors.accentGold, size: kIsWeb ? 22 : 22.sp),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: kIsWeb ? 14 : 14.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,20 +307,20 @@ class QuranDrawer extends StatelessWidget {
                       Flexible(
                         child: Text(
                           title,
-                          style: const TextStyle(
-                            fontSize: 15,
+                          style: TextStyle(
+                            fontSize: kIsWeb ? 15 : 15.sp,
                             fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,
                           ),
                         ),
                       ),
-                      if (badge != null) ...[const SizedBox(width: 8), badge],
+                      if (badge != null) ...[SizedBox(width: kIsWeb ? 8 : 8.w), badge],
                     ],
                   ),
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: kIsWeb ? 12 : 12.sp,
                       color: AppColors.textPrimary.withValues(alpha: 0.45),
                     ),
                   ),
@@ -330,7 +330,7 @@ class QuranDrawer extends StatelessWidget {
             Icon(
               Directionality.of(context) == TextDirection.rtl ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
               color: AppColors.textPrimary.withValues(alpha: 0.25),
-              size: 20,
+              size: kIsWeb ? 20 : 20.sp,
             ),
           ],
         ),
@@ -351,29 +351,29 @@ class _LanguagePickerSheet extends StatelessWidget {
       builder: (context, locale) {
         final isArabic = locale.languageCode == 'ar';
         return Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          padding: EdgeInsets.fromLTRB(kIsWeb ? 24 : 24.w, kIsWeb ? 16 : 16.h, kIsWeb ? 24 : 24.w, kIsWeb ? 32 : 32.h),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Drag handle
               Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
+                width: kIsWeb ? 40 : 40.w,
+                height: kIsWeb ? 4 : 4.h,
+                margin: EdgeInsets.only(bottom: kIsWeb ? 20 : 20.h),
                 decoration: BoxDecoration(
                   color: AppColors.accentGold,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(kIsWeb ? 2 : 2.r),
                 ),
               ),
               Text(
                 l10n.languagePickerTitle,
-                style: const TextStyle(
-                  fontSize: 18,
+                style: TextStyle(
+                  fontSize: kIsWeb ? 18 : 18.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: kIsWeb ? 20 : 20.h),
               _LanguageOption(
                 label: l10n.languageArabic,
                 isSelected: isArabic,
@@ -382,7 +382,7 @@ class _LanguagePickerSheet extends StatelessWidget {
                   Navigator.pop(context);
                 },
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: kIsWeb ? 12 : 12.h),
               _LanguageOption(
                 label: l10n.languageEnglish,
                 isSelected: !isArabic,
@@ -414,13 +414,13 @@ class _LanguageOption extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(kIsWeb ? 14 : 14.r),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: kIsWeb ? 20 : 20.w, vertical: kIsWeb ? 14 : 14.h),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.accentGold.withValues(alpha: 0.12) : AppColors.surfaceCream,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(kIsWeb ? 14 : 14.r),
           border: Border.all(
             color: isSelected ? AppColors.accentGold : AppColors.borderLight,
             width: isSelected ? 1.5 : 1,
@@ -431,13 +431,13 @@ class _LanguageOption extends StatelessWidget {
             Icon(
               isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
               color: isSelected ? AppColors.accentGold : AppColors.textPrimary.withValues(alpha: 0.3),
-              size: 22,
+              size: kIsWeb ? 22 : 22.sp,
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: kIsWeb ? 14 : 14.w),
             Text(
               label,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: kIsWeb ? 16 : 16.sp,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 color: isSelected ? AppColors.accentGold : AppColors.textPrimary,
               ),

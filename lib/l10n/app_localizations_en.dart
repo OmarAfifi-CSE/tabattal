@@ -262,7 +262,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String juzListItem(String name) {
-    return 'Juz $name';
+    return 'Juz\' $name';
   }
 
   @override

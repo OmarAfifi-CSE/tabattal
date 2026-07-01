@@ -64,6 +64,8 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
 
   final Set<int> _downloadedTafsirs = {16, 14, 91};
 
+  late String _noTafsirText;
+
   @override
   void initState() {
     super.initState();
@@ -74,6 +76,12 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
 
     // Infinite scroll: load next surah when near end
     _itemPositionsListener.itemPositions.addListener(_onScroll);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _noTafsirText = AppLocalizations.of(context)!.noTafsirAvailable;
   }
 
   Future<void> _checkDownloadedTafsirs() async {
@@ -197,7 +205,6 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   }
 
   Future<void> _loadSurahData(int surahId) async {
-    final l10n = AppLocalizations.of(context)!;
     final versesResult = await _repository.getVersesBySurah(surahId);
     await versesResult.fold(
       (f) async => null,
@@ -211,7 +218,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
         final newItems = verses.map((verse) => VerseTafsirData(
           verseKey: verse.verseKey,
           textUthmani: verse.textUthmani,
-          tafsirText: tafsirMap[verse.verseKey] ?? l10n.noTafsirAvailable,
+          tafsirText: tafsirMap[verse.verseKey] ?? _noTafsirText,
           surah: verse.surah,
           ayah: verse.ayah,
           page: verse.page,
@@ -548,7 +555,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
-                                              QuranMetadata.getSurahNameWithTashkeel(item.surah),
+                                              Localizations.localeOf(context).languageCode == 'en' ? QuranMetadata.getSurahNameEnglish(item.surah) : QuranMetadata.getSurahNameWithTashkeel(item.surah),
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 color: AppColors.accentGold,
@@ -557,7 +564,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                             ),
                                             const SizedBox(width: 6),
                                             Text(
-                                              '﴿${item.ayah.toArabicDigits}﴾',
+                                              Localizations.localeOf(context).languageCode == 'en' ? '(${item.ayah})' : '﴿${item.ayah.toArabicDigits}﴾',
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 color: AppColors.accentGold,

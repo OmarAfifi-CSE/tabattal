@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/network/audio_download_manager.dart';
+import '../../../../core/utils/reciter_localization.dart';
 import '../../../../core/services/audio_preferences_service.dart';
 import '../bloc/audio/audio_bloc.dart';
 import '../bloc/audio/audio_event.dart';
@@ -178,7 +179,7 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
             _SectionLabel(icon: Icons.repeat_rounded, label: AppLocalizations.of(context)!.audioRepeatLabel),
             SizedBox(height: 8.wH),
             Align(
-              alignment: Alignment.centerRight,
+              alignment: Localizations.localeOf(context).languageCode == 'en' ? Alignment.centerLeft : Alignment.centerRight,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
@@ -256,15 +257,16 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
     return Row(
-      textDirection: TextDirection.rtl,
+      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
       children: [
         Icon(icon, color: AppColors.accentGold, size: 18.wSp),
         SizedBox(width: 6.wW),
         Text(
           label,
           style: TextStyle(fontSize: 14.wSp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-          textDirection: TextDirection.rtl,
+          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
         ),
       ],
     );
@@ -322,9 +324,9 @@ class _SelectorButton extends StatelessWidget {
                   ),
                 Expanded(
                   child: Text(
-                    item,
-                    textAlign: TextAlign.right,
-                    textDirection: TextDirection.rtl,
+                    ReciterLocalization.localize(context, item),
+                    textAlign: Localizations.localeOf(context).languageCode == 'en' ? TextAlign.left : TextAlign.right,
+                    textDirection: Localizations.localeOf(context).languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 14,
@@ -359,12 +361,12 @@ class _SelectorButton extends StatelessWidget {
                   Text(
                     label,
                     style: TextStyle(fontSize: 10.wSp, color: AppColors.accentGold, fontWeight: FontWeight.w600),
-                    textDirection: TextDirection.rtl,
+                    textDirection: Localizations.localeOf(context).languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
                   ),
                   Text(
-                    value,
-                    textAlign: TextAlign.right,
-                    textDirection: TextDirection.rtl,
+                    ReciterLocalization.localize(context, value),
+                    textAlign: Localizations.localeOf(context).languageCode == 'en' ? TextAlign.left : TextAlign.right,
+                    textDirection: Localizations.localeOf(context).languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 14.wSp, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                   ),

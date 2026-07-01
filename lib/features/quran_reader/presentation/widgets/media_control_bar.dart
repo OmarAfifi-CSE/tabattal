@@ -9,6 +9,7 @@ import '../bloc/audio/audio_state.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'audio_settings_sheet.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/utils/reciter_localization.dart';
 
 class MediaControlBar extends StatefulWidget {
   final bool isExpanded;
@@ -160,7 +161,8 @@ class _MediaControlBarState extends State<MediaControlBar> {
                     Icon(Icons.multitrack_audio_rounded, color: AppColors.bronzeIcon, size: 24.wSp),
                     SizedBox(width: 8.wW),
                     Text(
-                      context.read<AudioBloc>().currentReciter,
+                      ReciterLocalization.localize(context, context.read<AudioBloc>().currentReciter),
+                      textDirection: Localizations.localeOf(context).languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
                       style: AppTextStyles.menuItemText.copyWith(
                         color: AppColors.inkBrown,
                         fontSize: 12.wSp,
@@ -218,17 +220,20 @@ class _MediaControlBarState extends State<MediaControlBar> {
             SizedBox(width: 8.wW),
             Expanded(
               child: BlocBuilder<AudioBloc, AudioState>(
-                builder: (context, state) => Text(
-                  context.read<AudioBloc>().currentReciter,
-                  textAlign: TextAlign.right,
-                  style: AppTextStyles.menuItemText.copyWith(
-                    color: AppColors.inkBrown,
-                    fontSize: 14.wSp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  textDirection: TextDirection.rtl,
-                ),
+                builder: (context, state) {
+                  final isEn = Localizations.localeOf(context).languageCode == 'en';
+                  return Text(
+                    ReciterLocalization.localize(context, context.read<AudioBloc>().currentReciter),
+                    textAlign: isEn ? TextAlign.left : TextAlign.right,
+                    style: AppTextStyles.menuItemText.copyWith(
+                      color: AppColors.inkBrown,
+                      fontSize: 14.wSp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+                  );
+                },
               ),
             ),
           ],

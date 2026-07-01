@@ -4,6 +4,7 @@ import '../../../../../core/network/audio_download_manager.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../quran_metadata.dart';
+import '../../../../../core/utils/reciter_localization.dart';
 
 class QuranAudioManagerView extends StatefulWidget {
   const QuranAudioManagerView({super.key});
@@ -354,9 +355,9 @@ class _InlineDropdown extends StatelessWidget {
               alignment: Alignment.centerRight,
               color: isSelected ? AppColors.accentGold.withValues(alpha: 0.1) : Colors.transparent,
               child: Text(
-                item,
-                textAlign: TextAlign.right,
-                textDirection: TextDirection.rtl,
+                ReciterLocalization.localize(context, item),
+                textAlign: Localizations.localeOf(context).languageCode == 'en' ? TextAlign.left : TextAlign.right,
+                textDirection: Localizations.localeOf(context).languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 14,
@@ -383,9 +384,9 @@ class _InlineDropdown extends StatelessWidget {
             const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.accentGold, size: 22),
             Expanded(
               child: Text(
-                value,
-                textAlign: TextAlign.right,
-                textDirection: TextDirection.rtl,
+                ReciterLocalization.localize(context, value),
+                textAlign: Localizations.localeOf(context).languageCode == 'en' ? TextAlign.left : TextAlign.right,
+                textDirection: Localizations.localeOf(context).languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 14,

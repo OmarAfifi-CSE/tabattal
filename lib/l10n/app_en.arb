@@ -131,7 +131,7 @@
       "name": { "type": "String" }
     }
   },
-  "juzListItem": "Juz {name}",
+  "juzListItem": "Juz' {name}",
   "@juzListItem": {
     "placeholders": {
       "name": { "type": "String" }

@@ -15,6 +15,7 @@ import 'audio_state.dart';
 import '../../../../../core/services/quran_audio_handler.dart';
 import 'package:audio_service/audio_service.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
+import '../../../../../core/utils/reciter_localization.dart';
 import '../../widgets/quran_metadata.dart';
 
 class AudioBloc extends Bloc<AudioEvent, AudioState> {
@@ -150,16 +151,24 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       if (index != null && _currentVerseIds.isNotEmpty && index < _currentVerseIds.length) {
         _currentIndex = index;
         final verse = _currentVerseIds[index];
-        final title = verse.ayah == 0
-            ? '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - البسملة'
-            : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - الآية ${verse.ayah.toArabicDigits}';
+        final isEn = _prefs.appLocale == 'en';
+        final String title;
+        if (verse.ayah == 0) {
+          title = isEn 
+              ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} - Basmalah' 
+              : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - البسملة';
+        } else {
+          title = isEn
+              ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} - Ayah ${verse.ayah}'
+              : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - الآية ${verse.ayah.toArabicDigits}';
+        }
         
         final artUri = await _getArtUri();
         
         _audioHandler.updateItem(MediaItem(
           id: verse.verseId.toString(),
           title: title,
-          artist: _currentReciter,
+          artist: ReciterLocalization.localizeByLang(isEn, _currentReciter),
           duration: _audioPlayer.duration,
           artUri: artUri,
         ));
@@ -267,16 +276,24 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       final playlist = ConcatenatingAudioSource(children: initialSources);
       _activePrefillPlaylist = playlist;
 
-      final initialTitle = verseQueue.first.ayah == 0
-          ? '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - البسملة'
-          : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - الآية ${verse.ayah.toArabicDigits}';
+      final isEn = _prefs.appLocale == 'en';
+      final String initialTitle;
+      if (verseQueue.first.ayah == 0) {
+        initialTitle = isEn 
+            ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} - Basmalah' 
+            : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - البسملة';
+      } else {
+        initialTitle = isEn
+            ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} - Ayah ${verse.ayah}'
+            : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - الآية ${verse.ayah.toArabicDigits}';
+      }
 
       final artUri = await _getArtUri();
 
       await _audioHandler.updateItem(MediaItem(
         id: verseQueue.first.verseId.toString(),
         title: initialTitle,
-        artist: _currentReciter,
+        artist: ReciterLocalization.localizeByLang(isEn, _currentReciter),
         duration: _audioPlayer.duration,
         artUri: artUri,
       ));

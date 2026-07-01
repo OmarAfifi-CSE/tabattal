@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/arabic_text_utils.dart';
@@ -508,12 +509,12 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0), // Virtual canvas padding
-      child: Row(
-        textDirection: TextDirection.rtl,
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: wordWidgets,
+        child: Row(
+          textDirection: TextDirection.rtl,
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: wordWidgets,
       ),
     );
   }
@@ -531,10 +532,12 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
       }
     }
 
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
     final surahNumber = ArabicTextUtils.parseVerseKey(firstVerseKey)?.surah ?? 1;
-    final surahName = QuranMetadata.getSurahNameWithTashkeel(surahNumber);
+    final surahName = isEn ? QuranMetadata.getSurahNameEnglish(surahNumber) : QuranMetadata.getSurahNameWithTashkeel(surahNumber);
+    
     final juzNum = QuranMetadata.getJuzNumberByPage(widget.pageNumber);
-    final juzName = QuranMetadata.getJuzNameWithTashkeel(juzNum);
+    final juzName = isEn ? AppLocalizations.of(context)!.juzListItem(juzNum.toString()) : QuranMetadata.getJuzNameWithTashkeel(juzNum);
 
     return QuranPageFrame(
       pageNumber: widget.pageNumber,
@@ -565,7 +568,8 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                 alignment: Alignment.center,
                 child: SizedBox(
                   // Use a fixed virtual canvas size instead of expensive IntrinsicWidth
-                  width: kIsWeb ? 650 : 460, 
+                  // Increased width from 460 to 490 to prevent horizontal overflow on dense lines like page 453
+                  width: kIsWeb ? 650 : 490, 
                   height: kIsWeb ? 950 : 1020,
                   child: Column(
                     key: _pageColumnKey,
