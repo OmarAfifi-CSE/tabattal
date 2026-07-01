@@ -45,7 +45,7 @@ class DatabaseHelper {
     final dbVersion = prefs.getInt('db_version') ?? 0;
     
     // Increment this whenever we update quran.db in assets
-    const currentDbVersion = 12; // bumped to 12: revert bulk fix, apply only 2 targeted fixes
+    const currentDbVersion = 14; // bumped to 14: reverted all fixes, original DB is correct (matches QCF PDF Mushafs)
 
     if (!exists || dbVersion < currentDbVersion) {
       if (!kIsWeb) {
