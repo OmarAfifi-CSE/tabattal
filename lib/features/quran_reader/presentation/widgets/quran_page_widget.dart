@@ -508,8 +508,9 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
     }
 
     // Justify words across the full canvas width (like the Mushaf's kashida fill).
-    // spaceBetween for multi-word lines; center for single-word lines.
-    final alignment = wordWidgets.length > 1
+    // Only for lines with 8+ words (body text); short lines (Al-Fatiha, end-of-surah)
+    // stay centered so they are not over-stretched.
+    final alignment = wordWidgets.length >= 8
         ? MainAxisAlignment.spaceBetween
         : MainAxisAlignment.center;
 

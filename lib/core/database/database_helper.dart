@@ -45,7 +45,7 @@ class DatabaseHelper {
     final dbVersion = prefs.getInt('db_version') ?? 0;
     
     // Increment this whenever we update quran.db in assets
-    const currentDbVersion = 11; // bumped to 11: fixed 273 misplaced verse-end markers
+    const currentDbVersion = 12; // bumped to 12: revert bulk fix, apply only 2 targeted fixes
 
     if (!exists || dbVersion < currentDbVersion) {
       if (!kIsWeb) {
