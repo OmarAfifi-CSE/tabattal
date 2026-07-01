@@ -507,14 +507,20 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
       ));
     }
 
+    // Justify words across the full canvas width (like the Mushaf's kashida fill).
+    // spaceBetween for multi-word lines; center for single-word lines.
+    final alignment = wordWidgets.length > 1
+        ? MainAxisAlignment.spaceBetween
+        : MainAxisAlignment.center;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2.0), // Virtual canvas padding
-        child: Row(
-          textDirection: TextDirection.rtl,
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: wordWidgets,
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        textDirection: TextDirection.rtl,
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: alignment,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: wordWidgets,
       ),
     );
   }
