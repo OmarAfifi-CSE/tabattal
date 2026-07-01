@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../bloc/bookmark/bookmark_bloc.dart';
 import '../../bloc/bookmark/bookmark_event.dart';
@@ -16,6 +17,7 @@ class QuranBookmarksView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final content = Scaffold(
       backgroundColor: AppColors.surfaceCream,
       appBar: AppBar(
@@ -23,7 +25,7 @@ class QuranBookmarksView extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'العلامات المرجعية',
+          l10n.bookmarksTitle,
           style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22.sp),
         ),
         leading: IconButton(
@@ -33,7 +35,7 @@ class QuranBookmarksView extends StatelessWidget {
       ),
       body: BlocBuilder<BookmarkBloc, BookmarkState>(
         builder: (context, state) {
-          if (state.bookmarkedVerseKeys.isEmpty) return _buildEmptyState();
+          if (state.bookmarkedVerseKeys.isEmpty) return _buildEmptyState(context);
 
           return ListView.separated(
             padding: EdgeInsets.all(16.r),
@@ -69,7 +71,8 @@ class QuranBookmarksView extends StatelessWidget {
     return content;
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -77,12 +80,12 @@ class QuranBookmarksView extends StatelessWidget {
           Icon(Icons.bookmark_border_rounded, size: 72.sp, color: AppColors.accentGold.withValues(alpha: 0.4)),
           SizedBox(height: 16.h),
           Text(
-            'لا توجد علامات مرجعية',
+            l10n.noBookmarks,
             style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           ),
           SizedBox(height: 8.h),
           Text(
-            'اضغط على أي آية لإضافتها كعلامة مرجعية',
+            l10n.noBookmarksHint,
             style: TextStyle(fontSize: 15.sp, color: AppColors.textPrimary.withValues(alpha: 0.4)),
           ),
         ],
@@ -144,6 +147,7 @@ class _BookmarkCardState extends State<_BookmarkCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -166,13 +170,16 @@ class _BookmarkCardState extends State<_BookmarkCard> {
           child: Icon(Icons.bookmark_rounded, color: AppColors.accentGold, size: 24.sp),
         ),
         title: Text(
-          'سورة ${widget.surahName}',
+          l10n.surahBookmarkTitle(widget.surahName),
           style: TextStyle(fontSize: 17.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
         ),
         subtitle: Padding(
           padding: EdgeInsets.only(top: 2.h),
           child: Text(
-            'الآية ${widget.ayahNum.toArabicDigits}  •  صفحة ${_hasError ? '—' : _surahStartPage.toArabicDigits}',
+            l10n.verseBookmarkSubtitle(
+              widget.ayahNum.toArabicDigits,
+              _hasError ? '—' : _surahStartPage.toArabicDigits,
+            ),
             style: TextStyle(fontSize: 13.sp, color: AppColors.textPrimary.withValues(alpha: 0.55)),
           ),
         ),

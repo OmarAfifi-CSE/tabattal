@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/network/audio_download_manager.dart';
+import '../../../../../../l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../quran_metadata.dart';
 
@@ -81,7 +82,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
       notifier.value = -1.0;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('فشل التحميل: ${QuranMetadata.getSurahName(surah)}')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.downloadFailed(QuranMetadata.getSurahName(surah)))),
         );
       }
     }
@@ -105,9 +106,9 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
         backgroundColor: AppColors.surfaceCream,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
-          'مدير الصوتيات',
-          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
+        title: Text(
+          AppLocalizations.of(context)!.audioManagerTitle,
+          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
         ),
         // RTL: leading icon is on the right side naturally
         leading: IconButton(
@@ -139,8 +140,8 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
               children: [
                 // Category row
                 _buildSelectorRow(
-                  label: 'النوع',
-                  icon: Icons.category_rounded,
+                label: AppLocalizations.of(context)!.audioTypeLabel,
+                icon: Icons.category_rounded,
                   value: _selectedCategory,
                   items: AudioDownloadManager.reciterCategories.keys.toList(),
                   onChanged: (val) {
@@ -158,7 +159,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                 const SizedBox(height: 10),
                 // Reciter row
                 _buildSelectorRow(
-                  label: 'القارئ',
+                  label: AppLocalizations.of(context)!.audioReciterLabel,
                   icon: Icons.mic_rounded,
                   value: _selectedReciter,
                   items: reciters,
@@ -178,9 +179,9 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                       elevation: 0,
                     ),
                     icon: const Icon(Icons.download_for_offline_rounded, color: Colors.white),
-                    label: const Text(
-                      'تحميل المصحف كامل',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    label: Text(
+                      AppLocalizations.of(context)!.audioDownloadAll,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     onPressed: _isLoadingStatus ? null : _downloadAll,
                   ),

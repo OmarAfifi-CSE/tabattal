@@ -1,0 +1,162 @@
+{
+  "@@locale": "en",
+  "appName": "Tabattal",
+  "drawerSearch": "Advanced Search",
+  "drawerSearchSubtitle": "Search by text or numbers",
+  "drawerIndex": "Index",
+  "drawerIndexSubtitle": "Surahs & Juzs",
+  "drawerBookmarks": "Bookmarks",
+  "drawerBookmarksSubtitle": "Saved verses",
+  "drawerTafsir": "Full Tafsir",
+  "drawerTafsirSubtitle": "Commentary on all verses and surahs",
+  "drawerTranslation": "English Translation",
+  "drawerTranslationSubtitle": "Meanings of the Quran",
+  "drawerAudioManager": "Audio Manager",
+  "drawerAudioManagerSubtitle": "Download & manage recitations",
+  "drawerLanguage": "Language",
+  "drawerLanguageSubtitle": "العربية / English",
+  "menuTafsir": "Tafsir",
+  "menuTafsirTitle": "Tafsir - Al-Muyassar",
+  "menuTranslation": "Translation",
+  "menuListen": "Listen to Verses",
+  "menuGoToVerse": "Go to Playing Verse",
+  "menuBookmarkAdd": "Add Bookmark",
+  "menuBookmarkRemove": "Remove Bookmark",
+  "menuShare": "Share",
+  "retry": "Retry",
+  "noBookmarks": "No Bookmarks",
+  "noBookmarksHint": "Tap any verse to bookmark it",
+  "noResults": "No results found",
+  "searchHint": "Search by text or number...",
+  "searchBy": "Search by",
+  "searchByHint": "Page number • Juz number • Surah number\nor Quranic text",
+  "pagePrefix": "Page",
+  "surahPrefix": "Surah",
+  "juzPrefix": "Juz",
+  "ayahPrefix": "Verse",
+  "audioTypeLabel": "Type",
+  "audioReciterLabel": "Reciter",
+  "audioRepeatLabel": "Repeat verse",
+  "audioRepeatContinuous": "Continuous repeat",
+  "audioRepeatNone": "No repeat (continue)",
+  "audioRepeatTwice": "Repeat twice",
+  "audioRepeatThrice": "Repeat three times",
+  "audioStartListening": "Start Listening",
+  "audioSaveSettings": "Save Settings",
+  "audioSettingsTitle": "Listening Settings",
+  "audioDownloadAll": "Download Full Quran",
+  "audioManagerTitle": "Audio Manager",
+  "timerStop": "Stop Timer",
+  "timerMinutes5": "5 minutes",
+  "timerMinutes10": "10 minutes",
+  "timerMinutes15": "15 minutes",
+  "timerMinutes30": "30 minutes",
+  "timerMinutes60": "60 minutes",
+  "indexSurahsTab": "Surahs",
+  "indexJuzsTab": "Juzs",
+  "downloadingTafsir": "Downloading Tafsir... {percent}%",
+  "@downloadingTafsir": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "downloadingTafsirBackground": "Downloading remaining Tafsir in background...",
+  "tafsirNotAvailableLocally": "Tafsir for this verse is not available locally",
+  "tafsirPartialDownloadHint": "{percent}% of Tafsir downloaded. Continue download?",
+  "@tafsirPartialDownloadHint": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "continueDownload": "Continue Download",
+  "noLocalData": "No data in local database",
+  "noLocalTranslation": "No translation in local database",
+  "noTafsirAvailable": "No tafsir available",
+  "indexLoadError": "Failed to load index",
+  "downloadFailed": "Download failed: {name}",
+  "@downloadFailed": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "downloadFailedInternet": "Failed to download Tafsir. Please check your internet connection.",
+  "fullTafsirTitle": "Full Tafsir",
+  "translationTitle": "Translation",
+  "bookmarksTitle": "Bookmarks",
+  "indexTitle": "Index",
+  "surahBookmarkTitle": "Surah {name}",
+  "@surahBookmarkTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "verseBookmarkSubtitle": "Verse {ayah}  •  Page {page}",
+  "@verseBookmarkSubtitle": {
+    "placeholders": {
+      "ayah": { "type": "String" },
+      "page": { "type": "String" }
+    }
+  },
+  "goToPageTitle": "Go to Page {num}",
+  "@goToPageTitle": {
+    "placeholders": {
+      "num": { "type": "int" }
+    }
+  },
+  "goToJuzTitle": "Go to Juz {name} ({num}) — Page {page}",
+  "@goToJuzTitle": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "num": { "type": "int" },
+      "page": { "type": "int" }
+    }
+  },
+  "goToSurahTitle": "Go to Surah {name} ({num}) — Page {page}",
+  "@goToSurahTitle": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "num": { "type": "int" },
+      "page": { "type": "int" }
+    }
+  },
+  "outOfRange": "Number {num} is out of range",
+  "@outOfRange": {
+    "placeholders": {
+      "num": { "type": "String" }
+    }
+  },
+  "surahListItem": "Surah {name}",
+  "@surahListItem": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "juzListItem": "Juz {name}",
+  "@juzListItem": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "pageListItem": "Page {page}",
+  "@pageListItem": {
+    "placeholders": {
+      "page": { "type": "String" }
+    }
+  },
+  "surahAndAyah": "Surah {surah} — Verse {ayah}",
+  "@surahAndAyah": {
+    "placeholders": {
+      "surah": { "type": "String" },
+      "ayah": { "type": "String" }
+    }
+  },
+  "languageArabic": "العربية",
+  "languageEnglish": "English",
+  "languagePickerTitle": "Choose Language",
+  "sleepTimerStopped": "Recitation will stop in {minutes} minutes",
+  "@sleepTimerStopped": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  }
+}

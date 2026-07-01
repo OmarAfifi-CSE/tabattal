@@ -7,7 +7,7 @@ class AppTextStyles {
   const AppTextStyles._();
 
   static TextStyle get quranText => TextStyle(
-    fontFamily: 'KFGQPC Uthmanic Script HAFS',
+    fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
     color: AppColors.textPrimary,
     fontSize: kIsWeb ? 26 : 26.sp,
     height: 1.9,

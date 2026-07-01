@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../data/models/verse_model.dart';
@@ -15,6 +16,7 @@ import '../bloc/bookmark/bookmark_state.dart';
 import '../bloc/audio/audio_bloc.dart';
 import '../bloc/audio/audio_state.dart';
 import '../bloc/audio/audio_event.dart';
+
 class OverlayPositionDelegate extends SingleChildLayoutDelegate {
   final Offset tapPosition;
   final Rect? verseRect;
@@ -228,6 +230,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
           value: quranBloc,
           child: StatefulBuilder(
             builder: (context, setState) {
+              final l10n = AppLocalizations.of(context)!;
               return Container(
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(context).size.height * 0.7, // Max 70% of screen
@@ -376,15 +379,15 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                         );
                                       }).toList();
                                     },
-                                    child: Container(
-                                      height: 36,
-                                      width: 140,
-                                      padding: EdgeInsets.symmetric(horizontal: kIsWeb ? 8 : 16.w, vertical: kIsWeb ? 8 : 12.h),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surfaceCream,
-                                        borderRadius: BorderRadius.circular(kIsWeb ? 12 : 12.r),
-                                        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.2)),
-                                      ),
+                                      child: Container(
+                                        height: 36,
+                                        width: 100,
+                                        padding: const EdgeInsets.only(left: 10, right: 10),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.background,
+                                          borderRadius: BorderRadius.circular(16),
+                                          border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
+                                        ),
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
@@ -394,7 +397,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                               _getTafsirName(displayResourceId),
                                               textAlign: TextAlign.right,
                                               style: AppTextStyles.menuItemText.copyWith(
-                                                fontSize: kIsWeb ? 12 : 12.sp,
+                                                fontSize: 12,
                                                 color: AppColors.accentGold,
                                                 fontWeight: FontWeight.w700,
                                               ),
@@ -423,37 +426,35 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                         ))
                       else if (currentState is TafsirDownloading)
                         Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 32.0),
-                            child: TweenAnimationBuilder<double>(
-                                  tween: Tween<double>(
-                                    begin: 0.0,
-                                    end: currentState.progress,
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween<double>(
+                              begin: 0.0,
+                              end: currentState.progress,
+                            ),
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeOut,
+                            builder: (context, value, child) {
+                              final l10n = AppLocalizations.of(context)!;
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: kIsWeb ? 24 : 24.sp,
+                                    height: kIsWeb ? 24 : 24.sp,
+                                    child: CircularProgressIndicator(
+                                      value: value == 0.0 ? null : value,
+                                      color: AppColors.bronzeIcon,
+                                    ),
                                   ),
-                                  duration: const Duration(milliseconds: 500),
-                                  curve: Curves.easeOut,
-                                  builder: (context, value, child) {
-                                    return Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        SizedBox(
-                                          width: kIsWeb ? 24 : 24.sp,
-                                          height: kIsWeb ? 24 : 24.sp,
-                                          child: CircularProgressIndicator(
-                                            value: value == 0.0 ? null : value,
-                                            color: AppColors.bronzeIcon,
-                                          ),
-                                        ),
-                                        SizedBox(width: kIsWeb ? 12 : 12.w),
-                                        Text(
-                                          'جاري تحميل التفسير... ${(value * 100).toStringAsFixed(1)}%',
-                                          style: AppTextStyles.menuItemText.copyWith(fontSize: 14, color: AppColors.accentGold),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
+                                  SizedBox(width: kIsWeb ? 12 : 12.w),
+                                  Text(
+                                    l10n.downloadingTafsir((value * 100).toStringAsFixed(1) == '0.0' ? 0 : (value * 100).toInt()),
+                                    style: AppTextStyles.menuItemText.copyWith(fontSize: 14, color: AppColors.accentGold),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                         )
                       else if (currentState is TafsirDownloadError)
@@ -475,7 +476,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                     backgroundColor: AppColors.accentGold,
                                     foregroundColor: AppColors.background,
                                   ),
-                                  child: const Text('إعادة المحاولة'),
+                                  child: Text(l10n.retry),
                                 ),
                               ],
                             ),
@@ -491,13 +492,13 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                 Icon(Icons.downloading_rounded, color: AppColors.accentGold.withValues(alpha: 0.8), size: 48),
                                 const SizedBox(height: 16),
                                 Text(
-                                  'تفسير هذه الآية غير متوفر محلياً',
+                                  l10n.tafsirNotAvailableLocally,
                                   style: AppTextStyles.menuItemText.copyWith(fontWeight: FontWeight.bold),
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'تم تحميل ${((_tafsirProgress[currentState.resourceId] ?? 0.0) * 100).toInt()}% من التفسير. هل ترغب في استكمال التحميل؟',
+                                  l10n.tafsirPartialDownloadHint(((_tafsirProgress[currentState.resourceId] ?? 0.0) * 100).toInt()),
                                   style: AppTextStyles.menuItemText.copyWith(fontSize: 14, color: Colors.grey[700]),
                                   textAlign: TextAlign.center,
                                 ),
@@ -513,7 +514,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                                   ),
                                   icon: const Icon(Icons.play_arrow_rounded),
-                                  label: const Text('استكمال التحميل', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                  label: Text(l10n.continueDownload, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                                 ),
                               ],
                             ),
@@ -549,7 +550,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                           ),
                                           const SizedBox(width: 8),
                                           Text(
-                                            'جاري تحميل باقي التفسير في الخلفية...',
+                                            l10n.downloadingTafsirBackground,
                                             style: AppTextStyles.menuItemText.copyWith(fontSize: 12, color: AppColors.accentGold),
                                           ),
                                           const Spacer(),
@@ -621,7 +622,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                   backgroundColor: AppColors.accentGold,
                                   foregroundColor: AppColors.background,
                                 ),
-                                child: const Text('Retry'),
+                                child: Text(l10n.retry),
                               ),
                             ],
                           ),
@@ -644,6 +645,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final menuSize = Size(240.w, 280.h);
 
     return Stack(
@@ -689,20 +691,20 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                   border: Border.all(color: AppColors.verseMarkerGold, width: 1.5),
                 ),
                 child: Directionality(
-                  textDirection: TextDirection.rtl,
+                  textDirection: Localizations.localeOf(context).languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
                   child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                      _buildMenuItem(Icons.menu_book_outlined, 'التفسير', () {
-                        _showOverlayContent(context, 'التفسير - الميسر', context.read<QuranBloc>().state, () {
+                      _buildMenuItem(Icons.menu_book_outlined, l10n.menuTafsir, () {
+                        _showOverlayContent(context, l10n.menuTafsirTitle, context.read<QuranBloc>().state, () {
                           context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey));
                         });
                         context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey));
                         _close(keepHighlight: true);
                       }, closeMenu: false),
                       const Divider(height: 1, thickness: 1, color: AppColors.divider),
-                      _buildMenuItem(Icons.g_translate_outlined, 'الترجمة', () {
-                        _showOverlayContent(context, 'الترجمة', context.read<QuranBloc>().state, () {
+                      _buildMenuItem(Icons.g_translate_outlined, l10n.menuTranslation, () {
+                        _showOverlayContent(context, l10n.menuTranslation, context.read<QuranBloc>().state, () {
                           context.read<QuranBloc>().add(FetchTranslation(widget.verse.verseKey));
                         });
                         context.read<QuranBloc>().add(FetchTranslation(widget.verse.verseKey));
@@ -714,7 +716,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                           final isAudioActive = audioState is! AudioIdle && audioState is! AudioError;
                           return _buildMenuItem(
                             Icons.play_circle_outline,
-                            isAudioActive ? 'انتقال التلاوة لهذه الآية' : 'الإستماع للآيات',
+                            isAudioActive ? l10n.menuGoToVerse : l10n.menuListen,
                             () {
                               if (isAudioActive) {
                                 context.read<AudioBloc>().add(PlayVerse('', widget.verse.id));
@@ -731,7 +733,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                           final isBookmarked = state.isBookmarked(widget.verse.verseKey);
                           return _buildMenuItem(
                             isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                            isBookmarked ? 'إزالة العلامة المرجعية' : 'إضافة علامة مرجعية',
+                            isBookmarked ? l10n.menuBookmarkRemove : l10n.menuBookmarkAdd,
                             () {
                               context.read<BookmarkBloc>().add(ToggleBookmark(widget.verse.verseKey));
                             },
@@ -739,7 +741,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                         },
                       ),
                       const Divider(height: 1, thickness: 1, color: AppColors.divider),
-                      _buildMenuItem(Icons.share_outlined, 'نشر', () {
+                      _buildMenuItem(Icons.share_outlined, l10n.menuShare, () {
                         // Share logic
                       }),
                     ],

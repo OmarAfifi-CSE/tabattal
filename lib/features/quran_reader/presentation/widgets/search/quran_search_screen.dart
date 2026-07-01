@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
@@ -224,6 +225,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
@@ -265,11 +267,11 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                       textDirection: TextDirection.rtl,
                       textAlign: TextAlign.right,
                       autofocus: true,
-                      decoration: const InputDecoration(
-                        hintText: 'البحث بالنصوص أو الأرقام...',
-                        hintStyle: TextStyle(color: Colors.black38, fontSize: 16),
+                      decoration: InputDecoration(
+                        hintText: l10n.searchHint,
+                        hintStyle: const TextStyle(color: Colors.black38, fontSize: 16),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.only(bottom: 8),
+                        contentPadding: const EdgeInsets.only(bottom: 8),
                       ),
                     ),
                   ),
@@ -283,6 +285,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context)!;
     if (_searchController.text.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -294,7 +297,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
             const SizedBox(height: 16),
             Center(
               child: Text(
-                'ابحث عن طريق',
+                l10n.searchBy,
                 style: TextStyle(
                   fontSize: 20,
                   color: AppColors.textPrimary.withValues(alpha: 0.6),
@@ -305,7 +308,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
             const SizedBox(height: 8),
             Center(
               child: Text(
-                'رقم الصفحة • رقم الجزء • رقم السورة\nأو النص القرآني',
+                l10n.searchByHint,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -338,7 +341,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
             Icon(Icons.search_off_rounded, size: 52, color: AppColors.textPrimary.withValues(alpha: 0.3)),
             const SizedBox(height: 12),
             Text(
-              'لم يتم العثور على نتائج',
+              l10n.noResults,
               style: TextStyle(fontSize: 18, color: AppColors.textPrimary.withValues(alpha: 0.6)),
             ),
           ],
@@ -352,7 +355,6 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
       separatorBuilder: (_, _) => const Divider(color: AppColors.divider, height: 1),
       itemBuilder: (context, index) {
         final verse = _results[index];
-        final surahName = QuranMetadata.getSurahName(verse.surah);
         return InkWell(
           onTap: () => _navigateToPage(verse.page, verseKey: verse.verseKey),
           child: Padding(
@@ -364,14 +366,14 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'صفحة ${verse.page.toArabicDigits}',
+                      l10n.pageListItem(verse.page.toArabicDigits),
                       style: TextStyle(
                         fontSize: 12,
                         color: AppColors.textPrimary.withValues(alpha: 0.6),
                       ),
                     ),
                     Text(
-                      'سورة $surahName - آية ${verse.ayah.toArabicDigits}',
+                      l10n.surahAndAyah(QuranMetadata.getSurahName(verse.surah), verse.ayah.toArabicDigits),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -402,12 +404,13 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   }
 
   Widget _buildNumericResults() {
+    final l10n = AppLocalizations.of(context)!;
     final number = int.tryParse(_normalizeArabicNumbers(_searchController.text.trim())) ?? 1;
     final cards = <Widget>[];
 
     if (number >= 1 && number <= 604) {
       cards.add(_buildActionCard(
-        title: 'الذهاب للصفحة $number',
+        title: l10n.goToPageTitle(number),
         icon: Icons.menu_book_rounded,
         onTap: () => _navigateToPage(number),
       ));
@@ -417,7 +420,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
       final juzPage = _juzStartPages[number - 1];
       final juzName = QuranMetadata.getJuzName(number);
       cards.add(_buildActionCard(
-        title: 'الذهاب للجزء $juzName ($number) — صفحة $juzPage',
+        title: l10n.goToJuzTitle(juzName, number, juzPage),
         icon: Icons.pie_chart_rounded,
         onTap: () => _navigateToPage(juzPage),
       ));
@@ -428,7 +431,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
       final surahPage = _surahPageMap[number];
       if (surahPage != null) {
         cards.add(_buildActionCard(
-          title: 'الذهاب لسورة $surahName ($number) — صفحة $surahPage',
+          title: l10n.goToSurahTitle(surahName, number, surahPage),
           icon: Icons.my_library_books_rounded,
           onTap: () => _navigateToPage(surahPage),
         ));
@@ -445,7 +448,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
     if (cards.isEmpty) {
       return Center(
         child: Text(
-          'الرقم ${number.toArabicDigits} خارج النطاق المتاح',
+          l10n.outOfRange(number.toArabicDigits),
           style: TextStyle(fontSize: 16, color: AppColors.textPrimary.withValues(alpha: 0.6)),
         ),
       );

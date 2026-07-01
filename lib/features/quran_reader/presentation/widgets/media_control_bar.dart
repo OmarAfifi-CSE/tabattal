@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/web_safe_size.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../bloc/audio/audio_bloc.dart';
@@ -245,14 +246,17 @@ class _MediaControlBarState extends State<MediaControlBar> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.wR)),
           offset: Offset(0, -180.wH),
           onSelected: _handleSleepTimerSelection,
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 0, child: Align(alignment: Alignment.centerRight, child: Text('إيقاف المؤقت', textDirection: TextDirection.rtl))),
-            PopupMenuItem(value: 5, child: Align(alignment: Alignment.centerRight, child: Text('5 دقائق', textDirection: TextDirection.rtl))),
-            PopupMenuItem(value: 10, child: Align(alignment: Alignment.centerRight, child: Text('10 دقائق', textDirection: TextDirection.rtl))),
-            PopupMenuItem(value: 15, child: Align(alignment: Alignment.centerRight, child: Text('15 دقيقة', textDirection: TextDirection.rtl))),
-            PopupMenuItem(value: 30, child: Align(alignment: Alignment.centerRight, child: Text('30 دقيقة', textDirection: TextDirection.rtl))),
-            PopupMenuItem(value: 60, child: Align(alignment: Alignment.centerRight, child: Text('60 دقيقة', textDirection: TextDirection.rtl))),
-          ],
+          itemBuilder: (ctx) {
+            final l10n = AppLocalizations.of(ctx)!;
+            return [
+              PopupMenuItem(value: 0, child: Align(alignment: Alignment.centerRight, child: Text(l10n.timerStop, textDirection: TextDirection.rtl))),
+              PopupMenuItem(value: 5, child: Align(alignment: Alignment.centerRight, child: Text(l10n.timerMinutes5, textDirection: TextDirection.rtl))),
+              PopupMenuItem(value: 10, child: Align(alignment: Alignment.centerRight, child: Text(l10n.timerMinutes10, textDirection: TextDirection.rtl))),
+              PopupMenuItem(value: 15, child: Align(alignment: Alignment.centerRight, child: Text(l10n.timerMinutes15, textDirection: TextDirection.rtl))),
+              PopupMenuItem(value: 30, child: Align(alignment: Alignment.centerRight, child: Text(l10n.timerMinutes30, textDirection: TextDirection.rtl))),
+              PopupMenuItem(value: 60, child: Align(alignment: Alignment.centerRight, child: Text(l10n.timerMinutes60, textDirection: TextDirection.rtl))),
+            ];
+          },
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 4.wW, vertical: 4.wH),
             child: Column(

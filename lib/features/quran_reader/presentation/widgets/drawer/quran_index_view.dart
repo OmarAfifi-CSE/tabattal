@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/utils/arabic_text_utils.dart';
 import '../../../../quran_reader/domain/repositories/quran_repository.dart';
@@ -59,6 +60,7 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final content = Scaffold(
       backgroundColor: AppColors.surfaceCream,
       appBar: AppBar(
@@ -66,7 +68,7 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'الفهرس',
+          l10n.indexTitle,
           style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22.sp),
         ),
         leading: IconButton(
@@ -79,10 +81,10 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
           unselectedLabelColor: Colors.black54,
           indicatorColor: AppColors.accentGold,
           labelStyle: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
-          tabs: const [Tab(text: 'السور'), Tab(text: 'الأجزاء')],
+          tabs: [Tab(text: l10n.indexSurahsTab), Tab(text: l10n.indexJuzsTab)],
         ),
       ),
-      body: _buildBody(),
+      body: _buildBody(l10n),
     );
     if (kIsWeb) {
       return Scaffold(
@@ -98,7 +100,7 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
     return content;
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(AppLocalizations l10n) {
     if (_isLoading) return const Center(child: CircularProgressIndicator(color: AppColors.accentGold));
     if (_hasError) {
       return Center(
@@ -107,20 +109,20 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
           children: [
             Icon(Icons.error_outline, color: Colors.red, size: 48.sp),
             SizedBox(height: 12.h),
-            Text('فشل تحميل الفهرس', style: TextStyle(color: Colors.red, fontSize: 16.sp)),
+            Text(l10n.indexLoadError, style: TextStyle(color: Colors.red, fontSize: 16.sp)),
             SizedBox(height: 12.h),
-            ElevatedButton(onPressed: _loadSurahIndex, child: const Text('إعادة المحاولة')),
+            ElevatedButton(onPressed: _loadSurahIndex, child: Text(l10n.retry)),
           ],
         ),
       );
     }
     return TabBarView(
       controller: _tabController,
-      children: [_buildSurahList(), _buildJuzList()],
+      children: [_buildSurahList(l10n), _buildJuzList(l10n)],
     );
   }
 
-  Widget _buildSurahList() {
+  Widget _buildSurahList(AppLocalizations l10n) {
     return ListView.separated(
       padding: EdgeInsets.all(16.r),
       itemCount: _surahIndex.length,
@@ -135,11 +137,11 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
           contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
           leading: _buildCircleNumberBadge('$surahNum'),
           title: Text(
-            'سورة ${QuranMetadata.getSurahName(surahNum)}',
+            l10n.surahListItem(QuranMetadata.getSurahName(surahNum)),
             style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           ),
           trailing: Text(
-            'صفحة ${startPage.toArabicDigits}',
+            l10n.pageListItem(startPage.toArabicDigits),
             style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary.withValues(alpha: 0.6)),
           ),
         );
@@ -147,7 +149,7 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
     );
   }
 
-  Widget _buildJuzList() {
+  Widget _buildJuzList(AppLocalizations l10n) {
     return ListView.separated(
       padding: EdgeInsets.all(16.r),
       itemCount: 30,
@@ -160,11 +162,11 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
           onTap: () => _navigateToPage(startPage),
           leading: _buildCircleNumberBadge('$juzNum', filled: false),
           title: Text(
-            'الجزء ${QuranMetadata.getJuzName(juzNum)}',
+            l10n.juzListItem(QuranMetadata.getJuzName(juzNum)),
             style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           ),
           trailing: Text(
-            'صفحة ${startPage.toArabicDigits}',
+            l10n.pageListItem(startPage.toArabicDigits),
             style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary.withValues(alpha: 0.6)),
           ),
         );

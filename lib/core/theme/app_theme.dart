@@ -3,8 +3,9 @@ import 'package:flutter/services.dart';
 
 import 'app_colors.dart';
 
-ThemeData appTheme() {
+ThemeData appTheme(String languageCode) {
   return ThemeData(
+    fontFamily: languageCode == 'en' ? 'Amiri' : 'KFGQPC HAFS Uthmanic Script Regular',
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.accentGold,
       surface: AppColors.background,

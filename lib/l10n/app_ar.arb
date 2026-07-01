@@ -1,0 +1,162 @@
+{
+  "@@locale": "ar",
+  "appName": "تبتل",
+  "drawerSearch": "البحث المتقدم",
+  "drawerSearchSubtitle": "بحث في النصوص والأرقام",
+  "drawerIndex": "الفهرس",
+  "drawerIndexSubtitle": "السور والأجزاء",
+  "drawerBookmarks": "العلامات المرجعية",
+  "drawerBookmarksSubtitle": "الآيات المحفوظة",
+  "drawerTafsir": "التفسير الكامل",
+  "drawerTafsirSubtitle": "تفسير لجميع الآيات والسور",
+  "drawerTranslation": "الترجمة الإنجليزية",
+  "drawerTranslationSubtitle": "ترجمة لمعاني القرآن",
+  "drawerAudioManager": "مدير الصوتيات",
+  "drawerAudioManagerSubtitle": "تحميل وإدارة التلاوات",
+  "drawerLanguage": "اللغة",
+  "drawerLanguageSubtitle": "العربية / English",
+  "menuTafsir": "التفسير",
+  "menuTafsirTitle": "التفسير - الميسر",
+  "menuTranslation": "الترجمة",
+  "menuListen": "الاستماع للآيات",
+  "menuGoToVerse": "انتقال التلاوة لهذه الآية",
+  "menuBookmarkAdd": "إضافة علامة مرجعية",
+  "menuBookmarkRemove": "إزالة العلامة المرجعية",
+  "menuShare": "نشر",
+  "retry": "إعادة المحاولة",
+  "noBookmarks": "لا توجد علامات مرجعية",
+  "noBookmarksHint": "اضغط على أي آية لإضافتها كعلامة مرجعية",
+  "noResults": "لم يتم العثور على نتائج",
+  "searchHint": "البحث بالنصوص أو الأرقام...",
+  "searchBy": "ابحث عن طريق",
+  "searchByHint": "رقم الصفحة • رقم الجزء • رقم السورة\nأو النص القرآني",
+  "pagePrefix": "صفحة",
+  "surahPrefix": "سورة",
+  "juzPrefix": "الجزء",
+  "ayahPrefix": "الآية",
+  "audioTypeLabel": "النوع",
+  "audioReciterLabel": "القارئ",
+  "audioRepeatLabel": "تكرار الآية",
+  "audioRepeatContinuous": "تكرار مستمر للآية",
+  "audioRepeatNone": "بدون تكرار (استمرار)",
+  "audioRepeatTwice": "تكرار مرتين",
+  "audioRepeatThrice": "تكرار ثلاث مرات",
+  "audioStartListening": "ابدأ الاستماع",
+  "audioSaveSettings": "حفظ الإعدادات",
+  "audioSettingsTitle": "إعدادات الاستماع",
+  "audioDownloadAll": "تحميل المصحف كامل",
+  "audioManagerTitle": "مدير الصوتيات",
+  "timerStop": "إيقاف المؤقت",
+  "timerMinutes5": "5 دقائق",
+  "timerMinutes10": "10 دقائق",
+  "timerMinutes15": "15 دقيقة",
+  "timerMinutes30": "30 دقيقة",
+  "timerMinutes60": "60 دقيقة",
+  "indexSurahsTab": "السور",
+  "indexJuzsTab": "الأجزاء",
+  "downloadingTafsir": "جاري تحميل التفسير... {percent}%",
+  "@downloadingTafsir": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "downloadingTafsirBackground": "جاري تحميل باقي التفسير في الخلفية...",
+  "tafsirNotAvailableLocally": "تفسير هذه الآية غير متوفر محلياً",
+  "tafsirPartialDownloadHint": "تم تحميل {percent}% من التفسير. هل ترغب في استكمال التحميل؟",
+  "@tafsirPartialDownloadHint": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "continueDownload": "استكمال التحميل",
+  "noLocalData": "لا يوجد بيانات في قاعدة البيانات المحلية",
+  "noLocalTranslation": "لا يوجد ترجمة في قاعدة البيانات المحلية",
+  "noTafsirAvailable": "لا يوجد تفسير متاح",
+  "indexLoadError": "فشل تحميل الفهرس",
+  "downloadFailed": "فشل التحميل: {name}",
+  "@downloadFailed": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "downloadFailedInternet": "فشل تحميل التفسير. يرجى التأكد من اتصالك بالإنترنت.",
+  "fullTafsirTitle": "التفسير الشامل",
+  "translationTitle": "الترجمة",
+  "bookmarksTitle": "العلامات المرجعية",
+  "indexTitle": "الفهرس",
+  "surahBookmarkTitle": "سورة {name}",
+  "@surahBookmarkTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "verseBookmarkSubtitle": "الآية {ayah}  •  صفحة {page}",
+  "@verseBookmarkSubtitle": {
+    "placeholders": {
+      "ayah": { "type": "String" },
+      "page": { "type": "String" }
+    }
+  },
+  "goToPageTitle": "الذهاب للصفحة {num}",
+  "@goToPageTitle": {
+    "placeholders": {
+      "num": { "type": "int" }
+    }
+  },
+  "goToJuzTitle": "الذهاب للجزء {name} ({num}) — صفحة {page}",
+  "@goToJuzTitle": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "num": { "type": "int" },
+      "page": { "type": "int" }
+    }
+  },
+  "goToSurahTitle": "الذهاب لسورة {name} ({num}) — صفحة {page}",
+  "@goToSurahTitle": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "num": { "type": "int" },
+      "page": { "type": "int" }
+    }
+  },
+  "outOfRange": "الرقم {num} خارج النطاق المتاح",
+  "@outOfRange": {
+    "placeholders": {
+      "num": { "type": "String" }
+    }
+  },
+  "surahListItem": "سورة {name}",
+  "@surahListItem": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "juzListItem": "الجزء {name}",
+  "@juzListItem": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "pageListItem": "صفحة {page}",
+  "@pageListItem": {
+    "placeholders": {
+      "page": { "type": "String" }
+    }
+  },
+  "surahAndAyah": "سورة {surah} - آية {ayah}",
+  "@surahAndAyah": {
+    "placeholders": {
+      "surah": { "type": "String" },
+      "ayah": { "type": "String" }
+    }
+  },
+  "languageArabic": "العربية",
+  "languageEnglish": "English",
+  "languagePickerTitle": "اختر اللغة",
+  "sleepTimerStopped": "سيتم إيقاف التلاوة بعد {minutes} دقائق",
+  "@sleepTimerStopped": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  }
+}

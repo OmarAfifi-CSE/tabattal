@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
@@ -157,6 +158,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
   }
 
   Future<void> _loadSurahData(int surahId) async {
+    final l10n = AppLocalizations.of(context)!;
     final versesResult = await _repository.getVersesBySurah(surahId);
     await versesResult.fold(
       (f) async => null,
@@ -171,7 +173,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
         final newItems = verses.map((verse) => VerseTranslationData(
           verseKey: verse.verseKey,
           textUthmani: verse.textUthmani,
-          translationText: translationMap[verse.verseKey] ?? 'Translation not available in local database.',
+          translationText: translationMap[verse.verseKey] ?? l10n.noLocalTranslation,
           surah: verse.surah,
           ayah: verse.ayah,
           page: verse.page,
@@ -200,6 +202,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return BlocListener<AudioBloc, AudioState>(
       listenWhen: (prev, curr) {
         if (curr is! AudioPlaying) return false;
@@ -232,9 +235,9 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
           backgroundColor: AppColors.surfaceCream,
           elevation: 0,
           centerTitle: true,
-          title: const Text(
-            'الترجمة الإنجليزية',
-            style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
+          title: Text(
+            l10n.translationTitle,
+            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
           ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
@@ -257,7 +260,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
         body: _isLoadingInitial
             ? const Center(child: CircularProgressIndicator(color: AppColors.accentGold))
             : _list.isEmpty
-                ? const Center(child: Text('لا يوجد ترجمة في قاعدة البيانات المحلية', style: TextStyle(fontSize: 16, color: AppColors.textPrimary)))
+                ? Center(child: Text(l10n.noLocalTranslation, style: const TextStyle(fontSize: 16, color: AppColors.textPrimary)))
                 : BlocBuilder<AudioBloc, AudioState>(
                     builder: (context, audioState) {
                       int? playingVerseId;

@@ -7,6 +7,7 @@ class AudioPreferencesService {
   static const String _keyReciter = 'audio_reciter';
   static const String _keyRepeatCount = 'audio_repeat_count';
   static const String _keyLastPage = 'last_read_page'; // For saving last page
+  static const String _keyLocale = 'app_locale';
 
   static const String defaultCategory = 'مرتل';
   static const String defaultReciter = 'محمود خليل الحصري';
@@ -54,5 +55,11 @@ class AudioPreferencesService {
 
   Future<void> saveLastReadPage(int page) async {
     await _prefs.setInt(_keyLastPage, page);
+  }
+
+  String get appLocale => _prefs.getString(_keyLocale) ?? 'ar';
+
+  Future<void> saveAppLocale(String languageCode) async {
+    await _prefs.setString(_keyLocale, languageCode);
   }
 }

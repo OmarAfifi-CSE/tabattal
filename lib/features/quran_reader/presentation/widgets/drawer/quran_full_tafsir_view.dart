@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../../../l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -196,6 +197,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   }
 
   Future<void> _loadSurahData(int surahId) async {
+    final l10n = AppLocalizations.of(context)!;
     final versesResult = await _repository.getVersesBySurah(surahId);
     await versesResult.fold(
       (f) async => null,
@@ -209,7 +211,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
         final newItems = verses.map((verse) => VerseTafsirData(
           verseKey: verse.verseKey,
           textUthmani: verse.textUthmani,
-          tafsirText: tafsirMap[verse.verseKey] ?? 'لا يوجد تفسير متاح',
+          tafsirText: tafsirMap[verse.verseKey] ?? l10n.noTafsirAvailable,
           surah: verse.surah,
           ayah: verse.ayah,
           page: verse.page,
@@ -286,6 +288,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   }
 
   Future<void> _startDownload(int resourceId) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _isDownloading = true;
       _downloadProgress = 0.0;
@@ -319,7 +322,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
       if (mounted) {
         setState(() {
           _isDownloading = false;
-          _downloadError = 'فشل تحميل التفسير. يرجى التأكد من اتصالك بالإنترنت.';
+          _downloadError = l10n.downloadFailedInternet;
         });
       }
     }
@@ -327,6 +330,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return BlocListener<AudioBloc, AudioState>(
       listenWhen: (prev, curr) {
         if (curr is! AudioPlaying) return false;
@@ -361,9 +365,9 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
           backgroundColor: AppColors.surfaceCream,
           elevation: 0,
           centerTitle: true,
-          title: const Text(
-            'التفسير الشامل',
-            style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
+          title: Text(
+            l10n.fullTafsirTitle,
+            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
           ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
@@ -460,7 +464,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                     Expanded(
                       child: Text(
                         _isDownloading
-                            ? 'جاري تحميل التفسير... ${(_downloadProgress * 100).toInt()}%'
+                            ? l10n.downloadingTafsir((_downloadProgress * 100).toInt())
                             : _downloadError!,
                         style: AppTextStyles.menuItemText.copyWith(
                           fontSize: 12,
@@ -475,7 +479,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
               child: _isLoadingInitial
                   ? const Center(child: CircularProgressIndicator(color: AppColors.accentGold))
                   : _tafsirList.isEmpty
-                      ? const Center(child: Text('لا يوجد بيانات في قاعدة البيانات المحلية', style: TextStyle(fontSize: 16, color: AppColors.textPrimary)))
+                      ? Center(child: Text(l10n.noLocalData, style: const TextStyle(fontSize: 16, color: AppColors.textPrimary)))
                       : BlocBuilder<AudioBloc, AudioState>(
                           builder: (context, audioState) {
                       int? playingVerseId;

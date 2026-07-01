@@ -82,7 +82,7 @@ class QuranPageFrame extends StatelessWidget {
     final isLeftPage = pageNumber % 2 == 0;
 
     const TextStyle headerStyle = TextStyle(
-      fontFamily: 'KFGQPC Uthmanic Script HAFS',
+      fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
       color: QuranBorderPainter.innerColor,
       fontWeight: FontWeight.bold,
     );
@@ -253,7 +253,7 @@ class QuranPageFrame extends StatelessWidget {
                                     children: buildHizbLabelTextSpans(
                                       (marker['text'] as String).toArabicDigits,
                                       TextStyle(
-                                        fontFamily: 'KFGQPC Uthmanic Script HAFS',
+                                        fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
                                         fontSize: kIsWeb ? 8 : 6.sp,
                                         height: 1.2,
                                         color: QuranBorderPainter.innerColor,

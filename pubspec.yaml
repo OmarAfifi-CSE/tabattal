@@ -10,6 +10,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
   cupertino_icons: ^1.0.8
   flutter_bloc: ^9.1.1
   equatable: ^2.0.8
@@ -34,6 +37,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
 flutter:
+  generate: true
   uses-material-design: true
 
   assets:
@@ -51,9 +55,9 @@ flutter:
     - family: QCF_BSML
       fonts:
         - asset: "assets/fonts/v1/QCF_BSML.TTF"
-    - family: KFGQPC Uthmanic Script HAFS
+    - family: KFGQPC HAFS Uthmanic Script Regular
       fonts:
-        - asset: "assets/fonts/KFGQPC Uthmanic Script HAFS.otf"
+        - asset: "assets/fonts/KFGQPC HAFS Uthmanic Script Regular.ttf"
     - family: QCF_Surah
       fonts:
         - asset: "assets/fonts/v1/surah_names.ttf"

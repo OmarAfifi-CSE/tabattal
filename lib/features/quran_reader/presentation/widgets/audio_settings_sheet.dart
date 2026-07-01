@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/web_safe_size.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -49,18 +50,19 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
   late int _selectedRepeatCount;
 
   static const List<int> _repeatOptions = [0, 2, 3, -1];
-  String _getRepeatLabel(int count) {
+  String _getRepeatLabel(BuildContext context, int count) {
+    final l10n = AppLocalizations.of(context)!;
     switch (count) {
       case -1:
-        return 'تكرار مستمر للآية';
+        return l10n.audioRepeatContinuous;
       case 0:
-        return 'بدون تكرار (استمرار)';
+        return l10n.audioRepeatNone;
       case 2:
-        return 'تكرار مرتين';
+        return l10n.audioRepeatTwice;
       case 3:
-        return 'تكرار 3 مرات';
+        return l10n.audioRepeatThrice;
       default:
-        return 'بدون تكرار (استمرار)';
+        return l10n.audioRepeatNone;
     }
   }
 
@@ -146,7 +148,7 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
             // ── Title
             Center(
               child: Text(
-                'إعدادات الاستماع',
+                AppLocalizations.of(context)!.audioSettingsTitle,
                 style: TextStyle(fontSize: 20.wSp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
               ),
             ),
@@ -155,7 +157,7 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
             // ── Category Selector
             _SelectorButton(
               icon: Icons.category_rounded,
-              label: 'النوع',
+              label: AppLocalizations.of(context)!.audioTypeLabel,
               value: _selectedCategory,
               items: categories,
               onChanged: _onCategoryChanged,
@@ -165,7 +167,7 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
             // ── Reciter Selector
             _SelectorButton(
               icon: Icons.mic_rounded,
-              label: 'القارئ',
+              label: AppLocalizations.of(context)!.audioReciterLabel,
               value: _selectedReciter,
               items: reciters,
               onChanged: _onReciterChanged,
@@ -173,7 +175,7 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
             SizedBox(height: 20.wH),
 
             // ── Repeat Selector
-            const _SectionLabel(icon: Icons.repeat_rounded, label: 'تكرار الآية'),
+            _SectionLabel(icon: Icons.repeat_rounded, label: AppLocalizations.of(context)!.audioRepeatLabel),
             SizedBox(height: 8.wH),
             Align(
               alignment: Alignment.centerRight,
@@ -197,27 +199,27 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
                     onChanged: (val) {
                       if (val != null) _onRepeatChanged(val);
                     },
-                  items: _repeatOptions.map((count) {
-                    return DropdownMenuItem<int>(
-                      value: count,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 14),
-                        child: Text(
-                          _getRepeatLabel(count),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
+                    items: _repeatOptions.map((count) {
+                      return DropdownMenuItem<int>(
+                        value: count,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 14),
+                          child: Text(
+                            _getRepeatLabel(context, count),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.right,
+                            textDirection: TextDirection.rtl,
                           ),
-                          textAlign: TextAlign.right,
-                          textDirection: TextDirection.rtl,
                         ),
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
-            ),
             ),
             SizedBox(height: 24.wH),
 
@@ -232,7 +234,7 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
               ),
               icon: Icon(widget.verseId != null ? Icons.play_arrow_rounded : Icons.check_rounded, size: 24.wSp),
               label: Text(
-                widget.verseId != null ? 'ابدأ الاستماع' : 'حفظ الإعدادات',
+                widget.verseId != null ? AppLocalizations.of(context)!.audioStartListening : AppLocalizations.of(context)!.audioSaveSettings,
                 style: TextStyle(fontSize: 17.wSp, fontWeight: FontWeight.bold),
               ),
               onPressed: _applyAndPlay,
