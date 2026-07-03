@@ -86,7 +86,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
   bool _isAnimating = false;
-  final Map<int, double> _tafsirProgress = {16: 1.0, 14: 1.0, 91: 1.0};
+  final Map<int, double> _tafsirProgress = {16: 1.0};
 
   // Helper to detect if text is primarily RTL (e.g., Arabic, Urdu, Persian)
   bool _isRtl(String text) {
@@ -125,7 +125,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
   Future<void> _checkDownloadedTafsirs() async {
     if (!mounted) return;
     final repo = context.read<QuranBloc>().repository;
-    final toCheck = [15, 90, 93, 94]; // Add all non-bundled tafsirs
+    final toCheck = [14, 91, 15, 90, 93, 94]; // Add all non-bundled tafsirs
     for (int id in toCheck) {
       final progressResult = await repo.getTafsirDownloadProgress(id);
       progressResult.fold(

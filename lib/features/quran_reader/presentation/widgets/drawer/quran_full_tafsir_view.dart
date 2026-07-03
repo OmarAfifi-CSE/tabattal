@@ -62,7 +62,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   final ItemScrollController _itemScrollController = ItemScrollController();
   final ItemPositionsListener _itemPositionsListener = ItemPositionsListener.create();
 
-  final Set<int> _downloadedTafsirs = {16, 14, 91};
+  final Set<int> _downloadedTafsirs = {16}; // Only bundled Muyassar; others checked dynamically
 
   late String _noTafsirText;
 
@@ -85,7 +85,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   }
 
   Future<void> _checkDownloadedTafsirs() async {
-    final toCheck = [15, 90, 93, 94];
+    final toCheck = [14, 91, 15, 90, 93, 94]; // Include newly-downloadable tafsir 14 & 91
     for (int id in toCheck) {
       final progressResult = await _repository.getTafsirDownloadProgress(id);
       progressResult.fold(

@@ -349,8 +349,8 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
 
     final wordTextStyle = AppTextStyles.quranText.copyWith(
       fontFamily: customFontFamily,
-      fontSize: kIsWeb ? 42 : 32, // Larger base font size for web
-      height: kIsWeb ? 1.2 : 1.5, // Tighter height to prevent vertical overflow on larger fonts
+      fontSize: kIsWeb ? 42 : 32,
+      height: kIsWeb ? 1.2 : 1.5,
     );
 
     if (isBookmarkHighlighted) {
@@ -359,10 +359,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
         builder: (context, _) => GestureDetector(
           onTapDown: handleTap,
           child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.accentGold.withValues(alpha: _bookmarkPulseAnimation.value),
-              borderRadius: BorderRadius.circular(4.r),
-            ),
+            color: AppColors.accentGold.withValues(alpha: _bookmarkPulseAnimation.value),
             child: Text(
               displayText,
               style: wordTextStyle.copyWith(
@@ -395,9 +392,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
         child: AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeInOut,
-          style: wordTextStyle.copyWith(
-            color: textColor,
-          ),
+          style: wordTextStyle.copyWith(color: textColor),
           child: Text(displayText),
         ),
       ),
@@ -413,7 +408,14 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
     required BookmarkState bookmarkState,
     required List<LineData> lines,
   }) {
-    final List<Widget> wordWidgets = [];
+    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+    final wordTextStyle = AppTextStyles.quranText.copyWith(
+      fontFamily: 'QCF_P$pageStr',
+      fontSize: kIsWeb ? 42 : 32,
+      height: kIsWeb ? 1.2 : 1.5,
+    );
+
+    final List<(String, Widget)> wordWidgets = [];
     bool fatihahBasmalaAdded = false;
 
     for (final word in lineWords) {
@@ -459,10 +461,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
             basmala = AnimatedBuilder(
               animation: _bookmarkPulseAnimation,
               builder: (context, _) => Container(
-                decoration: BoxDecoration(
-                  color: AppColors.accentGold.withValues(alpha: _bookmarkPulseAnimation.value),
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
+                color: AppColors.accentGold.withValues(alpha: _bookmarkPulseAnimation.value),
                 child: const Text(
                   '1 2 3',
                   style: TextStyle(
@@ -477,7 +476,8 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
             );
           }
 
-          wordWidgets.add(
+          wordWidgets.add((
+            '1:1',
             GestureDetector(
               onTapDown: (details) {
                 _showVerseMenu(context, details.globalPosition, verseId, lines);
@@ -486,8 +486,8 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
                 child: basmala,
               ),
-            ),
-          );
+            )
+          ));
           fatihahBasmalaAdded = true;
         }
         continue;
@@ -495,7 +495,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
 
       final bool isBookmarked = bookmarkState.isBookmarked(word.verseKey);
 
-      wordWidgets.add(_buildWordWidget(
+      wordWidgets.add((word.verseKey, _buildWordWidget(
         word: word,
         verseId: verseId,
         isMenuHighlighted: _activeVerseId == verseId,
@@ -504,24 +504,76 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
         isPermanentlyBookmarked: isBookmarked,
         audioState: audioState,
         lines: lines,
-      ));
+      )));
+    }
+
+    // Page 1 and 2 (Al-Fatiha and first page of Al-Baqarah) are opening pages
+    // with special large frames. Their text should always be centered and never stretched.
+    final bool useSpaceBetween = (widget.pageNumber > 2) && (wordWidgets.length >= 8);
+    final List<Widget> rowChildren = [];
+
+    for (int i = 0; i < wordWidgets.length; i++) {
+      rowChildren.add(wordWidgets[i].$2);
+
+      if (useSpaceBetween && i < wordWidgets.length - 1) {
+        final currentVerse = wordWidgets[i].$1;
+        final nextVerse = wordWidgets[i + 1].$1;
+        final isSameVerse = currentVerse == nextVerse;
+        
+        final verseId = verseKeyToIntIdMap[currentVerse] ?? 0;
+        final isMenuHighlighted = _activeVerseId == verseId;
+        final isAudioHighlighted = playingVerseId == verseId;
+        final isBookmarkHighlighted = _bookmarkHighlightVerseId == verseId;
+
+        Color gapColor = Colors.transparent;
+        if (isSameVerse) {
+          if (isAudioHighlighted || isMenuHighlighted) {
+            gapColor = AppColors.accentGold.withValues(alpha: 0.2);
+          }
+        }
+
+        Widget gap = AnimatedContainer(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+          color: gapColor,
+          child: Text('\u200B', style: wordTextStyle),
+        );
+
+        if (isSameVerse && isBookmarkHighlighted) {
+          gap = AnimatedBuilder(
+            animation: _bookmarkPulseAnimation,
+            builder: (context, _) => Container(
+              color: AppColors.accentGold.withValues(alpha: _bookmarkPulseAnimation.value),
+              child: Text('\u200B', style: wordTextStyle),
+            ),
+          );
+        }
+
+        if (isSameVerse) {
+          gap = GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: (details) {
+              _showVerseMenu(context, details.globalPosition, verseId, lines);
+            },
+            child: gap,
+          );
+        }
+
+        rowChildren.add(Expanded(child: gap));
+      }
     }
 
     // Justify words across the full canvas width (like the Mushaf's kashida fill).
     // Only for lines with 8+ words (body text); short lines (Al-Fatiha, end-of-surah)
     // stay centered so they are not over-stretched.
-    final alignment = wordWidgets.length >= 8
-        ? MainAxisAlignment.spaceBetween
-        : MainAxisAlignment.center;
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
         textDirection: TextDirection.rtl,
         mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: alignment,
+        mainAxisAlignment: useSpaceBetween ? MainAxisAlignment.start : MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
-        children: wordWidgets,
+        children: rowChildren,
       ),
     );
   }
@@ -581,7 +633,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                   child: Column(
                     key: _pageColumnKey,
                     mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: List.generate(15, (index) {
                         final lineNumber = index + 1;

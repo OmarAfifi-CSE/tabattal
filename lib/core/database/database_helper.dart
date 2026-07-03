@@ -45,7 +45,7 @@ class DatabaseHelper {
     final dbVersion = prefs.getInt('db_version') ?? 0;
     
     // Increment this whenever we update quran.db in assets
-    const currentDbVersion = 14; // bumped to 14: reverted all fixes, original DB is correct (matches QCF PDF Mushafs)
+    const currentDbVersion = 15; // bumped to 15: removed tafsir 14 & 91 from bundle (now downloadable), VACUUM applied — DB shrank from 38 MB to 9 MB
 
     if (!exists || dbVersion < currentDbVersion) {
       if (!kIsWeb) {

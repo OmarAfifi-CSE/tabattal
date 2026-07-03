@@ -6,8 +6,8 @@ class QuranConstants {
   static const int totalPages = 604;
   static const int linesPerPage = 15;
 
-  static const Set<int> bundledTafsirIds = {16, 14, 91};
-  static const Set<int> downloadableTafsirIds = {15, 90, 93, 94};
+  static const Set<int> bundledTafsirIds = {16}; // Only Muyassar bundled
+  static const Set<int> downloadableTafsirIds = {14, 91, 15, 90, 93, 94}; // 14 & 91 moved to downloadable
   static const int defaultTafsirId = 16;
   static const int defaultTranslationId = 20;
 
