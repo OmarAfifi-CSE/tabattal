@@ -22,6 +22,7 @@ class DependencyContainer {
   final BookmarkRepository bookmarkRepository;
   final AudioPreferencesService audioPrefs;
   final QuranAudioHandler audioHandler;
+  final SharedPreferences sharedPreferences;
 
   const DependencyContainer({
     required this.databaseHelper,
@@ -33,6 +34,7 @@ class DependencyContainer {
     required this.bookmarkRepository,
     required this.audioPrefs,
     required this.audioHandler,
+    required this.sharedPreferences,
   });
 }
 
@@ -80,5 +82,6 @@ Future<DependencyContainer> configureDependencies() async {
     bookmarkRepository: bookmarkRepository,
     audioPrefs: audioPrefs,
     audioHandler: audioHandler,
+    sharedPreferences: prefs,
   );
 }

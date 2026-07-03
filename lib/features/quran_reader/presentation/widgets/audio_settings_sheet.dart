@@ -191,11 +191,11 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
                   child: DropdownButton<int>(
                     isExpanded: false,
                     value: _selectedRepeatCount,
-                    icon: const Padding(
-                      padding: EdgeInsets.only(left: 10),
+                    icon: Padding(
+                      padding: const EdgeInsets.only(left: 10),
                       child: Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.accentGold),
                     ),
-                    dropdownColor: Colors.white,
+                    dropdownColor: AppColors.cardCream,
                     borderRadius: BorderRadius.circular(12),
                     onChanged: (val) {
                       if (val != null) _onRepeatChanged(val);
@@ -207,7 +207,7 @@ class _AudioSettingsSheetContentState extends State<_AudioSettingsSheetContent> 
                           padding: const EdgeInsets.only(right: 14),
                           child: Text(
                             _getRepeatLabel(context, count),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w600,
@@ -295,7 +295,7 @@ class _SelectorButton extends StatelessWidget {
       splashRadius: 0,
       initialValue: value,
       position: PopupMenuPosition.under,
-      color: Colors.white,
+      color: AppColors.cardCream,
       elevation: 4,
       constraints: const BoxConstraints(minWidth: 200, maxWidth: 350),
       shape: RoundedRectangleBorder(
@@ -319,8 +319,8 @@ class _SelectorButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (isSelected)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
                     child: Icon(Icons.check_rounded, color: AppColors.accentGold, size: 16),
                   ),
                 Expanded(

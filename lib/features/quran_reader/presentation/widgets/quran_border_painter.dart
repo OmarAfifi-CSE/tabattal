@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../../../../core/theme/app_colors.dart';
 
 class QuranBorderPainter extends CustomPainter {
   final int pageNumber;
   final List<double> hizbCutCenters;
+  final Color goldColor;
+  final Color innerColor;
+  final Color backgroundColor;
 
-  QuranBorderPainter({required this.pageNumber, required this.hizbCutCenters});
-
-  static const Color gold = AppColors.verseMarkerGold; 
-  static const Color innerColor = AppColors.inkBrown;
-  static const Color background = AppColors.background;
+  QuranBorderPainter({
+    required this.pageNumber,
+    required this.hizbCutCenters,
+    required this.goldColor,
+    required this.innerColor,
+    required this.backgroundColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -76,7 +80,7 @@ class QuranBorderPainter extends CustomPainter {
     // 4. Draw the two bounding parallel lines using the "hollow stroke" technique
     // Outer thick line (gold)
     final Paint outerBound = Paint()
-      ..color = gold
+      ..color = goldColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 12.0
       ..strokeJoin = StrokeJoin.miter
@@ -87,7 +91,7 @@ class QuranBorderPainter extends CustomPainter {
     // 5. Inner fill (light opaque gold)
     // By drawing this slightly thinner line over the outer bound, it creates two perfect 1px parallel lines!
     final Paint innerFill = Paint()
-      ..color = AppColors.borderInnerGold
+      ..color = innerColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 10.0
       ..strokeJoin = StrokeJoin.miter
@@ -97,7 +101,7 @@ class QuranBorderPainter extends CustomPainter {
 
     // 6. Distribute the large diamonds perfectly evenly along the path
     final Paint diamondFill = Paint()
-      ..color = gold
+      ..color = goldColor
       ..style = PaintingStyle.fill;
 
     for (final metric in framePath.computeMetrics()) {
@@ -130,12 +134,16 @@ class QuranBorderPainter extends CustomPainter {
   }
 
   void _drawBackground(Canvas canvas, Size size) {
-    final Paint bgPaint = Paint()..color = background;
+    final Paint bgPaint = Paint()..color = backgroundColor;
     canvas.drawRect(Offset.zero & size, bgPaint);
   }
 
   @override
   bool shouldRepaint(covariant QuranBorderPainter oldDelegate) {
-    return oldDelegate.pageNumber != pageNumber || oldDelegate.hizbCutCenters.toString() != hizbCutCenters.toString();
+    return oldDelegate.pageNumber != pageNumber || 
+           oldDelegate.hizbCutCenters.toString() != hizbCutCenters.toString() ||
+           oldDelegate.backgroundColor != backgroundColor ||
+           oldDelegate.goldColor != goldColor ||
+           oldDelegate.innerColor != innerColor;
   }
 }

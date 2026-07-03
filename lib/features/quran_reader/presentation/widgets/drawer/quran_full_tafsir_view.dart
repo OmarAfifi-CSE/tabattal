@@ -374,10 +374,10 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
           centerTitle: true,
           title: Text(
             l10n.fullTafsirTitle,
-            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
+            style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+            icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
             onPressed: () {
               int pageToReturn = widget.pageNumber;
               String? verseKeyToReturn;
@@ -397,10 +397,10 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
             PopupMenuButton<int>(
               splashRadius: 0,
               position: PopupMenuPosition.under,
-              color: Colors.white,
+              color: AppColors.cardCream,
               elevation: 3,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              icon: const Icon(Icons.tune_rounded, color: AppColors.accentGold),
+              icon: Icon(Icons.tune_rounded, color: AppColors.accentGold),
               onSelected: _changeTafsir,
               itemBuilder: (context) {
                 final options = [
@@ -485,9 +485,9 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
               ),
             Expanded(
               child: _isLoadingInitial
-                  ? const Center(child: CircularProgressIndicator(color: AppColors.accentGold))
+                  ? Center(child: CircularProgressIndicator(color: AppColors.accentGold))
                   : _tafsirList.isEmpty
-                      ? Center(child: Text(l10n.noLocalData, style: const TextStyle(fontSize: 16, color: AppColors.textPrimary)))
+                      ? Center(child: Text(l10n.noLocalData, style: TextStyle(fontSize: 16, color: AppColors.textPrimary)))
                       : BlocBuilder<AudioBloc, AudioState>(
                           builder: (context, audioState) {
                       int? playingVerseId;
@@ -505,8 +505,8 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                         itemBuilder: (context, index) {
                           if (index == _tafsirList.length) {
                             return _isLoadingMore
-                                ? const Padding(
-                                    padding: EdgeInsets.all(16),
+                                ? Padding(
+                                    padding: const EdgeInsets.all(16),
                                     child: Center(child: CircularProgressIndicator(color: AppColors.accentGold)),
                                   )
                                 : const SizedBox.shrink();
@@ -525,7 +525,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                               duration: const Duration(milliseconds: 300),
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: isActive ? AppColors.accentGold.withValues(alpha: 0.08) : Colors.white,
+                                color: isActive ? AppColors.accentGold.withValues(alpha: 0.08) : AppColors.cardCream,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: isActive ? AppColors.accentGold : AppColors.borderLight,
@@ -533,7 +533,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.04),
+                                    color: AppColors.textPrimary.withValues(alpha: 0.04),
                                     blurRadius: 8,
                                     offset: const Offset(0, 3),
                                   )
@@ -557,7 +557,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                           children: [
                                             Text(
                                               Localizations.localeOf(context).languageCode == 'en' ? QuranMetadata.getSurahNameEnglish(item.surah) : QuranMetadata.getSurahNameWithTashkeel(item.surah),
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 color: AppColors.accentGold,
                                                 fontSize: 16,
@@ -566,7 +566,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                             const SizedBox(width: 6),
                                             Text(
                                               Localizations.localeOf(context).languageCode == 'en' ? '(${item.ayah})' : '﴿${item.ayah.toArabicDigits}﴾',
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 color: AppColors.accentGold,
                                                 fontSize: 14,
@@ -626,7 +626,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                     textDirection: TextDirection.rtl,
                                   ),
                                   const SizedBox(height: 12),
-                                  const Divider(color: AppColors.divider),
+                                  Divider(color: AppColors.divider),
                                   const SizedBox(height: 10),
                                   // Tafsir text
                                   Text(

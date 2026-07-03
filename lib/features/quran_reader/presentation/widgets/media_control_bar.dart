@@ -44,7 +44,7 @@ class _MediaControlBarState extends State<MediaControlBar> {
           message,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.white,
+            color: AppColors.cardCream,
             fontWeight: FontWeight.bold,
             fontFamily: 'Cairo',
             fontSize: 13.wSp,
@@ -114,7 +114,7 @@ class _MediaControlBarState extends State<MediaControlBar> {
         border: Border.all(color: AppColors.bronzeIcon, width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: AppColors.textPrimary.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -142,7 +142,7 @@ class _MediaControlBarState extends State<MediaControlBar> {
           border: Border.all(color: AppColors.bronzeIcon, width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: AppColors.textPrimary.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -248,7 +248,7 @@ class _MediaControlBarState extends State<MediaControlBar> {
       children: [
         PopupMenuButton<int>(
           splashRadius: 0,
-          color: Colors.white,
+          color: AppColors.cardCream,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.wR)),
           offset: Offset(0, -180.wH),
           onSelected: _handleSleepTimerSelection,
@@ -288,7 +288,7 @@ class _MediaControlBarState extends State<MediaControlBar> {
           child: Container(
             padding: EdgeInsets.all(4.wR),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: AppColors.textPrimary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.close, color: AppColors.inkBrown, size: 24.wSp),
@@ -363,7 +363,7 @@ class _MediaControlBarState extends State<MediaControlBar> {
       child: Container(
         width: size,
         height: size,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.bronzeDark,
           shape: BoxShape.circle,
         ),
@@ -376,7 +376,7 @@ class _MediaControlBarState extends State<MediaControlBar> {
                 )
               : Icon(
                   isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                  color: Colors.white,
+                  color: AppColors.cardCream,
                   size: iconSize,
                 ),
         ),

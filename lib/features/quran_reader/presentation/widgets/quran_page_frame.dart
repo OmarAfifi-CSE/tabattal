@@ -7,6 +7,10 @@ import 'hizb_data.dart';
 import '../../../../core/utils/arabic_text_utils.dart';
 import 'drawer/quran_index_view.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../features/settings/presentation/bloc/settings_bloc.dart';
+import '../../../../core/theme/mushaf_theme.dart';
+
 class QuranPageFrame extends StatelessWidget {
   final Widget child;
   final int pageNumber;
@@ -63,15 +67,15 @@ class QuranPageFrame extends StatelessWidget {
     return rawY.clamp(minY, maxY);
   }
 
-  Widget _buildFrameInfoBox({required Widget child, EdgeInsetsGeometry? margin, EdgeInsetsGeometry? padding}) {
+  Widget _buildFrameInfoBox({required Widget child, required MushafTheme theme, EdgeInsetsGeometry? margin, EdgeInsetsGeometry? padding}) {
     return Container(
       margin: margin ?? (kIsWeb ? const EdgeInsets.symmetric(horizontal: 6) : EdgeInsets.symmetric(horizontal: 6.w)),
       padding: padding ?? (kIsWeb ? const EdgeInsets.symmetric(horizontal: 4, vertical: 4) : EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h)),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        border: Border.all(color: QuranBorderPainter.gold.withValues(alpha: 0.6), width: 1.0),
+        border: Border.all(color: theme.goldColor.withValues(alpha: 0.6), width: 1.0),
         borderRadius: BorderRadius.circular(kIsWeb ? 12 : 12.r),
-        color: QuranBorderPainter.background,
+        color: theme.backgroundColor,
       ),
       child: child,
     );
@@ -81,10 +85,12 @@ class QuranPageFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     final hizbMarkers = HizbData.pageHizbs[pageNumber];
     final isLeftPage = pageNumber % 2 == 0;
+    
+    final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
 
-    const TextStyle headerStyle = TextStyle(
+    final TextStyle headerStyle = TextStyle(
       fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
-      color: QuranBorderPainter.innerColor,
+      color: mushafTheme.textColor,
       fontWeight: FontWeight.bold,
     );
 
@@ -118,6 +124,9 @@ class QuranPageFrame extends StatelessWidget {
                               .map((m) => calculateHizbMarkerYPosition(m['line'] as int, pageHeight))
                               .toList()
                           : [],
+                      goldColor: mushafTheme.goldColor,
+                      innerColor: mushafTheme.innerBorderColor,
+                      backgroundColor: mushafTheme.backgroundColor,
                     ),
                     size: Size.infinite,
                   ),
@@ -144,6 +153,7 @@ class QuranPageFrame extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuranIndexView(initialIndex: 1))),
                       child: _buildFrameInfoBox(
+                        theme: mushafTheme,
                         child: Text(
                           juzName,
                           style: headerStyle.copyWith(fontSize: kIsWeb ? 12 : 10.sp),
@@ -166,6 +176,7 @@ class QuranPageFrame extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuranIndexView(initialIndex: 0))),
                       child: _buildFrameInfoBox(
+                        theme: mushafTheme,
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
@@ -189,8 +200,9 @@ class QuranPageFrame extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () => Scaffold.of(context).openDrawer(),
                       child: _buildFrameInfoBox(
+                        theme: mushafTheme,
                         margin: kIsWeb ? const EdgeInsets.symmetric(horizontal: 6) : EdgeInsets.symmetric(horizontal: 6.w),
-                        child: Icon(Icons.segment_rounded, color: QuranBorderPainter.gold, size: kIsWeb ? 24 : 24.sp),
+                        child: Icon(Icons.segment_rounded, color: mushafTheme.goldColor, size: kIsWeb ? 24 : 24.sp),
                       ),
                     ),
                   ),
@@ -204,13 +216,14 @@ class QuranPageFrame extends StatelessWidget {
                   child: FractionalTranslation(
                     translation: const Offset(0.0, 0.5),
                     child: _buildFrameInfoBox(
+                      theme: mushafTheme,
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
                           pageNumber.toArabicDigits,
                           style: TextStyle(
                             fontFamily: 'Amiri',
-                            color: QuranBorderPainter.innerColor,
+                            color: mushafTheme.textColor,
                             fontSize: kIsWeb ? 15 : 15.sp,
                             fontWeight: FontWeight.w900,
                             height: 1.1,
@@ -244,7 +257,7 @@ class QuranPageFrame extends StatelessWidget {
                                 style: TextStyle(
                                   fontFamily: 'QCF_BSML',
                                   fontSize: kIsWeb ? 55 : 65.sp,
-                                  color: QuranBorderPainter.gold,
+                                  color: mushafTheme.goldColor,
                                   height: 1.0,
                                 ),
                               ),
@@ -262,7 +275,7 @@ class QuranPageFrame extends StatelessWidget {
                                         fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
                                         fontSize: kIsWeb ? 8 : 6.sp,
                                         height: 1.2,
-                                        color: QuranBorderPainter.innerColor,
+                                        color: mushafTheme.textColor,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),

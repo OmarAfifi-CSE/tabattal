@@ -304,7 +304,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                     splashRadius: 0,
                                     initialValue: displayResourceId,
                                     position: PopupMenuPosition.under,
-                                    color: Colors.white,
+                                    color: AppColors.cardCream,
                                     elevation: 3,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(kIsWeb ? 12 : 12.r),
@@ -423,7 +423,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                       if (currentState is QuranOverlayLoading)
                         Center(child: Padding(
                           padding: EdgeInsets.all(kIsWeb ? 32.0 : 32.0.r),
-                          child: const CircularProgressIndicator(color: AppColors.accentGold),
+                          child: CircularProgressIndicator(color: AppColors.accentGold),
                         ))
                       else if (currentState is TafsirDownloading)
                         Center(
@@ -544,7 +544,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                           SizedBox(
                                             width: kIsWeb ? 20 : 20.sp,
                                             height: kIsWeb ? 20 : 20.sp,
-                                            child: const CircularProgressIndicator(
+                                            child: CircularProgressIndicator(
                                               strokeWidth: 2,
                                               color: AppColors.accentGold,
                                             ),
@@ -683,7 +683,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                   borderRadius: BorderRadius.circular(kIsWeb ? 16 : 16.r),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
+                      color: AppColors.textPrimary.withValues(alpha: 0.15),
                       blurRadius: 20,
                       offset: Offset(0, 8.h),
                     ),
@@ -702,7 +702,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                         context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey));
                         _close(keepHighlight: true);
                       }, closeMenu: false),
-                      const Divider(height: 1, thickness: 1, color: AppColors.divider),
+                      Divider(height: 1, thickness: 1, color: AppColors.divider),
                       _buildMenuItem(Icons.g_translate_outlined, l10n.menuTranslation, () {
                         _showOverlayContent(context, l10n.menuTranslation, context.read<QuranBloc>().state, () {
                           context.read<QuranBloc>().add(FetchTranslation(widget.verse.verseKey));
@@ -710,7 +710,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                         context.read<QuranBloc>().add(FetchTranslation(widget.verse.verseKey));
                         _close(keepHighlight: true);
                       }, closeMenu: false),
-                      const Divider(height: 1, thickness: 1, color: AppColors.divider),
+                      Divider(height: 1, thickness: 1, color: AppColors.divider),
                       BlocBuilder<AudioBloc, AudioState>(
                         builder: (context, audioState) {
                           final isAudioActive = audioState is! AudioIdle && audioState is! AudioError;
@@ -727,7 +727,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                           );
                         },
                       ),
-                      const Divider(height: 1, thickness: 1, color: AppColors.divider),
+                      Divider(height: 1, thickness: 1, color: AppColors.divider),
                       BlocBuilder<BookmarkBloc, BookmarkState>(
                         builder: (context, state) {
                           final isBookmarked = state.isBookmarked(widget.verse.verseKey);

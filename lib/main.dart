@@ -19,6 +19,8 @@ import 'core/theme/app_theme.dart';
 import 'core/network/audio_download_manager.dart';
 import 'core/services/audio_preferences_service.dart';
 import 'core/bloc/locale/locale_cubit.dart';
+import 'features/settings/presentation/bloc/settings_bloc.dart';
+import 'features/settings/presentation/bloc/settings_state.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,9 +61,14 @@ class TabattalApp extends StatelessWidget {
           BlocProvider<LocaleCubit>(
             create: (_) => LocaleCubit(container.audioPrefs),
           ),
+          BlocProvider<SettingsBloc>(
+            create: (_) => SettingsBloc(prefs: container.sharedPreferences),
+          ),
         ],
-        child: BlocBuilder<LocaleCubit, Locale>(
-          builder: (context, locale) {
+        child: BlocBuilder<SettingsBloc, SettingsState>(
+          builder: (context, settingsState) {
+            return BlocBuilder<LocaleCubit, Locale>(
+              builder: (context, locale) {
             return ResponsiveLayout(
               // Web: calibrated to 800×900 so .sp/.w/.h render at reasonable scale
               // for a typical browser viewport (900–1400px wide).
@@ -81,6 +88,8 @@ class TabattalApp extends StatelessWidget {
                     GlobalCupertinoLocalizations.delegate,
                   ],
                   theme: appTheme(),
+                  darkTheme: appThemeDark(),
+                  themeMode: settingsState.themeMode,
                   builder: appDirectionalityBuilder,
                   home: const QuranWebPageViewScreen(),
                 ),
@@ -102,13 +111,17 @@ class TabattalApp extends StatelessWidget {
                     GlobalCupertinoLocalizations.delegate,
                   ],
                   theme: appTheme(),
+                  darkTheme: appThemeDark(),
+                  themeMode: settingsState.themeMode,
                   builder: appDirectionalityBuilder,
                   home: const QuranPageViewScreen(),
                 ),
               ),
             );
           },
-        ),
+        );
+      },
+    ),
       ),
     );
   }

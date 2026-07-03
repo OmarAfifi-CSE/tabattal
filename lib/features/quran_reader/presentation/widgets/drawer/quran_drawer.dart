@@ -13,6 +13,10 @@ import 'quran_full_tafsir_view.dart';
 import 'quran_translation_view.dart';
 import 'quran_audio_manager_view.dart';
 import 'quran_bookmarks_view.dart';
+import '../../../../settings/presentation/bloc/settings_bloc.dart';
+import '../../../../settings/presentation/bloc/settings_event.dart';
+import '../../../../settings/presentation/bloc/settings_state.dart';
+import '../../../../../core/theme/mushaf_theme.dart';
 
 class QuranDrawer extends StatelessWidget {
   final int currentPage;
@@ -183,6 +187,17 @@ class QuranDrawer extends StatelessWidget {
         _divider(),
         _buildDrawerItem(
           context,
+          icon: Icons.palette_rounded,
+          title: 'المظهر', // Appearance
+          subtitle: 'تخصيص ألوان المصحف والوضع الليلي', // Customize Mushaf colors and dark mode
+          onTap: () {
+            Navigator.pop(context);
+            _showThemePicker(context);
+          },
+        ),
+        _divider(),
+        _buildDrawerItem(
+          context,
           icon: Icons.language_rounded,
           title: l10n.drawerLanguage,
           subtitle: l10n.drawerLanguageSubtitle,
@@ -203,7 +218,7 @@ class QuranDrawer extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 8.h),
       decoration: BoxDecoration(
         color: AppColors.accentGold.withValues(alpha: 0.08),
-        border: const Border(
+        border: Border(
           bottom: BorderSide(color: AppColors.divider, width: 1),
         ),
       ),
@@ -224,6 +239,19 @@ class QuranDrawer extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showThemePicker(BuildContext context) {
+    final bloc = context.read<SettingsBloc>();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      builder: (ctx) => BlocProvider.value(
+        value: bloc,
+        child: const _ThemePickerSheet(),
       ),
     );
   }
@@ -256,7 +284,7 @@ class QuranDrawer extends StatelessWidget {
           child: Text(
             '${state.bookmarkedVerseKeys.length}',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.cardCream,
               fontSize: kIsWeb ? 12 : 12.sp,
               fontWeight: FontWeight.bold,
             ),
@@ -444,6 +472,166 @@ class _LanguageOption extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ─── Theme Picker Sheet ───────────────────────────────────────────────────────
+
+class _ThemePickerSheet extends StatelessWidget {
+  const _ThemePickerSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<SettingsBloc, SettingsState>(
+      builder: (context, state) {
+        final isDark = state.themeMode == ThemeMode.dark;
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.cardCream,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(kIsWeb ? 24 : 24.r)),
+          ),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(kIsWeb ? 24 : 24.w, kIsWeb ? 16 : 16.h, kIsWeb ? 24 : 24.w, kIsWeb ? 32 : 32.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: kIsWeb ? 40 : 40.w,
+                  height: kIsWeb ? 4 : 4.h,
+                  margin: EdgeInsets.only(bottom: kIsWeb ? 20 : 20.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentGold,
+                    borderRadius: BorderRadius.circular(kIsWeb ? 2 : 2.r),
+                  ),
+                ),
+              ),
+              Text(
+                'المظهر',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: kIsWeb ? 18 : 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              SizedBox(height: kIsWeb ? 24 : 24.h),
+              
+              // Dark Mode Toggle
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: kIsWeb ? 16 : 16.w, vertical: kIsWeb ? 8 : 8.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceCream,
+                    borderRadius: BorderRadius.circular(kIsWeb ? 14 : 14.r),
+                    border: Border.all(color: AppColors.borderLight),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded, color: AppColors.accentGold),
+                          SizedBox(width: kIsWeb ? 12 : 12.w),
+                          Text(
+                            'الوضع الليلي',
+                            style: TextStyle(
+                              fontSize: kIsWeb ? 16 : 16.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Switch(
+                        value: isDark,
+                        activeTrackColor: AppColors.accentGold,
+                        onChanged: (val) {
+                          context.read<SettingsBloc>().add(ToggleThemeMode(val ? ThemeMode.dark : ThemeMode.light));
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              SizedBox(height: kIsWeb ? 24 : 24.h),
+              
+              // Mushaf Colors List
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: Text(
+                  'لون المصحف',
+                  style: TextStyle(
+                    fontSize: kIsWeb ? 16 : 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              SizedBox(height: kIsWeb ? 12 : 12.h),
+              
+              // Grid of colors
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: Wrap(
+                  spacing: kIsWeb ? 12 : 12.w,
+                  runSpacing: kIsWeb ? 12 : 12.h,
+                  children: MushafTheme.values.map((theme) {
+                    final isSelected = state.mushafTheme.id == theme.id;
+                    return GestureDetector(
+                      onTap: () {
+                        context.read<SettingsBloc>().add(ChangeMushafTheme(theme.id));
+                      },
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: kIsWeb ? 56 : 56.w,
+                            height: kIsWeb ? 56 : 56.w,
+                            decoration: BoxDecoration(
+                              color: theme.backgroundColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelected ? theme.goldColor : AppColors.borderLight,
+                                width: isSelected ? 3 : 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.textPrimary.withValues(alpha: 0.05),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: isSelected
+                                ? Icon(Icons.check_rounded, color: theme.goldColor)
+                                : null,
+                          ),
+                          SizedBox(height: kIsWeb ? 8 : 8.h),
+                          Text(
+                            theme.name,
+                            style: TextStyle(
+                              fontSize: kIsWeb ? 12 : 12.sp,
+                              color: isSelected ? theme.goldColor : AppColors.textPrimary,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        );
+      },
     );
   }
 }

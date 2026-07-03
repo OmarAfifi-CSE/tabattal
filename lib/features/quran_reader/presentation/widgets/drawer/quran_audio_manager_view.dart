@@ -109,11 +109,11 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
         centerTitle: true,
         title: Text(
           AppLocalizations.of(context)!.audioManagerTitle,
-          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
+          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
         ),
         // RTL: leading icon is on the right side naturally
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -125,12 +125,12 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.cardCream,
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.borderLight),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
+                  color: AppColors.textPrimary.withValues(alpha: 0.04),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -156,7 +156,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                   },
                 ),
                 const SizedBox(height: 10),
-                const Divider(height: 1, color: AppColors.divider),
+                Divider(height: 1, color: AppColors.divider),
                 const SizedBox(height: 10),
                 // Reciter row
                 _buildSelectorRow(
@@ -193,8 +193,8 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
 
           // ─── Surah List ───────────────────────────────────────────────
           if (_isLoadingStatus)
-            const Padding(
-              padding: EdgeInsets.all(32),
+            Padding(
+              padding: const EdgeInsets.all(32),
               child: Center(child: CircularProgressIndicator(color: AppColors.accentGold)),
             )
           else
@@ -228,7 +228,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
         // Label
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
@@ -254,7 +254,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardCream,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.borderLight),
       ),
@@ -276,12 +276,12 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
               ),
               child: Text(
                 '$surah',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.accentGold),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.accentGold),
               ),
             ),
             title: Text(
               'سورة $surahName',
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             trailing: isDownloaded
                 ? const Icon(Icons.check_circle_rounded, color: Colors.green, size: 28)
@@ -335,7 +335,7 @@ class _InlineDropdown extends StatelessWidget {
       splashRadius: 0,
       initialValue: value,
       position: PopupMenuPosition.under,
-      color: Colors.white,
+      color: AppColors.cardCream,
       elevation: 3,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -382,14 +382,14 @@ class _InlineDropdown extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.accentGold, size: 22),
+            Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.accentGold, size: 22),
             Expanded(
               child: Text(
                 ReciterLocalization.localize(context, value),
                 textAlign: Localizations.localeOf(context).languageCode == 'en' ? TextAlign.left : TextAlign.right,
                 textDirection: Localizations.localeOf(context).languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,

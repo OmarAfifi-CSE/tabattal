@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
 import 'quran_metadata.dart';
 import '../../../../core/utils/arabic_text_utils.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../features/settings/presentation/bloc/settings_bloc.dart';
 
 class SurahHeaderWidget extends StatelessWidget {
   final int surahNumber;
@@ -143,6 +144,8 @@ class SurahHeaderWidget extends StatelessWidget {
     // 412 is a standard mobile screen width used for calibration.
     const double canvasWidth = 412.0;
 
+    final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
+
     return Container(
       width: canvasWidth,
       margin: const EdgeInsets.symmetric(vertical: 12.0),
@@ -161,14 +164,14 @@ class SurahHeaderWidget extends StatelessWidget {
                 child: Transform.scale(
                   scaleX: 1.0, 
                   scaleY: 1.8,
-                  child: const FittedBox(
+                  child: FittedBox(
                     fit: BoxFit.fitWidth,
                     child: Text(
                       '\u00F2',
                       style: TextStyle(
                         fontFamily: 'QCF_BSML',
                         fontSize: 60.0,
-                        color: AppColors.accentGold,
+                        color: mushafTheme.goldColor,
                         height: 1.0,
                       ),
                     ),
@@ -181,10 +184,10 @@ class SurahHeaderWidget extends StatelessWidget {
                 offset: const Offset(-10.0, 11.0), // Calibrated center tweak for this ornament
                 child: Text(
                   '${_getSurahNameGlyph(surahNumber)}${String.fromCharCode(0xE903)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'QCF_Surah',
                     fontSize: 46.0,
-                    color: AppColors.accentGold,
+                    color: mushafTheme.goldColor,
                     height: 1.0,
                   ),
                 ),
@@ -197,23 +200,23 @@ class SurahHeaderWidget extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
+                    Text(
                       'آياتها',
                       style: TextStyle(
                         fontFamily: 'Amiri',
                         fontWeight: FontWeight.bold,
                         fontSize: 14.0,
-                        color: AppColors.accentGold,
+                        color: mushafTheme.goldColor,
                         height: 1.0,
                       ),
                     ),
                     Text(
                       versesCount.toArabicDigits,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Amiri',
                         fontWeight: FontWeight.bold,
                         fontSize: 12.0,
-                        color: AppColors.accentGold,
+                        color: mushafTheme.goldColor,
                         height: 1.0,
                       ),
                     ),
@@ -228,11 +231,11 @@ class SurahHeaderWidget extends StatelessWidget {
                 child: Text(
                   revelationPlace,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Amiri',
                     fontWeight: FontWeight.bold,
                     fontSize: 14.0,
-                    color: AppColors.accentGold,
+                    color: mushafTheme.goldColor,
                     height: 1.0,
                   ),
                 ),

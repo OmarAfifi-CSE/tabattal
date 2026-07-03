@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../core/theme/app_colors.dart';
+
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/arabic_text_utils.dart';
 import '../../data/models/verse_model.dart';
@@ -20,6 +20,8 @@ import 'verse_action_menu.dart';
 import 'quran_metadata.dart';
 import 'surah_header_widget.dart';
 import '../../../../core/services/font_service.dart';
+import '../../../../features/settings/presentation/bloc/settings_bloc.dart';
+import '../../../../core/theme/mushaf_theme.dart';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -246,7 +248,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
     return count;
   }
 
-  Widget _buildEmptyLineWidget(int lineNumber, List<LineData> lines) {
+  Widget _buildEmptyLineWidget(int lineNumber, List<LineData> lines, MushafTheme mushafTheme) {
     // ── Case A: A new Surah starts later on this page ──────────────────────
     final nextSurah = _findNextSurahStartOnPage(lineNumber, lines);
     if (nextSurah != null) {
@@ -255,13 +257,13 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
         padding: EdgeInsets.symmetric(vertical: 2.h),
         child: SurahHeaderWidget(surahNumber: surahId),
       );
-      const basmala = Center(
+      final basmala = Center(
         child: Text(
           '1 2 3',
           style: TextStyle(
             fontFamily: 'QCF_BSML',
             fontSize: 26,
-            color: AppColors.inkBrown,
+            color: mushafTheme.textColor,
             height: 1.0,
           ),
         ),
@@ -304,13 +306,13 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
           padding: EdgeInsets.symmetric(vertical: 2.h),
           child: SurahHeaderWidget(surahNumber: upcomingSurahId),
         );
-        const basmala = Center(
+        final basmala = Center(
           child: Text(
             '1 2 3',
             style: TextStyle(
               fontFamily: 'QCF_BSML',
               fontSize: 26,
-              color: AppColors.inkBrown,
+              color: mushafTheme.textColor,
               height: 1.0,
             ),
           ),
@@ -353,17 +355,19 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
       height: kIsWeb ? 1.2 : 1.5,
     );
 
+    final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
+
     if (isBookmarkHighlighted) {
       return AnimatedBuilder(
         animation: _bookmarkPulseAnimation,
         builder: (context, _) => GestureDetector(
           onTapDown: handleTap,
           child: Container(
-            color: AppColors.accentGold.withValues(alpha: _bookmarkPulseAnimation.value),
+            color: mushafTheme.goldColor.withValues(alpha: _bookmarkPulseAnimation.value),
             child: Text(
               displayText,
               style: wordTextStyle.copyWith(
-                color: AppColors.accentGoldDark,
+                color: mushafTheme.goldColor,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -373,14 +377,14 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
     }
 
     final backgroundColor = (isAudioHighlighted || isMenuHighlighted)
-        ? AppColors.accentGold.withValues(alpha: 0.2)
+        ? mushafTheme.goldColor.withValues(alpha: 0.2)
         : Colors.transparent;
 
-    Color textColor = AppColors.textPrimary;
+    Color textColor = mushafTheme.textColor;
     if (isAudioHighlighted) {
-      textColor = AppColors.accentGold;
+      textColor = mushafTheme.goldColor;
     } else if (isPermanentlyBookmarked && word.charTypeName == 'end') {
-      textColor = AppColors.accentGold;
+      textColor = mushafTheme.goldColor;
     }
 
     return GestureDetector(
@@ -422,15 +426,17 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
           final isBookmarkHighlighted = _bookmarkHighlightVerseId == verseId;
           final isBookmarked = bookmarkState.isBookmarked(word.verseKey);
 
+          final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
+
           final backgroundColor = (isAudioHighlighted || isMenuHighlighted)
-              ? AppColors.accentGold.withValues(alpha: 0.2)
+              ? mushafTheme.goldColor.withValues(alpha: 0.2)
               : Colors.transparent;
 
-          Color textColor = AppColors.textPrimary;
+          Color textColor = mushafTheme.textColor;
           if (isAudioHighlighted) {
-            textColor = AppColors.accentGold;
+            textColor = mushafTheme.goldColor;
           } else if (isBookmarked) {
-            textColor = AppColors.accentGold;
+            textColor = mushafTheme.goldColor;
           }
 
           Widget basmala = AnimatedContainer(
@@ -451,16 +457,17 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
           );
 
           if (isBookmarkHighlighted) {
+            final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
             basmala = AnimatedBuilder(
               animation: _bookmarkPulseAnimation,
               builder: (context, _) => Container(
-                color: AppColors.accentGold.withValues(alpha: _bookmarkPulseAnimation.value),
-                child: const Text(
+                color: mushafTheme.goldColor.withValues(alpha: _bookmarkPulseAnimation.value),
+                child: Text(
                   '1 2 3',
                   style: TextStyle(
                     fontFamily: 'QCF_BSML',
                     fontSize: 26,
-                    color: AppColors.accentGoldDark,
+                    color: mushafTheme.goldColor,
                     fontWeight: FontWeight.bold,
                     height: 1.0,
                   ),
@@ -539,6 +546,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
         builder: (context, bookmarkState) {
           return BlocBuilder<AudioBloc, AudioState>(
             builder: (context, audioState) {
+          final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
           int? playingVerseId;
           if (audioState is AudioPlaying) playingVerseId = audioState.currentVerseId;
           if (audioState is AudioPaused) playingVerseId = audioState.currentVerseId;
@@ -576,7 +584,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                         );
 
                         if (lineData.words.isEmpty) {
-                          return _buildEmptyLineWidget(lineNumber, lines);
+                          return _buildEmptyLineWidget(lineNumber, lines, mushafTheme);
                         }
 
                         return _buildWordRow(
@@ -620,12 +628,13 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
         buildWhen: (_, current) =>
             current is QuranLoading || current is QuranLoaded || current is QuranError || current is QuranInitial,
         builder: (context, state) {
+          final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
           if (state is QuranLoading || !_isFontLoaded) {
             return QuranPageFrame(
               pageNumber: widget.pageNumber,
               surahName: '',
               juzName: '',
-              child: const Center(child: CircularProgressIndicator(color: AppColors.accentGold)),
+              child: Center(child: CircularProgressIndicator(color: mushafTheme.goldColor)),
             );
           }
           if (state is QuranError) {

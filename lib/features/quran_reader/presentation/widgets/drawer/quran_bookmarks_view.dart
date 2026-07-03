@@ -150,11 +150,11 @@ class _BookmarkCardState extends State<_BookmarkCard> {
     final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardCream,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.2)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(color: AppColors.textPrimary.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       child: ListTile(
@@ -190,7 +190,7 @@ class _BookmarkCardState extends State<_BookmarkCard> {
               SizedBox(
                 width: 20.r,
                 height: 20.r,
-                child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.accentGold),
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accentGold),
               )
             else
               Icon(

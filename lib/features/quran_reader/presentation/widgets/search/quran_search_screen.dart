@@ -186,7 +186,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
     
     spans.add(TextSpan(
       text: uthmaniWords.sublist(startWordIdx, (endWordIdx + 1).clamp(0, uthmaniWords.length)).join(' '),
-      style: const TextStyle(backgroundColor: AppColors.accentGold, color: Colors.white),
+      style: TextStyle(backgroundColor: AppColors.accentGold, color: Colors.white),
     ));
     
     if (endWordIdx < uthmaniWords.length - 1) {
@@ -240,7 +240,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.borderMedium, width: 1),
               ),
-              child: const Icon(Icons.arrow_forward_rounded, color: AppColors.textPrimary, size: 24),
+              child: Icon(Icons.arrow_forward_rounded, color: AppColors.textPrimary, size: 24),
             ),
           ),
           const SizedBox(width: 12),
@@ -248,7 +248,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
             child: Container(
               height: 50,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.cardCream,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.borderMedium, width: 1),
               ),
@@ -256,12 +256,12 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                 textDirection: TextDirection.rtl,
                 children: [
                   const SizedBox(width: 12),
-                  const Icon(Icons.search_rounded, color: AppColors.textPrimary, size: 24),
+                  Icon(Icons.search_rounded, color: AppColors.textPrimary, size: 24),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
                       controller: _searchController,
-                      style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
+                      style: TextStyle(fontSize: 16, color: AppColors.textPrimary),
                       onChanged: _onSearchChanged,
                       textDirection: TextDirection.rtl,
                       textAlign: TextAlign.right,
@@ -269,7 +269,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                       decoration: InputDecoration(
                         
                         hintText: l10n.searchHint,
-                        hintStyle: const TextStyle(color: Colors.black38, fontSize: 16),
+                        hintStyle: TextStyle(color: AppColors.textPrimary.withValues(alpha: 0.38), fontSize: 16),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.only(bottom: 8),
                       ),
@@ -324,7 +324,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
     }
 
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: CircularProgressIndicator(color: AppColors.accentGold),
       );
     }
@@ -352,7 +352,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: _results.length,
-      separatorBuilder: (_, _) => const Divider(color: AppColors.divider, height: 1),
+      separatorBuilder: (_, _) => Divider(color: AppColors.divider, height: 1),
       itemBuilder: (context, index) {
         final verse = _results[index];
         return GestureDetector(
@@ -374,7 +374,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                     ),
                     Text(
                       l10n.surahAndAyah(QuranMetadata.getSurahName(verse.surah), verse.ayah.toArabicDigits),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: AppColors.accentGold,
@@ -436,9 +436,9 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
           onTap: () => _navigateToPage(surahPage),
         ));
       } else if (!_surahMapLoaded) {
-        cards.add(const Center(
+        cards.add(Center(
           child: Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8.0),
             child: CircularProgressIndicator(color: AppColors.accentGold, strokeWidth: 2),
           ),
         ));
@@ -468,7 +468,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      color: Colors.white,
+      color: AppColors.cardCream,
       elevation: 0,
       child: ListTile(
         onTap: onTap,
@@ -486,7 +486,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
           title,
           textAlign: TextAlign.right,
           textDirection: TextDirection.rtl,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,

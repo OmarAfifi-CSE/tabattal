@@ -80,7 +80,7 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.accentGold,
-          unselectedLabelColor: Colors.black54,
+          unselectedLabelColor: AppColors.textPrimary.withValues(alpha: 0.54),
           indicatorColor: AppColors.accentGold,
           labelStyle: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
           tabs: [Tab(text: l10n.indexSurahsTab), Tab(text: l10n.indexJuzsTab)],
@@ -103,7 +103,7 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
   }
 
   Widget _buildBody(AppLocalizations l10n) {
-    if (_isLoading) return const Center(child: CircularProgressIndicator(color: AppColors.accentGold));
+    if (_isLoading) return Center(child: CircularProgressIndicator(color: AppColors.accentGold));
     if (_hasError) {
       return Center(
         child: Column(
@@ -131,7 +131,7 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
       child: ListView.separated(
         padding: EdgeInsets.all(16.r),
         itemCount: _surahIndex.length,
-        separatorBuilder: (context, index) => const Divider(color: AppColors.divider, height: 1),
+        separatorBuilder: (context, index) => Divider(color: AppColors.divider, height: 1),
         itemBuilder: (context, index) {
           final surahData = _surahIndex[index];
           final surahNum = surahData['surah'] as int;
@@ -162,7 +162,7 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
       child: ListView.separated(
         padding: EdgeInsets.all(16.r),
         itemCount: 30,
-        separatorBuilder: (context, index) => const Divider(color: AppColors.divider, height: 1),
+        separatorBuilder: (context, index) => Divider(color: AppColors.divider, height: 1),
         itemBuilder: (context, index) {
           final juzNum = index + 1;
           final startPage = _juzStartPages[index];

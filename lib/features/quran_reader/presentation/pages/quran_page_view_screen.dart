@@ -12,7 +12,8 @@ import '../../data/models/search_verse_model.dart';
 import '../../../../core/utils/verse_ref.dart';
 import '../../../../core/constants/quran_constants.dart';
 import '../../../../core/theme/app_colors.dart';
-
+import '../../../../features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:flutter/services.dart';
 class QuranPageViewScreen extends StatefulWidget {
   const QuranPageViewScreen({super.key});
 
@@ -102,8 +103,22 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    // Watch SettingsBloc so this screen rebuilds instantly on theme change
+    final settingsState = context.watch<SettingsBloc>().state;
+    final isDarkMode = settingsState.effectiveMushafTheme.id == 'dark';
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        statusBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
+        systemNavigationBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
+        systemNavigationBarContrastEnforced: false,
+        systemStatusBarContrastEnforced: false,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
       drawer: QuranDrawer(
         currentPage: _currentPage,
         onNavigateToPage: (page, {String? verseKey}) => _jumpToPage(page, verseKey: verseKey),
@@ -162,6 +177,7 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
                 },
               ),
             ],
+          ),
           ),
         ),
       ),
