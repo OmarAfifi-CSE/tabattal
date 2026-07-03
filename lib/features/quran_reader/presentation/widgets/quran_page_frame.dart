@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'quran_border_painter.dart';
 import 'hizb_data.dart';
 import '../../../../core/utils/arabic_text_utils.dart';
+import 'drawer/quran_index_view.dart';
 
 class QuranPageFrame extends StatelessWidget {
   final Widget child;
@@ -140,13 +141,16 @@ class QuranPageFrame extends StatelessWidget {
                   width: pageWidth * 0.35,
                   child: FractionalTranslation(
                     translation: const Offset(0.0, -0.5),
-                    child: _buildFrameInfoBox(
-                      child: Text(
-                        juzName,
-                        style: headerStyle.copyWith(fontSize: kIsWeb ? 12 : 10.sp),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    child: GestureDetector(
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuranIndexView(initialIndex: 1))),
+                      child: _buildFrameInfoBox(
+                        child: Text(
+                          juzName,
+                          style: headerStyle.copyWith(fontSize: kIsWeb ? 12 : 10.sp),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                   ),
@@ -159,14 +163,17 @@ class QuranPageFrame extends StatelessWidget {
                   width: pageWidth * 0.33,
                   child: FractionalTranslation(
                     translation: const Offset(0.0, -0.5),
-                    child: _buildFrameInfoBox(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          surahName,
-                          style: headerStyle.copyWith(fontSize: kIsWeb ? 12 : 10.sp),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
+                    child: GestureDetector(
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuranIndexView(initialIndex: 0))),
+                      child: _buildFrameInfoBox(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            surahName,
+                            style: headerStyle.copyWith(fontSize: kIsWeb ? 12 : 10.sp),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                          ),
                         ),
                       ),
                     ),
@@ -179,11 +186,10 @@ class QuranPageFrame extends StatelessWidget {
                   right: pageWidth * 0.07,
                   child: FractionalTranslation(
                     translation: const Offset(0.0, -0.5),
-                    child: _buildFrameInfoBox(
-                      margin: kIsWeb ? const EdgeInsets.symmetric(horizontal: 6) : EdgeInsets.symmetric(horizontal: 6.w),
-                      child: InkWell(
-                        onTap: () => Scaffold.of(context).openDrawer(),
-                        borderRadius: BorderRadius.circular(12.r),
+                    child: GestureDetector(
+                      onTap: () => Scaffold.of(context).openDrawer(),
+                      child: _buildFrameInfoBox(
+                        margin: kIsWeb ? const EdgeInsets.symmetric(horizontal: 6) : EdgeInsets.symmetric(horizontal: 6.w),
                         child: Icon(Icons.segment_rounded, color: QuranBorderPainter.gold, size: kIsWeb ? 24 : 24.sp),
                       ),
                     ),

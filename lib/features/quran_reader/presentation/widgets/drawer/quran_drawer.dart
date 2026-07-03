@@ -282,7 +282,7 @@ class QuranDrawer extends StatelessWidget {
     required VoidCallback onTap,
     Widget? badge,
   }) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: kIsWeb ? 20 : 20.w, vertical: kIsWeb ? 12 : 12.h),
@@ -412,9 +412,8 @@ class _LanguageOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(kIsWeb ? 14 : 14.r),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(horizontal: kIsWeb ? 20 : 20.w, vertical: kIsWeb ? 14 : 14.h),

@@ -231,9 +231,8 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
       child: Row(
         textDirection: TextDirection.rtl,
         children: [
-          InkWell(
+          GestureDetector(
             onTap: () => Navigator.pop(context),
-            borderRadius: BorderRadius.circular(12),
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -268,6 +267,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                       textAlign: TextAlign.right,
                       autofocus: true,
                       decoration: InputDecoration(
+                        
                         hintText: l10n.searchHint,
                         hintStyle: const TextStyle(color: Colors.black38, fontSize: 16),
                         border: InputBorder.none,
@@ -355,7 +355,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
       separatorBuilder: (_, _) => const Divider(color: AppColors.divider, height: 1),
       itemBuilder: (context, index) {
         final verse = _results[index];
-        return InkWell(
+        return GestureDetector(
           onTap: () => _navigateToPage(verse.page, verseKey: verse.verseKey),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 12.0),

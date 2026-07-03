@@ -148,7 +148,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
   }
 
   Widget _buildMenuItem(IconData icon, String text, VoidCallback onTap, {Color? iconColor, bool closeMenu = true}) {
-    return InkWell(
+    return GestureDetector(
       onTap: () {
         if (_isAnimating) return;
         onTap();
@@ -301,6 +301,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                     displayResourceId = currentState.resourceId;
                                   }
                                   return PopupMenuButton<int>(
+                                    splashRadius: 0,
                                     initialValue: displayResourceId,
                                     position: PopupMenuPosition.under,
                                     color: Colors.white,
@@ -652,7 +653,6 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
       children: [
         GestureDetector(
           onTap: _close,
-          behavior: HitTestBehavior.opaque,
           child: SizedBox(width: MediaQuery.sizeOf(context).width, height: MediaQuery.sizeOf(context).height),
         ),
         CustomSingleChildLayout(
@@ -740,10 +740,6 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                           );
                         },
                       ),
-                      const Divider(height: 1, thickness: 1, color: AppColors.divider),
-                      _buildMenuItem(Icons.share_outlined, l10n.menuShare, () {
-                        // Share logic
-                      }),
                     ],
                   ),
                 ),

@@ -230,12 +230,6 @@ abstract class AppLocalizations {
   /// **'إزالة العلامة المرجعية'**
   String get menuBookmarkRemove;
 
-  /// No description provided for @menuShare.
-  ///
-  /// In ar, this message translates to:
-  /// **'نشر'**
-  String get menuShare;
-
   /// No description provided for @retry.
   ///
   /// In ar, this message translates to:

@@ -75,9 +75,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get menuBookmarkRemove => 'إزالة العلامة المرجعية';
 
   @override
-  String get menuShare => 'نشر';
-
-  @override
   String get retry => 'إعادة المحاولة';
 
   @override

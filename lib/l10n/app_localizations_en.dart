@@ -75,9 +75,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuBookmarkRemove => 'Remove Bookmark';
 
   @override
-  String get menuShare => 'Share';
-
-  @override
   String get retry => 'Retry';
 
   @override

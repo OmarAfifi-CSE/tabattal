@@ -395,6 +395,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
           ),
           actions: [
             PopupMenuButton<int>(
+              splashRadius: 0,
               position: PopupMenuPosition.under,
               color: Colors.white,
               elevation: 3,

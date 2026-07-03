@@ -9,7 +9,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../quran_metadata.dart';
 
 class QuranIndexView extends StatefulWidget {
-  const QuranIndexView({super.key});
+  final int initialIndex;
+
+  const QuranIndexView({super.key, this.initialIndex = 0});
 
   @override
   State<QuranIndexView> createState() => _QuranIndexViewState();
@@ -34,7 +36,7 @@ class _QuranIndexViewState extends State<QuranIndexView> with SingleTickerProvid
   void initState() {
     super.initState();
     _repository = context.read<QuranRepository>();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialIndex);
     _loadSurahIndex();
   }
 

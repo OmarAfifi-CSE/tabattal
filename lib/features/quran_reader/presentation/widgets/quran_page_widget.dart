@@ -526,7 +526,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
 
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     final surahNumber = ArabicTextUtils.parseVerseKey(firstVerseKey)?.surah ?? 1;
-    final surahName = isEn ? QuranMetadata.getSurahNameEnglish(surahNumber) : QuranMetadata.getSurahNameWithTashkeel(surahNumber);
+    final surahName = isEn ? "Surah ${QuranMetadata.getSurahNameEnglish(surahNumber)}" : QuranMetadata.getSurahNameWithTashkeel(surahNumber);
     
     final juzNum = QuranMetadata.getJuzNumberByPage(widget.pageNumber);
     final juzName = isEn ? AppLocalizations.of(context)!.juzListItem(juzNum.toString()) : QuranMetadata.getJuzNameWithTashkeel(juzNum);
