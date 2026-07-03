@@ -320,11 +320,11 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       }
 
     } on PlayerException catch (_) {
-      emit(const AudioError("الملف الصوتي غير متوفر."));
+      emit(const AudioError("audioErrorFileNotFound"));
     } on PlayerInterruptedException catch (_) {
       // Interrupted by a new play request — expected
     } catch (_) {
-      emit(const AudioError("حدث خطأ أثناء تشغيل التلاوة."));
+      emit(const AudioError("audioErrorPlayback"));
     }
   }
 
@@ -391,11 +391,11 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       _audioPlayer.play();
       emit(AudioPlaying(_currentVerseIds[_currentIndex].verseId));
     } on PlayerException catch (_) {
-      emit(const AudioError("Error loading playlist."));
+      emit(const AudioError("audioErrorPlaylist"));
     } on PlayerInterruptedException catch (_) {
       // Interrupted
     } catch (_) {
-      emit(const AudioError("حدث خطأ أثناء تشغيل القائمة."));
+      emit(const AudioError("audioErrorPlaylist"));
     }
   }
 

@@ -68,7 +68,8 @@ class _MediaControlBarState extends State<MediaControlBar> {
         _timerEndTime = null;
       });
       context.read<AudioBloc>().add(const CancelSleepTimer());
-      _showTimerConfirmationSnackBar('تم إلغاء المؤقت');
+      final l10n = AppLocalizations.of(context)!;
+      _showTimerConfirmationSnackBar(l10n.timerCancelled);
     } else {
       setState(() {
         _sleepTimerMinutes = minutes;
@@ -91,7 +92,8 @@ class _MediaControlBarState extends State<MediaControlBar> {
         }
       });
       context.read<AudioBloc>().add(SetSleepTimer(Duration(minutes: minutes)));
-      _showTimerConfirmationSnackBar('سيتم إيقاف التلاوة بعد $minutes دقائق');
+      final l10n = AppLocalizations.of(context)!;
+      _showTimerConfirmationSnackBar(l10n.sleepTimerStopped(minutes));
     }
   }
 

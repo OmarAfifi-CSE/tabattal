@@ -45,7 +45,7 @@ class QuranDrawer extends StatelessWidget {
     // On web, fill the full height to avoid overflow on smaller viewports.
     if (kIsWeb) return drawer;
     return Padding(
-      padding: EdgeInsets.only(top: 100.h, bottom: 100.h),
+      padding: EdgeInsets.only(top: 70.h, bottom: 70.h),
       child: drawer,
     );
   }
@@ -56,17 +56,22 @@ class QuranDrawer extends StatelessWidget {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildHeader(context),
-          _buildDrawerItem(
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: _buildHeader(context),
+          ),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                      _buildDrawerItem(
             context,
-          icon: Icons.search_rounded,
-          title: l10n.drawerSearch,
-          subtitle: l10n.drawerSearchSubtitle,
-          onTap: () async {
+                      icon: Icons.search_rounded,
+                      title: l10n.drawerSearch,
+                      subtitle: l10n.drawerSearchSubtitle,
+                      onTap: () async {
             Navigator.pop(context);
             final result = await Navigator.push<Map<String, dynamic>>(
               context,
@@ -75,15 +80,15 @@ class QuranDrawer extends StatelessWidget {
             if (result != null) {
               onNavigateToPage(result['page'], verseKey: result['verseKey']);
             }
-          },
-        ),
-        _divider(),
-        _buildDrawerItem(
-          context,
-          icon: Icons.list_alt_rounded,
-          title: l10n.drawerIndex,
-          subtitle: l10n.drawerIndexSubtitle,
-          onTap: () async {
+                      },
+                    ),
+            
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.list_alt_rounded,
+                      title: l10n.drawerIndex,
+                      subtitle: l10n.drawerIndexSubtitle,
+                      onTap: () async {
             Navigator.pop(context);
             final result = await Navigator.push<dynamic>(
               context,
@@ -97,16 +102,16 @@ class QuranDrawer extends StatelessWidget {
             } else if (result is int) {
               onNavigateToPage(result);
             }
-          },
-        ),
-        _divider(),
-        _buildDrawerItem(
-          context,
-          icon: Icons.bookmark_rounded,
-          title: l10n.drawerBookmarks,
-          subtitle: l10n.drawerBookmarksSubtitle,
-          badge: _buildBookmarkBadge(),
-          onTap: () async {
+                      },
+                    ),
+            
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.bookmark_rounded,
+                      title: l10n.drawerBookmarks,
+                      subtitle: l10n.drawerBookmarksSubtitle,
+                      badge: _buildBookmarkBadge(),
+                      onTap: () async {
             Navigator.pop(context);
             final result = await Navigator.push<dynamic>(
               context,
@@ -118,15 +123,15 @@ class QuranDrawer extends StatelessWidget {
                 verseKey: result['verseKey'] as String?,
               );
             }
-          },
-        ),
-        _divider(),
-        _buildDrawerItem(
-          context,
-          icon: Icons.menu_book_rounded,
-          title: l10n.drawerTafsir,
-          subtitle: l10n.drawerTafsirSubtitle,
-          onTap: () async {
+                      },
+                    ),
+            
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.menu_book_rounded,
+                      title: l10n.drawerTafsir,
+                      subtitle: l10n.drawerTafsirSubtitle,
+                      onTap: () async {
             Navigator.pop(context);
             final result = await Navigator.push<dynamic>(
               context,
@@ -142,15 +147,15 @@ class QuranDrawer extends StatelessWidget {
             } else if (result is int) {
               onNavigateToPage(result);
             }
-          },
-        ),
-        _divider(),
-        _buildDrawerItem(
-          context,
-          icon: Icons.translate_rounded,
-          title: l10n.drawerTranslation,
-          subtitle: l10n.drawerTranslationSubtitle,
-          onTap: () async {
+                      },
+                    ),
+            
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.translate_rounded,
+                      title: l10n.drawerTranslation,
+                      subtitle: l10n.drawerTranslationSubtitle,
+                      onTap: () async {
             Navigator.pop(context);
             final result = await Navigator.push<dynamic>(
               context,
@@ -166,11 +171,11 @@ class QuranDrawer extends StatelessWidget {
             } else if (result is int) {
               onNavigateToPage(result);
             }
-          },
-        ),
-        if (!kIsWeb) ...[
-          _divider(),
-          _buildDrawerItem(
+                      },
+                    ),
+                    if (!kIsWeb) ...[
+            
+                      _buildDrawerItem(
             context,
             icon: Icons.headphones_rounded,
             title: l10n.drawerAudioManager,
@@ -182,40 +187,42 @@ class QuranDrawer extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const QuranAudioManagerView()),
               );
             },
-          ),
-        ],
-        _divider(),
-        _buildDrawerItem(
-          context,
-          icon: Icons.palette_rounded,
-          title: 'المظهر', // Appearance
-          subtitle: 'تخصيص ألوان المصحف والوضع الليلي', // Customize Mushaf colors and dark mode
-          onTap: () {
+                      ),
+                    ],
+            
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.palette_rounded,
+                      title: l10n.themeAppearanceTitle,
+                      subtitle: l10n.themeAppearanceSubtitle,
+                      onTap: () {
             Navigator.pop(context);
             _showThemePicker(context);
-          },
-        ),
-        _divider(),
-        _buildDrawerItem(
-          context,
-          icon: Icons.language_rounded,
-          title: l10n.drawerLanguage,
-          subtitle: l10n.drawerLanguageSubtitle,
-          onTap: () {
+                      },
+                    ),
+            
+                    _buildDrawerItem(
+                      context,
+                      icon: Icons.language_rounded,
+                      title: l10n.drawerLanguage,
+                      subtitle: l10n.drawerLanguageSubtitle,
+                      onTap: () {
             Navigator.pop(context);
             _showLanguagePicker(context, l10n);
-          },
-        ),
+                      },
+                    ),
+              ],
+            ),
+          ),
         ],
       ),
-    ));
+    );
   }
 
   Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(20.w, 32.h, 20.w, 24.h),
-      margin: EdgeInsets.only(bottom: 8.h),
       decoration: BoxDecoration(
         color: AppColors.accentGold.withValues(alpha: 0.08),
         border: Border(
@@ -295,13 +302,6 @@ class QuranDrawer extends StatelessWidget {
   }
 
 
-  Widget _divider() => Divider(
-    color: AppColors.divider,
-    height: 1,
-    indent: kIsWeb ? 20 : 20.w,
-    endIndent: kIsWeb ? 20 : 20.w,
-  );
-
   Widget _buildDrawerItem(
     BuildContext context, {
     required IconData icon,
@@ -311,6 +311,7 @@ class QuranDrawer extends StatelessWidget {
     Widget? badge,
   }) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: kIsWeb ? 20 : 20.w, vertical: kIsWeb ? 12 : 12.h),
@@ -481,8 +482,21 @@ class _LanguageOption extends StatelessWidget {
 class _ThemePickerSheet extends StatelessWidget {
   const _ThemePickerSheet();
 
+  String _getThemeName(BuildContext context, String id) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (id) {
+      case 'cream': return l10n.themeCream;
+      case 'white': return l10n.themeWhite;
+      case 'mint': return l10n.themeMint;
+      case 'iceBlue': return l10n.themeIceBlue;
+      case 'dark': return l10n.themeDark;
+      default: return id;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return BlocBuilder<SettingsBloc, SettingsState>(
       builder: (context, state) {
         final isDark = state.themeMode == ThemeMode.dark;
@@ -510,7 +524,7 @@ class _ThemePickerSheet extends StatelessWidget {
                 ),
               ),
               Text(
-                'المظهر',
+                l10n.themeAppearanceTitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: kIsWeb ? 18 : 18.sp,
@@ -538,7 +552,7 @@ class _ThemePickerSheet extends StatelessWidget {
                           Icon(isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded, color: AppColors.accentGold),
                           SizedBox(width: kIsWeb ? 12 : 12.w),
                           Text(
-                            'الوضع الليلي',
+                            l10n.themeDarkMode,
                             style: TextStyle(
                               fontSize: kIsWeb ? 16 : 16.sp,
                               fontWeight: FontWeight.w600,
@@ -565,7 +579,7 @@ class _ThemePickerSheet extends StatelessWidget {
               Directionality(
                 textDirection: TextDirection.rtl,
                 child: Text(
-                  'لون المصحف',
+                  l10n.themeMushafColor,
                   style: TextStyle(
                     fontSize: kIsWeb ? 16 : 16.sp,
                     fontWeight: FontWeight.w600,
@@ -614,7 +628,7 @@ class _ThemePickerSheet extends StatelessWidget {
                           ),
                           SizedBox(height: kIsWeb ? 8 : 8.h),
                           Text(
-                            theme.name,
+                            _getThemeName(context, theme.id),
                             style: TextStyle(
                               fontSize: kIsWeb ? 12 : 12.sp,
                               color: isSelected ? theme.goldColor : AppColors.textPrimary,

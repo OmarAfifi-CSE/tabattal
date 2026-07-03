@@ -109,6 +109,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ayahPrefix => 'Verse';
 
   @override
+  String get audioSpeed => 'سرعة التلاوة';
+
+  @override
+  String get themeCream => 'Creamy';
+
+  @override
+  String get themeWhite => 'White';
+
+  @override
+  String get themeMint => 'Mint';
+
+  @override
+  String get themeIceBlue => 'Ice Blue';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
   String get audioTypeLabel => 'Type';
 
   @override
@@ -280,6 +298,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languagePickerTitle => 'Choose Language';
+
+  @override
+  String get themeAppearanceTitle => 'Appearance';
+
+  @override
+  String get themeAppearanceSubtitle => 'Customize Mushaf colors and dark mode';
+
+  @override
+  String get themeDarkMode => 'Dark Mode';
+
+  @override
+  String get themeMushafColor => 'Mushaf Color';
+
+  @override
+  String get timerCancelled => 'Timer cancelled';
+
+  @override
+  String get audioErrorFileNotFound => 'Audio file not available.';
+
+  @override
+  String get audioErrorPlayback => 'Error playing audio.';
+
+  @override
+  String get audioErrorPlaylist => 'Error playing playlist.';
 
   @override
   String sleepTimerStopped(int minutes) {

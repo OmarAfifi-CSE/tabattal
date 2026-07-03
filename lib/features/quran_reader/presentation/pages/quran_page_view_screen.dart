@@ -14,6 +14,7 @@ import '../../../../core/constants/quran_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/services.dart';
+import '../../../../l10n/app_localizations.dart';
 class QuranPageViewScreen extends StatefulWidget {
   const QuranPageViewScreen({super.key});
 
@@ -69,7 +70,25 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
     }
   }
 
-  void _showErrorSnackBar(String message) {
+  void _showErrorSnackBar(String messageKey) {
+    String message = messageKey;
+    if (context.mounted) {
+      final l10n = AppLocalizations.of(context);
+      if (l10n != null) {
+        switch (messageKey) {
+          case 'audioErrorFileNotFound':
+            message = l10n.audioErrorFileNotFound;
+            break;
+          case 'audioErrorPlayback':
+            message = l10n.audioErrorPlayback;
+            break;
+          case 'audioErrorPlaylist':
+            message = l10n.audioErrorPlaylist;
+            break;
+        }
+      }
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(

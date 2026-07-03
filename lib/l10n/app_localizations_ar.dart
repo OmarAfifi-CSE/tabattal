@@ -109,6 +109,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ayahPrefix => 'الآية';
 
   @override
+  String get audioSpeed => 'سرعة التلاوة';
+
+  @override
+  String get themeCream => 'كريمي';
+
+  @override
+  String get themeWhite => 'أبيض';
+
+  @override
+  String get themeMint => 'نعناعي';
+
+  @override
+  String get themeIceBlue => 'أزرق ثلجي';
+
+  @override
+  String get themeDark => 'ليلي';
+
+  @override
   String get audioTypeLabel => 'النوع';
 
   @override
@@ -279,6 +297,30 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get languagePickerTitle => 'اختر اللغة';
+
+  @override
+  String get themeAppearanceTitle => 'المظهر';
+
+  @override
+  String get themeAppearanceSubtitle => 'تخصيص ألوان المصحف والوضع الليلي';
+
+  @override
+  String get themeDarkMode => 'الوضع الليلي';
+
+  @override
+  String get themeMushafColor => 'لون المصحف';
+
+  @override
+  String get timerCancelled => 'تم إلغاء المؤقت';
+
+  @override
+  String get audioErrorFileNotFound => 'الملف الصوتي غير متوفر.';
+
+  @override
+  String get audioErrorPlayback => 'حدث خطأ أثناء تشغيل التلاوة.';
+
+  @override
+  String get audioErrorPlaylist => 'حدث خطأ أثناء تشغيل القائمة.';
 
   @override
   String sleepTimerStopped(int minutes) {

@@ -152,10 +152,24 @@
   "languageArabic": "العربية",
   "languageEnglish": "English",
   "languagePickerTitle": "Choose Language",
+  "themeDark": "Dark",
+  "themeAppearanceTitle": "Appearance",
+  "themeAppearanceSubtitle": "Customize Mushaf colors and dark mode",
+  "themeDarkMode": "Dark Mode",
+  "themeMushafColor": "Mushaf Color",
+  "timerCancelled": "Timer cancelled",
+  "audioErrorFileNotFound": "Audio file not available.",
+  "audioErrorPlayback": "Error playing audio.",
+  "audioErrorPlaylist": "Error playing playlist.",
   "sleepTimerStopped": "Recitation will stop in {minutes} minutes",
   "@sleepTimerStopped": {
     "placeholders": {
       "minutes": { "type": "int" }
     }
-  }
+  },
+  "themeCream": "Creamy",
+  "themeWhite": "White",
+  "themeMint": "Mint",
+  "themeIceBlue": "Ice Blue",
+  "themeDark": "Dark"
 }

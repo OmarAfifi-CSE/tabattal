@@ -296,6 +296,42 @@ abstract class AppLocalizations {
   /// **'الآية'**
   String get ayahPrefix;
 
+  /// No description provided for @audioSpeed.
+  ///
+  /// In ar, this message translates to:
+  /// **'سرعة التلاوة'**
+  String get audioSpeed;
+
+  /// No description provided for @themeCream.
+  ///
+  /// In ar, this message translates to:
+  /// **'كريمي'**
+  String get themeCream;
+
+  /// No description provided for @themeWhite.
+  ///
+  /// In ar, this message translates to:
+  /// **'أبيض'**
+  String get themeWhite;
+
+  /// No description provided for @themeMint.
+  ///
+  /// In ar, this message translates to:
+  /// **'نعناعي'**
+  String get themeMint;
+
+  /// No description provided for @themeIceBlue.
+  ///
+  /// In ar, this message translates to:
+  /// **'أزرق ثلجي'**
+  String get themeIceBlue;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليلي'**
+  String get themeDark;
+
   /// No description provided for @audioTypeLabel.
   ///
   /// In ar, this message translates to:
@@ -583,6 +619,54 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اختر اللغة'**
   String get languagePickerTitle;
+
+  /// No description provided for @themeAppearanceTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المظهر'**
+  String get themeAppearanceTitle;
+
+  /// No description provided for @themeAppearanceSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تخصيص ألوان المصحف والوضع الليلي'**
+  String get themeAppearanceSubtitle;
+
+  /// No description provided for @themeDarkMode.
+  ///
+  /// In ar, this message translates to:
+  /// **'الوضع الليلي'**
+  String get themeDarkMode;
+
+  /// No description provided for @themeMushafColor.
+  ///
+  /// In ar, this message translates to:
+  /// **'لون المصحف'**
+  String get themeMushafColor;
+
+  /// No description provided for @timerCancelled.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إلغاء المؤقت'**
+  String get timerCancelled;
+
+  /// No description provided for @audioErrorFileNotFound.
+  ///
+  /// In ar, this message translates to:
+  /// **'الملف الصوتي غير متوفر.'**
+  String get audioErrorFileNotFound;
+
+  /// No description provided for @audioErrorPlayback.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء تشغيل التلاوة.'**
+  String get audioErrorPlayback;
+
+  /// No description provided for @audioErrorPlaylist.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء تشغيل القائمة.'**
+  String get audioErrorPlaylist;
 
   /// No description provided for @sleepTimerStopped.
   ///
