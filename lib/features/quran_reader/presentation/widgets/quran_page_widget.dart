@@ -345,8 +345,12 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
     final customFontFamily = 'QCF_P$pageStr';
     final displayText = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
 
-    void handleTap(TapDownDetails details) {
-      _showVerseMenu(context, details.globalPosition, verseId, lines);
+    void handleTap(TapUpDetails details) {
+      if (_activeVerseId == verseId) {
+        _removeVerseMenu();
+      } else {
+        _showVerseMenu(context, details.globalPosition, verseId, lines);
+      }
     }
 
     final wordTextStyle = AppTextStyles.quranText.copyWith(
@@ -361,7 +365,9 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
       return AnimatedBuilder(
         animation: _bookmarkPulseAnimation,
         builder: (context, _) => GestureDetector(
-          onTapDown: handleTap,
+          onTapUp: handleTap,
+          onTap: () {},
+          onLongPress: () {},
           child: Container(
             color: mushafTheme.goldColor.withValues(alpha: _bookmarkPulseAnimation.value),
             child: Text(
@@ -388,7 +394,9 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
     }
 
     return GestureDetector(
-      onTapDown: handleTap,
+      onTapUp: handleTap,
+      onTap: () {},
+      onLongPress: () {},
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
@@ -478,9 +486,15 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
 
           wordWidgets.add(
             GestureDetector(
-              onTapDown: (details) {
-                _showVerseMenu(context, details.globalPosition, verseId, lines);
+              onTapUp: (details) {
+                if (_activeVerseId == verseId) {
+                  _removeVerseMenu();
+                } else {
+                  _showVerseMenu(context, details.globalPosition, verseId, lines);
+                }
               },
+              onTap: () {},
+              onLongPress: () {},
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
                 child: basmala,
@@ -563,10 +577,17 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
             data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
             child: Directionality(
               textDirection: TextDirection.rtl,
-              child: FittedBox(
-                fit: BoxFit.contain,
-                alignment: Alignment.center,
-                child: SizedBox(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () {
+                  if (_activeOverlayEntry != null) {
+                    _removeVerseMenu();
+                  }
+                },
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  alignment: Alignment.center,
+                  child: SizedBox(
                   // Use a fixed virtual canvas size instead of expensive IntrinsicWidth
                   // Increased width from 460 to 490 to prevent horizontal overflow on dense lines like page 453
                   width: kIsWeb ? 650 : 490, 
@@ -596,11 +617,12 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                           lines: lines,
                         );
                       }),
-                    ),
-                  ),
-                ),
-              ),
-          );
+                    ), // Column
+                  ), // SizedBox
+                ), // FittedBox
+              ), // GestureDetector
+            ), // Directionality
+          ); // MediaQuery
         },
       );
         },
