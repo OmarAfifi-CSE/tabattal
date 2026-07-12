@@ -84,14 +84,6 @@ Tabattal is an ad-free, open-source passion project built to provide the purest 
 
 ---
 
-## 📬 Support & Contact
-
-For business inquiries, support, or feedback regarding the application, please reach out via:
-- **Email:** omar.afifi@example.com
-- **Ko-fi:** [omarafifi](https://ko-fi.com/omarafifi)
-
----
-
 <div align="center">
   <i>Made with ❤️ and dedication to the Book of Allah.</i>
 </div>
