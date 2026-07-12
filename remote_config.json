@@ -1,3 +1,19 @@
 {
-  "update_type": "flexible"
+  "_comment_update_type": "can be 'flexible' or 'immediate'",
+  "update_type": "flexible",
+  "maintenance_mode": false,
+  "maintenance_message": {
+    "ar": "التطبيق يخضع لبعض التحديثات الهامة، يرجى المحاولة لاحقاً.",
+    "en": "The app is undergoing important updates. Please try again later."
+  },
+  "show_announcement": false,
+  "announcement_title": {
+    "ar": "إعلان",
+    "en": "Announcement"
+  },
+  "announcement_message": {
+    "ar": "نزلنا ميزة جديدة في التطبيق، نتمنى تعجبكم!",
+    "en": "We've released a new feature, we hope you like it!"
+  },
+  "announcement_url": "https://play.google.com/store/apps/details?id=com.omarafifi.tabattal"
 }

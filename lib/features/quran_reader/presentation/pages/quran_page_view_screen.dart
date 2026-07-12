@@ -15,6 +15,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/services.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/services/update_service.dart';
+
 class QuranPageViewScreen extends StatefulWidget {
   const QuranPageViewScreen({super.key});
 
@@ -33,6 +35,12 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
     super.initState();
     _currentPage = context.read<AudioPreferencesService>().lastReadPage;
     _pageController = PageController(initialPage: _currentPage - 1);
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        UpdateService.checkForUpdates(context);
+      }
+    });
   }
 
   @override

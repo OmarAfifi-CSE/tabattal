@@ -21,7 +21,6 @@ import 'core/services/audio_preferences_service.dart';
 import 'core/bloc/locale/locale_cubit.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/settings/presentation/bloc/settings_state.dart';
-import 'core/services/update_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,9 +30,6 @@ void main() async {
   final container = await configureDependencies();
 
   runApp(TabattalApp(container: container));
-  
-  // Check for in-app updates in the background
-  UpdateService.checkForUpdates();
 }
 
 class TabattalApp extends StatelessWidget {
