@@ -6,6 +6,11 @@
     <title>Tabattal | The Purest Digital Mushaf Experience</title>
     <meta name="description" content="A world-class, premium, and highly distinct Quran application featuring flawless typography, pure vector rendering, and perfect audio synchronization.">
     
+    <!-- Favicons -->
+    <link rel="icon" href="assets/images/icons/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="assets/images/icons/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -73,23 +78,23 @@
     </nav>
 
     <!-- Hero Section -->
-    <header class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
-        <div class="max-w-7xl mx-auto px-6 w-full grid lg:grid-cols-2 gap-12 items-center">
+    <header class="relative min-h-[100svh] flex flex-col justify-center pt-24 pb-20 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 w-full grid md:grid-cols-2 gap-12 items-center">
             
             <!-- Hero Text -->
-            <div class="space-y-8 z-10 hero-content text-center lg:text-left mt-12 lg:mt-0">
+            <div class="space-y-8 z-10 hero-content text-center lg:text-left mt-8 lg:mt-0">
                 <div class="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-brand-gold/10 border border-brand-gold/20 text-brand-gold text-xs font-semibold tracking-widest uppercase mb-4">
                     <span class="w-2 h-2 rounded-full bg-brand-gold animate-pulse"></span>
                     Sadaqa Jariya Project
                 </div>
                 
-                <h1 class="text-5xl md:text-7xl font-bold leading-tight tracking-tight">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
                     The Purest<br/>
                     <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold to-yellow-200">Digital Mushaf</span><br/>
                     Experience.
                 </h1>
                 
-                <p class="text-lg md:text-xl text-brand-muted max-w-xl mx-auto lg:mx-0 font-light leading-relaxed">
+                <p class="text-lg text-brand-muted max-w-xl mx-auto lg:mx-0 font-light leading-relaxed">
                     Flawless typography, perfect audio synchronization, and zero distractions. Designed for those who seek perfection in their daily recitation.
                 </p>
                 
@@ -105,84 +110,84 @@
             </div>
 
             <!-- Hero 3D Device -->
-            <div class="relative w-full h-[600px] lg:h-[800px] flex justify-center items-center hero-device">
+            <div class="relative w-full flex justify-center items-center hero-device mt-8 lg:mt-0">
                 <!-- Glowing Orb behind phone -->
-                <div class="absolute w-64 h-64 bg-brand-gold/20 rounded-full blur-[80px]"></div>
+                <div class="absolute w-56 h-56 lg:w-64 lg:h-64 bg-brand-gold/20 rounded-full blur-[80px]"></div>
                 
                 <!-- Phone Mockup Image -->
-                <img src="assets/images/hero-mockup.webp" alt="Tabattal App Screen" class="floating-image relative z-10 w-full max-w-[280px] lg:max-w-[380px] h-auto object-contain" />
+                <img src="assets/images/hero-mockup.webp" alt="Tabattal App Screen" class="floating-image relative z-10 w-full max-w-[320px] lg:max-w-[420px] max-h-[75vh] object-contain" />
             </div>
         </div>
         
         <!-- Scroll indicator -->
-        <div class="absolute bottom-10 inset-x-0 flex flex-col items-center justify-center gap-2 opacity-50 animate-bounce pointer-events-none">
+        <div class="absolute bottom-6 inset-x-0 flex flex-col items-center justify-center gap-2 opacity-50 animate-bounce pointer-events-none">
             <span class="text-xs uppercase tracking-widest text-center">Scroll to explore</span>
             <div class="w-px h-12 bg-gradient-to-b from-brand-gold to-transparent"></div>
         </div>
     </header>
 
     <!-- Detailed Features Grid -->
-    <section id="features" class="py-32 relative">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-20 section-title">
-                <h2 class="text-3xl md:text-5xl font-bold mb-6">Everything You Need <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold to-yellow-200">(And More)</span></h2>
-                <p class="text-brand-muted text-lg max-w-2xl mx-auto">We didn't cut any corners. Tabattal is packed with premium features wrapped in an elegant, distraction-free UI.</p>
+    <section id="features" class="min-h-[100svh] flex flex-col justify-center py-12 relative">
+        <div class="max-w-7xl mx-auto px-6 w-full">
+            <div class="text-center mb-8 xl:mb-16 section-title">
+                <h2 class="text-3xl md:text-5xl font-bold mb-4 xl:mb-6">Everything You Need <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold to-yellow-200">(And More)</span></h2>
+                <p class="text-brand-muted text-base xl:text-lg max-w-2xl mx-auto">We didn't cut any corners. Tabattal is packed with premium features wrapped in an elegant, distraction-free UI.</p>
             </div>
             
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="feature-card glass p-8 rounded-3xl hover:border-brand-gold/50 transition-colors group">
-                    <div class="w-12 h-12 rounded-full bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
+            <div class="grid md:grid-cols-3 gap-4 xl:gap-8">
+                <div class="feature-card glass p-5 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-colors group">
+                    <div class="w-10 h-10 xl:w-12 xl:h-12 rounded-full bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-4 xl:mb-6 text-lg xl:text-xl group-hover:scale-110 transition-transform">
                         <i class="fas fa-vector-square"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3">Pure Vector Rendering</h3>
-                    <p class="text-brand-muted text-sm leading-relaxed">No blurry scanned pages. Infinite sharpness across all devices using the optimized KFGQPC fonts.</p>
+                    <h3 class="text-lg xl:text-xl font-semibold mb-2 xl:mb-3">Pure Vector Rendering</h3>
+                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">No blurry scanned pages. Infinite sharpness across all devices using the optimized KFGQPC fonts.</p>
                 </div>
                 
-                <div class="feature-card glass p-8 rounded-3xl hover:border-brand-gold/50 transition-colors group delay-100">
-                    <div class="w-12 h-12 rounded-full bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
+                <div class="feature-card glass p-5 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-colors group">
+                    <div class="w-10 h-10 xl:w-12 xl:h-12 rounded-full bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-4 xl:mb-6 text-lg xl:text-xl group-hover:scale-110 transition-transform">
                         <i class="fas fa-headphones"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3">Smart Audio Sync</h3>
-                    <p class="text-brand-muted text-sm leading-relaxed">Perfect word-by-word tracking with world-renowned reciters. Download once, listen offline forever.</p>
+                    <h3 class="text-lg xl:text-xl font-semibold mb-2 xl:mb-3">Smart Audio Sync</h3>
+                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">Perfect word-by-word tracking with world-renowned reciters. Download once, listen offline forever.</p>
                 </div>
                 
-                <div class="feature-card glass p-8 rounded-3xl hover:border-brand-gold/50 transition-colors group delay-200">
-                    <div class="w-12 h-12 rounded-full bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
+                <div class="feature-card glass p-5 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-colors group">
+                    <div class="w-10 h-10 xl:w-12 xl:h-12 rounded-full bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-4 xl:mb-6 text-lg xl:text-xl group-hover:scale-110 transition-transform">
                         <i class="fas fa-moon"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3">Deep Dark Mode</h3>
-                    <p class="text-brand-muted text-sm leading-relaxed">True OLED black backgrounds to reduce eye strain during Qiyam and late-night recitations.</p>
+                    <h3 class="text-lg xl:text-xl font-semibold mb-2 xl:mb-3">Deep Dark Mode</h3>
+                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">True OLED black backgrounds to reduce eye strain during Qiyam and late-night recitations.</p>
                 </div>
 
-                <div class="feature-card glass p-8 rounded-3xl hover:border-brand-gold/50 transition-colors group">
-                    <div class="w-12 h-12 rounded-full bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
-                        <i class="fas fa-sliders"></i>
+                <div class="feature-card glass p-5 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-colors group">
+                    <div class="w-10 h-10 xl:w-12 xl:h-12 rounded-full bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-4 xl:mb-6 text-lg xl:text-xl group-hover:scale-110 transition-transform">
+                        <i class="fas fa-sliders-h"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3">Fluid Customization</h3>
-                    <p class="text-brand-muted text-sm leading-relaxed">Choose between horizontal pagination (like a Mushaf) or vertical scrolling (like an article).</p>
+                    <h3 class="text-lg xl:text-xl font-semibold mb-2 xl:mb-3">Fluid Customization</h3>
+                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">Choose between horizontal pagination (like a Mushaf) or vertical scrolling (like an article).</p>
                 </div>
 
-                <div class="feature-card glass p-8 rounded-3xl hover:border-brand-gold/50 transition-colors group delay-100">
-                    <div class="w-12 h-12 rounded-full bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
-                        <i class="fas fa-shield-halved"></i>
+                <div class="feature-card glass p-5 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-colors group">
+                    <div class="w-10 h-10 xl:w-12 xl:h-12 rounded-full bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-4 xl:mb-6 text-lg xl:text-xl group-hover:scale-110 transition-transform">
+                        <i class="fas fa-shield-alt"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3">100% Offline & Private</h3>
-                    <p class="text-brand-muted text-sm leading-relaxed">No data collection, no trackers, and fully functional without an internet connection.</p>
+                    <h3 class="text-lg xl:text-xl font-semibold mb-2 xl:mb-3">100% Offline & Private</h3>
+                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">No data collection, no trackers, and fully functional without an internet connection.</p>
                 </div>
 
-                <div class="feature-card glass p-8 rounded-3xl hover:border-brand-gold/50 transition-colors group delay-200">
-                    <div class="w-12 h-12 rounded-full bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
+                <div class="feature-card glass p-5 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-colors group">
+                    <div class="w-10 h-10 xl:w-12 xl:h-12 rounded-full bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-4 xl:mb-6 text-lg xl:text-xl group-hover:scale-110 transition-transform">
                         <i class="fas fa-bookmark"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3">Seamless Bookmarks</h3>
-                    <p class="text-brand-muted text-sm leading-relaxed">Automatically saves your last read page. Organize multiple bookmarks effortlessly.</p>
+                    <h3 class="text-lg xl:text-xl font-semibold mb-2 xl:mb-3">Seamless Bookmarks</h3>
+                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">Automatically saves your last read page. Organize multiple bookmarks effortlessly.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Showcase Video/Gallery Section -->
-    <section id="experience" class="py-32 bg-brand-darker relative border-y border-white/5">
+    <section id="experience" class="py-16 lg:py-20 xl:py-32 bg-brand-darker relative border-y border-white/5">
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex flex-col lg:flex-row items-center gap-16">
                 <div class="w-full lg:w-1/2 space-y-8 showcase-text">
@@ -255,7 +260,7 @@
     </section>
 
     <!-- How It Works Section -->
-    <section id="how-it-works" class="py-24 bg-[#05080b] relative border-y border-white/5">
+    <section id="how-it-works" class="py-12 lg:py-16 xl:py-24 bg-[#05080b] relative border-y border-white/5">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center mb-20 section-title">
                 <h2 class="text-3xl md:text-5xl font-bold mb-6">Your Journey in <span class="text-brand-gold">3 Steps</span></h2>
@@ -287,7 +292,7 @@
     </section>
 
     <!-- Comparison Section -->
-    <section class="py-32 relative">
+    <section class="py-16 lg:py-20 xl:py-32 relative">
         <div class="max-w-5xl mx-auto px-6">
             <div class="text-center mb-20 section-title">
                 <h2 class="text-3xl md:text-5xl font-bold mb-6">The New <span class="text-brand-gold">Standard</span></h2>
@@ -332,7 +337,7 @@
     </section>
 
     <!-- Philosophy Section -->
-    <section id="philosophy" class="py-32 relative overflow-hidden">
+    <section id="philosophy" class="py-16 lg:py-20 xl:py-32 relative overflow-hidden">
         <div class="absolute inset-0 bg-brand-gold/5 mask-radial"></div>
         <div class="max-w-4xl mx-auto px-6 text-center relative z-10 philosophy-content">
             <svg class="w-12 h-12 text-brand-gold mx-auto mb-8 opacity-50" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
@@ -385,8 +390,9 @@
                     <span class="text-brand-gold font-bold text-xl">تبتّل</span>
                     <span>&copy; 2026 Omar Afifi. All rights reserved.</span>
                 </div>
-                <div class="flex gap-6">
-                    <a href="PRIVACY_POLICY.md" class="hover:text-white transition-colors">Privacy Policy</a>
+                <div class="flex gap-6 items-center flex-wrap justify-center">
+                    <a href="https://ko-fi.com/omarafifi" target="_blank" class="text-brand-gold hover:text-yellow-200 transition-colors flex items-center gap-2 font-medium"><i class="fas fa-coffee"></i> Buy me a coffee</a>
+                    <a href="https://github.com/OmarAfifi-CSE/tabattal/blob/main/PRIVACY_POLICY.md" class="hover:text-white transition-colors">Privacy Policy</a>
                     <a href="https://github.com/OmarAfifi-CSE/tabattal" target="_blank" class="hover:text-white transition-colors">GitHub</a>
                     <a href="mailto:tabattal@omar-afifi.com" class="hover:text-white transition-colors">Contact</a>
                 </div>
@@ -400,4 +406,7 @@
     <script src="assets/js/main.js"></script>
 </body>
 </html>
+
+
+
 
