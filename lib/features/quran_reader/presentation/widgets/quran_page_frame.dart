@@ -202,6 +202,7 @@ class QuranPageFrame extends StatelessWidget {
                       child: _buildFrameInfoBox(
                         theme: mushafTheme,
                         margin: kIsWeb ? const EdgeInsets.symmetric(horizontal: 6) : EdgeInsets.symmetric(horizontal: 6.w),
+                        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0),
                         child: Icon(Icons.segment_rounded, color: mushafTheme.goldColor, size: kIsWeb ? 24 : 24.sp),
                       ),
                     ),

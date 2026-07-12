@@ -27,6 +27,13 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   int _currentIndex = 0;
   // ignore: unused_field — kept for compatibility with existing event handlers
   int _playedCount = 0;
+  // Incremented each time a new PlayVerse starts. Any in-flight handler or
+  // background prefill that sees a different value self-cancels immediately.
+  int _playlistGeneration = 0;
+  // Set to the generation value ONLY AFTER setAudioSource+play() actually succeed.
+  // Used in the `completed` handler to detect stale events from a previous
+  // surah that fired while a new PlayVerse was still loading its files.
+  int _activePlaylistGeneration = 0;
 
   static Uri? _cachedArtUri;
 
@@ -62,9 +69,6 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   String get currentReciter => _currentReciter;
   int get currentRepeatCount => _currentRepeatCount;
 
-  // Used to cancel in-progress background prefill when a new verse is played.
-  // ignore: deprecated_member_use
-  ConcatenatingAudioSource? _activePrefillPlaylist;
 
   AudioBloc(this._audioHandler, this._downloadManager, this._prefs)
       : _audioPlayer = _audioHandler.player,
@@ -123,6 +127,13 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
     _playerStateSubscription = _audioPlayer.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
+        // Guard against stale completed events: if a new PlayVerse has started
+        // but hasn't called play() yet, _currentVerseIds already holds the new
+        // surah's data while the OLD player fires completed. Without this check,
+        // the recovery path would read the new surah's partial list and jump to
+        // the wrong ayah (e.g., ayah 4 of the next surah).
+        if (_playlistGeneration != _activePlaylistGeneration) return;
+
         // The playlist finished
         if (_currentVerseIds.isNotEmpty && _currentRepeatCount != -1) {
           if (kIsWeb) {
@@ -130,13 +141,30 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
             // So when it completes, we advance to the next Ayah.
             add(const NextAyah());
           } else {
-            // On mobile, the entire surah playlist finished — advance to the next surah
-            final currentVerse = _currentVerseIds[_currentIndex];
-            final nextSurah = currentVerse.surah + 1;
-            if (nextSurah <= 114) {
-              add(PlayVerse('', VerseRef(nextSurah, 1).verseId));
+            // Snapshot the last verse in the list — NOT _currentIndex — because by the time
+            // `completed` fires the index stream may have already updated _currentIndex.
+            // The last entry in the list is always the final ayah of the loaded playlist.
+            final lastVerse = _currentVerseIds.lastWhere(
+              (v) => v.ayah > 0, // skip basmalah (ayah == 0)
+              orElse: () => _currentVerseIds.last,
+            );
+            final surahLength = QuranMetadata.surahLengthOf(lastVerse.surah);
+
+            if (lastVerse.ayah < surahLength) {
+              // The player ran out of buffered audio before the surah finished (e.g. slow network)
+              // Resume from the next ayah without re-playing basmalah.
+              final nextAyah = lastVerse.next;
+              if (nextAyah != null) {
+                add(PlayVerse('', nextAyah.verseId, skipBasmalah: true));
+              }
             } else {
-              add(const AudioStateChanged(isPlaying: false));
+              // The entire surah playlist finished — advance to the next surah (WITH basmalah)
+              final nextSurah = lastVerse.surah + 1;
+              if (nextSurah <= 114) {
+                add(PlayVerse('', VerseRef(nextSurah, 1).verseId));
+              } else {
+                add(const AudioStateChanged(isPlaying: false));
+              }
             }
           }
         } else {
@@ -202,14 +230,16 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     return _downloadManager.downloadVerse(_currentReciter, surah, ayah, null);
   }
 
-  /// Returns up to [count] consecutive VerseRefs starting from [startVerse].
+  /// Returns up to [count] consecutive VerseRefs starting from [startVerse],
+  /// BOUNDED to the same surah. Never crosses a surah boundary — callers
+  /// must handle transitions to the next surah (with basmalah) separately.
   List<VerseRef> _nextVerses(VerseRef startVerse, int count) {
+    final surahLength = QuranMetadata.surahLengthOf(startVerse.surah);
     final result = <VerseRef>[];
-    VerseRef? cur = startVerse;
     for (int i = 0; i < count; i++) {
-      if (cur == null) break;
-      result.add(cur);
-      cur = cur.next;
+      final ayah = startVerse.ayah + i;
+      if (ayah > surahLength) break;
+      result.add(VerseRef(startVerse.surah, ayah));
     }
     return result;
   }
@@ -228,6 +258,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   // ---------------------------------------------------------------------------
   Future<void> _onPlayVerse(PlayVerse event, Emitter<AudioState> emit) async {
     emit(AudioLoading());
+    // Grab a unique generation token. If a new PlayVerse fires while we are
+    // awaiting anything, _playlistGeneration changes and all in-flight work
+    // (this handler + the background prefill) self-cancels cleanly.
+    final int myGen = ++_playlistGeneration;
     try {
       _playedCount = 0;
       final verse = VerseRef.fromId(event.verseId);
@@ -238,8 +272,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       final int repeat = _currentRepeatCount > 0 ? _currentRepeatCount : 1;
 
       // --- Step 1: Pre-download first 3 ayahs (+ Basmalah) in PARALLEL ---
-      // This ensures ExoPlayer has items buffered from the start, eliminating
-      // the audio click that occurs when items are added after playback starts.
+      // _nextVerses is BOUNDED to the same surah — it never crosses into the
+      // next surah, which would cause ayahs to play without their basmalah.
       final List<Future<String>> downloadFutures = [];
       if (needsBasmalah) {
         downloadFutures.add(_ensureLocalPath(1, 1, 1001));
@@ -250,6 +284,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         downloadFutures.add(_ensureLocalPath(v.surah, v.ayah, v.verseId));
       }
       final List<String> prePaths = await Future.wait(downloadFutures);
+      // Guard: a newer PlayVerse may have started during the await above.
+      if (_playlistGeneration != myGen) return;
 
       // --- Step 2: Build initial playlist from pre-downloaded files ---
       final List<VerseRef> verseQueue = [];
@@ -269,18 +305,14 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         }
       }
 
-      _currentVerseIds = verseQueue;
-      _currentIndex = 0;
-
       // ignore: deprecated_member_use
       final playlist = ConcatenatingAudioSource(children: initialSources);
-      _activePrefillPlaylist = playlist;
 
       final isEn = _prefs.appLocale == 'en';
       final String initialTitle;
       if (verseQueue.first.ayah == 0) {
-        initialTitle = isEn 
-            ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} - Basmalah' 
+        initialTitle = isEn
+            ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} - Basmalah'
             : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - البسملة';
       } else {
         initialTitle = isEn
@@ -289,6 +321,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       }
 
       final artUri = await _getArtUri();
+      if (_playlistGeneration != myGen) return;
 
       await _audioHandler.updateItem(MediaItem(
         id: verseQueue.first.verseId.toString(),
@@ -298,23 +331,41 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         artUri: artUri,
       ));
 
+      // Commit state only after ALL async work is done and generation is valid.
+      // This prevents a stale `completed` event (from the old surah, fired
+      // during the download await above) from reading partial/wrong state.
+      _currentVerseIds = verseQueue;
+      _currentIndex = 0;
+
       await _audioPlayer.stop();
-      await _audioPlayer.setAudioSource(playlist);
+      if (_playlistGeneration != myGen) return;
+      await _audioPlayer.setAudioSource(playlist, initialIndex: 0);
+      if (_playlistGeneration != myGen) return;
       await _audioPlayer.setLoopMode(_currentRepeatCount == -1 ? LoopMode.one : LoopMode.off);
       _audioPlayer.play();
+      // Mark this generation as the ACTIVE one — only now is the player truly
+      // running with this playlist. Stale completed events from the previous
+      // playlist (that fired during the stop/setAudioSource transition) will
+      // be ignored by the _playlistGeneration != _activePlaylistGeneration check.
+      _activePlaylistGeneration = myGen;
       emit(AudioPlaying(_currentVerseIds.first.verseId));
 
-      // --- Step 3: Background-append remaining ayahs sequentially ---
+      // --- Step 3: Background-append remaining ayahs (SAME surah ONLY) ---
+      // We deliberately never cross into the next surah here. The `completed`
+      // event handler is the single, correct place that triggers the next-surah
+      // transition WITH basmalah.
       if (!kIsWeb && _currentRepeatCount != -1 && versesToPreload.isNotEmpty) {
-        final afterPreload = versesToPreload.last.next;
-        if (afterPreload != null) {
+        final lastPreloadedAyah = versesToPreload.last.ayah;
+        final surahLength = QuranMetadata.surahLengthOf(verse.surah);
+        if (lastPreloadedAyah < surahLength) {
           _backgroundPrefill(
             playlist: playlist,
             reciter: _currentReciter,
-            surah: afterPreload.surah,
-            startAyah: afterPreload.ayah,
+            surah: verse.surah,
+            startAyah: lastPreloadedAyah + 1,
             repeat: repeat,
             lookahead: 5,
+            generation: myGen,
           );
         }
       }
@@ -328,9 +379,9 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     }
   }
 
-  /// Downloads the next ayahs sequentially and appends them to [playlist].
-  /// Downloads one at a time (low network footprint), up to [lookahead] ahead
-  /// of the CURRENTLY playing index, not from the starting ayah.
+  /// Downloads the remaining ayahs of [surah] sequentially and appends them
+  /// to [playlist]. Runs ONLY within the same surah — never crosses into the
+  /// next surah. [generation] is used to self-cancel if a new PlayVerse fires.
   Future<void> _backgroundPrefill({
     // ignore: deprecated_member_use
     required ConcatenatingAudioSource playlist,
@@ -339,21 +390,21 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     required int startAyah,
     required int repeat,
     required int lookahead,
+    required int generation,
   }) async {
     final surahLength = QuranMetadata.surahLengthOf(surah);
 
     for (int a = startAyah; a <= surahLength; a++) {
-      // Stop if this playlist was replaced by a new PlayVerse call
-      if (_activePrefillPlaylist != playlist) return;
+      // Self-cancel if a newer PlayVerse or StopAudio has started.
+      if (_playlistGeneration != generation) return;
 
-      // Only prefetch if we're within [lookahead] ayahs of the current position
+      // Only prefetch if we're within [lookahead] ayahs of the current position.
       final currentAyah = _currentVerseIds.isNotEmpty
           ? _currentVerseIds[_currentIndex].ayah
           : startAyah;
       if (a > currentAyah + lookahead) {
-        // Too far ahead — wait until the player catches up
         await Future.delayed(const Duration(milliseconds: 500));
-        // Retry this same ayah
+        if (_playlistGeneration != generation) return;
         a--;
         continue;
       }
@@ -363,15 +414,20 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       try {
         path = await _ensureLocalPath(v.surah, v.ayah, v.verseId);
       } catch (_) {
-        continue; // skip if download fails, player will handle the missing item
+        // Download failed — skip this ayah. Do NOT add it to verseIds either
+        // since playlist source and verseId list MUST stay perfectly in sync.
+        continue;
       }
 
-      if (_activePrefillPlaylist != playlist) return;
+      // Check again after the download await — a new PlayVerse may have fired.
+      if (_playlistGeneration != generation) return;
 
       for (int r = 0; r < repeat; r++) {
-        _currentVerseIds = [..._currentVerseIds, v];
         // ignore: deprecated_member_use
         await playlist.add(_createAudioSource(path));
+        // Verify generation AFTER the async add before touching shared state.
+        if (_playlistGeneration != generation) return;
+        _currentVerseIds = [..._currentVerseIds, v];
       }
     }
   }
@@ -416,7 +472,9 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   }
 
   Future<void> _onStopAudio(StopAudio event, Emitter<AudioState> emit) async {
-    _activePrefillPlaylist = null;
+    // Increment generation to cancel any in-flight PlayVerse handler or prefill.
+    _playlistGeneration++;
+    _activePlaylistGeneration = 0;
     _currentVerseIds = [];
     _currentIndex = 0;
     _playedCount = 0;

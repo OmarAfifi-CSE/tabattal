@@ -301,7 +301,7 @@ class _VerseActionMenuState extends State<VerseActionMenu> with SingleTickerProv
                                     displayResourceId = currentState.resourceId;
                                   }
                                   return PopupMenuButton<int>(
-                                    splashRadius: 0,
+                                    splashRadius: 0.1,
                                     initialValue: displayResourceId,
                                     position: PopupMenuPosition.under,
                                     color: AppColors.cardCream,

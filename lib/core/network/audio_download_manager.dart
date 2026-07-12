@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
@@ -116,29 +117,50 @@ class AudioDownloadManager {
     final dirPath = await getReciterDirectory(reciterKey);
     final verseId = surah * 1000 + ayah;
     final savePath = '$dirPath/$verseId.mp3';
+    final tempPath = '$savePath.temp';
 
-    // If it already exists, don't download
+    // If it already exists and is not a temp file, return
     if (await File(savePath).exists()) {
       return savePath;
     }
 
+    // Check if we are already downloading this verse
+    if (_activePrefetches.containsKey(verseId)) {
+      return await _activePrefetches[verseId]!;
+    }
+
+    // Register active download
+    final completer = Completer<String>();
+    _activePrefetches[verseId] = completer.future;
+
     try {
       await _dio.download(
         url,
-        savePath,
+        tempPath,
         onReceiveProgress: (received, total) {
           if (total != -1 && onProgress != null) {
             onProgress(received / total);
           }
         },
       );
+      
+      // Rename temp file to actual file atomically
+      final tempFile = File(tempPath);
+      if (await tempFile.exists()) {
+        await tempFile.rename(savePath);
+      }
+      
+      _activePrefetches.remove(verseId);
+      completer.complete(savePath);
       return savePath;
     } catch (e) {
-      // Clean up partial file if download failed
-      final file = File(savePath);
-      if (await file.exists()) {
-        await file.delete();
+      // Clean up partial temp file if download failed
+      final tempFile = File(tempPath);
+      if (await tempFile.exists()) {
+        await tempFile.delete();
       }
+      _activePrefetches.remove(verseId);
+      completer.completeError(e);
       throw Exception('Failed to download audio for Surah $surah Ayah $ayah: $e');
     }
   }

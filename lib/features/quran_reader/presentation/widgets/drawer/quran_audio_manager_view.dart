@@ -332,7 +332,7 @@ class _InlineDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
-      splashRadius: 0,
+      splashRadius: 0.1,
       initialValue: value,
       position: PopupMenuPosition.under,
       color: AppColors.cardCream,

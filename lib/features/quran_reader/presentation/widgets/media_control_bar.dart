@@ -249,7 +249,7 @@ class _MediaControlBarState extends State<MediaControlBar> {
       mainAxisSize: MainAxisSize.min,
       children: [
         PopupMenuButton<int>(
-          splashRadius: 0,
+          splashRadius: 0.1,
           color: AppColors.cardCream,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.wR)),
           offset: Offset(0, -180.wH),

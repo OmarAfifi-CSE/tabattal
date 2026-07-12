@@ -552,38 +552,38 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
     final juzNum = QuranMetadata.getJuzNumberByPage(widget.pageNumber);
     final juzName = isEn ? AppLocalizations.of(context)!.juzListItem(juzNum.toString()) : QuranMetadata.getJuzNameWithTashkeel(juzNum);
 
-    return QuranPageFrame(
-      pageNumber: widget.pageNumber,
-      surahName: surahName,
-      juzName: juzName,
-      child: BlocBuilder<BookmarkBloc, BookmarkState>(
-        builder: (context, bookmarkState) {
-          return BlocBuilder<AudioBloc, AudioState>(
-            builder: (context, audioState) {
-          final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
-          int? playingVerseId;
-          if (audioState is AudioPlaying) playingVerseId = audioState.currentVerseId;
-          if (audioState is AudioPaused) playingVerseId = audioState.currentVerseId;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        if (_activeOverlayEntry != null) {
+          _removeVerseMenu();
+        }
+      },
+      child: QuranPageFrame(
+        pageNumber: widget.pageNumber,
+        surahName: surahName,
+        juzName: juzName,
+        child: BlocBuilder<BookmarkBloc, BookmarkState>(
+          builder: (context, bookmarkState) {
+            return BlocBuilder<AudioBloc, AudioState>(
+              builder: (context, audioState) {
+            final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
+            int? playingVerseId;
+            if (audioState is AudioPlaying) playingVerseId = audioState.currentVerseId;
+            if (audioState is AudioPaused) playingVerseId = audioState.currentVerseId;
 
-          // Pre-compute the verse key → integer ID mapping for fast lookup per word
-          final verseKeyToIntIdMap = <String, int>{
-            for (final line in lines)
-              for (final word in line.words)
-                if (ArabicTextUtils.parseVerseKey(word.verseKey) != null)
-                  word.verseKey: ArabicTextUtils.verseKeyToVerseId(word.verseKey),
-          };
+            // Pre-compute the verse key → integer ID mapping for fast lookup per word
+            final verseKeyToIntIdMap = <String, int>{
+              for (final line in lines)
+                for (final word in line.words)
+                  if (ArabicTextUtils.parseVerseKey(word.verseKey) != null)
+                    word.verseKey: ArabicTextUtils.verseKeyToVerseId(word.verseKey),
+            };
 
-          return MediaQuery(
-            data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTap: () {
-                  if (_activeOverlayEntry != null) {
-                    _removeVerseMenu();
-                  }
-                },
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+              child: Directionality(
+                textDirection: TextDirection.rtl,
                 child: FittedBox(
                   fit: BoxFit.contain,
                   alignment: Alignment.center,
@@ -620,12 +620,12 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                     ), // Column
                   ), // SizedBox
                 ), // FittedBox
-              ), // GestureDetector
-            ), // Directionality
-          ); // MediaQuery
-        },
-      );
-        },
+              ), // Directionality
+            ); // MediaQuery
+          },
+        );
+          },
+        ),
       ),
     );
   }

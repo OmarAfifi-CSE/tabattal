@@ -395,7 +395,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
           ),
           actions: [
             PopupMenuButton<int>(
-              splashRadius: 0,
+              splashRadius: 0.1,
               position: PopupMenuPosition.under,
               color: AppColors.cardCream,
               elevation: 3,
@@ -488,13 +488,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                   ? Center(child: CircularProgressIndicator(color: AppColors.accentGold))
                   : _tafsirList.isEmpty
                       ? Center(child: Text(l10n.noLocalData, style: TextStyle(fontSize: 16, color: AppColors.textPrimary)))
-                      : BlocBuilder<AudioBloc, AudioState>(
-                          builder: (context, audioState) {
-                      int? playingVerseId;
-                      if (audioState is AudioPlaying) playingVerseId = audioState.currentVerseId;
-                      if (audioState is AudioPaused) playingVerseId = audioState.currentVerseId;
-
-                      return ScrollablePositionedList.separated(
+                      : ScrollablePositionedList.separated(
                         itemScrollController: _itemScrollController,
                         itemPositionsListener: _itemPositionsListener,
                         initialScrollIndex: _initialScrollIndex,
@@ -513,11 +507,20 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                           }
 
                           final item = _tafsirList[index];
-                          final isPlaying = playingVerseId == item.verseId;
-                          final isActive = isPlaying;
 
-                          return GestureDetector(
-                            onTap: () {
+                          return Builder(
+                            builder: (context) {
+                              final audioStatus = context.select<AudioBloc, int>((bloc) {
+                                final state = bloc.state;
+                                if (state is AudioPlaying && state.currentVerseId == item.verseId) return 1;
+                                if (state is AudioPaused && state.currentVerseId == item.verseId) return 2;
+                                return 0;
+                              });
+                              final isPlaying = audioStatus != 0;
+                              final isActive = isPlaying;
+
+                              return GestureDetector(
+                                onTap: () {
                               // Navigate back to this verse in the Quran
                               Navigator.pop(context, {'page': item.page, 'verseKey': item.verseKey});
                             },
@@ -577,21 +580,20 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                         ),
                                       ),
                                       const Spacer(),
-                                      // Play button → opens audio settings sheet
-                                       GestureDetector(
-                                         onTap: () {
-                                           if (isPlaying && audioState is AudioPlaying) {
-                                             context.read<AudioBloc>().add(const PauseAudio());
-                                           } else if (isPlaying && audioState is AudioPaused) {
-                                             context.read<AudioBloc>().add(const ResumeAudio());
-                                           } else {
-                                             showAudioSettingsSheet(context, verseId: item.verseId);
-                                           }
-                                         },
-                                        child: Icon(
-                                          isPlaying && audioState is AudioPlaying
-                                              ? Icons.pause_circle_filled_rounded
-                                              : Icons.play_circle_fill_rounded,
+                                                                          GestureDetector(
+                                          onTap: () {
+                                            if (audioStatus == 1) {
+                                              context.read<AudioBloc>().add(const PauseAudio());
+                                            } else if (audioStatus == 2) {
+                                              context.read<AudioBloc>().add(const ResumeAudio());
+                                            } else {
+                                              showAudioSettingsSheet(context, verseId: item.verseId);
+                                            }
+                                          },
+                                         child: Icon(
+                                           audioStatus == 1
+                                               ? Icons.pause_circle_filled_rounded
+                                               : Icons.play_circle_fill_rounded,
                                           color: AppColors.accentGold,
                                           size: 32,
                                         ),
@@ -643,10 +645,10 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                               ),
                             ),
                           );
+                            },
+                          );
                         },
-                      );
-                    },
-                  ),
+                      ),
             ),
           ],
         ),

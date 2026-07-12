@@ -268,13 +268,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
             ? Center(child: CircularProgressIndicator(color: AppColors.accentGold))
             : _list.isEmpty
                 ? Center(child: Text(l10n.noLocalTranslation, style: TextStyle(fontSize: 16, color: AppColors.textPrimary)))
-                : BlocBuilder<AudioBloc, AudioState>(
-                    builder: (context, audioState) {
-                      int? playingVerseId;
-                      if (audioState is AudioPlaying) playingVerseId = audioState.currentVerseId;
-                      if (audioState is AudioPaused) playingVerseId = audioState.currentVerseId;
-
-                      return ScrollablePositionedList.separated(
+                : ScrollablePositionedList.separated(
                         itemScrollController: _itemScrollController,
                         itemPositionsListener: _itemPositionsListener,
                         initialScrollIndex: _initialScrollIndex,
@@ -293,11 +287,20 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
                           }
 
                           final item = _list[index];
-                          final isPlaying = playingVerseId == item.verseId;
 
-                          return GestureDetector(
-                            onTap: () => Navigator.pop(context, {'page': item.page, 'verseKey': item.verseKey}),
-                            child: AnimatedContainer(
+                          return Builder(
+                            builder: (context) {
+                              final audioStatus = context.select<AudioBloc, int>((bloc) {
+                                final state = bloc.state;
+                                if (state is AudioPlaying && state.currentVerseId == item.verseId) return 1;
+                                if (state is AudioPaused && state.currentVerseId == item.verseId) return 2;
+                                return 0;
+                              });
+                              final isPlaying = audioStatus != 0;
+
+                              return GestureDetector(
+                                onTap: () => Navigator.pop(context, {'page': item.page, 'verseKey': item.verseKey}),
+                                child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
@@ -354,16 +357,16 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
                                       const Spacer(),
                                       GestureDetector(
                                         onTap: () {
-                                          if (isPlaying && audioState is AudioPlaying) {
+                                          if (audioStatus == 1) {
                                             context.read<AudioBloc>().add(const PauseAudio());
-                                          } else if (isPlaying && audioState is AudioPaused) {
+                                          } else if (audioStatus == 2) {
                                             context.read<AudioBloc>().add(const ResumeAudio());
                                           } else {
                                              showAudioSettingsSheet(context, verseId: item.verseId);
                                           }
                                         },
                                         child: Icon(
-                                          isPlaying && audioState is AudioPlaying
+                                          audioStatus == 1
                                               ? Icons.pause_circle_filled_rounded
                                               : Icons.play_circle_fill_rounded,
                                           color: AppColors.accentGold,
@@ -402,10 +405,10 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
                               ),
                             ),
                           );
+                            },
+                          );
                         },
-                      );
-                    },
-                  ),
+                      ),
         ),
       ),
     );
