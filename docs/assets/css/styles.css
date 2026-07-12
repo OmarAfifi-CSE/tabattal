@@ -1,0 +1,65 @@
+/* Custom Utilities and Animations not easily achievable with raw Tailwind CDN */
+
+/* Hide scrollbar for cleaner look */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #05080b;
+}
+::-webkit-scrollbar-thumb {
+    background: #1A2332;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #D4AF37;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography styles */
+.font-arabic {
+    font-family: 'Amiri', serif;
+    direction: rtl;
+}
+
+/* Ambient glow animations */
+@keyframes pulse-slow {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+}
+.animate-pulse-slow {
+    animation: pulse-slow 8s ease-in-out infinite;
+}
+
+/* 3D Perspective Utility */
+.perspective-1000 {
+    perspective: 1000px;
+}
+
+/* Magnetic Button Base (Handled by JS, this just ensures transition) */
+.magnetic-btn {
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.3s;
+    transform-style: preserve-3d;
+}
+
+/* Radial Mask for Philosophy section */
+.mask-radial {
+    mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
+    -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
+}
+
+/* Glassmorphism utilities */
+.glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
