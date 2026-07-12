@@ -145,6 +145,8 @@ class SurahHeaderWidget extends StatelessWidget {
     const double canvasWidth = 412.0;
 
     final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final innerTextColor = isDarkMode ? mushafTheme.textColor : mushafTheme.goldColor;
 
     return Container(
       width: canvasWidth,
@@ -187,7 +189,7 @@ class SurahHeaderWidget extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'QCF_Surah',
                     fontSize: 46.0,
-                    color: mushafTheme.goldColor,
+                    color: innerTextColor,
                     height: 1.0,
                   ),
                 ),
@@ -206,7 +208,7 @@ class SurahHeaderWidget extends StatelessWidget {
                         fontFamily: 'Amiri',
                         fontWeight: FontWeight.bold,
                         fontSize: 14.0,
-                        color: mushafTheme.goldColor,
+                        color: innerTextColor,
                         height: 1.0,
                       ),
                     ),
@@ -216,7 +218,7 @@ class SurahHeaderWidget extends StatelessWidget {
                         fontFamily: 'Amiri',
                         fontWeight: FontWeight.bold,
                         fontSize: 12.0,
-                        color: mushafTheme.goldColor,
+                        color: innerTextColor,
                         height: 1.0,
                       ),
                     ),
@@ -235,7 +237,7 @@ class SurahHeaderWidget extends StatelessWidget {
                     fontFamily: 'Amiri',
                     fontWeight: FontWeight.bold,
                     fontSize: 14.0,
-                    color: mushafTheme.goldColor,
+                    color: innerTextColor,
                     height: 1.0,
                   ),
                 ),

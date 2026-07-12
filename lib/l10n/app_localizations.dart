@@ -332,6 +332,24 @@ abstract class AppLocalizations {
   /// **'ليلي'**
   String get themeDark;
 
+  /// No description provided for @themeScrollDirection.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتجاه التمرير'**
+  String get themeScrollDirection;
+
+  /// No description provided for @themeScrollHorizontal.
+  ///
+  /// In ar, this message translates to:
+  /// **'أفقي'**
+  String get themeScrollHorizontal;
+
+  /// No description provided for @themeScrollVertical.
+  ///
+  /// In ar, this message translates to:
+  /// **'رأسي'**
+  String get themeScrollVertical;
+
   /// No description provided for @audioTypeLabel.
   ///
   /// In ar, this message translates to:

@@ -45,7 +45,7 @@ class QuranDrawer extends StatelessWidget {
     // On web, fill the full height to avoid overflow on smaller viewports.
     if (kIsWeb) return drawer;
     return Padding(
-      padding: EdgeInsets.only(top: 70.h, bottom: 70.h),
+      padding: EdgeInsets.only(top: 50.h, bottom: 50.h),
       child: drawer,
     );
   }
@@ -59,7 +59,40 @@ class QuranDrawer extends StatelessWidget {
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
-            child: _buildHeader(context),
+            child: Column(
+              children: [
+                _buildHeader(context),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
+                  child: BlocBuilder<SettingsBloc, SettingsState>(
+                    builder: (context, state) {
+                      final l10n = AppLocalizations.of(context)!;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: Text(
+                              l10n.themeScrollDirection,
+                              style: TextStyle(
+                                fontSize: kIsWeb ? 14 : 14.sp,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: kIsWeb ? 12 : 12.h),
+                          ScrollDirectionToggle(
+                            scrollDirection: state.scrollDirection,
+                            onChanged: (val) => context.read<SettingsBloc>().add(ChangeScrollDirection(val)),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
           SliverFillRemaining(
             hasScrollBody: false,
@@ -472,6 +505,117 @@ class _LanguageOption extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─── Scroll Direction Toggle ──────────────────────────────────────────────────
+
+class ScrollDirectionToggle extends StatelessWidget {
+  final Axis scrollDirection;
+  final ValueChanged<Axis> onChanged;
+
+  const ScrollDirectionToggle({
+    super.key,
+    required this.scrollDirection,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isHorizontal = scrollDirection == Axis.horizontal;
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+
+    // In RTL, Alignment.centerRight corresponds to the first item visually.
+    final horizontalAlignment = isArabic ? Alignment.centerRight : Alignment.centerLeft;
+    final verticalAlignment = isArabic ? Alignment.centerLeft : Alignment.centerRight;
+
+    return Container(
+      height: kIsWeb ? 44 : 44.h,
+      decoration: BoxDecoration(
+        color: AppColors.divider.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(kIsWeb ? 12 : 12.r),
+      ),
+      child: Stack(
+        children: [
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOutCubic,
+            alignment: isHorizontal ? horizontalAlignment : verticalAlignment,
+            child: FractionallySizedBox(
+              widthFactor: 0.5,
+              child: Container(
+                margin: EdgeInsets.all(kIsWeb ? 4 : 4.r),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceCream,
+                  borderRadius: BorderRadius.circular(kIsWeb ? 8 : 8.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Directionality(
+            textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => onChanged(Axis.horizontal),
+                    behavior: HitTestBehavior.opaque,
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.swap_horiz_rounded, size: kIsWeb ? 18 : 18.sp, color: isHorizontal ? AppColors.accentGold : AppColors.textPrimary.withValues(alpha: 0.6)),
+                          SizedBox(width: kIsWeb ? 6 : 6.w),
+                          Text(
+                            l10n.themeScrollHorizontal,
+                            style: TextStyle(
+                              fontSize: kIsWeb ? 14 : 14.sp,
+                              fontWeight: isHorizontal ? FontWeight.bold : FontWeight.w500,
+                              color: isHorizontal ? AppColors.accentGold : AppColors.textPrimary.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => onChanged(Axis.vertical),
+                    behavior: HitTestBehavior.opaque,
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.swap_vert_rounded, size: kIsWeb ? 18 : 18.sp, color: !isHorizontal ? AppColors.accentGold : AppColors.textPrimary.withValues(alpha: 0.6)),
+                          SizedBox(width: kIsWeb ? 6 : 6.w),
+                          Text(
+                            l10n.themeScrollVertical,
+                            style: TextStyle(
+                              fontSize: kIsWeb ? 14 : 14.sp,
+                              fontWeight: !isHorizontal ? FontWeight.bold : FontWeight.w500,
+                              color: !isHorizontal ? AppColors.accentGold : AppColors.textPrimary.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

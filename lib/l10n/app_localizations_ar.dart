@@ -127,6 +127,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get themeDark => 'ليلي';
 
   @override
+  String get themeScrollDirection => 'اتجاه التمرير';
+
+  @override
+  String get themeScrollHorizontal => 'أفقي';
+
+  @override
+  String get themeScrollVertical => 'رأسي';
+
+  @override
   String get audioTypeLabel => 'النوع';
 
   @override

@@ -10,11 +10,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   static const String _themeModeKey = 'settings_theme_mode';
   static const String _mushafThemeKey = 'settings_mushaf_theme';
+  static const String _scrollDirectionKey = 'settings_scroll_direction';
 
   SettingsBloc({required this.prefs}) : super(SettingsState.initial()) {
     on<LoadSettings>(_onLoadSettings);
     on<ToggleThemeMode>(_onToggleThemeMode);
     on<ChangeMushafTheme>(_onChangeMushafTheme);
+    on<ChangeScrollDirection>(_onChangeScrollDirection);
 
     add(LoadSettings());
   }
@@ -26,7 +28,14 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final mushafThemeId = prefs.getString(_mushafThemeKey) ?? MushafTheme.cream.id;
     final mushafTheme = MushafTheme.fromId(mushafThemeId);
 
-    emit(state.copyWith(themeMode: themeMode, mushafTheme: mushafTheme));
+    final scrollStr = prefs.getString(_scrollDirectionKey) ?? 'horizontal';
+    final scrollDirection = scrollStr == 'vertical' ? Axis.vertical : Axis.horizontal;
+
+    emit(state.copyWith(
+      themeMode: themeMode,
+      mushafTheme: mushafTheme,
+      scrollDirection: scrollDirection,
+    ));
   }
 
   void _onToggleThemeMode(ToggleThemeMode event, Emitter<SettingsState> emit) async {
@@ -39,5 +48,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     await prefs.setString(_mushafThemeKey, event.themeId);
     final newTheme = MushafTheme.fromId(event.themeId);
     emit(state.copyWith(mushafTheme: newTheme));
+  }
+
+  void _onChangeScrollDirection(ChangeScrollDirection event, Emitter<SettingsState> emit) async {
+    final str = event.direction == Axis.vertical ? 'vertical' : 'horizontal';
+    await prefs.setString(_scrollDirectionKey, str);
+    emit(state.copyWith(scrollDirection: event.direction));
   }
 }

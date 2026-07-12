@@ -171,5 +171,8 @@
   "themeWhite": "White",
   "themeMint": "Mint",
   "themeIceBlue": "Ice Blue",
-  "themeDark": "Dark"
+  "themeDark": "Dark",
+  "themeScrollDirection": "Scroll Direction",
+  "themeScrollHorizontal": "Horizontal",
+  "themeScrollVertical": "Vertical"
 }

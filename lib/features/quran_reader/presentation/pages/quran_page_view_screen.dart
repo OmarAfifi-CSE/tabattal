@@ -159,7 +159,7 @@ class _QuranPageViewScreenState extends State<QuranPageViewScreen> {
                       controller: _pageController,
                       allowImplicitScrolling: true,
                       itemCount: QuranConstants.totalPages,
-                      scrollDirection: Axis.horizontal,
+                      scrollDirection: settingsState.scrollDirection,
                       reverse: false,
                       onPageChanged: (index) {
                         setState(() => _currentPage = index + 1);

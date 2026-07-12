@@ -25,3 +25,11 @@ class ChangeMushafTheme extends SettingsEvent {
 }
 
 class LoadSettings extends SettingsEvent {}
+
+class ChangeScrollDirection extends SettingsEvent {
+  final Axis direction;
+  const ChangeScrollDirection(this.direction);
+
+  @override
+  List<Object?> get props => [direction];
+}

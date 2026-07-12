@@ -127,6 +127,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeDark => 'Dark';
 
   @override
+  String get themeScrollDirection => 'Scroll Direction';
+
+  @override
+  String get themeScrollHorizontal => 'Horizontal';
+
+  @override
+  String get themeScrollVertical => 'Vertical';
+
+  @override
   String get audioTypeLabel => 'Type';
 
   @override

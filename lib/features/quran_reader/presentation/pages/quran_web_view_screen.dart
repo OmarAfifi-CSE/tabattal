@@ -13,6 +13,7 @@ import '../../../../core/utils/verse_ref.dart';
 import '../../../../core/constants/quran_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../settings/presentation/bloc/settings_bloc.dart';
 
 class QuranWebPageViewScreen extends StatefulWidget {
   const QuranWebPageViewScreen({super.key});
@@ -125,6 +126,8 @@ class _QuranPageViewScreenState extends State<QuranWebPageViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settingsState = context.watch<SettingsBloc>().state;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       drawer: QuranDrawer(
@@ -183,7 +186,7 @@ class _QuranPageViewScreenState extends State<QuranWebPageViewScreen> {
                               itemCount: isTwoPageMode 
                                   ? (QuranConstants.totalPages / 2).ceil() 
                                   : QuranConstants.totalPages,
-                              scrollDirection: Axis.horizontal,
+                              scrollDirection: settingsState.scrollDirection,
                               reverse: false,
                               onPageChanged: (index) {
                                 setState(() {
