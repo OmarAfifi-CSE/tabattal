@@ -82,8 +82,10 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
     } catch (e) {
       notifier.value = -1.0;
       if (mounted) {
+        final isEn = Localizations.localeOf(context).languageCode == 'en';
+        final surahName = isEn ? QuranMetadata.getSurahNameEnglish(surah) : QuranMetadata.getSurahName(surah);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.downloadFailed(QuranMetadata.getSurahName(surah)))),
+          SnackBar(content: Text(AppLocalizations.of(context)!.downloadFailed(surahName))),
         );
       }
     }
@@ -248,7 +250,8 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
   }
 
   Widget _buildSurahItem(int surah) {
-    final surahName = QuranMetadata.getSurahName(surah);
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final surahName = isEn ? QuranMetadata.getSurahNameEnglish(surah) : QuranMetadata.getSurahName(surah);
     final notifier = _surahProgress[surah]!;
 
     return Container(
@@ -280,7 +283,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
               ),
             ),
             title: Text(
-              'سورة $surahName',
+              AppLocalizations.of(context)!.surahListItem(surahName),
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             trailing: isDownloaded
