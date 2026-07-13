@@ -5,7 +5,7 @@
 **The Purest, Most Precise Digital Mushaf Experience**
 
 [![Flutter](https://img.shields.io/badge/Made_with-Flutter-02569B?logo=flutter)](https://flutter.dev)
-[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web-brightgreen)]()
+[![Platform](https://img.shields.io/badge/Platform-Android-brightgreen)]()
 [![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-orange)]()
 [![State Management](https://img.shields.io/badge/State_Management-BLoC-blue)]()
 
@@ -68,7 +68,7 @@ This project is built with production-ready standards, focusing on performance, 
 
 ## 📱 Download Now
 
-*(Coming Soon on Google Play & App Store)*
+*(Coming Soon on Google Play)*
 
 <a href="#">
   <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="60" alt="Get it on Google Play">
