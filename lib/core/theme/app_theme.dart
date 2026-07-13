@@ -15,6 +15,11 @@ ThemeData appTheme() {
     ),
     useMaterial3: true,
     scaffoldBackgroundColor: AppColors.background,
+    appBarTheme: const AppBarTheme(
+      scrolledUnderElevation: 0.0,
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+    ),
   );
 }
 
@@ -28,6 +33,11 @@ ThemeData appThemeDark() {
     ),
     useMaterial3: true,
     scaffoldBackgroundColor: const Color(0xFF121212),
+    appBarTheme: const AppBarTheme(
+      scrolledUnderElevation: 0.0,
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+    ),
   );
 }
 

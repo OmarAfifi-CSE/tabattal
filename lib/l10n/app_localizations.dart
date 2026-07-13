@@ -533,19 +533,19 @@ abstract class AppLocalizations {
   /// No description provided for @downloadFailedInternet.
   ///
   /// In ar, this message translates to:
-  /// **'فشل تحميل التفسير. يرجى التأكد من اتصالك بالإنترنت.'**
+  /// **'فشل تنزيل التفسير. يرجى التحقق من اتصالك بالإنترنت.'**
   String get downloadFailedInternet;
 
   /// No description provided for @fullTafsirTitle.
   ///
   /// In ar, this message translates to:
-  /// **'التفسير الشامل'**
+  /// **'التفسير الكامل'**
   String get fullTafsirTitle;
 
   /// No description provided for @translationTitle.
   ///
   /// In ar, this message translates to:
-  /// **'الترجمة'**
+  /// **'الترجمة الإنجليزية'**
   String get translationTitle;
 
   /// No description provided for @bookmarksTitle.

@@ -87,9 +87,9 @@
       "name": { "type": "String" }
     }
   },
-  "downloadFailedInternet": "فشل تحميل التفسير. يرجى التأكد من اتصالك بالإنترنت.",
-  "fullTafsirTitle": "التفسير الشامل",
-  "translationTitle": "الترجمة",
+  "downloadFailedInternet": "فشل تنزيل التفسير. يرجى التحقق من اتصالك بالإنترنت.",
+  "fullTafsirTitle": "التفسير الكامل",
+  "translationTitle": "الترجمة الإنجليزية",
   "bookmarksTitle": "العلامات المرجعية",
   "indexTitle": "الفهرس",
   "surahBookmarkTitle": "سورة {name}",

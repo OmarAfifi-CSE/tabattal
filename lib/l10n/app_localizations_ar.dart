@@ -234,13 +234,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get downloadFailedInternet =>
-      'فشل تحميل التفسير. يرجى التأكد من اتصالك بالإنترنت.';
+      'فشل تنزيل التفسير. يرجى التحقق من اتصالك بالإنترنت.';
 
   @override
-  String get fullTafsirTitle => 'التفسير الشامل';
+  String get fullTafsirTitle => 'التفسير الكامل';
 
   @override
-  String get translationTitle => 'الترجمة';
+  String get translationTitle => 'الترجمة الإنجليزية';
 
   @override
   String get bookmarksTitle => 'العلامات المرجعية';
