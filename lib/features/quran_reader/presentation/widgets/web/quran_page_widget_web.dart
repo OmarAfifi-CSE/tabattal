@@ -33,12 +33,14 @@ import '../../../../../core/theme/mushaf_theme.dart';
 
 class QuranPageWidgetWeb extends StatefulWidget {
   final int pageNumber;
+  final void Function(int page, {String? verseKey})? onNavigateToPage;
   final String? highlightVerseKey;
   
 
   const QuranPageWidgetWeb({
     super.key,
     required this.pageNumber,
+    this.onNavigateToPage,
     this.highlightVerseKey,
     
   });
@@ -563,6 +565,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb> with SingleTick
           aspectRatio: 0.72,
           child: QuranPageFrameWeb(
             pageNumber: widget.pageNumber,
+      onNavigateToPage: widget.onNavigateToPage,
             surahName: surahName,
             juzName: juzName,
         
@@ -641,6 +644,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb> with SingleTick
 
   Widget _buildEmptyFrame() => QuranPageFrameWeb(
         pageNumber: widget.pageNumber,
+      onNavigateToPage: widget.onNavigateToPage,
         surahName: '',
         juzName: '',
         child: const SizedBox(),
@@ -659,6 +663,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb> with SingleTick
           if (state is QuranLoading || !_isFontLoaded) {
             return QuranPageFrameWeb(
               pageNumber: widget.pageNumber,
+      onNavigateToPage: widget.onNavigateToPage,
               surahName: '',
               juzName: '',
               child: Center(child: CircularProgressIndicator(color: mushafTheme.goldColor)),
@@ -667,6 +672,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb> with SingleTick
           if (state is QuranError) {
             return QuranPageFrameWeb(
               pageNumber: widget.pageNumber,
+      onNavigateToPage: widget.onNavigateToPage,
               surahName: '',
               juzName: '',
               child: Center(

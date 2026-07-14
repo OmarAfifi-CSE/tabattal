@@ -34,11 +34,13 @@ import '../../../../../core/theme/mushaf_theme.dart';
 
 class QuranPageWidgetMobile extends StatefulWidget {
   final int pageNumber;
+  final void Function(int page, {String? verseKey})? onNavigateToPage;
   final String? highlightVerseKey;
 
   const QuranPageWidgetMobile({
     super.key,
     required this.pageNumber,
+    this.onNavigateToPage,
     this.highlightVerseKey,
   });
 
@@ -553,6 +555,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> with Sing
       },
       child: QuranPageFrameMobile(
         pageNumber: widget.pageNumber,
+      onNavigateToPage: widget.onNavigateToPage,
         surahName: surahName,
         juzName: juzName,
         child: BlocBuilder<BookmarkBloc, BookmarkState>(
@@ -627,6 +630,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> with Sing
 
   Widget _buildEmptyFrame() => QuranPageFrameMobile(
         pageNumber: widget.pageNumber,
+      onNavigateToPage: widget.onNavigateToPage,
         surahName: '',
         juzName: '',
         child: const SizedBox(),
@@ -645,6 +649,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> with Sing
           if (state is QuranLoading || !_isFontLoaded) {
             return QuranPageFrameMobile(
               pageNumber: widget.pageNumber,
+      onNavigateToPage: widget.onNavigateToPage,
               surahName: '',
               juzName: '',
               child: Center(child: CircularProgressIndicator(color: mushafTheme.goldColor)),
@@ -653,6 +658,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> with Sing
           if (state is QuranError) {
             return QuranPageFrameMobile(
               pageNumber: widget.pageNumber,
+      onNavigateToPage: widget.onNavigateToPage,
               surahName: '',
               juzName: '',
               child: Center(

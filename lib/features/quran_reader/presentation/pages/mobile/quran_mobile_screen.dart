@@ -181,6 +181,7 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                         return QuranPageWidgetMobile(
                           key: ValueKey(pageNumber),
                           pageNumber: pageNumber,
+                          onNavigateToPage: (page, {verseKey}) => _jumpToPage(page, verseKey: verseKey),
                           highlightVerseKey: pageNumber == _currentPage ? _highlightVerseKey : null,
                         );
                       },

@@ -34,12 +34,14 @@ import '../../../../../core/theme/mushaf_theme.dart';
 
 class QuranPageWidgetTablet extends StatefulWidget {
   final int pageNumber;
+  final void Function(int page, {String? verseKey})? onNavigateToPage;
   final String? highlightVerseKey;
   
 
   const QuranPageWidgetTablet({
     super.key,
     required this.pageNumber,
+    this.onNavigateToPage,
     this.highlightVerseKey,
     
   });
@@ -564,6 +566,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet> with Sing
           aspectRatio: 0.72,
           child: QuranPageFrameTablet(
             pageNumber: widget.pageNumber,
+      onNavigateToPage: widget.onNavigateToPage,
             surahName: surahName,
             juzName: juzName,
         
@@ -642,6 +645,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet> with Sing
 
   Widget _buildEmptyFrame() => QuranPageFrameTablet(
         pageNumber: widget.pageNumber,
+      onNavigateToPage: widget.onNavigateToPage,
         surahName: '',
         juzName: '',
         child: const SizedBox(),
@@ -660,6 +664,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet> with Sing
           if (state is QuranLoading || !_isFontLoaded) {
             return QuranPageFrameTablet(
               pageNumber: widget.pageNumber,
+      onNavigateToPage: widget.onNavigateToPage,
               surahName: '',
               juzName: '',
               child: Center(child: CircularProgressIndicator(color: mushafTheme.goldColor)),
@@ -668,6 +673,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet> with Sing
           if (state is QuranError) {
             return QuranPageFrameTablet(
               pageNumber: widget.pageNumber,
+      onNavigateToPage: widget.onNavigateToPage,
               surahName: '',
               juzName: '',
               child: Center(

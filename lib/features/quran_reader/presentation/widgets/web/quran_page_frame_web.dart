@@ -12,6 +12,7 @@ import '../../../../../core/theme/mushaf_theme.dart';
 class QuranPageFrameWeb extends StatelessWidget {
   final Widget child;
   final int pageNumber;
+  final void Function(int page, {String? verseKey})? onNavigateToPage;
   final String surahName;
   final String juzName;
   
@@ -20,6 +21,7 @@ class QuranPageFrameWeb extends StatelessWidget {
     super.key,
     required this.child,
     required this.pageNumber,
+    this.onNavigateToPage,
     required this.surahName,
     required this.juzName,
     
@@ -152,7 +154,16 @@ class QuranPageFrameWeb extends StatelessWidget {
                   child: FractionalTranslation(
                     translation: const Offset(0.0, -0.5),
                     child: GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuranIndexViewWeb(initialIndex: 1))),
+                      onTap: () async {
+                      final result = await Navigator.push<dynamic>(context, MaterialPageRoute(builder: (_) => const QuranIndexViewWeb(initialIndex: 1)));
+                      if (result != null && onNavigateToPage != null) {
+                        if (result is Map<String, dynamic>) {
+                          onNavigateToPage!(result['page'] as int, verseKey: result['verseKey'] as String?);
+                        } else if (result is int) {
+                          onNavigateToPage!(result);
+                        }
+                      }
+                    },
                       child: _buildFrameInfoBox(
                         theme: mushafTheme,
                         child: Text(
@@ -175,7 +186,16 @@ class QuranPageFrameWeb extends StatelessWidget {
                   child: FractionalTranslation(
                     translation: const Offset(0.0, -0.5),
                     child: GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuranIndexViewWeb(initialIndex: 0))),
+                      onTap: () async {
+                      final result = await Navigator.push<dynamic>(context, MaterialPageRoute(builder: (_) => const QuranIndexViewWeb(initialIndex: 0)));
+                      if (result != null && onNavigateToPage != null) {
+                        if (result is Map<String, dynamic>) {
+                          onNavigateToPage!(result['page'] as int, verseKey: result['verseKey'] as String?);
+                        } else if (result is int) {
+                          onNavigateToPage!(result);
+                        }
+                      }
+                    },
                       child: _buildFrameInfoBox(
                         theme: mushafTheme,
                         child: FittedBox(

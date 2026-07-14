@@ -244,6 +244,7 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                                               child: QuranPageWidgetWeb(
                                                 key: ValueKey('page_$leftPage'),
                                                 pageNumber: leftPage,
+                                                  onNavigateToPage: (page, {verseKey}) => _jumpToPage(page, verseKey: verseKey),
                                                 highlightVerseKey: (rightPage == _currentPage || leftPage == _currentPage) ? _highlightVerseKey : null,
                                               ),
                                             ),
@@ -273,6 +274,7 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                                           child: QuranPageWidgetWeb(
                                             key: ValueKey('page_$currentPage'),
                                             pageNumber: currentPage,
+                                              onNavigateToPage: (page, {verseKey}) => _jumpToPage(page, verseKey: verseKey),
                                             highlightVerseKey: currentPage == _currentPage ? _highlightVerseKey : null,
                                           ),
                                         ),
