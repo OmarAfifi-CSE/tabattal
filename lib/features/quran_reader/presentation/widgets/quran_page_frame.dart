@@ -16,6 +16,7 @@ class QuranPageFrame extends StatelessWidget {
   final int pageNumber;
   final String surahName;
   final String juzName;
+  final bool isDesktopLayout;
 
   const QuranPageFrame({
     super.key,
@@ -23,6 +24,7 @@ class QuranPageFrame extends StatelessWidget {
     required this.pageNumber,
     required this.surahName,
     required this.juzName,
+    this.isDesktopLayout = false,
   });
 
   /// Builds inline text spans for a Hizb label, making the digit larger and on a new line.
@@ -127,6 +129,7 @@ class QuranPageFrame extends StatelessWidget {
                       goldColor: mushafTheme.goldColor,
                       innerColor: mushafTheme.innerBorderColor,
                       backgroundColor: mushafTheme.backgroundColor,
+                      isDesktopLayout: isDesktopLayout,
                     ),
                     size: Size.infinite,
                   ),
@@ -134,8 +137,8 @@ class QuranPageFrame extends StatelessWidget {
 
                 // ── LAYER 2: Quran text content ─────────────────────────────
                 Positioned(
-                  top: pageHeight * 0.04, // Moved up to match the higher border
-                  bottom: pageHeight * 0.05,
+                  top: isDesktopLayout ? pageHeight * 0.045 : pageHeight * 0.04,
+                  bottom: isDesktopLayout ? pageHeight * 0.045 : pageHeight * 0.04,
                   left: pageWidth * 0.08,
                   right: pageWidth * 0.08,
                   child: RepaintBoundary(child: child),
@@ -145,7 +148,7 @@ class QuranPageFrame extends StatelessWidget {
 
                 // Juz Name
                 Positioned(
-                  top: pageHeight * 0.02,
+                  top: isDesktopLayout ? pageHeight * 0.025 : pageHeight * 0.02,
                   left: pageWidth * 0.08,
                   width: pageWidth * 0.35,
                   child: FractionalTranslation(
@@ -168,7 +171,7 @@ class QuranPageFrame extends StatelessWidget {
 
                 // Surah Name
                 Positioned(
-                  top: pageHeight * 0.02,
+                  top: isDesktopLayout ? pageHeight * 0.025 : pageHeight * 0.02,
                   left: pageWidth * 0.46,
                   width: pageWidth * 0.33,
                   child: FractionalTranslation(
@@ -193,17 +196,17 @@ class QuranPageFrame extends StatelessWidget {
 
                 // Hamburger Menu
                 Positioned(
-                  top: pageHeight * 0.02,
-                  right: pageWidth * 0.07,
+                  top: isDesktopLayout ? pageHeight * 0.025 : pageHeight * 0.02,
+                  right: isDesktopLayout ? pageWidth * 0.06: pageWidth * 0.07,
                   child: FractionalTranslation(
-                    translation: const Offset(0.0, -0.5),
+                    translation: const Offset(0, -0.5),
                     child: GestureDetector(
                       onTap: () => Scaffold.of(context).openDrawer(),
                       child: _buildFrameInfoBox(
                         theme: mushafTheme,
                         margin: kIsWeb ? const EdgeInsets.symmetric(horizontal: 6) : EdgeInsets.symmetric(horizontal: 6.w),
                         padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0),
-                        child: Icon(Icons.segment_rounded, color: mushafTheme.goldColor, size: kIsWeb ? 24 : 24.sp),
+                        child: Icon(Icons.segment_rounded, color: mushafTheme.goldColor, size: isDesktopLayout ? 20.sp : 24.sp),
                       ),
                     ),
                   ),
@@ -211,7 +214,7 @@ class QuranPageFrame extends StatelessWidget {
 
                 // ── LAYER 4: Page Number (bottom cut) ──────────────────────
                 Positioned(
-                  bottom: pageHeight * 0.03,
+                  bottom: isDesktopLayout ? pageHeight * 0.035 : pageHeight * 0.03,
                   left: pageWidth * 0.42,
                   width: pageWidth * 0.16,
                   child: FractionalTranslation(

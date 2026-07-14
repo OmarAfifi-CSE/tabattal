@@ -214,6 +214,7 @@ class _QuranPageViewScreenState extends State<QuranWebPageViewScreen> {
                                               key: ValueKey('page_$rightPage'),
                                               pageNumber: rightPage,
                                               highlightVerseKey: (rightPage == _currentPage || leftPage == _currentPage) ? _highlightVerseKey : null,
+                                              isDesktopLayout: true,
                                             ),
                                           ),
                                         ),
@@ -243,6 +244,7 @@ class _QuranPageViewScreenState extends State<QuranWebPageViewScreen> {
                                                 key: ValueKey('page_$leftPage'),
                                                 pageNumber: leftPage,
                                                 highlightVerseKey: (rightPage == _currentPage || leftPage == _currentPage) ? _highlightVerseKey : null,
+                                                isDesktopLayout: true,
                                               ),
                                             ),
                                           ),
@@ -260,6 +262,7 @@ class _QuranPageViewScreenState extends State<QuranWebPageViewScreen> {
                                         key: ValueKey('page_$pageNumber'),
                                         pageNumber: pageNumber,
                                         highlightVerseKey: pageNumber == _currentPage ? _highlightVerseKey : null,
+                                        isDesktopLayout: true,
                                       ),
                                     ),
                                   );

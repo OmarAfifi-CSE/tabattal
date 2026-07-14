@@ -7,6 +7,7 @@ class QuranBorderPainter extends CustomPainter {
   final Color goldColor;
   final Color innerColor;
   final Color backgroundColor;
+  final bool isDesktopLayout;
 
   QuranBorderPainter({
     required this.pageNumber,
@@ -14,6 +15,7 @@ class QuranBorderPainter extends CustomPainter {
     required this.goldColor,
     required this.innerColor,
     required this.backgroundColor,
+    this.isDesktopLayout = false,
   });
 
   @override
@@ -29,8 +31,8 @@ class QuranBorderPainter extends CustomPainter {
     // 2. Constants for positioning
     final double left = W * 0.05;
     final double right = W * 0.95;
-    final double top = H * 0.02;
-    final double bottom = H * 0.97;
+    final double top = isDesktopLayout ? H * 0.025 : H * 0.02;
+    final double bottom = isDesktopLayout ? H * 0.965 : H * 0.97;
 
     // 3. Build the exact continuous wireframe of the border with cuts
     final Path framePath = Path();

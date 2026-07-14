@@ -36,11 +36,13 @@ import '../../../../core/theme/mushaf_theme.dart';
 class QuranPageWidget extends StatefulWidget {
   final int pageNumber;
   final String? highlightVerseKey;
+  final bool isDesktopLayout;
 
   const QuranPageWidget({
     super.key,
     required this.pageNumber,
     this.highlightVerseKey,
+    this.isDesktopLayout = false,
   });
 
   @override
@@ -355,8 +357,8 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
 
     final wordTextStyle = AppTextStyles.quranText.copyWith(
       fontFamily: customFontFamily,
-      fontSize: kIsWeb ? 42 : 32,
-      height: kIsWeb ? 1.2 : 1.5,
+      fontSize: widget.isDesktopLayout ? 42 : 32,
+      height: widget.isDesktopLayout ? 1.2 : 1.5,
     );
 
     final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
@@ -563,6 +565,7 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
         pageNumber: widget.pageNumber,
         surahName: surahName,
         juzName: juzName,
+        isDesktopLayout: widget.isDesktopLayout,
         child: BlocBuilder<BookmarkBloc, BookmarkState>(
           builder: (context, bookmarkState) {
             return BlocBuilder<AudioBloc, AudioState>(
@@ -590,8 +593,8 @@ class _QuranPageWidgetState extends State<QuranPageWidget> with SingleTickerProv
                   child: SizedBox(
                   // Use a fixed virtual canvas size instead of expensive IntrinsicWidth
                   // Increased width from 460 to 490 to prevent horizontal overflow on dense lines like page 453
-                  width: kIsWeb ? 650 : 490, 
-                  height: kIsWeb ? 950 : 1020,
+                  width: widget.isDesktopLayout ? 650 : 490, 
+                  height: widget.isDesktopLayout ? 950 : 1020,
                   child: Column(
                     key: _pageColumnKey,
                     mainAxisSize: MainAxisSize.max,
