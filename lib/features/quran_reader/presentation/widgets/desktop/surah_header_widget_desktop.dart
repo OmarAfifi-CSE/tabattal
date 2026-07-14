@@ -148,10 +148,8 @@ class SurahHeaderWidgetDesktop extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final innerTextColor = isDarkMode ? mushafTheme.textColor : mushafTheme.goldColor;
 
-    return Container(
+    return SizedBox(
       width: canvasWidth,
-      // TODO: This margin controls the space above and below the Surah Header Frame for ALL platforms
-      margin: const EdgeInsets.symmetric(vertical: 6.0),
       child: FittedBox(
         fit: BoxFit.fitWidth,
         child: SizedBox(

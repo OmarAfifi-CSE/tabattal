@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../widgets/mobile/quran_page_widget_mobile.dart';
 import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_state.dart';
-import '../../widgets/media_control_bar.dart';
+import '../../widgets/mobile/media_control_bar_mobile.dart';
 import '../../../../../core/services/audio_preferences_service.dart';
 import '../../../domain/repositories/quran_repository.dart';
 import '../../../data/models/search_verse_model.dart';
@@ -197,7 +197,7 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                     bottom: isVisible ? 16.h : -200.h,
                     left: 16.w,
                     right: 16.w,
-                    child: MediaControlBar(
+                    child: MediaControlBarMobile(
                       isExpanded: _isAudioExpanded,
                       onToggleExpanded: () {
                         setState(() => _isAudioExpanded = !_isAudioExpanded);
