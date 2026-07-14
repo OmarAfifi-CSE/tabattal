@@ -1,5 +1,8 @@
-import 'package:dio/dio.dart';
+import 'dart:ui';
+import 'package:audio_service/audio_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../l10n/app_localizations.dart';
+import 'package:dio/dio.dart';
 import '../database/database_helper.dart';
 import '../network/api_client.dart';
 import '../network/tafsir_download_service.dart';
@@ -10,7 +13,6 @@ import '../../features/quran_reader/domain/repositories/quran_repository.dart';
 import '../../features/quran_reader/domain/repositories/bookmark_repository.dart';
 
 import '../services/quran_audio_handler.dart';
-import 'package:audio_service/audio_service.dart';
 
 class DependencyContainer {
   final DatabaseHelper databaseHelper;
@@ -64,9 +66,9 @@ Future<DependencyContainer> configureDependencies() async {
 
   final audioHandler = await AudioService.init<QuranAudioHandler>(
     builder: () => QuranAudioHandler(),
-    config: const AudioServiceConfig(
+    config: AudioServiceConfig(
       androidNotificationChannelId: 'com.tabattal.channel.audio',
-      androidNotificationChannelName: 'تلاوات القرآن',
+      androidNotificationChannelName: lookupAppLocalizations(PlatformDispatcher.instance.locale).notificationChannelRecitations,
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
     ),

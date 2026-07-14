@@ -691,6 +691,60 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'سيتم إيقاف التلاوة بعد {minutes} دقائق'**
   String sleepTimerStopped(int minutes);
+
+  /// No description provided for @ok.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسنًا'**
+  String get ok;
+
+  /// No description provided for @tafsirAlMuyassar.
+  ///
+  /// In ar, this message translates to:
+  /// **'الميسر'**
+  String get tafsirAlMuyassar;
+
+  /// No description provided for @tafsirIbnKathir.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابن كثير'**
+  String get tafsirIbnKathir;
+
+  /// No description provided for @tafsirAlSaadi.
+  ///
+  /// In ar, this message translates to:
+  /// **'السعدي'**
+  String get tafsirAlSaadi;
+
+  /// No description provided for @tafsirAlTabari.
+  ///
+  /// In ar, this message translates to:
+  /// **'الطبري'**
+  String get tafsirAlTabari;
+
+  /// No description provided for @tafsirAlQurtubi.
+  ///
+  /// In ar, this message translates to:
+  /// **'القرطبي'**
+  String get tafsirAlQurtubi;
+
+  /// No description provided for @tafsirAlWaseet.
+  ///
+  /// In ar, this message translates to:
+  /// **'الوسيط'**
+  String get tafsirAlWaseet;
+
+  /// No description provided for @tafsirAlBaghawi.
+  ///
+  /// In ar, this message translates to:
+  /// **'البغوي'**
+  String get tafsirAlBaghawi;
+
+  /// No description provided for @notificationChannelRecitations.
+  ///
+  /// In ar, this message translates to:
+  /// **'تلاوات القرآن'**
+  String get notificationChannelRecitations;
 }
 
 class _AppLocalizationsDelegate

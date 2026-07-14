@@ -56,7 +56,9 @@
   "downloadingTafsir": "Downloading Tafsir... {percent}%",
   "@downloadingTafsir": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "downloadingTafsirBackground": "Downloading remaining Tafsir in background...",
@@ -64,7 +66,9 @@
   "tafsirPartialDownloadHint": "{percent}% of Tafsir downloaded. Continue download?",
   "@tafsirPartialDownloadHint": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "continueDownload": "Continue Download",
@@ -75,7 +79,9 @@
   "downloadFailed": "Download failed: {name}",
   "@downloadFailed": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "downloadFailedInternet": "Failed to download Tafsir. Please check your internet connection.",
@@ -86,67 +92,99 @@
   "surahBookmarkTitle": "Surah {name}",
   "@surahBookmarkTitle": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "verseBookmarkSubtitle": "Verse {ayah}  •  Page {page}",
   "@verseBookmarkSubtitle": {
     "placeholders": {
-      "ayah": { "type": "String" },
-      "page": { "type": "String" }
+      "ayah": {
+        "type": "String"
+      },
+      "page": {
+        "type": "String"
+      }
     }
   },
   "goToPageTitle": "Go to Page {num}",
   "@goToPageTitle": {
     "placeholders": {
-      "num": { "type": "int" }
+      "num": {
+        "type": "int"
+      }
     }
   },
   "goToJuzTitle": "Go to Juz {name} ({num}) — Page {page}",
   "@goToJuzTitle": {
     "placeholders": {
-      "name": { "type": "String" },
-      "num": { "type": "int" },
-      "page": { "type": "int" }
+      "name": {
+        "type": "String"
+      },
+      "num": {
+        "type": "int"
+      },
+      "page": {
+        "type": "int"
+      }
     }
   },
   "goToSurahTitle": "Go to Surah {name} ({num}) — Page {page}",
   "@goToSurahTitle": {
     "placeholders": {
-      "name": { "type": "String" },
-      "num": { "type": "int" },
-      "page": { "type": "int" }
+      "name": {
+        "type": "String"
+      },
+      "num": {
+        "type": "int"
+      },
+      "page": {
+        "type": "int"
+      }
     }
   },
   "outOfRange": "Number {num} is out of range",
   "@outOfRange": {
     "placeholders": {
-      "num": { "type": "String" }
+      "num": {
+        "type": "String"
+      }
     }
   },
   "surahListItem": "Surah {name}",
   "@surahListItem": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "juzListItem": "Juz' {name}",
   "@juzListItem": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "pageListItem": "Page {page}",
   "@pageListItem": {
     "placeholders": {
-      "page": { "type": "String" }
+      "page": {
+        "type": "String"
+      }
     }
   },
   "surahAndAyah": "Surah {surah} — Verse {ayah}",
   "@surahAndAyah": {
     "placeholders": {
-      "surah": { "type": "String" },
-      "ayah": { "type": "String" }
+      "surah": {
+        "type": "String"
+      },
+      "ayah": {
+        "type": "String"
+      }
     }
   },
   "languageArabic": "العربية",
@@ -164,15 +202,26 @@
   "sleepTimerStopped": "Recitation will stop in {minutes} minutes",
   "@sleepTimerStopped": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "themeCream": "Creamy",
   "themeWhite": "White",
   "themeMint": "Mint",
   "themeIceBlue": "Ice Blue",
-  "themeDark": "Dark",
   "themeScrollDirection": "Scroll Direction",
   "themeScrollHorizontal": "Horizontal",
-  "themeScrollVertical": "Vertical"
+  "themeScrollVertical": "Vertical",
+  "ok": "OK",
+  "tafsirAlMuyassar": "Al-Muyassar",
+  "tafsirIbnKathir": "Ibn Kathir",
+  "tafsirAlSaadi": "Al-Saadi",
+  "tafsirAlTabari": "Al-Tabari",
+  "tafsirAlQurtubi": "Al-Qurtubi",
+  "tafsirAlWaseet": "Al-Waseet",
+  "tafsirAlBaghawi": "Al-Baghawi",
+  "notificationChannelRecitations": "Quran Recitations",
+  "audioSpeed": "Speed"
 }

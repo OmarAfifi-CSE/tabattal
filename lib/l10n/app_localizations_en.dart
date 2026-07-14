@@ -109,7 +109,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ayahPrefix => 'Verse';
 
   @override
-  String get audioSpeed => 'سرعة التلاوة';
+  String get audioSpeed => 'Speed';
 
   @override
   String get themeCream => 'Creamy';
@@ -336,4 +336,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String sleepTimerStopped(int minutes) {
     return 'Recitation will stop in $minutes minutes';
   }
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get tafsirAlMuyassar => 'Al-Muyassar';
+
+  @override
+  String get tafsirIbnKathir => 'Ibn Kathir';
+
+  @override
+  String get tafsirAlSaadi => 'Al-Saadi';
+
+  @override
+  String get tafsirAlTabari => 'Al-Tabari';
+
+  @override
+  String get tafsirAlQurtubi => 'Al-Qurtubi';
+
+  @override
+  String get tafsirAlWaseet => 'Al-Waseet';
+
+  @override
+  String get tafsirAlBaghawi => 'Al-Baghawi';
+
+  @override
+  String get notificationChannelRecitations => 'Quran Recitations';
 }

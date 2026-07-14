@@ -404,14 +404,14 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
               onSelected: _changeTafsir,
               itemBuilder: (context) {
                 final options = [
-                  (16, 'الميسر'),
-                  (14, 'ابن كثير'),
-                  (91, 'السعدي'),
-                  (15, 'الطبري'),
-                  (90, 'القرطبي'),
-                  (93, 'الوسيط'),
-                  (94, 'البغوي'),
-                ];
+                        (16, AppLocalizations.of(context)!.tafsirAlMuyassar),
+                        (14, AppLocalizations.of(context)!.tafsirIbnKathir),
+                        (91, AppLocalizations.of(context)!.tafsirAlSaadi),
+                        (15, AppLocalizations.of(context)!.tafsirAlTabari),
+                        (90, AppLocalizations.of(context)!.tafsirAlQurtubi),
+                        (93, AppLocalizations.of(context)!.tafsirAlWaseet),
+                        (94, AppLocalizations.of(context)!.tafsirAlBaghawi),
+                      ];
                 return options.map((option) {
                   final isSelected = option.$1 == _tafsirResourceId;
                   final isDownloaded = _downloadedTafsirs.contains(option.$1);

@@ -200,16 +200,17 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet> with Sing
     return text.replaceAll(RegExp(r' {3,}'), '  •  ').trim();
   }
 
-  String _getTafsirName(int id) {
+  String _getTafsirName(BuildContext context, int id) {
+    final l10n = AppLocalizations.of(context)!;
     switch (id) {
-      case 16: return 'الميسر';
-      case 14: return 'ابن كثير';
-      case 91: return 'السعدي';
-      case 15: return 'الطبري';
-      case 90: return 'القرطبي';
-      case 93: return 'الوسيط';
-      case 94: return 'البغوي';
-      default: return 'الميسر';
+      case 16: return l10n.tafsirAlMuyassar;
+      case 14: return l10n.tafsirIbnKathir;
+      case 91: return l10n.tafsirAlSaadi;
+      case 15: return l10n.tafsirAlTabari;
+      case 90: return l10n.tafsirAlQurtubi;
+      case 93: return l10n.tafsirAlWaseet;
+      case 94: return l10n.tafsirAlBaghawi;
+      default: return l10n.tafsirAlMuyassar;
     }
   }
 
@@ -272,14 +273,14 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet> with Sing
                           currentState is TafsirDownloading || 
                           currentState is TafsirDownloadError || 
                           currentState is TafsirPartialDownloadError || 
-                          (currentState is QuranOverlayLoading && initialTitle.contains('التفسير')))
+                          (currentState is QuranOverlayLoading && initialTitle.contains(AppLocalizations.of(context)!.menuTafsir)))
                         Stack(
                           alignment: Alignment.center,
                           children: [
                             Align(
                               alignment: Alignment.center,
                               child: Text(
-                                'التفسير',
+                                AppLocalizations.of(context)!.menuTafsir,
                                 style: AppTextStyles.headerText.copyWith(color: AppColors.accentGold),
                               ),
                             ),
@@ -315,13 +316,13 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet> with Sing
                                     },
                                     itemBuilder: (context) {
                                       final options = [
-                                        (16, 'الميسر'),
-                                        (14, 'ابن كثير'),
-                                        (91, 'السعدي'),
-                                        (15, 'الطبري'),
-                                        (90, 'القرطبي'),
-                                        (93, 'الوسيط'),
-                                        (94, 'البغوي'),
+                                        (16, AppLocalizations.of(context)!.tafsirAlMuyassar),
+                                        (14, AppLocalizations.of(context)!.tafsirIbnKathir),
+                                        (91, AppLocalizations.of(context)!.tafsirAlSaadi),
+                                        (15, AppLocalizations.of(context)!.tafsirAlTabari),
+                                        (90, AppLocalizations.of(context)!.tafsirAlQurtubi),
+                                        (93, AppLocalizations.of(context)!.tafsirAlWaseet),
+                                        (94, AppLocalizations.of(context)!.tafsirAlBaghawi),
                                       ];
                                       return options.map((option) {
                                         final isSelected = option.$1 == displayResourceId;
@@ -381,7 +382,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet> with Sing
                                     },
                                       child: Container(
                                         height: 36.h,
-                                        width: 100.w,
+                                        width: Localizations.localeOf(context).languageCode == 'en' ? 130.w : 100.w,
                                         padding: EdgeInsets.symmetric(horizontal: 10.w),
                                         decoration: BoxDecoration(
                                           color: AppColors.background,
@@ -394,7 +395,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet> with Sing
                                           Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.accentGold, size: 20.sp),
                                           Expanded(
                                             child: Text(
-                                              _getTafsirName(displayResourceId),
+                                              _getTafsirName(context, displayResourceId),
                                               textAlign: TextAlign.right,
                                               style: AppTextStyles.menuItemText.copyWith(
                                                 fontSize: 12.sp,

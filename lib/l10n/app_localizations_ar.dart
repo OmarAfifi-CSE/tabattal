@@ -335,4 +335,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String sleepTimerStopped(int minutes) {
     return 'سيتم إيقاف التلاوة بعد $minutes دقائق';
   }
+
+  @override
+  String get ok => 'حسنًا';
+
+  @override
+  String get tafsirAlMuyassar => 'الميسر';
+
+  @override
+  String get tafsirIbnKathir => 'ابن كثير';
+
+  @override
+  String get tafsirAlSaadi => 'السعدي';
+
+  @override
+  String get tafsirAlTabari => 'الطبري';
+
+  @override
+  String get tafsirAlQurtubi => 'القرطبي';
+
+  @override
+  String get tafsirAlWaseet => 'الوسيط';
+
+  @override
+  String get tafsirAlBaghawi => 'البغوي';
+
+  @override
+  String get notificationChannelRecitations => 'تلاوات القرآن';
 }

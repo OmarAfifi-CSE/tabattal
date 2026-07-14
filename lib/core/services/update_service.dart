@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_update/in_app_update.dart';
+import '../../l10n/app_localizations.dart';
 
 class UpdateService {
   static const String _configUrl =
@@ -120,7 +121,7 @@ class UpdateService {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('حسنًا'), // We can improve this with proper l10n later if needed
+            child: Text(AppLocalizations.of(context)!.ok), // We can improve this with proper l10n later if needed
           ),
           // We can add a URL launcher button here later if `url` is provided
         ],

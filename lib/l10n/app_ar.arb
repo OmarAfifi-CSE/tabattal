@@ -38,7 +38,7 @@
   "themeWhite": "أبيض",
   "themeMint": "نعناعي",
   "themeIceBlue": "أزرق ثلجي",
-  "themeDark": "داكن",
+  "themeDark": "ليلي",
   "themeScrollDirection": "اتجاه التمرير",
   "themeScrollHorizontal": "أفقي",
   "themeScrollVertical": "رأسي",
@@ -65,7 +65,9 @@
   "downloadingTafsir": "جاري تحميل التفسير... {percent}%",
   "@downloadingTafsir": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "downloadingTafsirBackground": "جاري تحميل باقي التفسير في الخلفية...",
@@ -73,7 +75,9 @@
   "tafsirPartialDownloadHint": "تم تحميل {percent}% من التفسير. هل ترغب في استكمال التحميل؟",
   "@tafsirPartialDownloadHint": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "continueDownload": "استكمال التحميل",
@@ -84,7 +88,9 @@
   "downloadFailed": "فشل التحميل: {name}",
   "@downloadFailed": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "downloadFailedInternet": "فشل تنزيل التفسير. يرجى التحقق من اتصالك بالإنترنت.",
@@ -95,73 +101,104 @@
   "surahBookmarkTitle": "سورة {name}",
   "@surahBookmarkTitle": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "verseBookmarkSubtitle": "الآية {ayah}  •  صفحة {page}",
   "@verseBookmarkSubtitle": {
     "placeholders": {
-      "ayah": { "type": "String" },
-      "page": { "type": "String" }
+      "ayah": {
+        "type": "String"
+      },
+      "page": {
+        "type": "String"
+      }
     }
   },
   "goToPageTitle": "الذهاب للصفحة {num}",
   "@goToPageTitle": {
     "placeholders": {
-      "num": { "type": "int" }
+      "num": {
+        "type": "int"
+      }
     }
   },
   "goToJuzTitle": "الذهاب للجزء {name} ({num}) — صفحة {page}",
   "@goToJuzTitle": {
     "placeholders": {
-      "name": { "type": "String" },
-      "num": { "type": "int" },
-      "page": { "type": "int" }
+      "name": {
+        "type": "String"
+      },
+      "num": {
+        "type": "int"
+      },
+      "page": {
+        "type": "int"
+      }
     }
   },
   "goToSurahTitle": "الذهاب لسورة {name} ({num}) — صفحة {page}",
   "@goToSurahTitle": {
     "placeholders": {
-      "name": { "type": "String" },
-      "num": { "type": "int" },
-      "page": { "type": "int" }
+      "name": {
+        "type": "String"
+      },
+      "num": {
+        "type": "int"
+      },
+      "page": {
+        "type": "int"
+      }
     }
   },
   "outOfRange": "الرقم {num} خارج النطاق المتاح",
   "@outOfRange": {
     "placeholders": {
-      "num": { "type": "String" }
+      "num": {
+        "type": "String"
+      }
     }
   },
   "surahListItem": "سورة {name}",
   "@surahListItem": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "juzListItem": "الجزء {name}",
   "@juzListItem": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "pageListItem": "صفحة {page}",
   "@pageListItem": {
     "placeholders": {
-      "page": { "type": "String" }
+      "page": {
+        "type": "String"
+      }
     }
   },
   "surahAndAyah": "سورة {surah} - آية {ayah}",
   "@surahAndAyah": {
     "placeholders": {
-      "surah": { "type": "String" },
-      "ayah": { "type": "String" }
+      "surah": {
+        "type": "String"
+      },
+      "ayah": {
+        "type": "String"
+      }
     }
   },
   "languageArabic": "العربية",
   "languageEnglish": "English",
   "languagePickerTitle": "اختر اللغة",
-  "themeDark": "ليلي",
   "themeAppearanceTitle": "المظهر",
   "themeAppearanceSubtitle": "تخصيص ألوان المصحف والوضع الليلي",
   "themeDarkMode": "الوضع الليلي",
@@ -173,7 +210,18 @@
   "sleepTimerStopped": "سيتم إيقاف التلاوة بعد {minutes} دقائق",
   "@sleepTimerStopped": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
-  }
+  },
+  "ok": "حسنًا",
+  "tafsirAlMuyassar": "الميسر",
+  "tafsirIbnKathir": "ابن كثير",
+  "tafsirAlSaadi": "السعدي",
+  "tafsirAlTabari": "الطبري",
+  "tafsirAlQurtubi": "القرطبي",
+  "tafsirAlWaseet": "الوسيط",
+  "tafsirAlBaghawi": "البغوي",
+  "notificationChannelRecitations": "تلاوات القرآن"
 }

@@ -1,0 +1,270 @@
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\core\constants\reciter_catalog.dart
+7: 'مرتل': {
+8: 'محمود خليل الحصري': 'Husary_128kbps',
+9: 'عبد الباسط عبد الصمد': 'Abdul_Basit_Murattal_192kbps',
+10: 'محمد صديق المنشاوي': 'Minshawy_Murattal_128kbps',
+11: 'مشاري العفاسي': 'Alafasy_128kbps',
+12: 'ماهر المعيقلي': 'MaherAlMuaiqly128kbps',
+13: 'ياسر الدوسري': 'Yasser_Ad-Dussary_128kbps',
+14: 'ناصر القطامي': 'Nasser_Alqatami_128kbps',
+15: 'سعود الشريم': 'Saud_Al-Shuraim_128kbps',
+16: 'عبدالرحمن السديس': 'Abdurrahmaan_As-Sudais_192kbps',
+17: 'أحمد العجمي': 'Ahmed_ibn_Ali_Al-Ajamy_128kbps',
+18: 'سعد الغامدي': 'Ghamadi_40kbps',
+19: 'فارس عباد': 'Fares_Abbad_64kbps',
+20: 'أبو بكر الشاطري': 'Abu_Bakr_Ash-Shaatree_128kbps',
+22: 'مجود': {
+23: 'عبد الباسط عبد الصمد': 'Abdul_Basit_Mujawwad_128kbps',
+24: 'محمد صديق المنشاوي': 'Minshawy_Mujawwad_192kbps',
+25: 'محمود خليل الحصري': 'Husary_Mujawwad_64kbps',
+26: 'مصطفى إسماعيل': 'Mustafa_Ismail_48kbps',
+28: 'المصحف المعلم': {
+29: 'محمود خليل الحصري': 'Husary_Muallim_128kbps',
+30: 'محمد صديق المنشاوي': 'Minshawy_Teacher_128kbps',
+31: 'خليفة الطنيجي': 'Khaalid_Abdullaah_al-Qahtaanee_192kbps',
+33: 'رواية ورش': {
+34: 'محمود خليل الحصري': 'Husary_128kbps',
+35: 'عبد الباسط عبد الصمد': 'Abdul_Basit_Murattal_192kbps',
+36: 'ياسين الجزائري': 'Yaser_Salamah_128kbps',
+38: 'الترجمات الصوتية': {
+39: 'إبراهيم ووك (إنجليزي)': 'English/Sahih_Intnl_Ibrahim_Walk_192kbps',
+40: 'عبد الله بصفر وإبراهيم ووك (عربي / إنجليزي)': 'MultiLanguage/Basfar_Walk_192kbps',
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\core\di\injection.dart
+69: androidNotificationChannelName: 'تلاوات القرآن',
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\core\network\audio_download_manager.dart
+16: 'مرتل': {
+17: 'محمود خليل الحصري': 'Husary_128kbps',
+18: 'عبد الباسط عبد الصمد': 'Abdul_Basit_Murattal_192kbps',
+19: 'محمد صديق المنشاوي': 'Minshawy_Murattal_128kbps',
+20: 'مشاري العفاسي': 'Alafasy_128kbps',
+21: 'ماهر المعيقلي': 'MaherAlMuaiqly128kbps',
+22: 'ياسر الدوسري': 'Yasser_Ad-Dussary_128kbps',
+23: 'ناصر القطامي': 'Nasser_Alqatami_128kbps',
+24: 'سعود الشريم': 'Saud_Al-Shuraim_128kbps',
+25: 'عبدالرحمن السديس': 'Abdurrahmaan_As-Sudais_192kbps',
+26: 'أحمد العجمي': 'Ahmed_ibn_Ali_Al-Ajamy_128kbps',
+27: 'سعد الغامدي': 'Ghamadi_40kbps',
+28: 'فارس عباد': 'Fares_Abbad_64kbps',
+29: 'أبو بكر الشاطري': 'Abu_Bakr_Ash-Shaatree_128kbps',
+31: 'مجود': {
+32: 'عبد الباسط عبد الصمد': 'Abdul_Basit_Mujawwad_128kbps',
+33: 'محمد صديق المنشاوي': 'Minshawy_Mujawwad_192kbps',
+34: 'محمود خليل الحصري': 'Husary_Mujawwad_64kbps',
+35: 'مصطفى إسماعيل': 'Mustafa_Ismail_48kbps',
+37: 'المصحف المعلم': {
+38: 'محمود خليل الحصري': 'Husary_Muallim_128kbps',
+39: 'محمد صديق المنشاوي': 'Minshawy_Teacher_128kbps',
+40: 'خليفة الطنيجي': 'Khaalid_Abdullaah_al-Qahtaanee_192kbps', // Alternative for teacher if missing
+42: 'رواية ورش': {
+43: 'محمود خليل الحصري': 'Husary_128kbps', // Typically different path for warsh, mapped to base for now if unavailable
+44: 'عبد الباسط عبد الصمد': 'Abdul_Basit_Murattal_192kbps', // Fallback
+45: 'ياسين الجزائري': 'Yaser_Salamah_128kbps', // Fallback
+47: 'الترجمات الصوتية': {
+48: 'إبراهيم ووك (إنجليزي)': 'English/Sahih_Intnl_Ibrahim_Walk_192kbps',
+49: 'عبد الله بصفر وإبراهيم ووك (عربي / إنجليزي)': 'MultiLanguage/Basfar_Walk_192kbps',
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\core\services\audio_preferences_service.dart
+12: static const String defaultCategory = 'مرتل';
+13: static const String defaultReciter = 'محمود خليل الحصري';
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\core\services\update_service.dart
+123: child: const Text('حسنًا'), // We can improve this with proper l10n later if needed
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\core\utils\reciter_localization.dart
+7: 'مرتل': 'Murattal',
+8: 'مجود': 'Mujawwad',
+9: 'المصحف المعلم': 'Teacher (Muallim)',
+10: 'رواية ورش': 'Warsh Recitation',
+11: 'الترجمات الصوتية': 'Audio Translations',
+13: 'محمود خليل الحصري': 'Mahmoud Khalil Al-Husary',
+14: 'عبد الباسط عبد الصمد': 'Abdul Basit Abdul Samad',
+15: 'محمد صديق المنشاوي': 'Muhammad Siddiq Al-Minshawi',
+16: 'مشاري العفاسي': 'Mishary Al-Afasy',
+17: 'ماهر المعيقلي': 'Maher Al-Muaiqly',
+18: 'ياسر الدوسري': 'Yasser Al-Dosari',
+19: 'ناصر القطامي': 'Nasser Al-Qatami',
+20: 'سعود الشريم': 'Saud Al-Shuraim',
+21: 'عبدالرحمن السديس': 'Abdul Rahman Al-Sudais',
+22: 'أحمد العجمي': 'Ahmed Al-Ajmi',
+23: 'سعد الغامدي': 'Saad Al-Ghamdi',
+24: 'فارس عباد': 'Fares Abbad',
+25: 'أبو بكر الشاطري': 'Abu Bakr Al-Shatri',
+26: 'مصطفى إسماعيل': 'Mustafa Ismail',
+27: 'خليفة الطنيجي': 'Khalifa Al-Tunaiji',
+28: 'ياسين الجزائري': 'Yassin Al-Jazaery',
+29: 'إبراهيم ووك (إنجليزي)': 'Ibrahim Walk (English)',
+30: 'عبد الله بصفر وإبراهيم ووك (عربي / إنجليزي)': 'Basfar & Walk (Arabic/English)',
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\bloc\audio\audio_bloc.dart
+187: : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - البسملة';
+191: : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - الآية ${verse.ayah.toArabicDigits}';
+316: : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - البسملة';
+320: : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - الآية ${verse.ayah.toArabicDigits}';
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\pages\search\desktop\quran_search_screen_desktop.dart
+128: const arabicNumbers = '٠١٢٣٤٥٦٧٨٩';
+140: c = c.replaceAll('ـ', '');
+141: c = c.replaceAll(RegExp(r'[اأإآٱى]'), '');
+142: c = c.replaceAll(RegExp(r'ة'), 'ه');
+143: c = c.replaceAll(RegExp(r'[ئ]'), 'ي');
+144: c = c.replaceAll(RegExp(r'ؤ'), 'و');
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\pages\search\mobile\quran_search_screen_mobile.dart
+129: const arabicNumbers = '٠١٢٣٤٥٦٧٨٩';
+141: c = c.replaceAll('ـ', '');
+142: c = c.replaceAll(RegExp(r'[اأإآٱى]'), '');
+143: c = c.replaceAll(RegExp(r'ة'), 'ه');
+144: c = c.replaceAll(RegExp(r'[ئ]'), 'ي');
+145: c = c.replaceAll(RegExp(r'ؤ'), 'و');
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\pages\search\tablet\quran_search_screen_tablet.dart
+128: const arabicNumbers = '٠١٢٣٤٥٦٧٨٩';
+140: c = c.replaceAll('ـ', '');
+141: c = c.replaceAll(RegExp(r'[اأإآٱى]'), '');
+142: c = c.replaceAll(RegExp(r'ة'), 'ه');
+143: c = c.replaceAll(RegExp(r'[ئ]'), 'ي');
+144: c = c.replaceAll(RegExp(r'ؤ'), 'و');
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\pages\search\web\quran_search_screen_web.dart
+128: const arabicNumbers = '٠١٢٣٤٥٦٧٨٩';
+140: c = c.replaceAll('ـ', '');
+141: c = c.replaceAll(RegExp(r'[اأإآٱى]'), '');
+142: c = c.replaceAll(RegExp(r'ة'), 'ه');
+143: c = c.replaceAll(RegExp(r'[ئ]'), 'ي');
+144: c = c.replaceAll(RegExp(r'ؤ'), 'و');
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\desktop\audio_settings_sheet_desktop.dart
+17: /// [verseId] – if provided, tapping "ابدأ الاستماع" will play that verse.
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\desktop\quran_page_frame_desktop.dart
+33: final digitRegExp = RegExp(r'[0-9٠-٩]+');
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\desktop\surah_header_widget_desktop.dart
+205: 'آياتها',
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\desktop\verse_action_menu_desktop.dart
+205: case 16: return 'الميسر';
+206: case 14: return 'ابن كثير';
+207: case 91: return 'السعدي';
+208: case 15: return 'الطبري';
+209: case 90: return 'القرطبي';
+210: case 93: return 'الوسيط';
+211: case 94: return 'البغوي';
+212: default: return 'الميسر';
+275: (currentState is QuranOverlayLoading && initialTitle.contains('التفسير')))
+282: 'التفسير',
+318: (16, 'الميسر'),
+319: (14, 'ابن كثير'),
+320: (91, 'السعدي'),
+321: (15, 'الطبري'),
+322: (90, 'القرطبي'),
+323: (93, 'الوسيط'),
+324: (94, 'البغوي'),
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\drawer\quran_full_tafsir_view.dart
+407: (16, 'الميسر'),
+408: (14, 'ابن كثير'),
+409: (91, 'السعدي'),
+410: (15, 'الطبري'),
+411: (90, 'القرطبي'),
+412: (93, 'الوسيط'),
+413: (94, 'البغوي'),
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\drawer\desktop\quran_drawer_desktop.dart
+267: '\uFD71 وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا \uFD70',
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\drawer\mobile\quran_drawer_mobile.dart
+267: '\uFD71 وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا \uFD70',
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\drawer\tablet\quran_drawer_tablet.dart
+267: '\uFD71 وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا \uFD70',
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\drawer\web\quran_drawer_web.dart
+266: '\uFD71 وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا \uFD70',
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\mobile\audio_settings_sheet_mobile.dart
+18: /// [verseId] – if provided, tapping "ابدأ الاستماع" will play that verse.
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\mobile\quran_page_frame_mobile.dart
+31: final digitRegExp = RegExp(r'[0-9٠-٩]+');
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\mobile\surah_header_widget_mobile.dart
+206: 'آياتها',
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\mobile\verse_action_menu_mobile.dart
+205: case 16: return 'الميسر';
+206: case 14: return 'ابن كثير';
+207: case 91: return 'السعدي';
+208: case 15: return 'الطبري';
+209: case 90: return 'القرطبي';
+210: case 93: return 'الوسيط';
+211: case 94: return 'البغوي';
+212: default: return 'الميسر';
+275: (currentState is QuranOverlayLoading && initialTitle.contains('التفسير')))
+282: 'التفسير',
+318: (16, 'الميسر'),
+319: (14, 'ابن كثير'),
+320: (91, 'السعدي'),
+321: (15, 'الطبري'),
+322: (90, 'القرطبي'),
+323: (93, 'الوسيط'),
+324: (94, 'البغوي'),
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\tablet\audio_settings_sheet_tablet.dart
+17: /// [verseId] – if provided, tapping "ابدأ الاستماع" will play that verse.
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\tablet\quran_page_frame_tablet.dart
+33: final digitRegExp = RegExp(r'[0-9٠-٩]+');
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\tablet\surah_header_widget_tablet.dart
+205: 'آياتها',
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\tablet\verse_action_menu_tablet.dart
+205: case 16: return 'الميسر';
+206: case 14: return 'ابن كثير';
+207: case 91: return 'السعدي';
+208: case 15: return 'الطبري';
+209: case 90: return 'القرطبي';
+210: case 93: return 'الوسيط';
+211: case 94: return 'البغوي';
+212: default: return 'الميسر';
+275: (currentState is QuranOverlayLoading && initialTitle.contains('التفسير')))
+282: 'التفسير',
+318: (16, 'الميسر'),
+319: (14, 'ابن كثير'),
+320: (91, 'السعدي'),
+321: (15, 'الطبري'),
+322: (90, 'القرطبي'),
+323: (93, 'الوسيط'),
+324: (94, 'البغوي'),
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\web\audio_settings_sheet_web.dart
+17: /// [verseId] – if provided, tapping "ابدأ الاستماع" will play that verse.
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\web\quran_page_frame_web.dart
+32: final digitRegExp = RegExp(r'[0-9٠-٩]+');
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\web\surah_header_widget_web.dart
+205: 'آياتها',
+
+c:\Users\Omar\Documents\Flutter\tabattal\lib\features\quran_reader\presentation\widgets\web\verse_action_menu_web.dart
+204: case 16: return 'الميسر';
+205: case 14: return 'ابن كثير';
+206: case 91: return 'السعدي';
+207: case 15: return 'الطبري';
+208: case 90: return 'القرطبي';
+209: case 93: return 'الوسيط';
+210: case 94: return 'البغوي';
+211: default: return 'الميسر';
+274: (currentState is QuranOverlayLoading && initialTitle.contains('التفسير')))
+281: 'التفسير',
+317: (16, 'الميسر'),
+318: (14, 'ابن كثير'),
+319: (91, 'السعدي'),
+320: (15, 'الطبري'),
+321: (90, 'القرطبي'),
+322: (93, 'الوسيط'),
+323: (94, 'البغوي'),
