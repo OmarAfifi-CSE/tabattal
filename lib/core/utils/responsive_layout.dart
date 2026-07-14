@@ -1,22 +1,32 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 class ResponsiveLayout extends StatelessWidget {
   final Widget mobileBody;
-  final Widget webBody;
+  final Widget tabletBody;
+  final Widget desktopBody;
+  final Widget? webBody;
 
   const ResponsiveLayout({
     super.key,
     required this.mobileBody,
-    required this.webBody,
+    required this.tabletBody,
+    required this.desktopBody,
+    this.webBody,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb && webBody != null) {
+      return webBody!;
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Threshold for web/tablet vs mobile
-        if (constraints.maxWidth > 600) {
-          return webBody;
+        if (constraints.maxWidth >= 1000) {
+          return desktopBody;
+        } else if (constraints.maxWidth >= 600) {
+          return tabletBody;
         } else {
           return mobileBody;
         }

@@ -3,7 +3,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/network/audio_download_manager.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../quran_metadata.dart';
+import '../../../../../core/constants/quran_metadata.dart';
 import '../../../../../core/utils/reciter_localization.dart';
 
 class QuranAudioManagerView extends StatefulWidget {

@@ -1,4 +1,4 @@
-import '../../features/quran_reader/presentation/widgets/quran_metadata.dart';
+import '../constants/quran_metadata.dart';
 
 class VerseRef {
   final int surah;

@@ -8,10 +8,10 @@ import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
 import '../../../../quran_reader/domain/repositories/quran_repository.dart';
 import '../../../../quran_reader/data/datasources/quran_local_data_source.dart';
-import '../../bloc/audio/audio_bloc.dart';
-import '../../bloc/audio/audio_event.dart';
-import '../../bloc/audio/audio_state.dart';
-import '../quran_metadata.dart';
+import '../../../bloc/audio/audio_bloc.dart';
+import '../../../bloc/audio/audio_event.dart';
+import '../../../bloc/audio/audio_state.dart';
+import '../../../../../core/constants/quran_metadata.dart';
 import '../audio_settings_sheet.dart';
 import '../../../domain/entities/download_state.dart';
 

@@ -5,12 +5,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 
-import 'features/quran_reader/presentation/pages/quran_page_view_screen.dart';
-import 'features/quran_reader/presentation/pages/quran_web_view_screen.dart';
+import 'features/quran_reader/presentation/pages/mobile/quran_mobile_screen.dart';
+import 'features/quran_reader/presentation/pages/tablet/quran_tablet_screen.dart';
+import 'features/quran_reader/presentation/pages/desktop/quran_desktop_screen.dart';
+import 'features/quran_reader/presentation/pages/web/quran_web_screen.dart';
 import 'core/utils/responsive_layout.dart';
-import 'features/quran_reader/presentation/bloc/audio/audio_bloc.dart';
-import 'features/quran_reader/presentation/bloc/bookmark/bookmark_bloc.dart';
-import 'features/quran_reader/presentation/bloc/bookmark/bookmark_event.dart';
+import 'features/quran_reader/bloc/audio/audio_bloc.dart';
+import 'features/quran_reader/bloc/bookmark/bookmark_bloc.dart';
+import 'features/quran_reader/bloc/bookmark/bookmark_event.dart';
 import 'features/quran_reader/domain/repositories/quran_repository.dart';
 import 'features/quran_reader/data/datasources/quran_local_data_source.dart';
 
@@ -19,8 +21,8 @@ import 'core/theme/app_theme.dart';
 import 'core/network/audio_download_manager.dart';
 import 'core/services/audio_preferences_service.dart';
 import 'core/bloc/locale/locale_cubit.dart';
-import 'features/settings/presentation/bloc/settings_bloc.dart';
-import 'features/settings/presentation/bloc/settings_state.dart';
+import 'features/settings/bloc/settings_bloc.dart';
+import 'features/settings/bloc/settings_state.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,7 +74,24 @@ class TabattalApp extends StatelessWidget {
             return ResponsiveLayout(
               // Web: calibrated to 800×900 so .sp/.w/.h render at reasonable scale
               // for a typical browser viewport (900–1400px wide).
-              webBody: ScreenUtilInit(
+              webBody: MaterialApp(
+                  onGenerateTitle: (ctx) => AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
+                  debugShowCheckedModeBanner: false,
+                  locale: locale,
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  localizationsDelegates: const [
+                    AppLocalizations.delegate,
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                  ],
+                  theme: appTheme(),
+                  darkTheme: appThemeDark(),
+                  themeMode: settingsState.themeMode,
+                  builder: appDirectionalityBuilder,
+                  home: const QuranWebScreen(),
+                ),
+                desktopBody: ScreenUtilInit(
                 designSize: const Size(800, 900),
                 minTextAdapt: true,
                 splitScreenMode: false,
@@ -91,7 +110,29 @@ class TabattalApp extends StatelessWidget {
                   darkTheme: appThemeDark(),
                   themeMode: settingsState.themeMode,
                   builder: appDirectionalityBuilder,
-                  home: const QuranWebPageViewScreen(),
+                  home: const QuranDesktopScreen(),
+                ),
+              ),
+              tabletBody: ScreenUtilInit(
+                designSize: const Size(800, 900),
+                minTextAdapt: true,
+                splitScreenMode: false,
+                child: MaterialApp(
+                  onGenerateTitle: (ctx) => AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
+                  debugShowCheckedModeBanner: false,
+                  locale: locale,
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  localizationsDelegates: const [
+                    AppLocalizations.delegate,
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                  ],
+                  theme: appTheme(),
+                  darkTheme: appThemeDark(),
+                  themeMode: settingsState.themeMode,
+                  builder: appDirectionalityBuilder,
+                  home: const QuranTabletScreen(),
                 ),
               ),
               // Mobile: calibrated against OnePlus 13R (412×917 dp).
@@ -114,7 +155,7 @@ class TabattalApp extends StatelessWidget {
                   darkTheme: appThemeDark(),
                   themeMode: settingsState.themeMode,
                   builder: appDirectionalityBuilder,
-                  home: const QuranPageViewScreen(),
+                  home: const QuranMobileScreen(),
                 ),
               ),
             );
@@ -126,3 +167,5 @@ class TabattalApp extends StatelessWidget {
     );
   }
 }
+
+

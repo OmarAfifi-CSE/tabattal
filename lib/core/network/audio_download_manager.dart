@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../features/quran_reader/presentation/widgets/quran_metadata.dart';
+import '../constants/quran_metadata.dart';
 
 class AudioDownloadManager {
   final Dio _dio = Dio();
@@ -279,3 +279,4 @@ class AudioDownloadManager {
     }
   }
 }
+

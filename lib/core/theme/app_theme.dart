@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../features/settings/presentation/bloc/settings_bloc.dart';
+import '../../features/settings/bloc/settings_bloc.dart';
 import 'app_colors.dart';
 
 ThemeData appTheme() {
@@ -80,3 +80,4 @@ Widget appDirectionalityBuilder(BuildContext context, Widget? child) {
     ),
   );
 }
+
