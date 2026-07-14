@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/web_safe_size.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/network/audio_download_manager.dart';
@@ -20,7 +20,7 @@ void showAudioSettingsSheet(BuildContext context, {int? verseId}) {
   showModalBottomSheet(
     context: context,
     backgroundColor: AppColors.cardCream,
-    constraints: kIsWeb ? const BoxConstraints(maxWidth: 450) : null,
+    constraints: MediaQuery.sizeOf(context).width > 600 ? const BoxConstraints(maxWidth: 450) : null,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24.wR))),
     isScrollControlled: true,
     builder: (_) => MultiBlocProvider(
@@ -291,6 +291,8 @@ class _SelectorButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktopLayout = MediaQuery.sizeOf(context).width > 600;
+    
     return PopupMenuButton<String>(
       splashRadius: 0.1,
       initialValue: value,
@@ -342,9 +344,11 @@ class _SelectorButton extends StatelessWidget {
         );
       }).toList(),
       child: Container(
-        height: kIsWeb ? null : 52.wH,
+        height: isDesktopLayout ? null : 52.wH,
         width: MediaQuery.sizeOf(context).width,
-        padding: kIsWeb ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8) : EdgeInsets.symmetric(horizontal: 12.wW),
+        padding: isDesktopLayout 
+            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 10) 
+            : EdgeInsets.symmetric(horizontal: 12.wW),
         decoration: BoxDecoration(
           color: AppColors.surfaceCream,
           borderRadius: BorderRadius.circular(10.wR),
