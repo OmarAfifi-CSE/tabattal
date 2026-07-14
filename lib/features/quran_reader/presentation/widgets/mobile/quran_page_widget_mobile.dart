@@ -17,7 +17,7 @@ import '../../../domain/repositories/quran_repository.dart';
 import 'quran_page_frame_mobile.dart';
 import '../verse_action_menu.dart';
 import '../../../../../core/constants/quran_metadata.dart';
-import '../surah_header_widget.dart';
+import 'surah_header_widget_mobile.dart';
 import '../../../../../core/services/font_service.dart';
 import '../../../../settings/bloc/settings_bloc.dart';
 import '../../../../../core/theme/mushaf_theme.dart';
@@ -251,10 +251,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> with Sing
     final nextSurah = _findNextSurahStartOnPage(lineNumber, lines);
     if (nextSurah != null) {
       final (:ayah1Line, :surahId) = nextSurah;
-      final header = Padding(
-        padding: EdgeInsets.symmetric(vertical: 2.h),
-        child: SurahHeaderWidget(surahNumber: surahId),
-      );
+      final header = SurahHeaderWidgetMobile(surahNumber: surahId);
       final basmala = Center(
         child: Text(
           '1 2 3',
@@ -300,10 +297,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> with Sing
       final upcomingSurahId = previousSurahId + 1;
       if (upcomingSurahId <= 114) {
         final emptyLinesBefore = _countEmptyLinesBefore(lineNumber, lines);
-        final header = Padding(
-          padding: EdgeInsets.symmetric(vertical: 2.h),
-          child: SurahHeaderWidget(surahNumber: upcomingSurahId),
-        );
+        final header = SurahHeaderWidgetMobile(surahNumber: upcomingSurahId);
         final basmala = Center(
           child: Text(
             '1 2 3',
@@ -588,11 +582,11 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> with Sing
                   child: SizedBox(
                   // Fixed virtual canvas size for mobile
                   width: 490.w, 
-                  height: 1020.h,
+                  height: 1100.h,
                   child: Column(
                     key: _pageColumnKey,
                     mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: List.generate(15, (index) {
                         final lineNumber = index + 1;

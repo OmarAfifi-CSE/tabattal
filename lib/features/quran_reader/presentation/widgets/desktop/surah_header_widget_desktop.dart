@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/quran_metadata.dart';
-import '../../../../core/utils/arabic_text_utils.dart';
+import '../../../../../core/constants/quran_metadata.dart';
+import '../../../../../core/utils/arabic_text_utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../settings/bloc/settings_bloc.dart';
+import '../../../../settings/bloc/settings_bloc.dart';
 
-class SurahHeaderWidget extends StatelessWidget {
+class SurahHeaderWidgetDesktop extends StatelessWidget {
   final int surahNumber;
 
-  const SurahHeaderWidget({super.key, required this.surahNumber});
+  const SurahHeaderWidgetDesktop({super.key, required this.surahNumber});
 
   /// Maps Surah number (1–114) to the corresponding character index in QCF_Surah font.
   static String _getSurahNameGlyph(int surahNumber) {
@@ -150,7 +150,8 @@ class SurahHeaderWidget extends StatelessWidget {
 
     return Container(
       width: canvasWidth,
-      margin: const EdgeInsets.symmetric(vertical: 12.0),
+      // TODO: This margin controls the space above and below the Surah Header Frame for ALL platforms
+      margin: const EdgeInsets.symmetric(vertical: 6.0),
       child: FittedBox(
         fit: BoxFit.fitWidth,
         child: SizedBox(

@@ -16,7 +16,7 @@ import '../../../domain/repositories/quran_repository.dart';
 import 'quran_page_frame_web.dart';
 import 'verse_action_menu_web.dart';
 import '../../../../../core/constants/quran_metadata.dart';
-import '../surah_header_widget.dart';
+import 'surah_header_widget_web.dart';
 import '../../../../../core/services/font_service.dart';
 import '../../../../settings/bloc/settings_bloc.dart';
 import '../../../../../core/theme/mushaf_theme.dart';
@@ -254,7 +254,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb> with SingleTick
       final (:ayah1Line, :surahId) = nextSurah;
       final header = Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
-        child: SurahHeaderWidget(surahNumber: surahId),
+        child: SurahHeaderWidgetWeb(surahNumber: surahId),
       );
       final basmala = Center(
         child: Text(
@@ -303,7 +303,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb> with SingleTick
         final emptyLinesBefore = _countEmptyLinesBefore(lineNumber, lines);
         final header = Padding(
           padding: const EdgeInsets.symmetric(vertical: 2),
-          child: SurahHeaderWidget(surahNumber: upcomingSurahId),
+          child: SurahHeaderWidgetWeb(surahNumber: upcomingSurahId),
         );
         final basmala = Center(
           child: Text(
