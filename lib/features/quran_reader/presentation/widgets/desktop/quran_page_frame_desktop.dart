@@ -89,6 +89,7 @@ class QuranPageFrameDesktop extends StatelessWidget {
   Widget build(BuildContext context) {
     final hizbMarkers = HizbData.pageHizbs[pageNumber];
     final isLeftPage = pageNumber % 2 == 0;
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
     
     final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
 
@@ -249,7 +250,7 @@ class QuranPageFrameDesktop extends StatelessWidget {
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          pageNumber.toArabicDigits,
+                          isEn ? pageNumber.toString() : pageNumber.toArabicDigits,
                           style: TextStyle(
                             fontFamily: 'Amiri',
                             color: mushafTheme.textColor,
