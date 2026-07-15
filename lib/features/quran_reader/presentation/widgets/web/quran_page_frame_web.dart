@@ -15,6 +15,7 @@ class QuranPageFrameWeb extends StatelessWidget {
   final void Function(int page, {String? verseKey})? onNavigateToPage;
   final String surahName;
   final String juzName;
+  final VoidCallback? onHeaderTap;
   
 
   const QuranPageFrameWeb({
@@ -24,7 +25,7 @@ class QuranPageFrameWeb extends StatelessWidget {
     this.onNavigateToPage,
     required this.surahName,
     required this.juzName,
-    
+    this.onHeaderTap,
   });
 
   /// Builds inline text spans for a Hizb label, making the digit larger and on a new line.
@@ -155,6 +156,7 @@ class QuranPageFrameWeb extends StatelessWidget {
                     translation: const Offset(0.0, -0.5),
                     child: GestureDetector(
                       onTap: () async {
+                      onHeaderTap?.call();
                       final result = await Navigator.push<dynamic>(context, MaterialPageRoute(builder: (_) => const QuranIndexViewWeb(initialIndex: 1)));
                       if (result != null && onNavigateToPage != null) {
                         if (result is Map<String, dynamic>) {
@@ -187,6 +189,7 @@ class QuranPageFrameWeb extends StatelessWidget {
                     translation: const Offset(0.0, -0.5),
                     child: GestureDetector(
                       onTap: () async {
+                      onHeaderTap?.call();
                       final result = await Navigator.push<dynamic>(context, MaterialPageRoute(builder: (_) => const QuranIndexViewWeb(initialIndex: 0)));
                       if (result != null && onNavigateToPage != null) {
                         if (result is Map<String, dynamic>) {
@@ -219,7 +222,10 @@ class QuranPageFrameWeb extends StatelessWidget {
                   child: FractionalTranslation(
                     translation: const Offset(0, -0.5),
                     child: GestureDetector(
-                      onTap: () => Scaffold.of(context).openDrawer(),
+                      onTap: () {
+                        onHeaderTap?.call();
+                        Scaffold.of(context).openDrawer();
+                      },
                       child: _buildFrameInfoBox(
                         theme: mushafTheme,
                         margin: const EdgeInsets.symmetric(horizontal: 6),

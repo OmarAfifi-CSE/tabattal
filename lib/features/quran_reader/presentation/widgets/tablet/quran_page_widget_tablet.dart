@@ -567,6 +567,11 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet> with Sing
           onNavigateToPage: widget.onNavigateToPage,
           surahName: surahName,
           juzName: juzName,
+          onHeaderTap: () {
+            if (_activeOverlayEntry != null) {
+              _removeVerseMenu();
+            }
+          },
         
         child: BlocBuilder<BookmarkBloc, BookmarkState>(
           builder: (context, bookmarkState) {

@@ -566,6 +566,11 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb> with SingleTick
           onNavigateToPage: widget.onNavigateToPage,
           surahName: surahName,
           juzName: juzName,
+          onHeaderTap: () {
+            if (_activeOverlayEntry != null) {
+              _removeVerseMenu();
+            }
+          },
         
         child: BlocBuilder<BookmarkBloc, BookmarkState>(
           builder: (context, bookmarkState) {

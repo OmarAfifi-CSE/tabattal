@@ -558,6 +558,11 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> with Sing
       onNavigateToPage: widget.onNavigateToPage,
         surahName: surahName,
         juzName: juzName,
+        onHeaderTap: () {
+          if (_activeOverlayEntry != null) {
+            _removeVerseMenu();
+          }
+        },
         child: BlocBuilder<BookmarkBloc, BookmarkState>(
           builder: (context, bookmarkState) {
             return BlocBuilder<AudioBloc, AudioState>(
