@@ -31,7 +31,7 @@ class QuranBorderPainterWeb extends CustomPainter {
     // 2. Constants for positioning
     final double left = W * 0.04;
     final double right = W * 0.96;
-    final double top = H * 0.04;
+    final double top = H * 0.02;
     final double bottom = H * 0.96;
 
     // 3. Build the exact continuous wireframe of the border with cuts

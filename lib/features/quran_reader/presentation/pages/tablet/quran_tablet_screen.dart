@@ -259,15 +259,15 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                                   return Align(
                                     alignment: Alignment.center,
                                     child: AspectRatio(
-                                      aspectRatio: 650 / 950,
+                                      aspectRatio: 650 / 1000,
                                       child: RepaintBoundary(
                                         child: Container(
                                           decoration: BoxDecoration(
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withValues(alpha: 0.1),
+                                                color: Colors.black.withValues(alpha: 0.2),
                                                 blurRadius: 10,
-                                                offset: const Offset(0, 5),
+                                                offset: const Offset(0, 0),
                                               ),
                                             ],
                                           ),

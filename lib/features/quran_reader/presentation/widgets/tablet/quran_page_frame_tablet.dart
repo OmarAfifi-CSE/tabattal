@@ -169,7 +169,7 @@ class QuranPageFrameTablet extends StatelessWidget {
                         theme: mushafTheme,
                         child: Text(
                           juzName,
-                          style: headerStyle.copyWith(fontSize: 10.sp),
+                          style: headerStyle.copyWith(fontSize: 24.sp),
                           textAlign: TextAlign.center,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -203,7 +203,7 @@ class QuranPageFrameTablet extends StatelessWidget {
                           fit: BoxFit.scaleDown,
                           child: Text(
                             surahName,
-                            style: headerStyle.copyWith(fontSize: 10.sp),
+                            style: headerStyle.copyWith(fontSize: 24.sp),
                             textAlign: TextAlign.center,
                             maxLines: 1,
                           ),
@@ -216,7 +216,8 @@ class QuranPageFrameTablet extends StatelessWidget {
                 // Hamburger Menu
                 Positioned(
                   top: pageHeight * 0.04,
-                  right: pageWidth * 0.06,
+                  right: pageWidth * 0.07,
+                  width: pageWidth * 0.11,
                   child: FractionalTranslation(
                     translation: const Offset(0, -0.5),
                     child: GestureDetector(
@@ -225,7 +226,7 @@ class QuranPageFrameTablet extends StatelessWidget {
                         theme: mushafTheme,
                         margin: EdgeInsets.symmetric(horizontal: 6.w),
                         padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0),
-                        child: Icon(Icons.segment_rounded, color: mushafTheme.goldColor, size: 20.sp),
+                        child: Icon(Icons.segment_rounded, color: mushafTheme.goldColor, size: 44.sp),
                       ),
                     ),
                   ),
@@ -247,7 +248,7 @@ class QuranPageFrameTablet extends StatelessWidget {
                           style: TextStyle(
                             fontFamily: 'Amiri',
                             color: mushafTheme.textColor,
-                            fontSize: 15.sp,
+                            fontSize: 20.sp,
                             fontWeight: FontWeight.w900,
                             height: 1.1,
                           ),

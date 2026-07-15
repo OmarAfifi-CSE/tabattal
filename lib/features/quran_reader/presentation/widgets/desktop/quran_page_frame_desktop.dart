@@ -149,7 +149,7 @@ class QuranPageFrameDesktop extends StatelessWidget {
 
                 // Juz Name
                 Positioned(
-                  top: pageHeight * 0.04,
+                  top: pageHeight * 0.025,
                   left: pageWidth * 0.08,
                   width: pageWidth * 0.35,
                   child: FractionalTranslation(
@@ -181,7 +181,7 @@ class QuranPageFrameDesktop extends StatelessWidget {
 
                 // Surah Name
                 Positioned(
-                  top: pageHeight * 0.04,
+                  top: pageHeight * 0.025,
                   left: pageWidth * 0.46,
                   width: pageWidth * 0.33,
                   child: FractionalTranslation(
@@ -215,7 +215,7 @@ class QuranPageFrameDesktop extends StatelessWidget {
 
                 // Hamburger Menu
                 Positioned(
-                  top: pageHeight * 0.04,
+                  top: pageHeight * 0.025,
                   right: pageWidth * 0.06,
                   child: FractionalTranslation(
                     translation: const Offset(0, -0.5),

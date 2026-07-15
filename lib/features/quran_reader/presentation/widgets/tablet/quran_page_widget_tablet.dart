@@ -562,13 +562,11 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet> with Sing
         }
       },
       child: Center(
-        child: AspectRatio(
-          aspectRatio: 0.72,
-          child: QuranPageFrameTablet(
-            pageNumber: widget.pageNumber,
-      onNavigateToPage: widget.onNavigateToPage,
-            surahName: surahName,
-            juzName: juzName,
+        child: QuranPageFrameTablet(
+          pageNumber: widget.pageNumber,
+          onNavigateToPage: widget.onNavigateToPage,
+          surahName: surahName,
+          juzName: juzName,
         
         child: BlocBuilder<BookmarkBloc, BookmarkState>(
           builder: (context, bookmarkState) {
@@ -598,11 +596,11 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet> with Sing
                   // Use a fixed virtual canvas size instead of expensive IntrinsicWidth
                   // Increased width from 460 to 490 to prevent horizontal overflow on dense lines like page 453
                   width: 650, 
-                  height: 950,
+                  height: 1050,
                   child: Column(
                     key: _pageColumnKey,
                     mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: List.generate(15, (index) {
                         final lineNumber = index + 1;
@@ -634,7 +632,6 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet> with Sing
           },
         ), // BlocBuilder
       ), // QuranPageFrameTablet
-        ), // AspectRatio
       ), // Center
     ); // GestureDetector
   }
