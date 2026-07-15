@@ -29,6 +29,15 @@ void main() async {
   SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   
+  final view = WidgetsBinding.instance.platformDispatcher.views.first;
+  final logicalShortestSide = view.physicalSize.shortestSide / view.devicePixelRatio;
+  if (logicalShortestSide < 600) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  }
+  
   final container = await configureDependencies();
 
   runApp(TabattalApp(container: container));
