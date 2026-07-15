@@ -39,13 +39,20 @@ $outputFolder = "..\B- Releases\Tabattal"
 
 Write-Host "--- STARTING BUILD PROCESS: [$appName] v$version ---" -ForegroundColor Cyan
 
-# --- Modified: Numerical Build Choice ---
+# --- Choice: Format ---
+Write-Host "`nSelect Build Format:" -ForegroundColor Yellow
+Write-Host "1) APK (Android Package - for testing)" -ForegroundColor Green
+Write-Host "2) AAB (Android App Bundle - for Play Store)" -ForegroundColor Blue
+Write-Host "3) BOTH" -ForegroundColor Magenta
+$formatChoice = Read-Host "Enter your choice [Default is 1]"
+
+# --- Choice: Clean Mode ---
 Write-Host "`nSelect Build Mode:" -ForegroundColor Yellow
 Write-Host "1) FAST MODE (Uses cache, takes seconds)" -ForegroundColor Green
 Write-Host "2) FRESH CLEAN MODE (Clears cache, takes minutes)" -ForegroundColor Red
-$choice = Read-Host "Enter your choice [Default is 1]"
+$cleanChoice = Read-Host "Enter your choice [Default is 1]"
 
-if ($choice -eq '2') {
+if ($cleanChoice -eq '2') {
     # --- Phase: Optional Flutter Clean ---
     Write-Host "`nPHASE 1: Running Flutter Clean..." -ForegroundColor Cyan
     try {
@@ -80,33 +87,60 @@ if ($choice -eq '2') {
     Write-Host "`nSPEED MODE ACTIVATED: Skipping clean and reusing build cache..." -ForegroundColor Green
 }
 
-# --- Phase: Building AppBundle ---
-Write-Host "PHASE 4: Building Android AppBundle (Release)..." -ForegroundColor Cyan
-flutter build appbundle --release --obfuscate --split-debug-info=build\app\outputs\symbols
-Check-CommandSuccess "Flutter Build AppBundle"
-
-# --- Phase: Organizing Outputs ---
-Write-Host "PHASE 5: Organizing output files..." -ForegroundColor Cyan
-
+# Ensure output folder exists
 if (!(Test-Path $outputFolder)) {
     New-Item -ItemType Directory -Path $outputFolder | Out-Null
 }
 
-# 1. Export the AAB
-$sourceAab = "build\app\outputs\bundle\release\app-release.aab"
-if (Test-Path $sourceAab) {
-    $newAabName = "$appName-v$version.aab"
-    $destAabPath = Join-Path $outputFolder $newAabName
-    Write-Host "Exporting AAB: $newAabName" -ForegroundColor White
-    Copy-Item $sourceAab -Destination $destAabPath -Force
+$buildApk = ($formatChoice -eq '1' -or $formatChoice -eq '3' -or [string]::IsNullOrWhiteSpace($formatChoice))
+$buildAab = ($formatChoice -eq '2' -or $formatChoice -eq '3')
+
+# --- Phase: Build APK ---
+if ($buildApk) {
+    Write-Host "`nPHASE 4: Building Android APK (Release)..." -ForegroundColor Cyan
+    flutter build apk --release --target-platform android-arm64 --obfuscate --split-debug-info=build\app\outputs\symbols
+    Check-CommandSuccess "Flutter Build APK"
+
+    # Export APK
+    $sourceApk = "build\app\outputs\flutter-apk\app-release.apk"
+    if (Test-Path $sourceApk) {
+        $newApkName = "$appName-v$version.apk"
+        $destApkPath = Join-Path $outputFolder $newApkName
+        Write-Host "Exporting APK: $newApkName" -ForegroundColor White
+        Copy-Item $sourceApk -Destination $destApkPath -Force
+    }
+    
+    # Export APK Symbols
+    $sourceSymbols = "build\app\outputs\symbols"
+    if (Test-Path $sourceSymbols) {
+        $destSymbolsPath = Join-Path $outputFolder "symbols_apk_v$version"
+        Write-Host "Exporting Symbols folder: symbols_apk_v$version" -ForegroundColor White
+        Copy-Item -Path $sourceSymbols -Destination $destSymbolsPath -Recurse -Force
+    }
 }
 
-# 2. Export the Symbols folder
-$sourceSymbols = "build\app\outputs\symbols"
-if (Test-Path $sourceSymbols) {
-    $destSymbolsPath = Join-Path $outputFolder "symbols_aab_v$version"
-    Write-Host "Exporting Symbols folder: symbols_aab_v$version" -ForegroundColor White
-    Copy-Item -Path $sourceSymbols -Destination $destSymbolsPath -Recurse -Force
+# --- Phase: Build AAB ---
+if ($buildAab) {
+    Write-Host "`nPHASE 5: Building Android AppBundle (Release)..." -ForegroundColor Cyan
+    flutter build appbundle --release --obfuscate --split-debug-info=build\app\outputs\symbols
+    Check-CommandSuccess "Flutter Build AppBundle"
+
+    # Export AAB
+    $sourceAab = "build\app\outputs\bundle\release\app-release.aab"
+    if (Test-Path $sourceAab) {
+        $newAabName = "$appName-v$version.aab"
+        $destAabPath = Join-Path $outputFolder $newAabName
+        Write-Host "Exporting AAB: $newAabName" -ForegroundColor White
+        Copy-Item $sourceAab -Destination $destAabPath -Force
+    }
+
+    # Export AAB Symbols
+    $sourceSymbols = "build\app\outputs\symbols"
+    if (Test-Path $sourceSymbols) {
+        $destSymbolsPath = Join-Path $outputFolder "symbols_aab_v$version"
+        Write-Host "Exporting Symbols folder: symbols_aab_v$version" -ForegroundColor White
+        Copy-Item -Path $sourceSymbols -Destination $destSymbolsPath -Recurse -Force
+    }
 }
 
 # --- Phase: Final Report ---
