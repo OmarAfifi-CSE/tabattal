@@ -21,7 +21,10 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
   }
 
   String _failureMessage(Failure f) {
-    return f.message;
+    if (f is NetworkFailure) return 'Network connection error. Please try again.';
+    if (f is ServerFailure) return 'Failed to fetch content from the server. Please try again later.';
+    if (f is CacheFailure) return 'Failed to load local data. Please try again.';
+    return 'An unexpected error occurred.';
   }
 
   Future<void> _onLoadSurah(LoadSurah event, Emitter<QuranState> emit) async {
@@ -48,10 +51,18 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
     );
   }
 
-  Future<int> _resolveResourceId(int? eventResourceId) async {
+  Future<int> _resolveResourceId(int? eventResourceId, String? languageCode) async {
     final prefs = await SharedPreferences.getInstance();
-    int currentId = eventResourceId ?? prefs.getInt('tafsir_id') ?? 16;
-    if (eventResourceId != null) {
+    int savedId = prefs.getInt('tafsir_id') ?? (languageCode == 'en' ? 169 : 16);
+    
+    if (languageCode == 'en' && ![169, 168, 817].contains(savedId)) {
+      savedId = 169;
+    } else if (languageCode == 'ar' && ![16, 14, 91, 15, 90, 93, 94].contains(savedId)) {
+      savedId = 16;
+    }
+
+    int currentId = eventResourceId ?? savedId;
+    if (currentId != prefs.getInt('tafsir_id')) {
       await prefs.setInt('tafsir_id', currentId);
     }
     return currentId;
@@ -61,27 +72,33 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
     final progressResult = await repository.getTafsirDownloadProgress(currentId);
     final progress = progressResult.getOrNull() ?? 0.0;
     
-    if (progress < 1.0) {
-      // Fetch the specific verse dynamically
-      await repository.downloadSingleVerseTafsir(currentId, verseKey);
-      final retry = await repository.getTafsir(verseKey, resourceId: currentId);
-      
-      retry.fold(
-        (f) => emit(TafsirPartialDownloadError(currentId, progress)),
-        (tafsir) {
-          emit(TafsirLoaded(tafsir, isDownloading: true, downloadProgress: progress));
-          // Start background download automatically
+    // Always try to fetch via API backward-lookup, regardless of progress.
+    // The local DB may be missing grouped verses that require fetching a previous verse.
+    await repository.downloadSingleVerseTafsir(currentId, verseKey);
+    
+    // Re-try local lookup — getTafsirForVerse uses backward search so it finds grouped tafsirs.
+    final retry = await repository.getTafsir(verseKey, resourceId: currentId);
+    
+    retry.fold(
+      (f) {
+        if (progress < 1.0) {
+          emit(TafsirPartialDownloadError(currentId, progress));
+        } else {
+          emit(const QuranOverlayError('Content temporarily unavailable'));
+        }
+      },
+      (tafsir) {
+        emit(TafsirLoaded(tafsir, isDownloading: progress < 1.0, downloadProgress: progress));
+        if (progress < 1.0) {
           add(DownloadTafsir(currentId));
-        },
-      );
-    } else {
-      emit(const QuranOverlayError('Content temporarily unavailable'));
-    }
+        }
+      },
+    );
   }
 
   Future<void> _onFetchTafsir(FetchTafsir event, Emitter<QuranState> emit) async {
     emit(QuranOverlayLoading());
-    final currentId = await _resolveResourceId(event.resourceId);
+    final currentId = await _resolveResourceId(event.resourceId, event.languageCode);
     final result = await repository.getTafsir(event.verseKey, resourceId: currentId);
     
     await result.fold(

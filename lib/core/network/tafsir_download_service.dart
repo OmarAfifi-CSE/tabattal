@@ -26,8 +26,8 @@ class TafsirDownloadService {
     }
 
     Future<void> emitProgress() async {
-      int completedVerses = await localDataSource.getDownloadedVerseCount(resourceId);
-      double progress = completedVerses / QuranConstants.totalVerses;
+      int maxChapter = await localDataSource.getMaxDownloadedChapter(resourceId);
+      double progress = maxChapter / QuranConstants.totalSurahs;
       if (progress > 1.0) progress = 1.0;
       if (!controller.isClosed && !hasError) {
         controller.add(Progressing(progress));

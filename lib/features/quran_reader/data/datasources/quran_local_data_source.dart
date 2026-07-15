@@ -88,7 +88,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       int verseNumber = int.tryParse(parts[1]) ?? 1;
       
       // Look backwards to find grouped tafsir
-      for (int i = 0; i < QuranConstants.linesPerPage && verseNumber > 0; i++) {
+      for (int i = 0; i < QuranConstants.tafsirGroupLookbackWindow && verseNumber > 0; i++) {
         final searchKey = '$chapterId:$verseNumber';
         final List<Map<String, dynamic>> maps = await db.query(
           'tafsir',
@@ -97,7 +97,10 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
           limit: 1,
         );
         if (maps.isNotEmpty && maps.first['text'] != null) {
-          return maps.first['text'] as String;
+          final textStr = maps.first['text'] as String;
+          if (textStr.trim().isNotEmpty) {
+            return textStr;
+          }
         }
         verseNumber--;
       }
@@ -240,18 +243,13 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   @override
   Future<double> getTafsirDownloadProgress(int resourceId) async {
     try {
-      final db = await databaseHelper.database;
-      final result = await db.rawQuery('SELECT COUNT(*) as count FROM tafsir WHERE resource_id = ?', [resourceId]);
-      final count = Sqflite.firstIntValue(result) ?? 0;
-      
-      // Some tafsirs (like Al-Tabari) combine verses, so their row count isn't exactly 6236.
-      // If SharedPreferences marks it as completed and the count is reasonably high (> 6000), consider it 100%.
       final prefs = await SharedPreferences.getInstance();
-      if (prefs.getBool('tafsir_completed_$resourceId') == true && count > 6000) {
+      if (prefs.getBool('tafsir_completed_$resourceId') == true) {
         return 1.0;
       }
-
-      final progress = count / QuranConstants.totalVerses;
+      
+      final maxChapter = await getMaxDownloadedChapter(resourceId);
+      final progress = maxChapter / QuranConstants.totalSurahs;
       return progress > 1.0 ? 1.0 : progress;
     } catch (e) {
       return 0.0;

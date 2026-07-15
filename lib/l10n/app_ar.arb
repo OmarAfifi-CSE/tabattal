@@ -16,7 +16,7 @@
   "drawerLanguage": "اللغة",
   "drawerLanguageSubtitle": "العربية / English",
   "menuTafsir": "التفسير",
-  "menuTafsirTitle": "التفسير - الميسر",
+  "menuTafsirTitle": "التفسير",
   "menuTranslation": "الترجمة",
   "menuListen": "الاستماع للآيات",
   "menuGoToVerse": "انتقال التلاوة لهذه الآية",
@@ -223,5 +223,9 @@
   "tafsirAlQurtubi": "القرطبي",
   "tafsirAlWaseet": "الوسيط",
   "tafsirAlBaghawi": "البغوي",
-  "notificationChannelRecitations": "تلاوات القرآن"
+  "notificationChannelRecitations": "تلاوات القرآن",
+  "tafsirEnIbnKathir": "ابن كثير (مختصر)",
+  "tafsirEnAsSaadi": "السعدي",
+  "tafsirEnMaarif": "معارف القرآن",
+  "tafsirEnTazkirul": "تذكير القرآن"
 }

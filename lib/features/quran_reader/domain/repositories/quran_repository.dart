@@ -122,17 +122,36 @@ class QuranRepositoryImpl implements QuranRepository {
   @override
   Future<Either<Failure, void>> downloadSingleVerseTafsir(int resourceId, String verseKey) {
     return _execute(() async {
-      final response = await remoteDataSource.getTafsirByVerse(resourceId, verseKey);
-      final Map<String, dynamic>? t = response['tafsir'];
-      
-      if (t != null) {
-        final rows = [<String, dynamic>{
-          'verse_key': t['verse_key'] ?? verseKey,
-          'resource_id': resourceId,
-          'text': t['text'],
-        }];
-        
-        await localDataSource.insertTafsirs(rows);
+      final parts = verseKey.split(':');
+      if (parts.length != 2) return;
+      final chapterId = int.tryParse(parts[0]) ?? 1;
+
+      // Use the chapter API — it's authoritative and returns all verse entries correctly.
+      // The single-verse API is inconsistent (e.g. 18:28 returns empty even though it has its own tafsir).
+      int page = 1;
+      bool hasNext = true;
+
+      while (hasNext) {
+        final response = await remoteDataSource.getTafsirByChapter(
+          resourceId,
+          chapterId,
+          page: page,
+          perPage: QuranConstants.tafsirPerPage,
+        );
+
+        final List tafsirs = response['tafsirs'] ?? [];
+        if (tafsirs.isNotEmpty) {
+          final rows = tafsirs.map((t) => <String, dynamic>{
+            'verse_key': t['verse_key'],
+            'resource_id': resourceId,
+            'text': t['text'],
+          }).toList();
+          await localDataSource.insertTafsirs(rows);
+        }
+
+        final pagination = response['pagination'];
+        hasNext = pagination != null && pagination['next_page'] != null;
+        page++;
       }
     });
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../../core/widgets/mixed_direction_text.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
@@ -87,18 +88,6 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
   bool _isAnimating = false;
   final Map<int, double> _tafsirProgress = {16: 1.0};
 
-  // Helper to detect if text is primarily RTL (e.g., Arabic, Urdu, Persian)
-  bool _isRtl(String text) {
-    final RegExp arabicRegex = RegExp(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]');
-    final RegExp englishRegex = RegExp(r'[a-zA-Z]');
-    
-    for (int i = 0; i < text.length; i++) {
-      final char = text[i];
-      if (arabicRegex.hasMatch(char)) return true;
-      if (englishRegex.hasMatch(char)) return false;
-    }
-    return true; // Default to RTL
-  }
 
   @override
   void initState() {
@@ -124,7 +113,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
   Future<void> _checkDownloadedTafsirs() async {
     if (!mounted) return;
     final repo = context.read<QuranBloc>().repository;
-    final toCheck = [14, 91, 15, 90, 93, 94]; // Add all non-bundled tafsirs
+    final toCheck = [14, 91, 15, 90, 93, 94, 169, 168, 817]; // Add all non-bundled tafsirs
     for (int id in toCheck) {
       final progressResult = await repo.getTafsirDownloadProgress(id);
       progressResult.fold(
@@ -203,6 +192,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
   String _getTafsirName(BuildContext context, int id) {
     final l10n = AppLocalizations.of(context)!;
     switch (id) {
+      // Arabic tafsirs
       case 16: return l10n.tafsirAlMuyassar;
       case 14: return l10n.tafsirIbnKathir;
       case 91: return l10n.tafsirAlSaadi;
@@ -210,6 +200,10 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
       case 90: return l10n.tafsirAlQurtubi;
       case 93: return l10n.tafsirAlWaseet;
       case 94: return l10n.tafsirAlBaghawi;
+      // English tafsirs
+      case 169: return l10n.tafsirEnIbnKathir;
+      case 168: return l10n.tafsirEnMaarif;
+      case 817: return l10n.tafsirEnTazkirul;
       default: return l10n.tafsirAlMuyassar;
     }
   }
@@ -242,6 +236,11 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
                     setState(() {
                       _tafsirProgress[state.resourceId] = 1.0;
                     });
+                    quranBloc.add(FetchTafsir(
+                      widget.verse.verseKey, 
+                      resourceId: state.resourceId, 
+                      languageCode: Localizations.localeOf(context).languageCode,
+                    ));
                   } else if (state is TafsirDownloading) {
                     setState(() {
                       _tafsirProgress[state.resourceId] = state.progress;
@@ -288,7 +287,8 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
                               alignment: Alignment.centerRight,
                               child: Builder(
                                 builder: (context) {
-                                  int displayResourceId = 16;
+                                  final langCode = Localizations.localeOf(context).languageCode;
+                                  int displayResourceId = langCode == 'en' ? 169 : 16;
                                   if (currentState is TafsirLoaded) {
                                     displayResourceId = currentState.tafsir.tafsirId;
                                   } else if (currentState is TafsirDownloading) {
@@ -312,10 +312,14 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
                                     ),
                                     constraints: BoxConstraints(minWidth: 150.w, maxWidth: 200.w),
                                     onSelected: (int newValue) {
-                                      quranBloc.add(FetchTafsir(widget.verse.verseKey, resourceId: newValue));
+                                      quranBloc.add(FetchTafsir(widget.verse.verseKey, resourceId: newValue, languageCode: Localizations.localeOf(context).languageCode));
                                     },
                                     itemBuilder: (context) {
-                                      final options = [
+                                      final options = langCode == 'en' ? [
+                                        (169, AppLocalizations.of(context)!.tafsirEnIbnKathir),
+                                        (168, AppLocalizations.of(context)!.tafsirEnMaarif),
+                                        (817, AppLocalizations.of(context)!.tafsirEnTazkirul),
+                                      ] : [
                                         (16, AppLocalizations.of(context)!.tafsirAlMuyassar),
                                         (14, AppLocalizations.of(context)!.tafsirIbnKathir),
                                         (91, AppLocalizations.of(context)!.tafsirAlSaadi),
@@ -328,9 +332,9 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
                                         final isSelected = option.$1 == displayResourceId;
                                         final isDownloaded = _tafsirProgress[option.$1] == 1.0;
                                         
-                                        final progressStr = (_tafsirProgress.containsKey(option.$1) && _tafsirProgress[option.$1]! > 0.0 && _tafsirProgress[option.$1]! < 1.0)
-                                            ? ' (${(_tafsirProgress[option.$1]! * 100).toInt()}%)'
-                                            : '';
+                                        final isDownloading = !isDownloaded && ((currentState is TafsirDownloading && currentState.resourceId == option.$1) || (_tafsirProgress.containsKey(option.$1) && _tafsirProgress[option.$1]! > 0.0 && _tafsirProgress[option.$1]! < 1.0));
+                                        
+                                        final progressValue = (currentState is TafsirDownloading && currentState.resourceId == option.$1) ? currentState.progress : (_tafsirProgress[option.$1] ?? 0.0);
                                         
                                         return PopupMenuItem<int>(
                                           value: option.$1,
@@ -349,22 +353,25 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
                                                   child: Row(
                                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: [
-                                                      Text(
-                                                        '${option.$2}$progressStr',
-                                                        style: AppTextStyles.menuItemText.copyWith(
-                                                          fontSize: 14.sp,
-                                                          color: isSelected ? AppColors.accentGold : AppColors.textPrimary,
-                                                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                                      Expanded(
+                                                        child: Text(
+                                                          option.$2,
+                                                          style: AppTextStyles.menuItemText.copyWith(
+                                                            fontSize: 14.sp,
+                                                            color: isSelected ? AppColors.accentGold : AppColors.textPrimary,
+                                                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                                          ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
                                                         ),
                                                       ),
-                                                      if (!isDownloaded && currentState is TafsirDownloading && currentState.resourceId == option.$1)
-                                                        SizedBox(
-                                                          width: 14.w,
-                                                          height: 14.w,
-                                                          child: CircularProgressIndicator(
-                                                            strokeWidth: 2,
-                                                            value: currentState.progress == 0.0 ? null : currentState.progress,
+                                                      if (isDownloading)
+                                                        Text(
+                                                          '${(progressValue * 100).toInt()}%',
+                                                          style: AppTextStyles.menuItemText.copyWith(
+                                                            fontSize: 12.sp,
                                                             color: AppColors.accentGold,
+                                                            fontWeight: FontWeight.bold,
                                                           ),
                                                         )
                                                       else if (!isDownloaded)
@@ -381,7 +388,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
                                       }).toList();
                                     },
                                       child: Container(
-                                        height: 36.h,
+                                        height: 40.h,
                                         width: Localizations.localeOf(context).languageCode == 'en' ? 130.w : 100.w,
                                         padding: EdgeInsets.symmetric(horizontal: 10.w),
                                         decoration: BoxDecoration(
@@ -396,7 +403,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
                                           Expanded(
                                             child: Text(
                                               _getTafsirName(context, displayResourceId),
-                                              textAlign: TextAlign.right,
+                                              textAlign: TextAlign.center,
                                               style: AppTextStyles.menuItemText.copyWith(
                                                 fontSize: 12.sp,
                                                 color: AppColors.accentGold,
@@ -568,13 +575,12 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
                               Flexible(
                                 child: SingleChildScrollView(
                                   physics: const BouncingScrollPhysics(),
-                                  child: Text(
-                                    _stripHtml(currentState.tafsir.text),
+                                  child: MixedDirectionText(
+                                    text: _stripHtml(currentState.tafsir.text),
                                     style: AppTextStyles.menuItemText.copyWith(
                                       height: 1.8.h, 
                                       color: AppColors.textPrimary, // Dark charcoal
                                     ),
-                                    textDirection: TextDirection.rtl,
                                   ),
                                 ),
                               ),
@@ -585,16 +591,13 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
                         Builder(
                           builder: (context) {
                             final strippedText = _stripHtml(currentState.translation.text);
-                            final isRtl = _isRtl(strippedText);
                             return Flexible(
                               child: SingleChildScrollView(
                                 physics: const BouncingScrollPhysics(),
                                 child: SizedBox(
                                   width: double.infinity,
-                                  child: Text(
-                                    strippedText,
-                                    textAlign: isRtl ? TextAlign.right : TextAlign.left,
-                                    textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+                                  child: MixedDirectionText(
+                                    text: strippedText,
                                     style: AppTextStyles.menuItemText.copyWith(
                                       height: 1.8.h,
                                       color: AppColors.textPrimary,
@@ -696,18 +699,21 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
                       mainAxisSize: MainAxisSize.min,
                       children: [
                       _buildMenuItem(Icons.menu_book_outlined, l10n.menuTafsir, () {
-                        _showOverlayContent(context, l10n.menuTafsirTitle, context.read<QuranBloc>().state, () {
-                          context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey));
+                        final qBloc = context.read<QuranBloc>();
+                        final langCode = Localizations.localeOf(context).languageCode;
+                        _showOverlayContent(context, l10n.menuTafsirTitle, qBloc.state, () {
+                          qBloc.add(FetchTafsir(widget.verse.verseKey, languageCode: langCode));
                         });
-                        context.read<QuranBloc>().add(FetchTafsir(widget.verse.verseKey));
+                        qBloc.add(FetchTafsir(widget.verse.verseKey, languageCode: langCode));
                         _close(keepHighlight: true);
                       }, closeMenu: false),
                       Divider(height: 1.h, thickness: 1, color: AppColors.divider),
                       _buildMenuItem(Icons.g_translate_outlined, l10n.menuTranslation, () {
-                        _showOverlayContent(context, l10n.menuTranslation, context.read<QuranBloc>().state, () {
-                          context.read<QuranBloc>().add(FetchTranslation(widget.verse.verseKey));
+                        final qBloc = context.read<QuranBloc>();
+                        _showOverlayContent(context, l10n.menuTranslation, qBloc.state, () {
+                          qBloc.add(FetchTranslation(widget.verse.verseKey));
                         });
-                        context.read<QuranBloc>().add(FetchTranslation(widget.verse.verseKey));
+                        qBloc.add(FetchTranslation(widget.verse.verseKey));
                         _close(keepHighlight: true);
                       }, closeMenu: false),
                       Divider(height: 1.h, thickness: 1, color: AppColors.divider),

@@ -197,7 +197,7 @@ abstract class AppLocalizations {
   /// No description provided for @menuTafsirTitle.
   ///
   /// In ar, this message translates to:
-  /// **'التفسير - الميسر'**
+  /// **'التفسير'**
   String get menuTafsirTitle;
 
   /// No description provided for @menuTranslation.
@@ -745,6 +745,30 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تلاوات القرآن'**
   String get notificationChannelRecitations;
+
+  /// No description provided for @tafsirEnIbnKathir.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابن كثير (مختصر)'**
+  String get tafsirEnIbnKathir;
+
+  /// No description provided for @tafsirEnAsSaadi.
+  ///
+  /// In ar, this message translates to:
+  /// **'السعدي'**
+  String get tafsirEnAsSaadi;
+
+  /// No description provided for @tafsirEnMaarif.
+  ///
+  /// In ar, this message translates to:
+  /// **'معارف القرآن'**
+  String get tafsirEnMaarif;
+
+  /// No description provided for @tafsirEnTazkirul.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير القرآن'**
+  String get tafsirEnTazkirul;
 }
 
 class _AppLocalizationsDelegate

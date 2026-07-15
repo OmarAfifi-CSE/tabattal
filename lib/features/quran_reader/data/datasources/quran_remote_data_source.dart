@@ -19,7 +19,7 @@ class QuranRemoteDataSourceImpl implements QuranRemoteDataSource {
   @override
   Future<Map<String, dynamic>> getTafsirByVerse(int resourceId, String verseKey) {
     return apiClient.getJson(
-      '/tafsirs/$resourceId/by_ayah/$verseKey',
+      '/quran/tafsirs/$resourceId?verse_key=$verseKey',
       parse: (json) => json,
     );
   }

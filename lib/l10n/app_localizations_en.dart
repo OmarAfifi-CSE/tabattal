@@ -57,7 +57,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuTafsir => 'Tafsir';
 
   @override
-  String get menuTafsirTitle => 'Tafsir - Al-Muyassar';
+  String get menuTafsirTitle => 'Tafsir';
 
   @override
   String get menuTranslation => 'Translation';
@@ -363,4 +363,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationChannelRecitations => 'Quran Recitations';
+
+  @override
+  String get tafsirEnIbnKathir => 'Ibn Kathir (Abridged)';
+
+  @override
+  String get tafsirEnAsSaadi => 'As-Sa\'di';
+
+  @override
+  String get tafsirEnMaarif => 'Ma\'arif-ul-Quran';
+
+  @override
+  String get tafsirEnTazkirul => 'Tazkirul Quran';
 }

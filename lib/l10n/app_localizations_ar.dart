@@ -57,7 +57,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get menuTafsir => 'التفسير';
 
   @override
-  String get menuTafsirTitle => 'التفسير - الميسر';
+  String get menuTafsirTitle => 'التفسير';
 
   @override
   String get menuTranslation => 'الترجمة';
@@ -362,4 +362,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationChannelRecitations => 'تلاوات القرآن';
+
+  @override
+  String get tafsirEnIbnKathir => 'ابن كثير (مختصر)';
+
+  @override
+  String get tafsirEnAsSaadi => 'السعدي';
+
+  @override
+  String get tafsirEnMaarif => 'معارف القرآن';
+
+  @override
+  String get tafsirEnTazkirul => 'تذكير القرآن';
 }

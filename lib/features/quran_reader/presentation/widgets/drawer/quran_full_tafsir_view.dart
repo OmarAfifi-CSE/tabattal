@@ -14,6 +14,8 @@ import '../../../bloc/audio/audio_state.dart';
 import '../../../../../core/constants/quran_metadata.dart';
 import '../audio_settings_sheet.dart';
 import '../../../domain/entities/download_state.dart';
+import '../../../../../core/error/failures.dart';
+import '../../../../../core/widgets/mixed_direction_text.dart';
 
 class QuranFullTafsirView extends StatefulWidget {
   final int pageNumber;
@@ -85,7 +87,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   }
 
   Future<void> _checkDownloadedTafsirs() async {
-    final toCheck = [14, 91, 15, 90, 93, 94]; // Include newly-downloadable tafsir 14 & 91
+    final toCheck = [14, 91, 15, 90, 93, 94, 169, 168, 817]; // Include newly-downloadable tafsir 14 & 91 and english ones
     for (int id in toCheck) {
       final progressResult = await _repository.getTafsirDownloadProgress(id);
       progressResult.fold(
@@ -105,7 +107,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        _tafsirResourceId = prefs.getInt('tafsir_id') ?? 16;
+        _tafsirResourceId = prefs.getInt('tafsir_id') ?? (Localizations.localeOf(context).languageCode == 'en' ? 169 : 16);
       });
       _initData();
     }
@@ -320,7 +322,11 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
           case Failed(:final failure):
             setState(() {
               _isDownloading = false;
-              _downloadError = failure.message;
+              if (failure is NetworkFailure) {
+                _downloadError = l10n.downloadFailedInternet;
+              } else {
+                _downloadError = 'Failed to fetch content from the server. Please try again later.';
+              }
             });
             return;
         }
@@ -403,15 +409,19 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
               icon: Icon(Icons.tune_rounded, color: AppColors.accentGold),
               onSelected: _changeTafsir,
               itemBuilder: (context) {
-                final options = [
-                        (16, AppLocalizations.of(context)!.tafsirAlMuyassar),
-                        (14, AppLocalizations.of(context)!.tafsirIbnKathir),
-                        (91, AppLocalizations.of(context)!.tafsirAlSaadi),
-                        (15, AppLocalizations.of(context)!.tafsirAlTabari),
-                        (90, AppLocalizations.of(context)!.tafsirAlQurtubi),
-                        (93, AppLocalizations.of(context)!.tafsirAlWaseet),
-                        (94, AppLocalizations.of(context)!.tafsirAlBaghawi),
-                      ];
+                final options = Localizations.localeOf(context).languageCode == 'en' ? [
+                                        (169, AppLocalizations.of(context)!.tafsirEnIbnKathir),
+                                        (168, AppLocalizations.of(context)!.tafsirEnMaarif),
+                                        (817, AppLocalizations.of(context)!.tafsirEnTazkirul),
+                                      ] : [
+                                        (16, AppLocalizations.of(context)!.tafsirAlMuyassar),
+                                        (14, AppLocalizations.of(context)!.tafsirIbnKathir),
+                                        (91, AppLocalizations.of(context)!.tafsirAlSaadi),
+                                        (15, AppLocalizations.of(context)!.tafsirAlTabari),
+                                        (90, AppLocalizations.of(context)!.tafsirAlQurtubi),
+                                        (93, AppLocalizations.of(context)!.tafsirAlWaseet),
+                                        (94, AppLocalizations.of(context)!.tafsirAlBaghawi),
+                                      ];
                 return options.map((option) {
                   final isSelected = option.$1 == _tafsirResourceId;
                   final isDownloaded = _downloadedTafsirs.contains(option.$1);
@@ -631,10 +641,8 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                   Divider(color: AppColors.divider),
                                   const SizedBox(height: 10),
                                   // Tafsir text
-                                  Text(
-                                    item.tafsirText,
-                                    textAlign: TextAlign.right,
-                                    textDirection: TextDirection.rtl,
+                                  MixedDirectionText(
+                                    text: item.tafsirText,
                                     style: TextStyle(
                                       fontSize: 17,
                                       height: 1.7,

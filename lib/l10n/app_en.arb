@@ -16,7 +16,7 @@
   "drawerLanguage": "Language",
   "drawerLanguageSubtitle": "العربية / English",
   "menuTafsir": "Tafsir",
-  "menuTafsirTitle": "Tafsir - Al-Muyassar",
+  "menuTafsirTitle": "Tafsir",
   "menuTranslation": "Translation",
   "menuListen": "Listen to Verses",
   "menuGoToVerse": "Go to Playing Verse",
@@ -223,5 +223,9 @@
   "tafsirAlWaseet": "Al-Waseet",
   "tafsirAlBaghawi": "Al-Baghawi",
   "notificationChannelRecitations": "Quran Recitations",
-  "audioSpeed": "Speed"
+  "audioSpeed": "Speed",
+  "tafsirEnIbnKathir": "Ibn Kathir (Abridged)",
+  "tafsirEnAsSaadi": "As-Sa'di",
+  "tafsirEnMaarif": "Ma'arif-ul-Quran",
+  "tafsirEnTazkirul": "Tazkirul Quran"
 }
