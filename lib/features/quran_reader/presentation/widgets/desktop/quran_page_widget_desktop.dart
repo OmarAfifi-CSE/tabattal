@@ -562,13 +562,11 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
         }
       },
       child: Center(
-        child: AspectRatio(
-          aspectRatio: 0.72,
-          child: QuranPageFrameDesktop(
-            pageNumber: widget.pageNumber,
-      onNavigateToPage: widget.onNavigateToPage,
-            surahName: surahName,
-            juzName: juzName,
+        child: QuranPageFrameDesktop(
+          pageNumber: widget.pageNumber,
+          onNavigateToPage: widget.onNavigateToPage,
+          surahName: surahName,
+          juzName: juzName,
         
         child: BlocBuilder<BookmarkBloc, BookmarkState>(
           builder: (context, bookmarkState) {
@@ -634,7 +632,6 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
           },
         ), // BlocBuilder
       ), // QuranPageFrameDesktop
-        ), // AspectRatio
       ), // Center
     ); // GestureDetector
   }

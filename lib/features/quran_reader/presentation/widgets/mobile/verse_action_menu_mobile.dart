@@ -137,6 +137,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile> with Sing
 
   Widget _buildMenuItem(IconData icon, String text, VoidCallback onTap, {Color? iconColor, bool closeMenu = true}) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
         if (_isAnimating) return;
         onTap();

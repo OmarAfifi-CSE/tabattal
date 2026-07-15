@@ -215,6 +215,7 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                                             child: QuranPageWidgetTablet(
                                               key: ValueKey('page_$rightPage'),
                                               pageNumber: rightPage,
+                                              onNavigateToPage: (page, {verseKey}) => _jumpToPage(page, verseKey: verseKey),
                                               highlightVerseKey: (rightPage == _currentPage || leftPage == _currentPage) ? _highlightVerseKey : null,
                                             ),
                                           ),

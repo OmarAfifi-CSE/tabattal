@@ -215,6 +215,7 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                                             child: QuranPageWidgetWeb(
                                               key: ValueKey('page_$rightPage'),
                                               pageNumber: rightPage,
+                                              onNavigateToPage: (page, {verseKey}) => _jumpToPage(page, verseKey: verseKey),
                                               highlightVerseKey: (rightPage == _currentPage || leftPage == _currentPage) ? _highlightVerseKey : null,
                                             ),
                                           ),

@@ -561,13 +561,11 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb> with SingleTick
         }
       },
       child: Center(
-        child: AspectRatio(
-          aspectRatio: 0.72,
-          child: QuranPageFrameWeb(
-            pageNumber: widget.pageNumber,
-      onNavigateToPage: widget.onNavigateToPage,
-            surahName: surahName,
-            juzName: juzName,
+        child: QuranPageFrameWeb(
+          pageNumber: widget.pageNumber,
+          onNavigateToPage: widget.onNavigateToPage,
+          surahName: surahName,
+          juzName: juzName,
         
         child: BlocBuilder<BookmarkBloc, BookmarkState>(
           builder: (context, bookmarkState) {
@@ -633,7 +631,6 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb> with SingleTick
           },
         ), // BlocBuilder
       ), // QuranPageFrameWeb
-        ), // AspectRatio
       ), // Center
     ); // GestureDetector
   }

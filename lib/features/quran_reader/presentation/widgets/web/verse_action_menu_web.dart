@@ -136,6 +136,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb> with SingleTick
 
   Widget _buildMenuItem(IconData icon, String text, VoidCallback onTap, {Color? iconColor, bool closeMenu = true}) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
         if (_isAnimating) return;
         onTap();
