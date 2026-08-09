@@ -770,7 +770,8 @@ class _ThemePickerSheet extends StatelessWidget {
                         ),
                         Switch(
                           value: isDark,
-                          activeTrackColor: AppColors.accentGold,
+                          activeThumbColor: state.effectiveMushafTheme.goldColor,
+                          activeTrackColor: state.effectiveMushafTheme.goldColor.withValues(alpha: 0.5),
                           onChanged: (val) {
                             context.read<SettingsBloc>().add(
                               ToggleThemeMode(

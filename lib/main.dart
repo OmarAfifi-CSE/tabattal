@@ -18,6 +18,7 @@ import 'features/quran_reader/data/datasources/quran_local_data_source.dart';
 
 import 'core/di/injection.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_colors.dart';
 import 'core/network/audio_download_manager.dart';
 import 'core/services/audio_preferences_service.dart';
 import 'core/bloc/locale/locale_cubit.dart';
@@ -87,6 +88,10 @@ class TabattalApp extends StatelessWidget {
         ],
         child: BlocBuilder<SettingsBloc, SettingsState>(
           builder: (context, settingsState) {
+            // Update static AppColors immediately so appTheme() uses the correct seed color
+            AppColors.isDarkMode = settingsState.themeMode == ThemeMode.dark;
+            AppColors.currentMushafTheme = settingsState.effectiveMushafTheme;
+
             return BlocBuilder<LocaleCubit, Locale>(
               builder: (context, locale) {
                 return ResponsiveLayout(
