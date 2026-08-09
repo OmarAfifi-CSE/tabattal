@@ -184,81 +184,35 @@ class _AudioSettingsSheetContentState
             SizedBox(height: 18.wH),
 
             // ── Category Selector
-            _SelectorButton(
+            _SelectorButton<String>(
               icon: Icons.category_rounded,
               label: AppLocalizations.of(context)!.audioTypeLabel,
               value: _selectedCategory,
               items: categories,
-              onChanged: _onCategoryChanged,
+              onChanged: (val) => _onCategoryChanged(val),
+              labelBuilder: (context, item) => ReciterLocalization.localize(context, item),
             ),
             SizedBox(height: 12.wH),
 
             // ── Reciter Selector
-            _SelectorButton(
+            _SelectorButton<String>(
               icon: Icons.mic_rounded,
               label: AppLocalizations.of(context)!.audioReciterLabel,
               value: _selectedReciter,
               items: reciters,
-              onChanged: _onReciterChanged,
+              onChanged: (val) => _onReciterChanged(val),
+              labelBuilder: (context, item) => ReciterLocalization.localize(context, item),
             ),
             SizedBox(height: 20.wH),
 
             // ── Repeat Selector
-            _SectionLabel(
+            _SelectorButton<int>(
               icon: Icons.repeat_rounded,
               label: AppLocalizations.of(context)!.audioRepeatLabel,
-            ),
-            SizedBox(height: 8.wH),
-            Align(
-              alignment: Localizations.localeOf(context).languageCode == 'en'
-                  ? Alignment.centerLeft
-                  : Alignment.centerRight,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceCream,
-                  borderRadius: BorderRadius.circular(10.wR),
-                  border: Border.all(
-                    color: AppColors.accentGold.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<int>(
-                    isExpanded: false,
-                    value: _selectedRepeatCount,
-                    icon: Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: AppColors.accentGold,
-                      ),
-                    ),
-                    dropdownColor: AppColors.cardCream,
-                    borderRadius: BorderRadius.circular(12),
-                    onChanged: (val) {
-                      if (val != null) _onRepeatChanged(val);
-                    },
-                    items: _repeatOptions.map((count) {
-                      return DropdownMenuItem<int>(
-                        value: count,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 14),
-                          child: Text(
-                            _getRepeatLabel(context, count),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            textAlign: TextAlign.right,
-                            textDirection: TextDirection.rtl,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
+              value: _selectedRepeatCount,
+              items: _repeatOptions,
+              onChanged: _onRepeatChanged,
+              labelBuilder: (context, item) => _getRepeatLabel(context, item),
             ),
             SizedBox(height: 16.wH),
             Container(
@@ -333,41 +287,16 @@ class _AudioSettingsSheetContentState
 
 // ─── Helper Widgets ──────────────────────────────────────────────────────────
 
-class _SectionLabel extends StatelessWidget {
-  final IconData icon;
-  final String label;
 
-  const _SectionLabel({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
-    return Row(
-      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
-      children: [
-        Icon(icon, color: AppColors.accentGold, size: 18.wSp),
-        SizedBox(width: 6.wW),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14.wSp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
-        ),
-      ],
-    );
-  }
-}
 
 /// A full-width dropdown button that displays a popup menu below it.
-class _SelectorButton extends StatelessWidget {
+class _SelectorButton<T> extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String value;
-  final List<String> items;
-  final ValueChanged<String> onChanged;
+  final T value;
+  final List<T> items;
+  final ValueChanged<T> onChanged;
+  final String Function(BuildContext, T) labelBuilder;
 
   const _SelectorButton({
     required this.icon,
@@ -375,11 +304,12 @@ class _SelectorButton extends StatelessWidget {
     required this.value,
     required this.items,
     required this.onChanged,
+    required this.labelBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
+    return PopupMenuButton<T>(
       splashRadius: 0.1,
       initialValue: value,
       position: PopupMenuPosition.under,
@@ -393,7 +323,7 @@ class _SelectorButton extends StatelessWidget {
       onSelected: onChanged,
       itemBuilder: (context) => items.map((item) {
         final isSelected = item == value;
-        return PopupMenuItem<String>(
+        return PopupMenuItem<T>(
           value: item,
           height: 40,
           padding: EdgeInsets.zero,
@@ -419,7 +349,7 @@ class _SelectorButton extends StatelessWidget {
                   ),
                 Expanded(
                   child: Text(
-                    ReciterLocalization.localize(context, item),
+                    labelBuilder(context, item),
                     textAlign:
                         Localizations.localeOf(context).languageCode == 'en'
                         ? TextAlign.left
@@ -476,7 +406,7 @@ class _SelectorButton extends StatelessWidget {
                         : TextDirection.rtl,
                   ),
                   Text(
-                    ReciterLocalization.localize(context, value),
+                    labelBuilder(context, value),
                     textAlign:
                         Localizations.localeOf(context).languageCode == 'en'
                         ? TextAlign.left
