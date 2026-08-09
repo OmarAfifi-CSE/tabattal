@@ -66,6 +66,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get menuListen => 'الاستماع للآيات';
 
   @override
+  String get menuListenOnce => 'الاستماع لهذه الآية فقط';
+
+  @override
   String get menuGoToVerse => 'انتقال التلاوة لهذه الآية';
 
   @override

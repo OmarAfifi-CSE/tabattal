@@ -81,6 +81,13 @@ class ChangeRepeatCount extends AudioEvent {
   List<Object> get props => [repeatCount];
 }
 
+class ChangePlayOnce extends AudioEvent {
+  final bool playOnce;
+  const ChangePlayOnce(this.playOnce);
+  @override
+  List<Object> get props => [playOnce];
+}
+
 class SetSleepTimer extends AudioEvent {
   final Duration duration;
   const SetSleepTimer(this.duration);

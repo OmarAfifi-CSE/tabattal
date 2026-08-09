@@ -34,6 +34,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   // Used in the `completed` handler to detect stale events from a previous
   // surah that fired while a new PlayVerse was still loading its files.
   int _activePlaylistGeneration = 0;
+  bool _isPlayingOnce = false;
 
   static Uri? _cachedArtUri;
 
@@ -74,11 +75,15 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   String get currentReciter => _currentReciter;
   int get currentRepeatCount => _currentRepeatCount;
 
+  late bool _playOnce;
+  bool get playOnce => _playOnce;
+
   AudioBloc(this._audioHandler, this._downloadManager, this._prefs)
     : _audioPlayer = _audioHandler.player,
       super(AudioIdle()) {
     _currentReciter = _prefs.reciter;
     _currentRepeatCount = _prefs.repeatCount;
+    _playOnce = _prefs.playOnce;
 
     on<PlayVerse>(_onPlayVerse, transformer: restartable());
     on<PlayPlaylist>(_onPlayPlaylist, transformer: restartable());
@@ -92,6 +97,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     on<AudioStateChanged>(_onStateChanged);
     on<ChangeReciter>(_onChangeReciter);
     on<ChangeRepeatCount>(_onChangeRepeatCount);
+    on<ChangePlayOnce>(_onChangePlayOnce);
     on<SetSleepTimer>(_onSetSleepTimer);
     on<CancelSleepTimer>(_onCancelSleepTimer);
     on<AudioErrorEvent>((event, emit) => emit(AudioError(event.message)));
@@ -145,7 +151,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         if (_playlistGeneration != _activePlaylistGeneration) return;
 
         // The playlist finished
-        if (_currentVerseIds.isNotEmpty && _currentRepeatCount != -1) {
+        if (_currentVerseIds.isNotEmpty && _currentRepeatCount != -1 && !_isPlayingOnce) {
           if (kIsWeb) {
             // On web, we only load 1 ayah at a time (to avoid browser DOM limits and ConcatenatingAudioSource bugs).
             // So when it completes, we advance to the next Ayah.
@@ -178,7 +184,11 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
             }
           }
         } else {
-          add(const AudioStateChanged(isPlaying: false));
+          if (_isPlayingOnce) {
+            add(const StopAudio());
+          } else {
+            add(const AudioStateChanged(isPlaying: false));
+          }
         }
       } else {
         add(AudioStateChanged(isPlaying: state.playing));
@@ -287,6 +297,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     final int myGen = ++_playlistGeneration;
     try {
       _playedCount = 0;
+      _isPlayingOnce = _playOnce;
       final verse = VerseRef.fromId(event.verseId);
       final bool needsBasmalah =
           !event.skipBasmalah &&
@@ -302,7 +313,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       if (needsBasmalah) {
         downloadFutures.add(_ensureLocalPath(1, 1, 1001));
       }
-      const int preloadCount = kIsWeb ? 1 : 3;
+      int preloadCount = kIsWeb ? 1 : 3;
+      if (_isPlayingOnce) preloadCount = 1;
       final List<VerseRef> versesToPreload = _nextVerses(verse, preloadCount);
       for (final v in versesToPreload) {
         downloadFutures.add(_ensureLocalPath(v.surah, v.ayah, v.verseId));
@@ -382,7 +394,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       // We deliberately never cross into the next surah here. The `completed`
       // event handler is the single, correct place that triggers the next-surah
       // transition WITH basmalah.
-      if (!kIsWeb && _currentRepeatCount != -1 && versesToPreload.isNotEmpty) {
+      if (!kIsWeb && _currentRepeatCount != -1 && versesToPreload.isNotEmpty && !_isPlayingOnce) {
         final lastPreloadedAyah = versesToPreload.last.ayah;
         final surahLength = QuranMetadata.surahLengthOf(verse.surah);
         if (lastPreloadedAyah < surahLength) {
@@ -594,6 +606,11 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       if (state is AudioPlaying) emit(AudioPlaying(verseId));
       if (state is AudioPaused) emit(AudioPaused(verseId));
     }
+  }
+
+  void _onChangePlayOnce(ChangePlayOnce event, Emitter<AudioState> emit) {
+    _playOnce = event.playOnce;
+    _prefs.savePlayOnce(event.playOnce);
   }
 
   void _onSetSleepTimer(SetSleepTimer event, Emitter<AudioState> emit) {

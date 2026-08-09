@@ -18,6 +18,8 @@ import '../../../bloc/audio/audio_event.dart';
 /// [verseId] – if provided, tapping "ابدأ الاستماع" will play that verse.
 ///              Pass null to only show reciter/repeat settings without triggering play.
 void showAudioSettingsSheetWeb(BuildContext context, {int? verseId}) {
+  final audioBloc = context.read<AudioBloc>();
+  final audioPrefs = context.read<AudioPreferencesService>();
   showModalBottomSheet(
     context: context,
     backgroundColor: AppColors.cardCream,
@@ -29,10 +31,10 @@ void showAudioSettingsSheetWeb(BuildContext context, {int? verseId}) {
     ),
     isScrollControlled: true,
     builder: (_) => MultiBlocProvider(
-      providers: [BlocProvider.value(value: context.read<AudioBloc>())],
+      providers: [BlocProvider.value(value: audioBloc)],
       child: _AudioSettingsSheetContent(
         verseId: verseId,
-        audioPrefs: context.read<AudioPreferencesService>(),
+        audioPrefs: audioPrefs,
       ),
     ),
   );
@@ -59,6 +61,7 @@ class _AudioSettingsSheetContentState
   late String _selectedCategory;
   late String _selectedReciter;
   late int _selectedRepeatCount;
+  late bool _playOnce;
 
   static const List<int> _repeatOptions = [0, 2, 3, -1];
   String _getRepeatLabel(BuildContext context, int count) {
@@ -82,6 +85,7 @@ class _AudioSettingsSheetContentState
     super.initState();
     final bloc = context.read<AudioBloc>();
     _selectedRepeatCount = bloc.currentRepeatCount;
+    _playOnce = bloc.playOnce;
     if (!_repeatOptions.contains(_selectedRepeatCount)) {
       _selectedRepeatCount =
           0; // Fallback to default if saved value was removed
@@ -124,6 +128,11 @@ class _AudioSettingsSheetContentState
   void _onRepeatChanged(int repeatCount) {
     setState(() => _selectedRepeatCount = repeatCount);
     context.read<AudioBloc>().add(ChangeRepeatCount(repeatCount));
+  }
+
+  void _onPlayOnceChanged(bool value) {
+    setState(() => _playOnce = value);
+    context.read<AudioBloc>().add(ChangePlayOnce(value));
   }
 
   void _applyAndPlay() {
@@ -249,6 +258,43 @@ class _AudioSettingsSheetContentState
                     }).toList(),
                   ),
                 ),
+              ),
+            ),
+            SizedBox(height: 16.wH),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.wW, vertical: 2.wH),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceCream,
+                borderRadius: BorderRadius.circular(10.wR),
+                border: Border.all(
+                  color: AppColors.accentGold.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.looks_one_rounded, color: AppColors.accentGold, size: 20.wSp),
+                      SizedBox(width: 8.wW),
+                      Text(
+                        AppLocalizations.of(context)!.menuListenOnce,
+                        style: TextStyle(
+                          fontSize: 14.wSp,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Switch(
+                    value: _playOnce,
+                    activeTrackColor: AppColors.accentGold.withValues(alpha: 0.5),
+                    activeThumbColor: AppColors.accentGold,
+                    onChanged: _onPlayOnceChanged,
+                  ),
+                ],
               ),
             ),
             SizedBox(height: 24.wH),

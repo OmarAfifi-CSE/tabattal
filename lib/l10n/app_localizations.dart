@@ -212,6 +212,12 @@ abstract class AppLocalizations {
   /// **'الاستماع للآيات'**
   String get menuListen;
 
+  /// No description provided for @menuListenOnce.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاستماع لهذه الآية فقط'**
+  String get menuListenOnce;
+
   /// No description provided for @menuGoToVerse.
   ///
   /// In ar, this message translates to:

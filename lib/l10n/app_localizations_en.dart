@@ -66,6 +66,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuListen => 'Listen to Verses';
 
   @override
+  String get menuListenOnce => 'Listen to this Verse only';
+
+  @override
   String get menuGoToVerse => 'Go to Playing Verse';
 
   @override
