@@ -21,6 +21,8 @@ import '../../../bloc/audio/audio_event.dart';
 void showAudioSettingsSheetMobile(BuildContext context, {int? verseId}) {
   final audioBloc = context.read<AudioBloc>();
   final audioPrefs = context.read<AudioPreferencesService>();
+  final isEn = Localizations.localeOf(context).languageCode == 'en';
+
   showModalBottomSheet(
     context: context,
     backgroundColor: AppColors.cardCream,
@@ -31,11 +33,14 @@ void showAudioSettingsSheetMobile(BuildContext context, {int? verseId}) {
       borderRadius: BorderRadius.vertical(top: Radius.circular(24.wR)),
     ),
     isScrollControlled: true,
-    builder: (_) => MultiBlocProvider(
-      providers: [BlocProvider.value(value: audioBloc)],
-      child: _AudioSettingsSheetContent(
-        verseId: verseId,
-        audioPrefs: audioPrefs,
+    builder: (_) => Directionality(
+      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+      child: MultiBlocProvider(
+        providers: [BlocProvider.value(value: audioBloc)],
+        child: _AudioSettingsSheetContent(
+          verseId: verseId,
+          audioPrefs: audioPrefs,
+        ),
       ),
     ),
   );
@@ -134,6 +139,7 @@ class _AudioSettingsSheetContentState
 
   @override
   Widget build(BuildContext context) {
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
     final categories = AudioDownloadManager.reciterCategories.keys.toList();
     final reciters = _recitersForCategory;
 
@@ -179,7 +185,7 @@ class _AudioSettingsSheetContentState
               value: _selectedCategory,
               items: categories,
               onChanged: (val) => _onCategoryChanged(val),
-              labelBuilder: (context, item) => ReciterLocalization.localize(context, item),
+              labelBuilder: (item) => ReciterLocalization.localizeByLang(isEn, item),
             ),
             SizedBox(height: 12.wH),
 
@@ -190,7 +196,7 @@ class _AudioSettingsSheetContentState
               value: _selectedReciter,
               items: reciters,
               onChanged: (val) => _onReciterChanged(val),
-              labelBuilder: (context, item) => ReciterLocalization.localize(context, item),
+              labelBuilder: (item) => ReciterLocalization.localizeByLang(isEn, item),
             ),
             SizedBox(height: 20.wH),
 
@@ -201,7 +207,7 @@ class _AudioSettingsSheetContentState
               value: _selectedRepeatCount,
               items: _repeatOptions,
               onChanged: _onRepeatChanged,
-              labelBuilder: (context, item) => _getRepeatLabel(context, item),
+              labelBuilder: (item) => _getRepeatLabel(context, item),
             ),
             SizedBox(height: 16.wH),
             Container(
@@ -285,7 +291,7 @@ class _SelectorButton<T> extends StatelessWidget {
   final T value;
   final List<T> items;
   final ValueChanged<T> onChanged;
-  final String Function(BuildContext, T) labelBuilder;
+  final String Function(T) labelBuilder;
 
   const _SelectorButton({
     required this.icon,
@@ -319,12 +325,15 @@ class _SelectorButton<T> extends StatelessWidget {
             PopupMenuItem<T>(
               enabled: false,
               padding: EdgeInsets.zero,
-              child: _PopupMenuScrollableContent<T>(
-                items: items,
-                value: value,
-                labelBuilder: labelBuilder,
-                maxHeight: 250.h,
-                itemHeight: 40.h,
+              child: Directionality(
+                textDirection: Directionality.of(context),
+                child: _PopupMenuScrollableContent<T>(
+                  items: items,
+                  value: value,
+                  labelBuilder: labelBuilder,
+                  maxHeight: 250.h,
+                  itemHeight: 40.h,
+                ),
               ),
             ),
           ],
@@ -355,21 +364,9 @@ class _SelectorButton<T> extends StatelessWidget {
                           color: AppColors.accentGold,
                           fontWeight: FontWeight.w600,
                         ),
-                        textDirection:
-                            Localizations.localeOf(context).languageCode == 'en'
-                            ? TextDirection.ltr
-                            : TextDirection.rtl,
                       ),
                       Text(
-                        labelBuilder(context, value),
-                        textAlign:
-                            Localizations.localeOf(context).languageCode == 'en'
-                            ? TextAlign.left
-                            : TextAlign.right,
-                        textDirection:
-                            Localizations.localeOf(context).languageCode == 'en'
-                            ? TextDirection.ltr
-                            : TextDirection.rtl,
+                        labelBuilder(value),
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 14.wSp,
@@ -397,7 +394,7 @@ class _SelectorButton<T> extends StatelessWidget {
 class _PopupMenuScrollableContent<T> extends StatefulWidget {
   final List<T> items;
   final T value;
-  final String Function(BuildContext, T) labelBuilder;
+  final String Function(T) labelBuilder;
   final double maxHeight;
   final double itemHeight;
 
@@ -459,16 +456,15 @@ class _PopupMenuScrollableContentState<T> extends State<_PopupMenuScrollableCont
                   width: double.infinity,
                   height: widget.itemHeight,
                   padding: EdgeInsets.symmetric(horizontal: 14.w),
-                  alignment: Alignment.centerRight,
+                  alignment: AlignmentDirectional.centerStart,
                   color: isSelected
                       ? AppColors.accentGold.withValues(alpha: 0.1)
                       : Colors.transparent,
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       if (isSelected)
                         Padding(
-                          padding: EdgeInsets.only(left: 8.w),
+                          padding: EdgeInsetsDirectional.only(end: 8.w),
                           child: Icon(
                             Icons.check_rounded,
                             color: AppColors.accentGold,
@@ -477,15 +473,7 @@ class _PopupMenuScrollableContentState<T> extends State<_PopupMenuScrollableCont
                         ),
                       Expanded(
                         child: Text(
-                          widget.labelBuilder(context, item),
-                          textAlign:
-                              Localizations.localeOf(context).languageCode == 'en'
-                              ? TextAlign.left
-                              : TextAlign.right,
-                          textDirection:
-                              Localizations.localeOf(context).languageCode == 'en'
-                              ? TextDirection.ltr
-                              : TextDirection.rtl,
+                          widget.labelBuilder(item),
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 14.sp,
