@@ -11,16 +11,19 @@ class BookmarkBloc extends Bloc<BookmarkEvent, BookmarkState> {
     on<ToggleBookmark>(_onToggleBookmark);
   }
 
-  Future<void> _onLoadBookmarks(LoadBookmarks event, Emitter<BookmarkState> emit) async {
+  Future<void> _onLoadBookmarks(
+    LoadBookmarks event,
+    Emitter<BookmarkState> emit,
+  ) async {
     final bookmarks = await repository.loadBookmarks();
     emit(BookmarkState(bookmarkedVerseKeys: bookmarks));
   }
 
-  Future<void> _onToggleBookmark(ToggleBookmark event, Emitter<BookmarkState> emit) async {
+  Future<void> _onToggleBookmark(
+    ToggleBookmark event,
+    Emitter<BookmarkState> emit,
+  ) async {
     final bookmarks = await repository.toggle(event.verseKey);
     emit(BookmarkState(bookmarkedVerseKeys: bookmarks));
   }
 }
-
-
-

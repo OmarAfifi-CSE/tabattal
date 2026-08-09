@@ -6,6 +6,7 @@ import '../../../../../../../core/utils/arabic_text_utils.dart';
 import '../../../../../quran_reader/domain/repositories/quran_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
+
 class QuranIndexViewMobile extends StatefulWidget {
   final int initialIndex;
 
@@ -15,7 +16,8 @@ class QuranIndexViewMobile extends StatefulWidget {
   State<QuranIndexViewMobile> createState() => _QuranIndexViewMobileState();
 }
 
-class _QuranIndexViewMobileState extends State<QuranIndexViewMobile> with SingleTickerProviderStateMixin {
+class _QuranIndexViewMobileState extends State<QuranIndexViewMobile>
+    with SingleTickerProviderStateMixin {
   late final QuranRepository _repository;
   late TabController _tabController;
 
@@ -25,16 +27,47 @@ class _QuranIndexViewMobileState extends State<QuranIndexViewMobile> with Single
 
   // Approximate start pages for Juz (Madani Mushaf standard)
   static const List<int> _juzStartPages = [
-    1, 22, 42, 62, 82, 102, 122, 142, 162, 182,
-    202, 222, 242, 262, 282, 302, 322, 342, 362, 382,
-    402, 422, 442, 462, 482, 502, 522, 542, 562, 582,
+    1,
+    22,
+    42,
+    62,
+    82,
+    102,
+    122,
+    142,
+    162,
+    182,
+    202,
+    222,
+    242,
+    262,
+    282,
+    302,
+    322,
+    342,
+    362,
+    382,
+    402,
+    422,
+    442,
+    462,
+    482,
+    502,
+    522,
+    542,
+    562,
+    582,
   ];
 
   @override
   void initState() {
     super.initState();
     _repository = context.read<QuranRepository>();
-    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialIndex);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialIndex,
+    );
     _loadSurahIndex();
   }
 
@@ -48,10 +81,20 @@ class _QuranIndexViewMobileState extends State<QuranIndexViewMobile> with Single
     final result = await _repository.getSurahsIndex();
     result.fold(
       (failure) {
-        if (mounted) setState(() { _isLoading = false; _hasError = true; });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _hasError = true;
+          });
+        }
       },
       (index) {
-        if (mounted) setState(() { _surahIndex = index; _isLoading = false; });
+        if (mounted) {
+          setState(() {
+            _surahIndex = index;
+            _isLoading = false;
+          });
+        }
       },
     );
   }
@@ -69,10 +112,18 @@ class _QuranIndexViewMobileState extends State<QuranIndexViewMobile> with Single
         centerTitle: true,
         title: Text(
           l10n.indexTitle,
-          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22.sp),
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 22.sp,
+          ),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary, size: 24.sp),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textPrimary,
+            size: 24.sp,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         bottom: TabBar(
@@ -81,7 +132,10 @@ class _QuranIndexViewMobileState extends State<QuranIndexViewMobile> with Single
           unselectedLabelColor: AppColors.textPrimary.withValues(alpha: 0.54),
           indicatorColor: AppColors.accentGold,
           labelStyle: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
-          tabs: [Tab(text: l10n.indexSurahsTab), Tab(text: l10n.indexJuzsTab)],
+          tabs: [
+            Tab(text: l10n.indexSurahsTab),
+            Tab(text: l10n.indexJuzsTab),
+          ],
         ),
       ),
       body: _buildBody(l10n),
@@ -90,7 +144,11 @@ class _QuranIndexViewMobileState extends State<QuranIndexViewMobile> with Single
   }
 
   Widget _buildBody(AppLocalizations l10n) {
-    if (_isLoading) return Center(child: CircularProgressIndicator(color: AppColors.accentGold));
+    if (_isLoading) {
+      return Center(
+        child: CircularProgressIndicator(color: AppColors.accentGold),
+      );
+    }
     if (_hasError) {
       return Center(
         child: Column(
@@ -98,7 +156,10 @@ class _QuranIndexViewMobileState extends State<QuranIndexViewMobile> with Single
           children: [
             Icon(Icons.error_outline, color: Colors.red, size: 48.sp),
             SizedBox(height: 12.h),
-            Text(l10n.indexLoadError, style: TextStyle(color: Colors.red, fontSize: 16.sp)),
+            Text(
+              l10n.indexLoadError,
+              style: TextStyle(color: Colors.red, fontSize: 16.sp),
+            ),
             SizedBox(height: 12.h),
             ElevatedButton(onPressed: _loadSurahIndex, child: Text(l10n.retry)),
           ],
@@ -118,7 +179,8 @@ class _QuranIndexViewMobileState extends State<QuranIndexViewMobile> with Single
       child: ListView.separated(
         padding: EdgeInsets.all(16.r),
         itemCount: _surahIndex.length,
-        separatorBuilder: (context, index) => Divider(color: AppColors.divider, height: 1.h),
+        separatorBuilder: (context, index) =>
+            Divider(color: AppColors.divider, height: 1.h),
         itemBuilder: (context, index) {
           final surahData = _surahIndex[index];
           final surahNum = surahData['surah'] as int;
@@ -126,15 +188,31 @@ class _QuranIndexViewMobileState extends State<QuranIndexViewMobile> with Single
 
           return ListTile(
             onTap: () => _navigateToPage(startPage),
-            contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 12.w,
+              vertical: 4.h,
+            ),
             leading: _buildCircleNumberBadge('$surahNum'),
             title: Text(
-              l10n.surahListItem(isEn ? QuranMetadata.getSurahNameEnglish(surahNum) : QuranMetadata.getSurahName(surahNum)),
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              l10n.surahListItem(
+                isEn
+                    ? QuranMetadata.getSurahNameEnglish(surahNum)
+                    : QuranMetadata.getSurahName(surahNum),
+              ),
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             trailing: Text(
-              l10n.pageListItem(isEn ? startPage.toString() : startPage.toArabicDigits),
-              style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary.withValues(alpha: 0.6)),
+              l10n.pageListItem(
+                isEn ? startPage.toString() : startPage.toArabicDigits,
+              ),
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textPrimary.withValues(alpha: 0.6),
+              ),
             ),
           );
         },
@@ -149,7 +227,8 @@ class _QuranIndexViewMobileState extends State<QuranIndexViewMobile> with Single
       child: ListView.separated(
         padding: EdgeInsets.all(16.r),
         itemCount: 30,
-        separatorBuilder: (context, index) => Divider(color: AppColors.divider, height: 1.h),
+        separatorBuilder: (context, index) =>
+            Divider(color: AppColors.divider, height: 1.h),
         itemBuilder: (context, index) {
           final juzNum = index + 1;
           final startPage = _juzStartPages[index];
@@ -158,12 +237,23 @@ class _QuranIndexViewMobileState extends State<QuranIndexViewMobile> with Single
             onTap: () => _navigateToPage(startPage),
             leading: _buildCircleNumberBadge('$juzNum', filled: false),
             title: Text(
-              l10n.juzListItem(isEn ? juzNum.toString() : QuranMetadata.getJuzName(juzNum)),
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              l10n.juzListItem(
+                isEn ? juzNum.toString() : QuranMetadata.getJuzName(juzNum),
+              ),
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             trailing: Text(
-              l10n.pageListItem(isEn ? startPage.toString() : startPage.toArabicDigits),
-              style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary.withValues(alpha: 0.6)),
+              l10n.pageListItem(
+                isEn ? startPage.toString() : startPage.toArabicDigits,
+              ),
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textPrimary.withValues(alpha: 0.6),
+              ),
             ),
           );
         },
@@ -180,11 +270,20 @@ class _QuranIndexViewMobileState extends State<QuranIndexViewMobile> with Single
       decoration: BoxDecoration(
         color: AppColors.accentGold.withValues(alpha: filled ? 0.12 : 0.1),
         shape: BoxShape.circle,
-        border: filled ? Border.all(color: AppColors.accentGold.withValues(alpha: 0.4), width: 1.w) : null,
+        border: filled
+            ? Border.all(
+                color: AppColors.accentGold.withValues(alpha: 0.4),
+                width: 1.w,
+              )
+            : null,
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: AppColors.accentGold),
+        style: TextStyle(
+          fontSize: 14.sp,
+          fontWeight: FontWeight.bold,
+          color: AppColors.accentGold,
+        ),
       ),
     );
   }

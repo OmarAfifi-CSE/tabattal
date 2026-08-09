@@ -27,7 +27,8 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
   void initState() {
     super.initState();
     _downloadManager = context.read<AudioDownloadManager>();
-    _selectedReciter = AudioDownloadManager.reciterCategories[_selectedCategory]!.keys.first;
+    _selectedReciter =
+        AudioDownloadManager.reciterCategories[_selectedCategory]!.keys.first;
     _initializeProgressTrackers();
   }
 
@@ -52,7 +53,11 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
       if (!mounted) return;
       final numAyahs = QuranMetadata.surahLengths[i - 1];
       // Use progress (0.0 to 1.0) instead of just bool so partial downloads are shown
-      final progress = await _downloadManager.getSurahDownloadProgress(_selectedReciter, i, numAyahs);
+      final progress = await _downloadManager.getSurahDownloadProgress(
+        _selectedReciter,
+        i,
+        numAyahs,
+      );
       if (progress > 0) {
         _surahProgress[i]!.value = progress; // 1.0=complete, 0.01-0.99=partial
       }
@@ -83,9 +88,15 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
       notifier.value = -1.0;
       if (mounted) {
         final isEn = Localizations.localeOf(context).languageCode == 'en';
-        final surahName = isEn ? QuranMetadata.getSurahNameEnglish(surah) : QuranMetadata.getSurahName(surah);
+        final surahName = isEn
+            ? QuranMetadata.getSurahNameEnglish(surah)
+            : QuranMetadata.getSurahName(surah);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.downloadFailed(surahName))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.downloadFailed(surahName),
+            ),
+          ),
         );
       }
     }
@@ -101,7 +112,10 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
 
   @override
   Widget build(BuildContext context) {
-    final reciters = AudioDownloadManager.reciterCategories[_selectedCategory]!.keys.toList();
+    final reciters = AudioDownloadManager
+        .reciterCategories[_selectedCategory]!
+        .keys
+        .toList();
 
     return Scaffold(
       backgroundColor: AppColors.surfaceCream,
@@ -111,7 +125,11 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
         centerTitle: true,
         title: Text(
           AppLocalizations.of(context)!.audioManagerTitle,
-          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
         ),
         // RTL: leading icon is on the right side naturally
         leading: IconButton(
@@ -143,15 +161,18 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
               children: [
                 // Category row
                 _buildSelectorRow(
-                label: AppLocalizations.of(context)!.audioTypeLabel,
-                icon: Icons.category_rounded,
+                  label: AppLocalizations.of(context)!.audioTypeLabel,
+                  icon: Icons.category_rounded,
                   value: _selectedCategory,
                   items: AudioDownloadManager.reciterCategories.keys.toList(),
                   onChanged: (val) {
                     if (val != null) {
                       setState(() {
                         _selectedCategory = val;
-                        _selectedReciter = AudioDownloadManager.reciterCategories[val]!.keys.first;
+                        _selectedReciter = AudioDownloadManager
+                            .reciterCategories[val]!
+                            .keys
+                            .first;
                       });
                       _initializeProgressTrackers();
                     }
@@ -178,13 +199,22 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.accentGold,
                       padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       elevation: 0,
                     ),
-                    icon: const Icon(Icons.download_for_offline_rounded, color: Colors.white),
+                    icon: const Icon(
+                      Icons.download_for_offline_rounded,
+                      color: Colors.white,
+                    ),
                     label: Text(
                       AppLocalizations.of(context)!.audioDownloadAll,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                     onPressed: _isLoadingStatus ? null : _downloadAll,
                   ),
@@ -197,7 +227,9 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
           if (_isLoadingStatus)
             Padding(
               padding: const EdgeInsets.all(32),
-              child: Center(child: CircularProgressIndicator(color: AppColors.accentGold)),
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.accentGold),
+              ),
             )
           else
             ...List.generate(114, (index) => _buildSurahItem(index + 1)),
@@ -251,7 +283,9 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
 
   Widget _buildSurahItem(int surah) {
     final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final surahName = isEn ? QuranMetadata.getSurahNameEnglish(surah) : QuranMetadata.getSurahName(surah);
+    final surahName = isEn
+        ? QuranMetadata.getSurahNameEnglish(surah)
+        : QuranMetadata.getSurahName(surah);
     final notifier = _surahProgress[surah]!;
 
     return Container(
@@ -268,7 +302,10 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
           final isDownloading = progress >= 0.0 && progress < 1.0;
 
           return ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 4,
+            ),
             leading: Container(
               width: 36,
               height: 36,
@@ -279,40 +316,55 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
               ),
               child: Text(
                 '$surah',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.accentGold),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.accentGold,
+                ),
               ),
             ),
             title: Text(
               AppLocalizations.of(context)!.surahListItem(surahName),
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             trailing: isDownloaded
-                ? const Icon(Icons.check_circle_rounded, color: Colors.green, size: 28)
+                ? const Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.green,
+                    size: 28,
+                  )
                 : isDownloading
-                    ? SizedBox(
-                        width: 42,
-                        height: 42,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              value: progress,
-                              backgroundColor: Colors.grey.shade200,
-                              color: AppColors.accentGold,
-                              strokeWidth: 3,
-                            ),
-                            Text(
-                              '${(progress * 100).toInt()}%',
-                              style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
-                            ),
-                          ],
+                ? SizedBox(
+                    width: 42,
+                    height: 42,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          value: progress,
+                          backgroundColor: Colors.grey.shade200,
+                          color: AppColors.accentGold,
+                          strokeWidth: 3,
                         ),
-                      )
-                    : IconButton(
-                        icon: const Icon(Icons.download_rounded),
-                        color: AppColors.accentGold,
-                        onPressed: () => _downloadSurah(surah),
-                      ),
+                        Text(
+                          '${(progress * 100).toInt()}%',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.download_rounded),
+                    color: AppColors.accentGold,
+                    onPressed: () => _downloadSurah(surah),
+                  ),
           );
         },
       ),
@@ -357,11 +409,18 @@ class _InlineDropdown extends StatelessWidget {
               height: 40,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               alignment: Alignment.centerRight,
-              color: isSelected ? AppColors.accentGold.withValues(alpha: 0.1) : Colors.transparent,
+              color: isSelected
+                  ? AppColors.accentGold.withValues(alpha: 0.1)
+                  : Colors.transparent,
               child: Text(
                 ReciterLocalization.localize(context, item),
-                textAlign: Localizations.localeOf(context).languageCode == 'en' ? TextAlign.left : TextAlign.right,
-                textDirection: Localizations.localeOf(context).languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
+                textAlign: Localizations.localeOf(context).languageCode == 'en'
+                    ? TextAlign.left
+                    : TextAlign.right,
+                textDirection:
+                    Localizations.localeOf(context).languageCode == 'en'
+                    ? TextDirection.ltr
+                    : TextDirection.rtl,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 14,
@@ -380,17 +439,28 @@ class _InlineDropdown extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surfaceCream,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: AppColors.accentGold.withValues(alpha: 0.4),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.accentGold, size: 22),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: AppColors.accentGold,
+              size: 22,
+            ),
             Expanded(
               child: Text(
                 ReciterLocalization.localize(context, value),
-                textAlign: Localizations.localeOf(context).languageCode == 'en' ? TextAlign.left : TextAlign.right,
-                textDirection: Localizations.localeOf(context).languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
+                textAlign: Localizations.localeOf(context).languageCode == 'en'
+                    ? TextAlign.left
+                    : TextAlign.right,
+                textDirection:
+                    Localizations.localeOf(context).languageCode == 'en'
+                    ? TextDirection.ltr
+                    : TextDirection.rtl,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 14,

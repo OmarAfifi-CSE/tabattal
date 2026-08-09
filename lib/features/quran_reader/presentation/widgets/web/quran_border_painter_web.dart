@@ -7,7 +7,6 @@ class QuranBorderPainterWeb extends CustomPainter {
   final Color goldColor;
   final Color innerColor;
   final Color backgroundColor;
-  
 
   const QuranBorderPainterWeb({
     required this.pageNumber,
@@ -15,14 +14,13 @@ class QuranBorderPainterWeb extends CustomPainter {
     required this.goldColor,
     required this.innerColor,
     required this.backgroundColor,
-    
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final W = size.width;
     final H = size.height;
-    
+
     final bool isLeftPage = pageNumber % 2 == 0;
 
     // 1. Paint Background
@@ -40,34 +38,39 @@ class QuranBorderPainterWeb extends CustomPainter {
     // Path 1: From Juz cut (left), around the left and bottom, to Page Number cut (left)
     framePath.moveTo(W * 0.08, top); // Juz Left Cut
     framePath.lineTo(left, top); // Top Left Corner
-    
+
     // Left Edge
     if (isLeftPage && hizbCutCenters.isNotEmpty) {
       // Sort in descending order of Y to draw from top to bottom
-      final sortedCenters = List<double>.from(hizbCutCenters)..sort((a, b) => a.compareTo(b));
+      final sortedCenters = List<double>.from(hizbCutCenters)
+        ..sort((a, b) => a.compareTo(b));
       for (final cy in sortedCenters) {
         framePath.lineTo(left, cy - H * 0.083); // Top Cut (smaller gap above)
         framePath.moveTo(left, cy + H * 0.112); // Bottom Cut (larger gap below)
       }
     }
-    
+
     framePath.lineTo(left, bottom); // Bottom Left Corner
     framePath.lineTo(W * 0.42, bottom); // Page Number Left Cut
 
     // Path 2: From Page Number cut (right), around the bottom and right, to Menu cut (right)
     framePath.moveTo(W * 0.58, bottom); // Page Number Right Cut
     framePath.lineTo(right, bottom); // Bottom Right Corner
-    
+
     // Right Edge
     if (!isLeftPage && hizbCutCenters.isNotEmpty) {
       // For right edge, we draw from bottom to top, so sort in descending order of Y
-      final sortedCenters = List<double>.from(hizbCutCenters)..sort((a, b) => b.compareTo(a));
+      final sortedCenters = List<double>.from(hizbCutCenters)
+        ..sort((a, b) => b.compareTo(a));
       for (final cy in sortedCenters) {
-        framePath.lineTo(right, cy + H * 0.112); // Bottom Cut (larger gap below)
+        framePath.lineTo(
+          right,
+          cy + H * 0.112,
+        ); // Bottom Cut (larger gap below)
         framePath.moveTo(right, cy - H * 0.083); // Top Cut (smaller gap above)
       }
     }
-    
+
     framePath.lineTo(right, top); // Top Right Corner
     framePath.lineTo(W * 0.93, top); // Menu Right Cut
 
@@ -87,7 +90,7 @@ class QuranBorderPainterWeb extends CustomPainter {
       ..strokeWidth = 12.0
       ..strokeJoin = StrokeJoin.miter
       ..strokeCap = StrokeCap.round;
-    
+
     canvas.drawPath(framePath, outerBound);
 
     // 5. Inner fill (light opaque gold)
@@ -98,7 +101,7 @@ class QuranBorderPainterWeb extends CustomPainter {
       ..strokeWidth = 10.0
       ..strokeJoin = StrokeJoin.miter
       ..strokeCap = StrokeCap.round;
-      
+
     canvas.drawPath(framePath, innerFill);
 
     // 6. Distribute the large diamonds perfectly evenly along the path
@@ -125,11 +128,17 @@ class QuranBorderPainterWeb extends CustomPainter {
         // Make the diamonds larger again (radius 4.5) to fill the 10px track nicely
         final Path diamond = Path();
         diamond.moveTo(pos.dx + dir.dx * 4.5, pos.dy + dir.dy * 4.5); // Front
-        diamond.lineTo(pos.dx + normal.dx * 4.5, pos.dy + normal.dy * 4.5); // Right
+        diamond.lineTo(
+          pos.dx + normal.dx * 4.5,
+          pos.dy + normal.dy * 4.5,
+        ); // Right
         diamond.lineTo(pos.dx - dir.dx * 4.5, pos.dy - dir.dy * 4.5); // Back
-        diamond.lineTo(pos.dx - normal.dx * 4.5, pos.dy - normal.dy * 4.5); // Left
+        diamond.lineTo(
+          pos.dx - normal.dx * 4.5,
+          pos.dy - normal.dy * 4.5,
+        ); // Left
         diamond.close();
-        
+
         canvas.drawPath(diamond, diamondFill);
       }
     }
@@ -142,15 +151,10 @@ class QuranBorderPainterWeb extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant QuranBorderPainterWeb oldDelegate) {
-    return oldDelegate.pageNumber != pageNumber || 
-           oldDelegate.hizbCutCenters.toString() != hizbCutCenters.toString() ||
-           oldDelegate.backgroundColor != backgroundColor ||
-           oldDelegate.goldColor != goldColor ||
-           oldDelegate.innerColor != innerColor;
+    return oldDelegate.pageNumber != pageNumber ||
+        oldDelegate.hizbCutCenters.toString() != hizbCutCenters.toString() ||
+        oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.goldColor != goldColor ||
+        oldDelegate.innerColor != innerColor;
   }
 }
-
-
-
-
-

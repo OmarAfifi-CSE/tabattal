@@ -28,16 +28,17 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  
+
   final view = WidgetsBinding.instance.platformDispatcher.views.first;
-  final logicalShortestSide = view.physicalSize.shortestSide / view.devicePixelRatio;
+  final logicalShortestSide =
+      view.physicalSize.shortestSide / view.devicePixelRatio;
   if (logicalShortestSide < 600) {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
   }
-  
+
   final container = await configureDependencies();
 
   runApp(TabattalApp(container: container));
@@ -52,9 +53,15 @@ class TabattalApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
-        RepositoryProvider<QuranRepository>.value(value: container.quranRepository),
-        RepositoryProvider<QuranLocalDataSource>.value(value: container.localDataSource),
-        RepositoryProvider<AudioPreferencesService>.value(value: container.audioPrefs),
+        RepositoryProvider<QuranRepository>.value(
+          value: container.quranRepository,
+        ),
+        RepositoryProvider<QuranLocalDataSource>.value(
+          value: container.localDataSource,
+        ),
+        RepositoryProvider<AudioPreferencesService>.value(
+          value: container.audioPrefs,
+        ),
         RepositoryProvider(create: (_) => AudioDownloadManager()),
       ],
       child: MultiBlocProvider(
@@ -67,7 +74,9 @@ class TabattalApp extends StatelessWidget {
             ),
           ),
           BlocProvider<BookmarkBloc>(
-            create: (_) => BookmarkBloc(repository: container.bookmarkRepository)..add(LoadBookmarks()),
+            create: (_) =>
+                BookmarkBloc(repository: container.bookmarkRepository)
+                  ..add(LoadBookmarks()),
           ),
           BlocProvider<LocaleCubit>(
             create: (_) => LocaleCubit(container.audioPrefs),
@@ -80,101 +89,103 @@ class TabattalApp extends StatelessWidget {
           builder: (context, settingsState) {
             return BlocBuilder<LocaleCubit, Locale>(
               builder: (context, locale) {
-            return ResponsiveLayout(
-              // Web: calibrated to 800×900 so .sp/.w/.h render at reasonable scale
-              // for a typical browser viewport (900–1400px wide).
-              webBody: MaterialApp(
-                  onGenerateTitle: (ctx) => AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
-                  debugShowCheckedModeBanner: false,
-                  locale: locale,
-                  supportedLocales: AppLocalizations.supportedLocales,
-                  localizationsDelegates: const [
-                    AppLocalizations.delegate,
-                    GlobalMaterialLocalizations.delegate,
-                    GlobalWidgetsLocalizations.delegate,
-                    GlobalCupertinoLocalizations.delegate,
-                  ],
-                  theme: appTheme(),
-                  darkTheme: appThemeDark(),
-                  themeMode: settingsState.themeMode,
-                  builder: appDirectionalityBuilder,
-                  home: const QuranWebScreen(),
-                ),
-                desktopBody: ScreenUtilInit(
-                designSize: const Size(800, 900),
-                minTextAdapt: true,
-                splitScreenMode: false,
-                child: MaterialApp(
-                  onGenerateTitle: (ctx) => AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
-                  debugShowCheckedModeBanner: false,
-                  locale: locale,
-                  supportedLocales: AppLocalizations.supportedLocales,
-                  localizationsDelegates: const [
-                    AppLocalizations.delegate,
-                    GlobalMaterialLocalizations.delegate,
-                    GlobalWidgetsLocalizations.delegate,
-                    GlobalCupertinoLocalizations.delegate,
-                  ],
-                  theme: appTheme(),
-                  darkTheme: appThemeDark(),
-                  themeMode: settingsState.themeMode,
-                  builder: appDirectionalityBuilder,
-                  home: const QuranDesktopScreen(),
-                ),
-              ),
-              tabletBody: ScreenUtilInit(
-                designSize: const Size(800, 900),
-                minTextAdapt: true,
-                splitScreenMode: false,
-                child: MaterialApp(
-                  onGenerateTitle: (ctx) => AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
-                  debugShowCheckedModeBanner: false,
-                  locale: locale,
-                  supportedLocales: AppLocalizations.supportedLocales,
-                  localizationsDelegates: const [
-                    AppLocalizations.delegate,
-                    GlobalMaterialLocalizations.delegate,
-                    GlobalWidgetsLocalizations.delegate,
-                    GlobalCupertinoLocalizations.delegate,
-                  ],
-                  theme: appTheme(),
-                  darkTheme: appThemeDark(),
-                  themeMode: settingsState.themeMode,
-                  builder: appDirectionalityBuilder,
-                  home: const QuranTabletScreen(),
-                ),
-              ),
-              // Mobile: calibrated against OnePlus 13R (412×917 dp).
-              mobileBody: ScreenUtilInit(
-                designSize: const Size(412, 917),
-                minTextAdapt: true,
-                splitScreenMode: true,
-                child: MaterialApp(
-                  onGenerateTitle: (ctx) => AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
-                  debugShowCheckedModeBanner: false,
-                  locale: locale,
-                  supportedLocales: AppLocalizations.supportedLocales,
-                  localizationsDelegates: const [
-                    AppLocalizations.delegate,
-                    GlobalMaterialLocalizations.delegate,
-                    GlobalWidgetsLocalizations.delegate,
-                    GlobalCupertinoLocalizations.delegate,
-                  ],
-                  theme: appTheme(),
-                  darkTheme: appThemeDark(),
-                  themeMode: settingsState.themeMode,
-                  builder: appDirectionalityBuilder,
-                  home: const QuranMobileScreen(),
-                ),
-              ),
+                return ResponsiveLayout(
+                  // Web: calibrated to 800×900 so .sp/.w/.h render at reasonable scale
+                  // for a typical browser viewport (900–1400px wide).
+                  webBody: MaterialApp(
+                    onGenerateTitle: (ctx) =>
+                        AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
+                    debugShowCheckedModeBanner: false,
+                    locale: locale,
+                    supportedLocales: AppLocalizations.supportedLocales,
+                    localizationsDelegates: const [
+                      AppLocalizations.delegate,
+                      GlobalMaterialLocalizations.delegate,
+                      GlobalWidgetsLocalizations.delegate,
+                      GlobalCupertinoLocalizations.delegate,
+                    ],
+                    theme: appTheme(),
+                    darkTheme: appThemeDark(),
+                    themeMode: settingsState.themeMode,
+                    builder: appDirectionalityBuilder,
+                    home: const QuranWebScreen(),
+                  ),
+                  desktopBody: ScreenUtilInit(
+                    designSize: const Size(800, 900),
+                    minTextAdapt: true,
+                    splitScreenMode: false,
+                    child: MaterialApp(
+                      onGenerateTitle: (ctx) =>
+                          AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
+                      debugShowCheckedModeBanner: false,
+                      locale: locale,
+                      supportedLocales: AppLocalizations.supportedLocales,
+                      localizationsDelegates: const [
+                        AppLocalizations.delegate,
+                        GlobalMaterialLocalizations.delegate,
+                        GlobalWidgetsLocalizations.delegate,
+                        GlobalCupertinoLocalizations.delegate,
+                      ],
+                      theme: appTheme(),
+                      darkTheme: appThemeDark(),
+                      themeMode: settingsState.themeMode,
+                      builder: appDirectionalityBuilder,
+                      home: const QuranDesktopScreen(),
+                    ),
+                  ),
+                  tabletBody: ScreenUtilInit(
+                    designSize: const Size(800, 900),
+                    minTextAdapt: true,
+                    splitScreenMode: false,
+                    child: MaterialApp(
+                      onGenerateTitle: (ctx) =>
+                          AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
+                      debugShowCheckedModeBanner: false,
+                      locale: locale,
+                      supportedLocales: AppLocalizations.supportedLocales,
+                      localizationsDelegates: const [
+                        AppLocalizations.delegate,
+                        GlobalMaterialLocalizations.delegate,
+                        GlobalWidgetsLocalizations.delegate,
+                        GlobalCupertinoLocalizations.delegate,
+                      ],
+                      theme: appTheme(),
+                      darkTheme: appThemeDark(),
+                      themeMode: settingsState.themeMode,
+                      builder: appDirectionalityBuilder,
+                      home: const QuranTabletScreen(),
+                    ),
+                  ),
+                  // Mobile: calibrated against OnePlus 13R (412×917 dp).
+                  mobileBody: ScreenUtilInit(
+                    designSize: const Size(412, 917),
+                    minTextAdapt: true,
+                    splitScreenMode: true,
+                    child: MaterialApp(
+                      onGenerateTitle: (ctx) =>
+                          AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
+                      debugShowCheckedModeBanner: false,
+                      locale: locale,
+                      supportedLocales: AppLocalizations.supportedLocales,
+                      localizationsDelegates: const [
+                        AppLocalizations.delegate,
+                        GlobalMaterialLocalizations.delegate,
+                        GlobalWidgetsLocalizations.delegate,
+                        GlobalCupertinoLocalizations.delegate,
+                      ],
+                      theme: appTheme(),
+                      darkTheme: appThemeDark(),
+                      themeMode: settingsState.themeMode,
+                      builder: appDirectionalityBuilder,
+                      home: const QuranMobileScreen(),
+                    ),
+                  ),
+                );
+              },
             );
           },
-        );
-      },
-    ),
+        ),
       ),
     );
   }
 }
-
-

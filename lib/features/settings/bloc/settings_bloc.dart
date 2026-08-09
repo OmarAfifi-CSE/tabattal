@@ -25,35 +25,48 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final themeModeStr = prefs.getString(_themeModeKey) ?? 'light';
     final themeMode = themeModeStr == 'dark' ? ThemeMode.dark : ThemeMode.light;
 
-    final mushafThemeId = prefs.getString(_mushafThemeKey) ?? MushafTheme.cream.id;
+    final mushafThemeId =
+        prefs.getString(_mushafThemeKey) ?? MushafTheme.cream.id;
     final mushafTheme = MushafTheme.fromId(mushafThemeId);
 
     final scrollStr = prefs.getString(_scrollDirectionKey) ?? 'horizontal';
-    final scrollDirection = scrollStr == 'vertical' ? Axis.vertical : Axis.horizontal;
+    final scrollDirection = scrollStr == 'vertical'
+        ? Axis.vertical
+        : Axis.horizontal;
 
-    emit(state.copyWith(
-      themeMode: themeMode,
-      mushafTheme: mushafTheme,
-      scrollDirection: scrollDirection,
-    ));
+    emit(
+      state.copyWith(
+        themeMode: themeMode,
+        mushafTheme: mushafTheme,
+        scrollDirection: scrollDirection,
+      ),
+    );
   }
 
-  void _onToggleThemeMode(ToggleThemeMode event, Emitter<SettingsState> emit) async {
+  void _onToggleThemeMode(
+    ToggleThemeMode event,
+    Emitter<SettingsState> emit,
+  ) async {
     final modeStr = event.themeMode == ThemeMode.dark ? 'dark' : 'light';
     await prefs.setString(_themeModeKey, modeStr);
     emit(state.copyWith(themeMode: event.themeMode));
   }
 
-  void _onChangeMushafTheme(ChangeMushafTheme event, Emitter<SettingsState> emit) async {
+  void _onChangeMushafTheme(
+    ChangeMushafTheme event,
+    Emitter<SettingsState> emit,
+  ) async {
     await prefs.setString(_mushafThemeKey, event.themeId);
     final newTheme = MushafTheme.fromId(event.themeId);
     emit(state.copyWith(mushafTheme: newTheme));
   }
 
-  void _onChangeScrollDirection(ChangeScrollDirection event, Emitter<SettingsState> emit) async {
+  void _onChangeScrollDirection(
+    ChangeScrollDirection event,
+    Emitter<SettingsState> emit,
+  ) async {
     final str = event.direction == Axis.vertical ? 'vertical' : 'horizontal';
     await prefs.setString(_scrollDirectionKey, str);
     emit(state.copyWith(scrollDirection: event.direction));
   }
 }
-

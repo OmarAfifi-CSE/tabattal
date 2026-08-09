@@ -8,10 +8,7 @@ sealed class Either<L, R> {
   T fold<T>(T Function(L left) onLeft, T Function(R right) onRight);
 
   Either<L, T> map<T>(T Function(R right) fn) {
-    return fold(
-      (left) => Left(left),
-      (right) => Right(fn(right)),
-    );
+    return fold((left) => Left(left), (right) => Right(fn(right)));
   }
 
   R? getOrNull() => fold((_) => null, (r) => r);
@@ -27,7 +24,8 @@ class Left<L, R> extends Either<L, R> {
   const Left(this.value);
 
   @override
-  T fold<T>(T Function(L left) onLeft, T Function(R right) onRight) => onLeft(value);
+  T fold<T>(T Function(L left) onLeft, T Function(R right) onRight) =>
+      onLeft(value);
 }
 
 class Right<L, R> extends Either<L, R> {
@@ -35,5 +33,6 @@ class Right<L, R> extends Either<L, R> {
   const Right(this.value);
 
   @override
-  T fold<T>(T Function(L left) onLeft, T Function(R right) onRight) => onRight(value);
+  T fold<T>(T Function(L left) onLeft, T Function(R right) onRight) =>
+      onRight(value);
 }

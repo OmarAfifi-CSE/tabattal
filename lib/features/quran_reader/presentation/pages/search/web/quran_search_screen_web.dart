@@ -8,6 +8,7 @@ import '../../../../../quran_reader/domain/repositories/quran_repository.dart';
 import '../../../../../quran_reader/data/models/search_verse_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
+
 class QuranSearchScreenWeb extends StatefulWidget {
   const QuranSearchScreenWeb({super.key});
 
@@ -28,9 +29,36 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
   bool _surahMapLoaded = false;
 
   static const List<int> _juzStartPages = [
-    1, 22, 42, 62, 82, 102, 122, 142, 162, 182,
-    202, 222, 242, 262, 282, 302, 322, 342, 362, 382,
-    402, 422, 442, 462, 482, 502, 522, 542, 562, 582
+    1,
+    22,
+    42,
+    62,
+    82,
+    102,
+    122,
+    142,
+    162,
+    182,
+    202,
+    222,
+    242,
+    262,
+    282,
+    302,
+    322,
+    342,
+    362,
+    382,
+    402,
+    422,
+    442,
+    462,
+    482,
+    502,
+    522,
+    542,
+    562,
+    582,
   ];
 
   @override
@@ -136,7 +164,12 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
 
   String _smartNormalize(String text) {
     String c = _normalizeArabicNumbers(text);
-    c = c.replaceAll(RegExp(r'[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED\u0640]'), '');
+    c = c.replaceAll(
+      RegExp(
+        r'[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED\u0640]',
+      ),
+      '',
+    );
     c = c.replaceAll('ـ', '');
     c = c.replaceAll(RegExp(r'[اأإآٱى]'), '');
     c = c.replaceAll(RegExp(r'ة'), 'ه');
@@ -145,18 +178,27 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
     return c;
   }
 
-  List<TextSpan> _getHighlightedUthmani(String textClean, String textUthmani, String query) {
+  List<TextSpan> _getHighlightedUthmani(
+    String textClean,
+    String textUthmani,
+    String query,
+  ) {
     if (query.isEmpty) return [TextSpan(text: textUthmani)];
-    
-    final queryWords = query.trim().split(RegExp(r'\s+')).map(_smartNormalize).where((w) => w.isNotEmpty).toList();
+
+    final queryWords = query
+        .trim()
+        .split(RegExp(r'\s+'))
+        .map(_smartNormalize)
+        .where((w) => w.isNotEmpty)
+        .toList();
     if (queryWords.isEmpty) return [TextSpan(text: textUthmani)];
 
     final cleanWords = textClean.split(' ');
     final uthmaniWords = textUthmani.split(' ');
-    
+
     int startWordIdx = -1;
     int endWordIdx = -1;
-    
+
     for (int i = 0; i <= cleanWords.length - queryWords.length; i++) {
       bool match = true;
       for (int j = 0; j < queryWords.length; j++) {
@@ -171,26 +213,40 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
         break;
       }
     }
-    
+
     if (startWordIdx == -1) {
       return [TextSpan(text: textUthmani)];
     }
 
     final spans = <TextSpan>[];
-    
+
     if (startWordIdx > 0) {
-      spans.add(TextSpan(text: '${uthmaniWords.sublist(0, startWordIdx).join(' ')} '));
+      spans.add(
+        TextSpan(text: '${uthmaniWords.sublist(0, startWordIdx).join(' ')} '),
+      );
     }
-    
-    spans.add(TextSpan(
-      text: uthmaniWords.sublist(startWordIdx, (endWordIdx + 1).clamp(0, uthmaniWords.length)).join(' '),
-      style: TextStyle(backgroundColor: AppColors.accentGold, color: Colors.white),
-    ));
-    
+
+    spans.add(
+      TextSpan(
+        text: uthmaniWords
+            .sublist(
+              startWordIdx,
+              (endWordIdx + 1).clamp(0, uthmaniWords.length),
+            )
+            .join(' '),
+        style: TextStyle(
+          backgroundColor: AppColors.accentGold,
+          color: Colors.white,
+        ),
+      ),
+    );
+
     if (endWordIdx < uthmaniWords.length - 1) {
-      spans.add(TextSpan(text: ' ${uthmaniWords.sublist(endWordIdx + 1).join(' ')}'));
+      spans.add(
+        TextSpan(text: ' ${uthmaniWords.sublist(endWordIdx + 1).join(' ')}'),
+      );
     }
-    
+
     return spans;
   }
 
@@ -209,14 +265,14 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
       ),
     );
     return Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: content,
-          ),
+      backgroundColor: AppColors.background,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: content,
         ),
-      );
+      ),
+    );
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -235,7 +291,11 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.borderMedium, width: 1),
               ),
-              child: Icon(Icons.arrow_forward_rounded, color: AppColors.textPrimary, size: 24),
+              child: Icon(
+                Icons.arrow_forward_rounded,
+                color: AppColors.textPrimary,
+                size: 24,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -251,20 +311,29 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
                 textDirection: TextDirection.rtl,
                 children: [
                   const SizedBox(width: 12),
-                  Icon(Icons.search_rounded, color: AppColors.textPrimary, size: 24),
+                  Icon(
+                    Icons.search_rounded,
+                    color: AppColors.textPrimary,
+                    size: 24,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
                       controller: _searchController,
-                      style: TextStyle(fontSize: 16, color: AppColors.textPrimary),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                      ),
                       onChanged: _onSearchChanged,
                       textDirection: TextDirection.rtl,
                       textAlign: TextAlign.right,
                       autofocus: true,
                       decoration: InputDecoration(
-                        
                         hintText: l10n.searchHint,
-                        hintStyle: TextStyle(color: AppColors.textPrimary.withValues(alpha: 0.38), fontSize: 16),
+                        hintStyle: TextStyle(
+                          color: AppColors.textPrimary.withValues(alpha: 0.38),
+                          fontSize: 16,
+                        ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.only(bottom: 8),
                       ),
@@ -288,7 +357,11 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Spacer(),
-            Icon(Icons.search_rounded, size: 64, color: AppColors.accentGold.withValues(alpha: 0.4)),
+            Icon(
+              Icons.search_rounded,
+              size: 64,
+              color: AppColors.accentGold.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 16),
             Center(
               child: Text(
@@ -333,11 +406,18 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off_rounded, size: 52, color: AppColors.textPrimary.withValues(alpha: 0.3)),
+            Icon(
+              Icons.search_off_rounded,
+              size: 52,
+              color: AppColors.textPrimary.withValues(alpha: 0.3),
+            ),
             const SizedBox(height: 12),
             Text(
               l10n.noResults,
-              style: TextStyle(fontSize: 18, color: AppColors.textPrimary.withValues(alpha: 0.6)),
+              style: TextStyle(
+                fontSize: 18,
+                color: AppColors.textPrimary.withValues(alpha: 0.6),
+              ),
             ),
           ],
         ),
@@ -368,7 +448,10 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
                       ),
                     ),
                     Text(
-                      l10n.surahAndAyah(QuranMetadata.getSurahName(verse.surah), verse.ayah.toArabicDigits),
+                      l10n.surahAndAyah(
+                        QuranMetadata.getSurahName(verse.surah),
+                        verse.ayah.toArabicDigits,
+                      ),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -382,10 +465,16 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
                   textAlign: TextAlign.right,
                   textDirection: TextDirection.rtl,
                   text: TextSpan(
-                    style: AppTextStyles.quranText.copyWith(fontSize: 22, height: 1.5, color: AppColors.textPrimary),
+                    style: AppTextStyles.quranText.copyWith(
+                      fontSize: 22,
+                      height: 1.5,
+                      color: AppColors.textPrimary,
+                    ),
                     children: _getHighlightedUthmani(
                       verse.textClean,
-                      ArabicTextUtils.removeExtendedUthmaniChars(verse.textUthmani),
+                      ArabicTextUtils.removeExtendedUthmaniChars(
+                        verse.textUthmani,
+                      ),
                       _searchController.text,
                     ),
                   ),
@@ -400,43 +489,56 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
 
   Widget _buildNumericResults() {
     final l10n = AppLocalizations.of(context)!;
-    final number = int.tryParse(_normalizeArabicNumbers(_searchController.text.trim())) ?? 1;
+    final number =
+        int.tryParse(_normalizeArabicNumbers(_searchController.text.trim())) ??
+        1;
     final cards = <Widget>[];
 
     if (number >= 1 && number <= 604) {
-      cards.add(_buildActionCard(
-        title: l10n.goToPageTitle(number),
-        icon: Icons.menu_book_rounded,
-        onTap: () => _navigateToPage(number),
-      ));
+      cards.add(
+        _buildActionCard(
+          title: l10n.goToPageTitle(number),
+          icon: Icons.menu_book_rounded,
+          onTap: () => _navigateToPage(number),
+        ),
+      );
     }
 
     if (number >= 1 && number <= 30) {
       final juzPage = _juzStartPages[number - 1];
       final juzName = QuranMetadata.getJuzName(number);
-      cards.add(_buildActionCard(
-        title: l10n.goToJuzTitle(juzName, number, juzPage),
-        icon: Icons.pie_chart_rounded,
-        onTap: () => _navigateToPage(juzPage),
-      ));
+      cards.add(
+        _buildActionCard(
+          title: l10n.goToJuzTitle(juzName, number, juzPage),
+          icon: Icons.pie_chart_rounded,
+          onTap: () => _navigateToPage(juzPage),
+        ),
+      );
     }
 
     if (number >= 1 && number <= 114) {
       final surahName = QuranMetadata.getSurahName(number);
       final surahPage = _surahPageMap[number];
       if (surahPage != null) {
-        cards.add(_buildActionCard(
-          title: l10n.goToSurahTitle(surahName, number, surahPage),
-          icon: Icons.my_library_books_rounded,
-          onTap: () => _navigateToPage(surahPage),
-        ));
-      } else if (!_surahMapLoaded) {
-        cards.add(Center(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: CircularProgressIndicator(color: AppColors.accentGold, strokeWidth: 2),
+        cards.add(
+          _buildActionCard(
+            title: l10n.goToSurahTitle(surahName, number, surahPage),
+            icon: Icons.my_library_books_rounded,
+            onTap: () => _navigateToPage(surahPage),
           ),
-        ));
+        );
+      } else if (!_surahMapLoaded) {
+        cards.add(
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: CircularProgressIndicator(
+                color: AppColors.accentGold,
+                strokeWidth: 2,
+              ),
+            ),
+          ),
+        );
       }
     }
 
@@ -444,7 +546,10 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
       return Center(
         child: Text(
           l10n.outOfRange(number.toArabicDigits),
-          style: TextStyle(fontSize: 16, color: AppColors.textPrimary.withValues(alpha: 0.6)),
+          style: TextStyle(
+            fontSize: 16,
+            color: AppColors.textPrimary.withValues(alpha: 0.6),
+          ),
         ),
       );
     }

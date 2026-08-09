@@ -17,7 +17,10 @@ class FontService {
     _initFuture = () async {
       try {
         final zipBytes = await rootBundle.load('assets/fonts/quran_fonts.zip');
-        _fontArchive = ZipDecoder().decodeBytes(zipBytes.buffer.asUint8List(), verify: false);
+        _fontArchive = ZipDecoder().decodeBytes(
+          zipBytes.buffer.asUint8List(),
+          verify: false,
+        );
         _isInit = true;
       } catch (e) {
         debugPrint("Failed to load quran_fonts.zip: $e");
@@ -48,7 +51,9 @@ class FontService {
         if (fontFile != null) {
           final fontData = fontFile.content as List<int>;
           final fontLoader = FontLoader(fontName);
-          fontLoader.addFont(Future.value(ByteData.view(Uint8List.fromList(fontData).buffer)));
+          fontLoader.addFont(
+            Future.value(ByteData.view(Uint8List.fromList(fontData).buffer)),
+          );
           await fontLoader.load();
           _loadedFonts.add(fontName);
         }

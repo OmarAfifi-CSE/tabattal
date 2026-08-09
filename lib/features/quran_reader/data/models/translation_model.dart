@@ -2,10 +2,7 @@ class TranslationModel {
   final int resourceId;
   final String text;
 
-  TranslationModel({
-    required this.resourceId,
-    required this.text,
-  });
+  TranslationModel({required this.resourceId, required this.text});
 
   factory TranslationModel.fromJson(Map<String, dynamic> json) {
     return TranslationModel(

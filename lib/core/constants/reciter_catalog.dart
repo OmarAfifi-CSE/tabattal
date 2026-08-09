@@ -37,7 +37,8 @@ class ReciterCatalog {
     },
     'الترجمات الصوتية': {
       'إبراهيم ووك (إنجليزي)': 'English/Sahih_Intnl_Ibrahim_Walk_192kbps',
-      'عبد الله بصفر وإبراهيم ووك (عربي / إنجليزي)': 'MultiLanguage/Basfar_Walk_192kbps',
+      'عبد الله بصفر وإبراهيم ووك (عربي / إنجليزي)':
+          'MultiLanguage/Basfar_Walk_192kbps',
     },
   };
 

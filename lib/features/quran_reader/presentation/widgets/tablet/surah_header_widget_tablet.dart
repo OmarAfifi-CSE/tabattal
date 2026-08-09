@@ -144,9 +144,14 @@ class SurahHeaderWidgetTablet extends StatelessWidget {
     // 412 is a standard mobile screen width used for calibration.
     const double canvasWidth = 412.0;
 
-    final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
+    final mushafTheme = context
+        .watch<SettingsBloc>()
+        .state
+        .effectiveMushafTheme;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final innerTextColor = isDarkMode ? mushafTheme.textColor : mushafTheme.goldColor;
+    final innerTextColor = isDarkMode
+        ? mushafTheme.textColor
+        : mushafTheme.goldColor;
 
     return SizedBox(
       width: canvasWidth,
@@ -163,7 +168,7 @@ class SurahHeaderWidgetTablet extends StatelessWidget {
               SizedBox(
                 width: canvasWidth,
                 child: Transform.scale(
-                  scaleX: 1.0, 
+                  scaleX: 1.0,
                   scaleY: 1.8,
                   child: FittedBox(
                     fit: BoxFit.fitWidth,
@@ -182,7 +187,10 @@ class SurahHeaderWidgetTablet extends StatelessWidget {
 
               // 2. The Surah Name from QCF_Surah
               Transform.translate(
-                offset: const Offset(-10.0, 11.0), // Calibrated center tweak for this ornament
+                offset: const Offset(
+                  -10.0,
+                  11.0,
+                ), // Calibrated center tweak for this ornament
                 child: Text(
                   '${_getSurahNameGlyph(surahNumber)}${String.fromCharCode(0xE903)}',
                   style: TextStyle(
@@ -248,5 +256,3 @@ class SurahHeaderWidgetTablet extends StatelessWidget {
     );
   }
 }
-
-

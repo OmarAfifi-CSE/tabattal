@@ -58,13 +58,15 @@ Widget appDirectionalityBuilder(BuildContext context, Widget? child) {
 
   AppColors.isDarkMode = isDarkMode;
   AppColors.currentMushafTheme = effectiveTheme;
-  
+
   final overlayStyle = SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     systemNavigationBarColor: Colors.transparent,
     systemNavigationBarDividerColor: Colors.transparent,
     statusBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
-    systemNavigationBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
+    systemNavigationBarIconBrightness: isDarkMode
+        ? Brightness.light
+        : Brightness.dark,
     systemNavigationBarContrastEnforced: false,
     systemStatusBarContrastEnforced: false,
   );
@@ -74,10 +76,6 @@ Widget appDirectionalityBuilder(BuildContext context, Widget? child) {
 
   return AnnotatedRegion<SystemUiOverlayStyle>(
     value: overlayStyle,
-    child: Directionality(
-      textDirection: TextDirection.rtl,
-      child: child!,
-    ),
+    child: Directionality(textDirection: TextDirection.rtl, child: child!),
   );
 }
-

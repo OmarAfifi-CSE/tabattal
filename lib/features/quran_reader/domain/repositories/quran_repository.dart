@@ -14,15 +14,31 @@ import '../../data/models/search_verse_model.dart';
 
 abstract class QuranRepository {
   Future<Either<Failure, List<LineData>>> getLinesByPage(int pageNumber);
-  Future<Either<Failure, TafsirModel>> getTafsir(String verseKey, {int resourceId = 16});
-  Future<Either<Failure, TranslationModel>> getTranslation(String verseKey, {int resourceId = 20});
-  Future<Either<Failure, List<TafsirModel>>> getTafsirsByChapter(int chapterId, {int resourceId = 16, int page = 1});
-  Future<Either<Failure, List<TranslationModel>>> getTranslationsByChapter(int chapterId, {int resourceId = 20});
+  Future<Either<Failure, TafsirModel>> getTafsir(
+    String verseKey, {
+    int resourceId = 16,
+  });
+  Future<Either<Failure, TranslationModel>> getTranslation(
+    String verseKey, {
+    int resourceId = 20,
+  });
+  Future<Either<Failure, List<TafsirModel>>> getTafsirsByChapter(
+    int chapterId, {
+    int resourceId = 16,
+    int page = 1,
+  });
+  Future<Either<Failure, List<TranslationModel>>> getTranslationsByChapter(
+    int chapterId, {
+    int resourceId = 20,
+  });
   Future<Either<Failure, List<SearchVerseModel>>> searchQuran(String query);
   Future<Either<Failure, List<Map<String, dynamic>>>> getSurahsIndex();
   Future<Either<Failure, int>> getPageForVerse(String verseKey);
   Future<Either<Failure, List<SearchVerseModel>>> getVersesBySurah(int surahId);
-  Future<Either<Failure, void>> downloadSingleVerseTafsir(int resourceId, String verseKey);
+  Future<Either<Failure, void>> downloadSingleVerseTafsir(
+    int resourceId,
+    String verseKey,
+  );
   Stream<DownloadState> downloadTafsir(int resourceId);
   Future<Either<Failure, double>> getTafsirDownloadProgress(int resourceId);
 }
@@ -33,7 +49,7 @@ class QuranRepositoryImpl implements QuranRepository {
   final TafsirDownloadService tafsirDownloadService;
 
   QuranRepositoryImpl({
-    required this.localDataSource, 
+    required this.localDataSource,
     required this.remoteDataSource,
     required this.tafsirDownloadService,
   });
@@ -51,7 +67,7 @@ class QuranRepositoryImpl implements QuranRepository {
   Future<Either<Failure, List<LineData>>> getLinesByPage(int pageNumber) {
     return _execute(() async {
       final words = await localDataSource.getWordsByPage(pageNumber);
-      
+
       final Map<int, List<WordModel>> groupedByLine = {};
       for (var word in words) {
         if (!groupedByLine.containsKey(word.lineNumber)) {
@@ -72,31 +88,61 @@ class QuranRepositoryImpl implements QuranRepository {
   }
 
   @override
-  Future<Either<Failure, TafsirModel>> getTafsir(String verseKey, {int resourceId = 16}) {
+  Future<Either<Failure, TafsirModel>> getTafsir(
+    String verseKey, {
+    int resourceId = 16,
+  }) {
     return _execute(() async {
-      final text = await localDataSource.getTafsirForVerse(verseKey, resourceId);
+      final text = await localDataSource.getTafsirForVerse(
+        verseKey,
+        resourceId,
+      );
       if (text.isEmpty) throw CacheException('Tafsir not found locally');
       return TafsirModel(id: 1, tafsirId: resourceId, text: text);
     });
   }
 
   @override
-  Future<Either<Failure, TranslationModel>> getTranslation(String verseKey, {int resourceId = 20}) {
+  Future<Either<Failure, TranslationModel>> getTranslation(
+    String verseKey, {
+    int resourceId = 20,
+  }) {
     return _execute(() async {
-      final text = await localDataSource.getTranslationForVerse(verseKey, resourceId);
+      final text = await localDataSource.getTranslationForVerse(
+        verseKey,
+        resourceId,
+      );
       if (text.isEmpty) throw CacheException('Translation not found locally');
       return TranslationModel(resourceId: resourceId, text: text);
     });
   }
 
   @override
-  Future<Either<Failure, List<TafsirModel>>> getTafsirsByChapter(int chapterId, {int resourceId = 16, int page = 1}) {
-    return _execute(() => remoteDataSource.getTafsirsByChapter(chapterId, tafsirId: resourceId, page: page));
+  Future<Either<Failure, List<TafsirModel>>> getTafsirsByChapter(
+    int chapterId, {
+    int resourceId = 16,
+    int page = 1,
+  }) {
+    return _execute(
+      () => remoteDataSource.getTafsirsByChapter(
+        chapterId,
+        tafsirId: resourceId,
+        page: page,
+      ),
+    );
   }
 
   @override
-  Future<Either<Failure, List<TranslationModel>>> getTranslationsByChapter(int chapterId, {int resourceId = 20}) {
-    return _execute(() => remoteDataSource.getTranslationsByChapter(chapterId, translationId: resourceId));
+  Future<Either<Failure, List<TranslationModel>>> getTranslationsByChapter(
+    int chapterId, {
+    int resourceId = 20,
+  }) {
+    return _execute(
+      () => remoteDataSource.getTranslationsByChapter(
+        chapterId,
+        translationId: resourceId,
+      ),
+    );
   }
 
   @override
@@ -115,12 +161,17 @@ class QuranRepositoryImpl implements QuranRepository {
   }
 
   @override
-  Future<Either<Failure, List<SearchVerseModel>>> getVersesBySurah(int surahId) {
+  Future<Either<Failure, List<SearchVerseModel>>> getVersesBySurah(
+    int surahId,
+  ) {
     return _execute(() => localDataSource.getVersesBySurah(surahId));
   }
 
   @override
-  Future<Either<Failure, void>> downloadSingleVerseTafsir(int resourceId, String verseKey) {
+  Future<Either<Failure, void>> downloadSingleVerseTafsir(
+    int resourceId,
+    String verseKey,
+  ) {
     return _execute(() async {
       final parts = verseKey.split(':');
       if (parts.length != 2) return;
@@ -141,11 +192,15 @@ class QuranRepositoryImpl implements QuranRepository {
 
         final List tafsirs = response['tafsirs'] ?? [];
         if (tafsirs.isNotEmpty) {
-          final rows = tafsirs.map((t) => <String, dynamic>{
-            'verse_key': t['verse_key'],
-            'resource_id': resourceId,
-            'text': t['text'],
-          }).toList();
+          final rows = tafsirs
+              .map(
+                (t) => <String, dynamic>{
+                  'verse_key': t['verse_key'],
+                  'resource_id': resourceId,
+                  'text': t['text'],
+                },
+              )
+              .toList();
           await localDataSource.insertTafsirs(rows);
         }
 

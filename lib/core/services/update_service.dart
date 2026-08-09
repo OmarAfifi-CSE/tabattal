@@ -21,10 +21,12 @@ class UpdateService {
       dio.options.receiveTimeout = const Duration(seconds: 3);
 
       final response = await dio.get(_configUrl);
-      
+
       if (response.statusCode == 200) {
-        final data = response.data is String ? jsonDecode(response.data) : response.data;
-        
+        final data = response.data is String
+            ? jsonDecode(response.data)
+            : response.data;
+
         // 1. Check Maintenance Mode
         final isMaintenance = data['maintenance_mode'] == true;
         if (isMaintenance) {
@@ -38,16 +40,17 @@ class UpdateService {
         final showAnnouncement = data['show_announcement'] == true;
         if (showAnnouncement && context.mounted) {
           _showAnnouncementDialog(
-            context, 
-            data['announcement_title'], 
-            data['announcement_message'], 
-            data['announcement_url']
+            context,
+            data['announcement_title'],
+            data['announcement_message'],
+            data['announcement_url'],
           );
         }
 
         // 3. Check App Updates (Android Only)
         if (Platform.isAndroid) {
-          final updateType = data['update_type']?.toString().toLowerCase() ?? 'flexible';
+          final updateType =
+              data['update_type']?.toString().toLowerCase() ?? 'flexible';
           await _handleInAppUpdate(updateType);
         }
       }
@@ -85,7 +88,10 @@ class UpdateService {
     return '';
   }
 
-  static void _showMaintenanceDialog(BuildContext context, dynamic messageData) {
+  static void _showMaintenanceDialog(
+    BuildContext context,
+    dynamic messageData,
+  ) {
     final message = _getLocalizedText(context, messageData);
     showDialog(
       context: context,
@@ -104,10 +110,15 @@ class UpdateService {
     );
   }
 
-  static void _showAnnouncementDialog(BuildContext context, dynamic titleData, dynamic messageData, String? url) {
+  static void _showAnnouncementDialog(
+    BuildContext context,
+    dynamic titleData,
+    dynamic messageData,
+    String? url,
+  ) {
     final title = _getLocalizedText(context, titleData);
     final message = _getLocalizedText(context, messageData);
-    
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -121,7 +132,9 @@ class UpdateService {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(AppLocalizations.of(context)!.ok), // We can improve this with proper l10n later if needed
+            child: Text(
+              AppLocalizations.of(context)!.ok,
+            ), // We can improve this with proper l10n later if needed
           ),
           // We can add a URL launcher button here later if `url` is provided
         ],

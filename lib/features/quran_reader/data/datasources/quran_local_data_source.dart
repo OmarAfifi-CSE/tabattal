@@ -15,8 +15,14 @@ abstract class QuranLocalDataSource {
   Future<List<Map<String, dynamic>>> getSurahsIndex();
   Future<int> getPageForVerse(String verseKey);
   Future<List<SearchVerseModel>> getVersesBySurah(int surahId);
-  Future<List<Map<String, dynamic>>> getTafsirsBySurah(int surahId, int resourceId);
-  Future<List<Map<String, dynamic>>> getTranslationsBySurah(int surahId, int resourceId);
+  Future<List<Map<String, dynamic>>> getTafsirsBySurah(
+    int surahId,
+    int resourceId,
+  );
+  Future<List<Map<String, dynamic>>> getTranslationsBySurah(
+    int surahId,
+    int resourceId,
+  );
   Future<void> insertTafsirs(List<Map<String, dynamic>> tafsirs);
   Future<double> getTafsirDownloadProgress(int resourceId);
   Future<int> getMaxDownloadedChapter(int resourceId);
@@ -44,14 +50,18 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
         throw CacheException('No data found for page $pageNumber');
       }
 
-      return maps.map((map) => WordModel(
-        id: map['id'] as int,
-        textUthmani: map['text_uthmani'] as String,
-        codeV1: map['code_v1'] as String? ?? '',
-        lineNumber: map['line_number'] as int,
-        charTypeName: map['char_type_name'] as String,
-        verseKey: map['verse_key'] as String,
-      )).toList();
+      return maps
+          .map(
+            (map) => WordModel(
+              id: map['id'] as int,
+              textUthmani: map['text_uthmani'] as String,
+              codeV1: map['code_v1'] as String? ?? '',
+              lineNumber: map['line_number'] as int,
+              charTypeName: map['char_type_name'] as String,
+              verseKey: map['verse_key'] as String,
+            ),
+          )
+          .toList();
     } catch (e) {
       throw CacheException('Database error: ${e.toString()}');
     }
@@ -83,12 +93,16 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       final db = await databaseHelper.database;
       final parts = verseKey.split(':');
       if (parts.length != 2) return '';
-      
+
       final chapterId = int.tryParse(parts[0]) ?? 1;
       int verseNumber = int.tryParse(parts[1]) ?? 1;
-      
+
       // Look backwards to find grouped tafsir
-      for (int i = 0; i < QuranConstants.tafsirGroupLookbackWindow && verseNumber > 0; i++) {
+      for (
+        int i = 0;
+        i < QuranConstants.tafsirGroupLookbackWindow && verseNumber > 0;
+        i++
+      ) {
         final searchKey = '$chapterId:$verseNumber';
         final List<Map<String, dynamic>> maps = await db.query(
           'tafsir',
@@ -104,7 +118,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
         }
         verseNumber--;
       }
-      
+
       return '';
     } catch (e) {
       throw CacheException('Error fetching tafsir: ${e.toString()}');
@@ -144,13 +158,17 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
     try {
       final db = await databaseHelper.database;
       final allVerses = await _getAllVerses(db);
-      
-      final smartQuery = ArabicTextUtils.normalizeArabicDiacritics(query).replaceAll(' ', '');
+
+      final smartQuery = ArabicTextUtils.normalizeArabicDiacritics(
+        query,
+      ).replaceAll(' ', '');
       if (smartQuery.isEmpty) return [];
 
       final results = <SearchVerseModel>[];
       for (final verse in allVerses) {
-        final smartVerse = ArabicTextUtils.normalizeArabicDiacritics(verse.textClean);
+        final smartVerse = ArabicTextUtils.normalizeArabicDiacritics(
+          verse.textClean,
+        );
         if (smartVerse.replaceAll(' ', '').contains(smartQuery)) {
           results.add(verse);
           if (results.length >= 100) break;
@@ -196,7 +214,10 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getTafsirsBySurah(int surahId, int resourceId) async {
+  Future<List<Map<String, dynamic>>> getTafsirsBySurah(
+    int surahId,
+    int resourceId,
+  ) async {
     try {
       final db = await databaseHelper.database;
       return await db.query(
@@ -211,14 +232,19 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getTranslationsBySurah(int surahId, int resourceId) async {
+  Future<List<Map<String, dynamic>>> getTranslationsBySurah(
+    int surahId,
+    int resourceId,
+  ) async {
     try {
       final db = await databaseHelper.database;
       final List<Map<String, dynamic>> maps = await db.query(
         'translation',
-        where: 'CAST(substr(verse_key, 1, instr(verse_key, ":") - 1) AS INTEGER) = ? AND resource_id = ?',
+        where:
+            'CAST(substr(verse_key, 1, instr(verse_key, ":") - 1) AS INTEGER) = ? AND resource_id = ?',
         whereArgs: [surahId, resourceId],
-        orderBy: 'CAST(substr(verse_key, instr(verse_key, ":") + 1) AS INTEGER) ASC',
+        orderBy:
+            'CAST(substr(verse_key, instr(verse_key, ":") + 1) AS INTEGER) ASC',
       );
       return maps;
     } catch (e) {
@@ -231,11 +257,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
     final db = await databaseHelper.database;
     final batch = db.batch();
     for (var row in rows) {
-      batch.insert(
-        'tafsir', 
-        row, 
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      batch.insert('tafsir', row, conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit(noResult: true);
   }
@@ -247,7 +269,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       if (prefs.getBool('tafsir_completed_$resourceId') == true) {
         return 1.0;
       }
-      
+
       final maxChapter = await getMaxDownloadedChapter(resourceId);
       final progress = maxChapter / QuranConstants.totalSurahs;
       return progress > 1.0 ? 1.0 : progress;
@@ -267,8 +289,8 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
     try {
       final db = await databaseHelper.database;
       final result = await db.rawQuery(
-        'SELECT MAX(CAST(substr(verse_key, 1, instr(verse_key, ":") - 1) AS INTEGER)) as max_chap FROM tafsir WHERE resource_id = ?', 
-        [resourceId]
+        'SELECT MAX(CAST(substr(verse_key, 1, instr(verse_key, ":") - 1) AS INTEGER)) as max_chap FROM tafsir WHERE resource_id = ?',
+        [resourceId],
       );
       return Sqflite.firstIntValue(result) ?? 0;
     } catch (e) {
@@ -280,7 +302,10 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   Future<int> getDownloadedVerseCount(int resourceId) async {
     try {
       final db = await databaseHelper.database;
-      final result = await db.rawQuery('SELECT COUNT(*) as count FROM tafsir WHERE resource_id = ?', [resourceId]);
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM tafsir WHERE resource_id = ?',
+        [resourceId],
+      );
       return Sqflite.firstIntValue(result) ?? 0;
     } catch (e) {
       return 0;

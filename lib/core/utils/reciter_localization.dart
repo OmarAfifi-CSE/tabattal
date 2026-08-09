@@ -9,7 +9,7 @@ class ReciterLocalization {
     'المصحف المعلم': 'Teacher (Muallim)',
     'رواية ورش': 'Warsh Recitation',
     'الترجمات الصوتية': 'Audio Translations',
-    
+
     'محمود خليل الحصري': 'Mahmoud Khalil Al-Husary',
     'عبد الباسط عبد الصمد': 'Abdul Basit Abdul Samad',
     'محمد صديق المنشاوي': 'Muhammad Siddiq Al-Minshawi',
@@ -27,7 +27,8 @@ class ReciterLocalization {
     'خليفة الطنيجي': 'Khalifa Al-Tunaiji',
     'ياسين الجزائري': 'Yassin Al-Jazaery',
     'إبراهيم ووك (إنجليزي)': 'Ibrahim Walk (English)',
-    'عبد الله بصفر وإبراهيم ووك (عربي / إنجليزي)': 'Basfar & Walk (Arabic/English)',
+    'عبد الله بصفر وإبراهيم ووك (عربي / إنجليزي)':
+        'Basfar & Walk (Arabic/English)',
   };
 
   static String localize(BuildContext context, String arabicName) {

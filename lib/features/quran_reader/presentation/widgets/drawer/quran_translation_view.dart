@@ -53,7 +53,8 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
   String? _initialVerseKey;
 
   final ItemScrollController _itemScrollController = ItemScrollController();
-  final ItemPositionsListener _itemPositionsListener = ItemPositionsListener.create();
+  final ItemPositionsListener _itemPositionsListener =
+      ItemPositionsListener.create();
 
   late String _noTranslationText;
 
@@ -81,8 +82,12 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
   void _onScroll() {
     final positions = _itemPositionsListener.itemPositions.value;
     if (positions.isNotEmpty) {
-      final maxIndex = positions.map((p) => p.index).reduce((a, b) => a > b ? a : b);
-      if (maxIndex >= _list.length - 8 && !_isLoadingMore && _currentSurahId < 114) {
+      final maxIndex = positions
+          .map((p) => p.index)
+          .reduce((a, b) => a > b ? a : b);
+      if (maxIndex >= _list.length - 8 &&
+          !_isLoadingMore &&
+          _currentSurahId < 114) {
         _loadNextSurah();
       }
     }
@@ -129,7 +134,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
         }
 
         await _loadSurahData(_currentSurahId);
-        
+
         if (_initialVerseKey != null) {
           final index = _list.indexWhere((e) => e.verseKey == _initialVerseKey);
           if (index != -1) {
@@ -153,46 +158,74 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
   }
 
   String _cleanHtml(String text) {
-    text = text.replaceAll(RegExp(r'<sup[^>]*>.*?<\/sup>', multiLine: true, caseSensitive: false), '');
-    text = text.replaceAll(RegExp(r'</p>|</li>|<br\s*/?>', caseSensitive: false), '\n\n');
-    text = text.replaceAll(RegExp(r'<[^>]*>', multiLine: true, caseSensitive: false), '');
+    text = text.replaceAll(
+      RegExp(r'<sup[^>]*>.*?<\/sup>', multiLine: true, caseSensitive: false),
+      '',
+    );
+    text = text.replaceAll(
+      RegExp(r'</p>|</li>|<br\s*/?>', caseSensitive: false),
+      '\n\n',
+    );
+    text = text.replaceAll(
+      RegExp(r'<[^>]*>', multiLine: true, caseSensitive: false),
+      '',
+    );
     // Remove printed page number annotations from digitized texts e.g. < 1-599 > or &lt; 1-599 &gt;
-    text = text.replaceAll(RegExp(r'(<|&lt;)\s*\d+-\d+\s*(>|&gt;)', caseSensitive: false), '');
-    text = text.replaceAll('&nbsp;', ' ').replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&').replaceAll('&lt;', '<').replaceAll('&gt;', '>');
+    text = text.replaceAll(
+      RegExp(r'(<|&lt;)\s*\d+-\d+\s*(>|&gt;)', caseSensitive: false),
+      '',
+    );
+    text = text
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'")
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>');
     text = text.replaceAll('\\"', '"').replaceAll("\\'", "'");
     // Remove invisible unicode characters and fix non-breaking spaces
-    text = text.replaceAll('\u200d', '').replaceAll('\u200c', '').replaceAll('\u200f', '').replaceAll('\u200e', '').replaceAll('\xa0', ' ');
+    text = text
+        .replaceAll('\u200d', '')
+        .replaceAll('\u200c', '')
+        .replaceAll('\u200f', '')
+        .replaceAll('\u200e', '')
+        .replaceAll('\xa0', ' ');
     return text.replaceAll(RegExp(r' {3,}'), '  •  ').trim();
   }
 
   Future<void> _loadSurahData(int surahId) async {
     final versesResult = await _repository.getVersesBySurah(surahId);
-    await versesResult.fold(
-      (f) async => null,
-      (verses) async {
-        final translationRows = await _localDS.getTranslationsBySurah(surahId, _translationResourceId);
+    await versesResult.fold((f) async => null, (verses) async {
+      final translationRows = await _localDS.getTranslationsBySurah(
+        surahId,
+        _translationResourceId,
+      );
 
-        final Map<String, String> translationMap = {
-          for (final row in translationRows)
-            row['verse_key'] as String: _cleanHtml(row['text'] as String)
-        };
+      final Map<String, String> translationMap = {
+        for (final row in translationRows)
+          row['verse_key'] as String: _cleanHtml(row['text'] as String),
+      };
 
-        final newItems = verses.map((verse) => VerseTranslationData(
-          verseKey: verse.verseKey,
-          textUthmani: verse.textUthmani,
-          translationText: translationMap[verse.verseKey] ?? _noTranslationText,
-          surah: verse.surah,
-          ayah: verse.ayah,
-          page: verse.page,
-        )).toList();
+      final newItems = verses
+          .map(
+            (verse) => VerseTranslationData(
+              verseKey: verse.verseKey,
+              textUthmani: verse.textUthmani,
+              translationText:
+                  translationMap[verse.verseKey] ?? _noTranslationText,
+              surah: verse.surah,
+              ayah: verse.ayah,
+              page: verse.page,
+            ),
+          )
+          .toList();
 
-        if (mounted) {
-          setState(() {
-            _list.addAll(newItems);
-          });
-        }
-      },
-    );
+      if (mounted) {
+        setState(() {
+          _list.addAll(newItems);
+        });
+      }
+    });
   }
 
   void _scrollToPlayingVerse(int playingVerseId) {
@@ -227,188 +260,279 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
           String? verseKeyToReturn;
           final positions = _itemPositionsListener.itemPositions.value;
           if (positions.isNotEmpty) {
-            final minIndex = positions.map((p) => p.index).reduce((a, b) => a < b ? a : b);
+            final minIndex = positions
+                .map((p) => p.index)
+                .reduce((a, b) => a < b ? a : b);
             if (minIndex >= 0 && minIndex < _list.length) {
               final currentVerse = _list[minIndex];
               pageToReturn = currentVerse.page;
               verseKeyToReturn = currentVerse.verseKey;
             }
           }
-          Navigator.pop(context, {'page': pageToReturn, 'verseKey': verseKeyToReturn});
+          Navigator.pop(context, {
+            'page': pageToReturn,
+            'verseKey': verseKeyToReturn,
+          });
         },
         child: Scaffold(
           backgroundColor: AppColors.surfaceCream,
           appBar: AppBar(
-          backgroundColor: AppColors.surfaceCream,
-          elevation: 0,
-          centerTitle: true,
-          title: Text(
-            l10n.translationTitle,
-            style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
-          ),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
-            onPressed: () {
-              int pageToReturn = widget.pageNumber;
-              String? verseKeyToReturn;
-              final positions = _itemPositionsListener.itemPositions.value;
-              if (positions.isNotEmpty) {
-                final minIndex = positions.map((p) => p.index).reduce((a, b) => a < b ? a : b);
-                if (minIndex >= 0 && minIndex < _list.length) {
-                  final currentVerse = _list[minIndex];
-                  pageToReturn = currentVerse.page;
-                  verseKeyToReturn = currentVerse.verseKey;
+            backgroundColor: AppColors.surfaceCream,
+            elevation: 0,
+            centerTitle: true,
+            title: Text(
+              l10n.translationTitle,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+              ),
+            ),
+            leading: IconButton(
+              icon: Icon(
+                Icons.arrow_back_rounded,
+                color: AppColors.textPrimary,
+              ),
+              onPressed: () {
+                int pageToReturn = widget.pageNumber;
+                String? verseKeyToReturn;
+                final positions = _itemPositionsListener.itemPositions.value;
+                if (positions.isNotEmpty) {
+                  final minIndex = positions
+                      .map((p) => p.index)
+                      .reduce((a, b) => a < b ? a : b);
+                  if (minIndex >= 0 && minIndex < _list.length) {
+                    final currentVerse = _list[minIndex];
+                    pageToReturn = currentVerse.page;
+                    verseKeyToReturn = currentVerse.verseKey;
+                  }
                 }
-              }
-              Navigator.pop(context, {'page': pageToReturn, 'verseKey': verseKeyToReturn});
-            },
+                Navigator.pop(context, {
+                  'page': pageToReturn,
+                  'verseKey': verseKeyToReturn,
+                });
+              },
+            ),
           ),
-        ),
-        body: _isLoadingInitial
-            ? Center(child: CircularProgressIndicator(color: AppColors.accentGold))
-            : _list.isEmpty
-                ? Center(child: Text(l10n.noLocalTranslation, style: TextStyle(fontSize: 16, color: AppColors.textPrimary)))
-                : ScrollablePositionedList.separated(
-                        itemScrollController: _itemScrollController,
-                        itemPositionsListener: _itemPositionsListener,
-                        initialScrollIndex: _initialScrollIndex,
-                        initialAlignment: 0.01,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _list.length + 1,
-                        separatorBuilder: (context, index) => const SizedBox(height: 20),
-                        itemBuilder: (context, index) {
-                          if (index == _list.length) {
-                            return _isLoadingMore
-                                ? Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Center(child: CircularProgressIndicator(color: AppColors.accentGold)),
-                                  )
-                                : const SizedBox.shrink();
-                          }
-
-                          final item = _list[index];
-
-                          return Builder(
-                            builder: (context) {
-                              final audioStatus = context.select<AudioBloc, int>((bloc) {
-                                final state = bloc.state;
-                                if (state is AudioPlaying && state.currentVerseId == item.verseId) return 1;
-                                if (state is AudioPaused && state.currentVerseId == item.verseId) return 2;
-                                return 0;
-                              });
-                              final isPlaying = audioStatus != 0;
-
-                              return GestureDetector(
-                                onTap: () => Navigator.pop(context, {'page': item.page, 'verseKey': item.verseKey}),
-                                child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
+          body: _isLoadingInitial
+              ? Center(
+                  child: CircularProgressIndicator(color: AppColors.accentGold),
+                )
+              : _list.isEmpty
+              ? Center(
+                  child: Text(
+                    l10n.noLocalTranslation,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                )
+              : ScrollablePositionedList.separated(
+                  itemScrollController: _itemScrollController,
+                  itemPositionsListener: _itemPositionsListener,
+                  initialScrollIndex: _initialScrollIndex,
+                  initialAlignment: 0.01,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _list.length + 1,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 20),
+                  itemBuilder: (context, index) {
+                    if (index == _list.length) {
+                      return _isLoadingMore
+                          ? Padding(
                               padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: isPlaying ? AppColors.accentGold.withValues(alpha: 0.08) : AppColors.cardCream,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: isPlaying ? AppColors.accentGold : AppColors.borderLight,
-                                  width: isPlaying ? 2 : 1,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.accentGold,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.textPrimary.withValues(alpha: 0.04),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  )
-                                ],
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Row(
-                                    textDirection: TextDirection.rtl,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.accentGold.withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(8),
+                            )
+                          : const SizedBox.shrink();
+                    }
+
+                    final item = _list[index];
+
+                    return Builder(
+                      builder: (context) {
+                        final audioStatus = context.select<AudioBloc, int>((
+                          bloc,
+                        ) {
+                          final state = bloc.state;
+                          if (state is AudioPlaying &&
+                              state.currentVerseId == item.verseId) {
+                            return 1;
+                          }
+                          if (state is AudioPaused &&
+                              state.currentVerseId == item.verseId) {
+                            return 2;
+                          }
+                          return 0;
+                        });
+                        final isPlaying = audioStatus != 0;
+
+                        return GestureDetector(
+                          onTap: () => Navigator.pop(context, {
+                            'page': item.page,
+                            'verseKey': item.verseKey,
+                          }),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isPlaying
+                                  ? AppColors.accentGold.withValues(alpha: 0.08)
+                                  : AppColors.cardCream,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isPlaying
+                                    ? AppColors.accentGold
+                                    : AppColors.borderLight,
+                                width: isPlaying ? 2 : 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.textPrimary.withValues(
+                                    alpha: 0.04,
+                                  ),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  textDirection: TextDirection.rtl,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.accentGold.withValues(
+                                          alpha: 0.12,
                                         ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              Localizations.localeOf(context).languageCode == 'en' ? QuranMetadata.getSurahNameEnglish(item.surah) : QuranMetadata.getSurahNameWithTashkeel(item.surah),
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.accentGold,
-                                                fontSize: 16,
-                                              ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            Localizations.localeOf(
+                                                      context,
+                                                    ).languageCode ==
+                                                    'en'
+                                                ? QuranMetadata.getSurahNameEnglish(
+                                                    item.surah,
+                                                  )
+                                                : QuranMetadata.getSurahNameWithTashkeel(
+                                                    item.surah,
+                                                  ),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.accentGold,
+                                              fontSize: 16,
                                             ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              Localizations.localeOf(context).languageCode == 'en' ? '(${item.ayah})' : '﴿${item.ayah.toArabicDigits}﴾',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.accentGold,
-                                                fontSize: 14,
-                                                fontFamily: 'Amiri',
-                                              ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            Localizations.localeOf(
+                                                      context,
+                                                    ).languageCode ==
+                                                    'en'
+                                                ? '(${item.ayah})'
+                                                : '﴿${item.ayah.toArabicDigits}﴾',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.accentGold,
+                                              fontSize: 14,
+                                              fontFamily: 'Amiri',
                                             ),
-                                          ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    GestureDetector(
+                                      onTap: () {
+                                        if (audioStatus == 1) {
+                                          context.read<AudioBloc>().add(
+                                            const PauseAudio(),
+                                          );
+                                        } else if (audioStatus == 2) {
+                                          context.read<AudioBloc>().add(
+                                            const ResumeAudio(),
+                                          );
+                                        } else {
+                                          showAudioSettingsSheet(
+                                            context,
+                                            verseId: item.verseId,
+                                          );
+                                        }
+                                      },
+                                      child: Icon(
+                                        audioStatus == 1
+                                            ? Icons.pause_circle_filled_rounded
+                                            : Icons.play_circle_fill_rounded,
+                                        color: AppColors.accentGold,
+                                        size: 32,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 14),
+                                Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text:
+                                            '${ArabicTextUtils.removeExtendedUthmaniChars(item.textUthmani)} ',
+                                        style: AppTextStyles.quranText.copyWith(
+                                          fontSize: 23,
+                                          height: 1.9,
+                                          color: AppColors.textPrimary,
                                         ),
                                       ),
-                                      const Spacer(),
-                                      GestureDetector(
-                                        onTap: () {
-                                          if (audioStatus == 1) {
-                                            context.read<AudioBloc>().add(const PauseAudio());
-                                          } else if (audioStatus == 2) {
-                                            context.read<AudioBloc>().add(const ResumeAudio());
-                                          } else {
-                                             showAudioSettingsSheet(context, verseId: item.verseId);
-                                          }
-                                        },
-                                        child: Icon(
-                                          audioStatus == 1
-                                              ? Icons.pause_circle_filled_rounded
-                                              : Icons.play_circle_fill_rounded,
-                                          color: AppColors.accentGold,
-                                          size: 32,
+                                      TextSpan(
+                                        text: '﴿${item.ayah.toArabicDigits}﴾',
+                                        style: AppTextStyles.quranText.copyWith(
+                                          fontFamily: 'Amiri',
+                                          fontSize: 21,
+                                          height: 1.9,
+                                          color: AppColors.textPrimary,
                                         ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 14),
-                                  Text.rich(
-                                    TextSpan(
-                                      children: [
-                                        TextSpan(
-                                          text: '${ArabicTextUtils.removeExtendedUthmaniChars(item.textUthmani)} ',
-                                          style: AppTextStyles.quranText.copyWith(fontSize: 23, height: 1.9, color: AppColors.textPrimary),
-                                        ),
-                                        TextSpan(
-                                          text: '﴿${item.ayah.toArabicDigits}﴾',
-                                          style: AppTextStyles.quranText.copyWith(fontFamily: 'Amiri', fontSize: 21, height: 1.9, color: AppColors.textPrimary),
-                                        ),
-                                      ],
+                                  textAlign: TextAlign.right,
+                                  textDirection: TextDirection.rtl,
+                                ),
+                                const SizedBox(height: 12),
+                                Divider(color: AppColors.divider),
+                                const SizedBox(height: 10),
+                                Text(
+                                  item.translationText,
+                                  textAlign: TextAlign.left,
+                                  textDirection: TextDirection.ltr,
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    height: 1.7,
+                                    color: AppColors.textPrimary.withValues(
+                                      alpha: 0.82,
                                     ),
-                                    textAlign: TextAlign.right,
-                                    textDirection: TextDirection.rtl,
                                   ),
-                                  const SizedBox(height: 12),
-                                  Divider(color: AppColors.divider),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    item.translationText,
-                                    textAlign: TextAlign.left,
-                                    textDirection: TextDirection.ltr,
-                                    style: TextStyle(fontSize: 17, height: 1.7, color: AppColors.textPrimary.withValues(alpha: 0.82)),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          );
-                            },
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
         ),
       ),
     );

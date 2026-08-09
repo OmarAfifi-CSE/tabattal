@@ -37,16 +37,19 @@ class AudioDownloadManager {
     'المصحف المعلم': {
       'محمود خليل الحصري': 'Husary_Muallim_128kbps',
       'محمد صديق المنشاوي': 'Minshawy_Teacher_128kbps',
-      'خليفة الطنيجي': 'Khaalid_Abdullaah_al-Qahtaanee_192kbps', // Alternative for teacher if missing
+      'خليفة الطنيجي':
+          'Khaalid_Abdullaah_al-Qahtaanee_192kbps', // Alternative for teacher if missing
     },
     'رواية ورش': {
-      'محمود خليل الحصري': 'Husary_128kbps', // Typically different path for warsh, mapped to base for now if unavailable
+      'محمود خليل الحصري':
+          'Husary_128kbps', // Typically different path for warsh, mapped to base for now if unavailable
       'عبد الباسط عبد الصمد': 'Abdul_Basit_Murattal_192kbps', // Fallback
       'ياسين الجزائري': 'Yaser_Salamah_128kbps', // Fallback
     },
     'الترجمات الصوتية': {
       'إبراهيم ووك (إنجليزي)': 'English/Sahih_Intnl_Ibrahim_Walk_192kbps',
-      'عبد الله بصفر وإبراهيم ووك (عربي / إنجليزي)': 'MultiLanguage/Basfar_Walk_192kbps',
+      'عبد الله بصفر وإبراهيم ووك (عربي / إنجليزي)':
+          'MultiLanguage/Basfar_Walk_192kbps',
     },
   };
 
@@ -84,11 +87,15 @@ class AudioDownloadManager {
   }
 
   /// Returns the local path for a specific verse if it exists, otherwise null
-  Future<String> getVerseAudioPath(String reciterKey, int surah, int ayah) async {
+  Future<String> getVerseAudioPath(
+    String reciterKey,
+    int surah,
+    int ayah,
+  ) async {
     final reciterPath = _getReciterPath(reciterKey);
     final surahStr = surah.toString().padLeft(3, '0');
     final ayahStr = ayah.toString().padLeft(3, '0');
-    
+
     final url = 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
 
     if (kIsWeb) return url;
@@ -105,13 +112,18 @@ class AudioDownloadManager {
   }
 
   /// Downloads a specific verse audio file
-  Future<String> downloadVerse(String reciterKey, int surah, int ayah, Function(double)? onProgress) async {
+  Future<String> downloadVerse(
+    String reciterKey,
+    int surah,
+    int ayah,
+    Function(double)? onProgress,
+  ) async {
     final reciterPath = _getReciterPath(reciterKey);
     final surahStr = surah.toString().padLeft(3, '0');
     final ayahStr = ayah.toString().padLeft(3, '0');
-    
+
     final url = 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
-    
+
     if (kIsWeb) return url;
 
     final dirPath = await getReciterDirectory(reciterKey);
@@ -143,13 +155,13 @@ class AudioDownloadManager {
           }
         },
       );
-      
+
       // Rename temp file to actual file atomically
       final tempFile = File(tempPath);
       if (await tempFile.exists()) {
         await tempFile.rename(savePath);
       }
-      
+
       _activePrefetches.remove(verseId);
       completer.complete(savePath);
       return savePath;
@@ -161,12 +173,18 @@ class AudioDownloadManager {
       }
       _activePrefetches.remove(verseId);
       completer.completeError(e);
-      throw Exception('Failed to download audio for Surah $surah Ayah $ayah: $e');
+      throw Exception(
+        'Failed to download audio for Surah $surah Ayah $ayah: $e',
+      );
     }
   }
 
   /// Checks if an entire Surah is already downloaded locally
-  Future<bool> isSurahDownloaded(String reciterKey, int surah, int numAyahs) async {
+  Future<bool> isSurahDownloaded(
+    String reciterKey,
+    int surah,
+    int numAyahs,
+  ) async {
     if (kIsWeb) return false;
     final dirPath = await getReciterDirectory(reciterKey);
     for (int ayah = 1; ayah <= numAyahs; ayah++) {
@@ -194,7 +212,11 @@ class AudioDownloadManager {
 
   /// Returns download progress for a surah (0.0 to 1.0).
   /// Counts how many ayahs are already on disk vs total.
-  Future<double> getSurahDownloadProgress(String reciterKey, int surah, int numAyahs) async {
+  Future<double> getSurahDownloadProgress(
+    String reciterKey,
+    int surah,
+    int numAyahs,
+  ) async {
     if (kIsWeb || numAyahs == 0) return 0.0;
     final dirPath = await getReciterDirectory(reciterKey);
     int count = 0;
@@ -206,9 +228,14 @@ class AudioDownloadManager {
   }
 
   /// Downloads an entire Surah by downloading all its ayahs sequentially
-  Future<void> downloadSurah(String reciterKey, int surah, int numAyahs, {Function(double)? onProgress}) async {
+  Future<void> downloadSurah(
+    String reciterKey,
+    int surah,
+    int numAyahs, {
+    Function(double)? onProgress,
+  }) async {
     int downloadedCount = 0;
-    
+
     // Check what's already downloaded to initialize progress properly
     final dirPath = await getReciterDirectory(reciterKey);
     for (int ayah = 1; ayah <= numAyahs; ayah++) {
@@ -246,23 +273,28 @@ class AudioDownloadManager {
 
   /// Predictive Prefetching Queue Engine (Anti-Stuttering)
   /// Instantly fires background downloads for N+1, N+2...
-  Future<void> prefetchVerses(String reciterKey, int currentSurah, int currentAyah, {int lookaheadCount = 3}) async {
+  Future<void> prefetchVerses(
+    String reciterKey,
+    int currentSurah,
+    int currentAyah, {
+    int lookaheadCount = 3,
+  }) async {
     int surah = currentSurah;
     int ayah = currentAyah;
 
     for (int i = 0; i < lookaheadCount; i++) {
       ayah++;
-      
+
       // Use QuranMetadata for accurate bound checking
       final maxAyah = QuranMetadata.surahLengthOf(surah);
-      if (ayah > maxAyah) { 
+      if (ayah > maxAyah) {
         surah++;
         ayah = 1;
       }
       if (surah > 114) break;
 
       final verseId = surah * 1000 + ayah;
-      
+
       // If we are already prefetching this verse, skip
       if (_activePrefetches.containsKey(verseId)) continue;
 
@@ -271,12 +303,13 @@ class AudioDownloadManager {
       if (localPath != null) continue;
 
       // Launch background download task and catch errors silently since it's just prefetching
-      final downloadTask = downloadVerse(reciterKey, surah, ayah, null).catchError((_) => '').whenComplete(() {
-        _activePrefetches.remove(verseId);
-      });
-      
+      final downloadTask = downloadVerse(reciterKey, surah, ayah, null)
+          .catchError((_) => '')
+          .whenComplete(() {
+            _activePrefetches.remove(verseId);
+          });
+
       _activePrefetches[verseId] = downloadTask;
     }
   }
 }
-

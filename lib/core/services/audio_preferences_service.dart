@@ -11,7 +11,8 @@ class AudioPreferencesService {
 
   static const String defaultCategory = 'مرتل';
   static const String defaultReciter = 'محمود خليل الحصري';
-  static const int defaultRepeatCount = 0; // 0 = continue reading, -1 = infinite, >0 = count
+  static const int defaultRepeatCount =
+      0; // 0 = continue reading, -1 = infinite, >0 = count
 
   final SharedPreferences _prefs;
 

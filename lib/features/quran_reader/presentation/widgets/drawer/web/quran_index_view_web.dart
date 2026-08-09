@@ -5,6 +5,7 @@ import '../../../../../../../core/utils/arabic_text_utils.dart';
 import '../../../../../quran_reader/domain/repositories/quran_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
+
 class QuranIndexViewWeb extends StatefulWidget {
   final int initialIndex;
 
@@ -14,7 +15,8 @@ class QuranIndexViewWeb extends StatefulWidget {
   State<QuranIndexViewWeb> createState() => _QuranIndexViewWebState();
 }
 
-class _QuranIndexViewWebState extends State<QuranIndexViewWeb> with SingleTickerProviderStateMixin {
+class _QuranIndexViewWebState extends State<QuranIndexViewWeb>
+    with SingleTickerProviderStateMixin {
   late final QuranRepository _repository;
   late TabController _tabController;
 
@@ -24,16 +26,47 @@ class _QuranIndexViewWebState extends State<QuranIndexViewWeb> with SingleTicker
 
   // Approximate start pages for Juz (Madani Mushaf standard)
   static const List<int> _juzStartPages = [
-    1, 22, 42, 62, 82, 102, 122, 142, 162, 182,
-    202, 222, 242, 262, 282, 302, 322, 342, 362, 382,
-    402, 422, 442, 462, 482, 502, 522, 542, 562, 582,
+    1,
+    22,
+    42,
+    62,
+    82,
+    102,
+    122,
+    142,
+    162,
+    182,
+    202,
+    222,
+    242,
+    262,
+    282,
+    302,
+    322,
+    342,
+    362,
+    382,
+    402,
+    422,
+    442,
+    462,
+    482,
+    502,
+    522,
+    542,
+    562,
+    582,
   ];
 
   @override
   void initState() {
     super.initState();
     _repository = context.read<QuranRepository>();
-    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialIndex);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialIndex,
+    );
     _loadSurahIndex();
   }
 
@@ -47,10 +80,20 @@ class _QuranIndexViewWebState extends State<QuranIndexViewWeb> with SingleTicker
     final result = await _repository.getSurahsIndex();
     result.fold(
       (failure) {
-        if (mounted) setState(() { _isLoading = false; _hasError = true; });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _hasError = true;
+          });
+        }
       },
       (index) {
-        if (mounted) setState(() { _surahIndex = index; _isLoading = false; });
+        if (mounted) {
+          setState(() {
+            _surahIndex = index;
+            _isLoading = false;
+          });
+        }
       },
     );
   }
@@ -68,10 +111,18 @@ class _QuranIndexViewWebState extends State<QuranIndexViewWeb> with SingleTicker
         centerTitle: true,
         title: Text(
           l10n.indexTitle,
-          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 22),
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary, size: 24),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textPrimary,
+            size: 24,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         bottom: TabBar(
@@ -79,25 +130,35 @@ class _QuranIndexViewWebState extends State<QuranIndexViewWeb> with SingleTicker
           labelColor: AppColors.accentGold,
           unselectedLabelColor: AppColors.textPrimary.withValues(alpha: 0.54),
           indicatorColor: AppColors.accentGold,
-          labelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          tabs: [Tab(text: l10n.indexSurahsTab), Tab(text: l10n.indexJuzsTab)],
+          labelStyle: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+          tabs: [
+            Tab(text: l10n.indexSurahsTab),
+            Tab(text: l10n.indexJuzsTab),
+          ],
         ),
       ),
       body: _buildBody(l10n),
     );
     return Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: content,
-          ),
+      backgroundColor: AppColors.background,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: content,
         ),
-      );
+      ),
+    );
   }
 
   Widget _buildBody(AppLocalizations l10n) {
-    if (_isLoading) return Center(child: CircularProgressIndicator(color: AppColors.accentGold));
+    if (_isLoading) {
+      return Center(
+        child: CircularProgressIndicator(color: AppColors.accentGold),
+      );
+    }
     if (_hasError) {
       return Center(
         child: Column(
@@ -105,7 +166,10 @@ class _QuranIndexViewWebState extends State<QuranIndexViewWeb> with SingleTicker
           children: [
             const Icon(Icons.error_outline, color: Colors.red, size: 48),
             const SizedBox(height: 12),
-            Text(l10n.indexLoadError, style: const TextStyle(color: Colors.red, fontSize: 16)),
+            Text(
+              l10n.indexLoadError,
+              style: const TextStyle(color: Colors.red, fontSize: 16),
+            ),
             const SizedBox(height: 12),
             ElevatedButton(onPressed: _loadSurahIndex, child: Text(l10n.retry)),
           ],
@@ -125,7 +189,8 @@ class _QuranIndexViewWebState extends State<QuranIndexViewWeb> with SingleTicker
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: _surahIndex.length,
-        separatorBuilder: (context, index) => Divider(color: AppColors.divider, height: 1),
+        separatorBuilder: (context, index) =>
+            Divider(color: AppColors.divider, height: 1),
         itemBuilder: (context, index) {
           final surahData = _surahIndex[index];
           final surahNum = surahData['surah'] as int;
@@ -133,15 +198,31 @@ class _QuranIndexViewWebState extends State<QuranIndexViewWeb> with SingleTicker
 
           return ListTile(
             onTap: () => _navigateToPage(startPage),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 4,
+            ),
             leading: _buildCircleNumberBadge('$surahNum'),
             title: Text(
-              l10n.surahListItem(isEn ? QuranMetadata.getSurahNameEnglish(surahNum) : QuranMetadata.getSurahName(surahNum)),
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              l10n.surahListItem(
+                isEn
+                    ? QuranMetadata.getSurahNameEnglish(surahNum)
+                    : QuranMetadata.getSurahName(surahNum),
+              ),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             trailing: Text(
-              l10n.pageListItem(isEn ? startPage.toString() : startPage.toArabicDigits),
-              style: TextStyle(fontSize: 14, color: AppColors.textPrimary.withValues(alpha: 0.6)),
+              l10n.pageListItem(
+                isEn ? startPage.toString() : startPage.toArabicDigits,
+              ),
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textPrimary.withValues(alpha: 0.6),
+              ),
             ),
           );
         },
@@ -156,7 +237,8 @@ class _QuranIndexViewWebState extends State<QuranIndexViewWeb> with SingleTicker
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: 30,
-        separatorBuilder: (context, index) => Divider(color: AppColors.divider, height: 1),
+        separatorBuilder: (context, index) =>
+            Divider(color: AppColors.divider, height: 1),
         itemBuilder: (context, index) {
           final juzNum = index + 1;
           final startPage = _juzStartPages[index];
@@ -165,12 +247,23 @@ class _QuranIndexViewWebState extends State<QuranIndexViewWeb> with SingleTicker
             onTap: () => _navigateToPage(startPage),
             leading: _buildCircleNumberBadge('$juzNum', filled: false),
             title: Text(
-              l10n.juzListItem(isEn ? juzNum.toString() : QuranMetadata.getJuzName(juzNum)),
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              l10n.juzListItem(
+                isEn ? juzNum.toString() : QuranMetadata.getJuzName(juzNum),
+              ),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             trailing: Text(
-              l10n.pageListItem(isEn ? startPage.toString() : startPage.toArabicDigits),
-              style: TextStyle(fontSize: 14, color: AppColors.textPrimary.withValues(alpha: 0.6)),
+              l10n.pageListItem(
+                isEn ? startPage.toString() : startPage.toArabicDigits,
+              ),
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textPrimary.withValues(alpha: 0.6),
+              ),
             ),
           );
         },
@@ -187,11 +280,20 @@ class _QuranIndexViewWebState extends State<QuranIndexViewWeb> with SingleTicker
       decoration: BoxDecoration(
         color: AppColors.accentGold.withValues(alpha: filled ? 0.12 : 0.1),
         shape: BoxShape.circle,
-        border: filled ? Border.all(color: AppColors.accentGold.withValues(alpha: 0.4), width: 1) : null,
+        border: filled
+            ? Border.all(
+                color: AppColors.accentGold.withValues(alpha: 0.4),
+                width: 1,
+              )
+            : null,
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.accentGold),
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: AppColors.accentGold,
+        ),
       ),
     );
   }

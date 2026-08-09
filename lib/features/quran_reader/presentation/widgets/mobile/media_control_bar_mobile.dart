@@ -51,7 +51,9 @@ class _MediaControlBarMobileState extends State<MediaControlBarMobile> {
           ),
         ),
         backgroundColor: AppColors.bronzeIcon,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30.r),
+        ),
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.symmetric(horizontal: 50.w, vertical: 20.h),
         duration: const Duration(seconds: 2),
@@ -101,7 +103,9 @@ class _MediaControlBarMobileState extends State<MediaControlBarMobile> {
   Widget build(BuildContext context) {
     return AnimatedCrossFade(
       duration: const Duration(milliseconds: 300),
-      crossFadeState: widget.isExpanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+      crossFadeState: widget.isExpanded
+          ? CrossFadeState.showFirst
+          : CrossFadeState.showSecond,
       firstChild: _buildExpandedPlayer(context),
       secondChild: _buildMiniPlayer(context),
     );
@@ -160,11 +164,21 @@ class _MediaControlBarMobileState extends State<MediaControlBarMobile> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.multitrack_audio_rounded, color: AppColors.bronzeIcon, size: 24.sp),
+                    Icon(
+                      Icons.multitrack_audio_rounded,
+                      color: AppColors.bronzeIcon,
+                      size: 24.sp,
+                    ),
                     SizedBox(width: 8.w),
                     Text(
-                      ReciterLocalization.localize(context, context.read<AudioBloc>().currentReciter),
-                      textDirection: Localizations.localeOf(context).languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
+                      ReciterLocalization.localize(
+                        context,
+                        context.read<AudioBloc>().currentReciter,
+                      ),
+                      textDirection:
+                          Localizations.localeOf(context).languageCode == 'en'
+                          ? TextDirection.ltr
+                          : TextDirection.rtl,
                       style: AppTextStyles.menuItemText.copyWith(
                         color: AppColors.inkBrown,
                         fontSize: 12.sp,
@@ -176,9 +190,19 @@ class _MediaControlBarMobileState extends State<MediaControlBarMobile> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildPlayPauseButton(context, isPlaying: isPlaying, isLoading: isLoading, size: 40.r, iconSize: 24.sp),
+                    _buildPlayPauseButton(
+                      context,
+                      isPlaying: isPlaying,
+                      isLoading: isLoading,
+                      size: 40.r,
+                      iconSize: 24.sp,
+                    ),
                     SizedBox(width: 8.w),
-                    Icon(Icons.keyboard_arrow_up_rounded, color: AppColors.inkBrown, size: 28.sp),
+                    Icon(
+                      Icons.keyboard_arrow_up_rounded,
+                      color: AppColors.inkBrown,
+                      size: 28.sp,
+                    ),
                   ],
                 ),
               ],
@@ -196,7 +220,11 @@ class _MediaControlBarMobileState extends State<MediaControlBarMobile> {
         IconButton(
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
-          icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.inkBrown, size: 28.sp),
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: AppColors.inkBrown,
+            size: 28.sp,
+          ),
           onPressed: widget.onToggleExpanded,
         ),
         Expanded(child: _buildReciterButton(context)),
@@ -212,20 +240,30 @@ class _MediaControlBarMobileState extends State<MediaControlBarMobile> {
         margin: EdgeInsets.symmetric(horizontal: 8.w),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.bronzeIcon.withValues(alpha: 0.5)),
+          border: Border.all(
+            color: AppColors.bronzeIcon.withValues(alpha: 0.5),
+          ),
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.keyboard_arrow_up_rounded, color: AppColors.bronzeIcon, size: 24.sp),
+            Icon(
+              Icons.keyboard_arrow_up_rounded,
+              color: AppColors.bronzeIcon,
+              size: 24.sp,
+            ),
             SizedBox(width: 8.w),
             Expanded(
               child: BlocBuilder<AudioBloc, AudioState>(
                 builder: (context, state) {
-                  final isEn = Localizations.localeOf(context).languageCode == 'en';
+                  final isEn =
+                      Localizations.localeOf(context).languageCode == 'en';
                   return Text(
-                    ReciterLocalization.localize(context, context.read<AudioBloc>().currentReciter),
+                    ReciterLocalization.localize(
+                      context,
+                      context.read<AudioBloc>().currentReciter,
+                    ),
                     textAlign: isEn ? TextAlign.left : TextAlign.right,
                     style: AppTextStyles.menuItemText.copyWith(
                       color: AppColors.inkBrown,
@@ -251,18 +289,71 @@ class _MediaControlBarMobileState extends State<MediaControlBarMobile> {
         PopupMenuButton<int>(
           splashRadius: 0.1,
           color: AppColors.cardCream,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
           offset: Offset(0, -180.h),
           onSelected: _handleSleepTimerSelection,
           itemBuilder: (ctx) {
             final l10n = AppLocalizations.of(ctx)!;
             return [
-              PopupMenuItem(value: 0, child: Align(alignment: Alignment.centerRight, child: Text(l10n.timerStop, textDirection: TextDirection.rtl))),
-              PopupMenuItem(value: 5, child: Align(alignment: Alignment.centerRight, child: Text(l10n.timerMinutes5, textDirection: TextDirection.rtl))),
-              PopupMenuItem(value: 10, child: Align(alignment: Alignment.centerRight, child: Text(l10n.timerMinutes10, textDirection: TextDirection.rtl))),
-              PopupMenuItem(value: 15, child: Align(alignment: Alignment.centerRight, child: Text(l10n.timerMinutes15, textDirection: TextDirection.rtl))),
-              PopupMenuItem(value: 30, child: Align(alignment: Alignment.centerRight, child: Text(l10n.timerMinutes30, textDirection: TextDirection.rtl))),
-              PopupMenuItem(value: 60, child: Align(alignment: Alignment.centerRight, child: Text(l10n.timerMinutes60, textDirection: TextDirection.rtl))),
+              PopupMenuItem(
+                value: 0,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(l10n.timerStop, textDirection: TextDirection.rtl),
+                ),
+              ),
+              PopupMenuItem(
+                value: 5,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    l10n.timerMinutes5,
+                    textDirection: TextDirection.rtl,
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                value: 10,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    l10n.timerMinutes10,
+                    textDirection: TextDirection.rtl,
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                value: 15,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    l10n.timerMinutes15,
+                    textDirection: TextDirection.rtl,
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                value: 30,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    l10n.timerMinutes30,
+                    textDirection: TextDirection.rtl,
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                value: 60,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    l10n.timerMinutes60,
+                    textDirection: TextDirection.rtl,
+                  ),
+                ),
+              ),
             ];
           },
           child: Padding(
@@ -272,13 +363,21 @@ class _MediaControlBarMobileState extends State<MediaControlBarMobile> {
               children: [
                 Icon(
                   Icons.timer_outlined,
-                  color: _sleepTimerMinutes != null ? AppColors.bronzeDark : AppColors.inkBrown,
+                  color: _sleepTimerMinutes != null
+                      ? AppColors.bronzeDark
+                      : AppColors.inkBrown,
                   size: 24.sp,
                 ),
                 if (_timerEndTime != null)
                   Text(
-                    _formatRemainingTime(_timerEndTime!.difference(DateTime.now())),
-                    style: TextStyle(fontSize: 10.sp, color: AppColors.bronzeDark, fontWeight: FontWeight.bold),
+                    _formatRemainingTime(
+                      _timerEndTime!.difference(DateTime.now()),
+                    ),
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      color: AppColors.bronzeDark,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
               ],
             ),
@@ -323,25 +422,51 @@ class _MediaControlBarMobileState extends State<MediaControlBarMobile> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.fast_rewind_rounded, color: AppColors.inkBrown, size: 30.sp),
-                    onPressed: () => context.read<AudioBloc>().add(const PreviousSurah()),
+                    icon: Icon(
+                      Icons.fast_rewind_rounded,
+                      color: AppColors.inkBrown,
+                      size: 30.sp,
+                    ),
+                    onPressed: () =>
+                        context.read<AudioBloc>().add(const PreviousSurah()),
                   ),
                   SizedBox(width: 4.w),
                   IconButton(
-                    icon: Icon(Icons.skip_previous_rounded, color: AppColors.inkBrown, size: 32.sp),
-                    onPressed: () => context.read<AudioBloc>().add(const PreviousAyah()),
+                    icon: Icon(
+                      Icons.skip_previous_rounded,
+                      color: AppColors.inkBrown,
+                      size: 32.sp,
+                    ),
+                    onPressed: () =>
+                        context.read<AudioBloc>().add(const PreviousAyah()),
                   ),
                   SizedBox(width: 8.w),
-                  _buildPlayPauseButton(context, isPlaying: isPlaying, isLoading: isLoading, size: 56.r, iconSize: 32.sp),
+                  _buildPlayPauseButton(
+                    context,
+                    isPlaying: isPlaying,
+                    isLoading: isLoading,
+                    size: 56.r,
+                    iconSize: 32.sp,
+                  ),
                   SizedBox(width: 8.w),
                   IconButton(
-                    icon: Icon(Icons.skip_next_rounded, color: AppColors.inkBrown, size: 32.sp),
-                    onPressed: () => context.read<AudioBloc>().add(const NextAyah()),
+                    icon: Icon(
+                      Icons.skip_next_rounded,
+                      color: AppColors.inkBrown,
+                      size: 32.sp,
+                    ),
+                    onPressed: () =>
+                        context.read<AudioBloc>().add(const NextAyah()),
                   ),
                   SizedBox(width: 4.w),
                   IconButton(
-                    icon: Icon(Icons.fast_forward_rounded, color: AppColors.inkBrown, size: 30.sp),
-                    onPressed: () => context.read<AudioBloc>().add(const NextSurah()),
+                    icon: Icon(
+                      Icons.fast_forward_rounded,
+                      color: AppColors.inkBrown,
+                      size: 30.sp,
+                    ),
+                    onPressed: () =>
+                        context.read<AudioBloc>().add(const NextSurah()),
                   ),
                 ],
               ),
@@ -353,7 +478,13 @@ class _MediaControlBarMobileState extends State<MediaControlBarMobile> {
     );
   }
 
-  Widget _buildPlayPauseButton(BuildContext context, {required bool isPlaying, required bool isLoading, required double size, required double iconSize}) {
+  Widget _buildPlayPauseButton(
+    BuildContext context, {
+    required bool isPlaying,
+    required bool isLoading,
+    required double size,
+    required double iconSize,
+  }) {
     return GestureDetector(
       onTap: () {
         if (isPlaying) {
@@ -374,7 +505,10 @@ class _MediaControlBarMobileState extends State<MediaControlBarMobile> {
               ? SizedBox(
                   width: iconSize * 0.75,
                   height: iconSize * 0.75,
-                  child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  child: const CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
                 )
               : Icon(
                   isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,

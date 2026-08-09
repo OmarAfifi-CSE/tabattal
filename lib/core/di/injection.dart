@@ -43,16 +43,18 @@ class DependencyContainer {
 Future<DependencyContainer> configureDependencies() async {
   final databaseHelper = DatabaseHelper();
   await databaseHelper.database;
-  
+
   final apiClient = ApiClient(dio: Dio());
-  final localDataSource = QuranLocalDataSourceImpl(databaseHelper: databaseHelper);
+  final localDataSource = QuranLocalDataSourceImpl(
+    databaseHelper: databaseHelper,
+  );
   final remoteDataSource = QuranRemoteDataSourceImpl(apiClient: apiClient);
-  
+
   final tafsirDownloadService = TafsirDownloadService(
     localDataSource: localDataSource,
     remoteDataSource: remoteDataSource,
   );
-  
+
   final quranRepository = QuranRepositoryImpl(
     localDataSource: localDataSource,
     remoteDataSource: remoteDataSource,
@@ -61,14 +63,16 @@ Future<DependencyContainer> configureDependencies() async {
 
   final prefs = await SharedPreferences.getInstance();
   final bookmarkRepository = BookmarkRepositoryImpl(prefs);
-  
+
   final audioPrefs = await AudioPreferencesService.create();
 
   final audioHandler = await AudioService.init<QuranAudioHandler>(
     builder: () => QuranAudioHandler(),
     config: AudioServiceConfig(
       androidNotificationChannelId: 'com.tabattal.channel.audio',
-      androidNotificationChannelName: lookupAppLocalizations(PlatformDispatcher.instance.locale).notificationChannelRecitations,
+      androidNotificationChannelName: lookupAppLocalizations(
+        PlatformDispatcher.instance.locale,
+      ).notificationChannelRecitations,
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
     ),

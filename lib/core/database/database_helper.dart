@@ -39,13 +39,14 @@ class DatabaseHelper {
 
     // Check if the database exists (Mobile/Desktop/Web)
     bool exists = await databaseFactory.databaseExists(path);
-    
+
     // Check version to force update if we ship a new DB
     final prefs = await SharedPreferences.getInstance();
     final dbVersion = prefs.getInt('db_version') ?? 0;
-    
+
     // Increment this whenever we update quran.db in assets
-    const currentDbVersion = 15; // bumped to 15: removed tafsir 14 & 91 from bundle (now downloadable), VACUUM applied — DB shrank from 38 MB to 9 MB
+    const currentDbVersion =
+        15; // bumped to 15: removed tafsir 14 & 91 from bundle (now downloadable), VACUUM applied — DB shrank from 38 MB to 9 MB
 
     if (!exists || dbVersion < currentDbVersion) {
       if (!kIsWeb) {
@@ -60,17 +61,21 @@ class DatabaseHelper {
 
       // Copy from asset. ALWAYS use forward slashes for rootBundle paths!
       ByteData data = await rootBundle.load('assets/data/quran.db');
-      List<int> bytes =
-          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      List<int> bytes = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
 
       // Write bytes via databaseFactory (supports native)
       await databaseFactory.writeDatabaseBytes(path, Uint8List.fromList(bytes));
-      
+
       await prefs.setInt('db_version', currentDbVersion);
     }
 
     // Open the database
-    return await databaseFactory.openDatabase(path, options: OpenDatabaseOptions(readOnly: false));
+    return await databaseFactory.openDatabase(
+      path,
+      options: OpenDatabaseOptions(readOnly: false),
+    );
   }
 }
-

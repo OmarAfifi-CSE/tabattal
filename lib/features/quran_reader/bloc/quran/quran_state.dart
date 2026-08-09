@@ -5,7 +5,7 @@ import '../../data/models/translation_model.dart';
 
 abstract class QuranState extends Equatable {
   const QuranState();
-  
+
   @override
   List<Object?> get props => [];
 }
@@ -20,7 +20,11 @@ class QuranLoaded extends QuranState {
   final int? currentSurahId;
   final int? currentPage;
 
-  const QuranLoaded({required this.lines, this.currentSurahId, this.currentPage});
+  const QuranLoaded({
+    required this.lines,
+    this.currentSurahId,
+    this.currentPage,
+  });
 
   @override
   List<Object?> get props => [lines, currentSurahId, currentPage];
@@ -43,7 +47,11 @@ class TafsirLoaded extends QuranState {
   final bool isDownloading;
   final double downloadProgress;
 
-  const TafsirLoaded(this.tafsir, {this.isDownloading = false, this.downloadProgress = 0.0});
+  const TafsirLoaded(
+    this.tafsir, {
+    this.isDownloading = false,
+    this.downloadProgress = 0.0,
+  });
 
   @override
   List<Object> get props => [tafsir, isDownloading, downloadProgress];
@@ -105,4 +113,3 @@ class TafsirPartialDownloadError extends QuranState {
   @override
   List<Object> get props => [resourceId, progress];
 }
-

@@ -17,7 +17,13 @@ class MushafTheme extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, backgroundColor, textColor, goldColor, innerBorderColor];
+  List<Object?> get props => [
+    id,
+    backgroundColor,
+    textColor,
+    goldColor,
+    innerBorderColor,
+  ];
 
   // The 4 color themes
   static const MushafTheme cream = MushafTheme(
@@ -65,14 +71,17 @@ class MushafTheme extends Equatable {
 
   static MushafTheme fromId(String id) {
     switch (id) {
-      case 'white': return white;
-      case 'mint': return mint;
-      case 'iceBlue': return iceBlue;
-      case 'dark': return dark;
+      case 'white':
+        return white;
+      case 'mint':
+        return mint;
+      case 'iceBlue':
+        return iceBlue;
+      case 'dark':
+        return dark;
       case 'cream':
       default:
         return cream;
     }
   }
 }
-

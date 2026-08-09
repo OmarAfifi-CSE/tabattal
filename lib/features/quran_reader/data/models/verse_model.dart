@@ -46,12 +46,13 @@ class VerseModel {
 
   factory VerseModel.fromJson(Map<String, dynamic> json) {
     final wordsJson = json['words'] as List<dynamic>? ?? [];
-    
+
     return VerseModel(
       id: json['id'] as int? ?? 0,
       verseNumber: json['verse_number'] as int? ?? 0,
       verseKey: json['verse_key'] as String? ?? '',
-      textUthmani: json['text_uthmani'] as String? ?? 'Error loading verse text',
+      textUthmani:
+          json['text_uthmani'] as String? ?? 'Error loading verse text',
       words: wordsJson.map((w) => WordModel.fromJson(w)).toList(),
       juzNumber: json['juz_number'] as int? ?? 1,
     );
@@ -62,8 +63,5 @@ class LineData {
   final int lineNumber;
   final List<WordModel> words;
 
-  LineData({
-    required this.lineNumber,
-    required this.words,
-  });
+  LineData({required this.lineNumber, required this.words});
 }

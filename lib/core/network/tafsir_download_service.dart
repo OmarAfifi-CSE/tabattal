@@ -19,14 +19,18 @@ class TafsirDownloadService {
     bool hasError = false;
 
     Future<int> startChapterForResume() async {
-      int maxChapter = await localDataSource.getMaxDownloadedChapter(resourceId);
-      return maxChapter > QuranConstants.tafsirDownloadConcurrency 
-          ? maxChapter - QuranConstants.tafsirDownloadConcurrency 
+      int maxChapter = await localDataSource.getMaxDownloadedChapter(
+        resourceId,
+      );
+      return maxChapter > QuranConstants.tafsirDownloadConcurrency
+          ? maxChapter - QuranConstants.tafsirDownloadConcurrency
           : 1;
     }
 
     Future<void> emitProgress() async {
-      int maxChapter = await localDataSource.getMaxDownloadedChapter(resourceId);
+      int maxChapter = await localDataSource.getMaxDownloadedChapter(
+        resourceId,
+      );
       double progress = maxChapter / QuranConstants.totalSurahs;
       if (progress > 1.0) progress = 1.0;
       if (!controller.isClosed && !hasError) {
@@ -66,11 +70,15 @@ class TafsirDownloadService {
 
         final List tafsirs = response['tafsirs'] ?? [];
         if (tafsirs.isNotEmpty) {
-          final rows = tafsirs.map((t) => <String, dynamic>{
-            'verse_key': t['verse_key'],
-            'resource_id': resourceId,
-            'text': t['text'],
-          }).toList();
+          final rows = tafsirs
+              .map(
+                (t) => <String, dynamic>{
+                  'verse_key': t['verse_key'],
+                  'resource_id': resourceId,
+                  'text': t['text'],
+                },
+              )
+              .toList();
 
           await localDataSource.insertTafsirs(rows);
           await emitProgress();
@@ -83,7 +91,11 @@ class TafsirDownloadService {
     }
 
     Future<void> runWorker(int workerId, int safeStartChapter) async {
-      for (int i = workerId; i <= QuranConstants.totalSurahs; i += QuranConstants.tafsirDownloadConcurrency) {
+      for (
+        int i = workerId;
+        i <= QuranConstants.totalSurahs;
+        i += QuranConstants.tafsirDownloadConcurrency
+      ) {
         if (hasError) return;
         if (i < safeStartChapter) continue;
 
@@ -111,7 +123,7 @@ class TafsirDownloadService {
           QuranConstants.tafsirDownloadConcurrency,
           (index) => runWorker(index + 1, safeStartChapter),
         );
-        
+
         await Future.wait(workers);
 
         if (!hasError && !controller.isClosed) {

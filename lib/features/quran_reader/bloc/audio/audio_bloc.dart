@@ -48,7 +48,12 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       final file = File('${dir.path}/app_icon.png');
       if (!await file.exists()) {
         final byteData = await rootBundle.load('assets/images/app_icon.png');
-        await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+        await file.writeAsBytes(
+          byteData.buffer.asUint8List(
+            byteData.offsetInBytes,
+            byteData.lengthInBytes,
+          ),
+        );
       }
       _cachedArtUri = Uri.parse('file://${file.path}');
     } catch (e) {
@@ -69,10 +74,9 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   String get currentReciter => _currentReciter;
   int get currentRepeatCount => _currentRepeatCount;
 
-
   AudioBloc(this._audioHandler, this._downloadManager, this._prefs)
-      : _audioPlayer = _audioHandler.player,
-        super(AudioIdle()) {
+    : _audioPlayer = _audioHandler.player,
+      super(AudioIdle()) {
     _currentReciter = _prefs.reciter;
     _currentRepeatCount = _prefs.repeatCount;
 
@@ -106,13 +110,19 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           break;
         case QuranAudioAction.prevAyah:
           final prev = currentVerse.previous;
-          if (prev != null) add(PlayVerse('', prev.verseId, skipBasmalah: true));
+          if (prev != null) {
+            add(PlayVerse('', prev.verseId, skipBasmalah: true));
+          }
           break;
         case QuranAudioAction.nextSurah:
-          if (currentVerse.surah < 114) add(PlayVerse('', VerseRef(currentVerse.surah + 1, 1).verseId));
+          if (currentVerse.surah < 114) {
+            add(PlayVerse('', VerseRef(currentVerse.surah + 1, 1).verseId));
+          }
           break;
         case QuranAudioAction.prevSurah:
-          if (currentVerse.surah > 1) add(PlayVerse('', VerseRef(currentVerse.surah - 1, 1).verseId));
+          if (currentVerse.surah > 1) {
+            add(PlayVerse('', VerseRef(currentVerse.surah - 1, 1).verseId));
+          }
           break;
         case QuranAudioAction.stop:
           _currentVerseIds = [];
@@ -175,31 +185,37 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       }
     });
 
-    _currentIndexSubscription = _audioPlayer.currentIndexStream.listen((index) async {
-      if (index != null && _currentVerseIds.isNotEmpty && index < _currentVerseIds.length) {
+    _currentIndexSubscription = _audioPlayer.currentIndexStream.listen((
+      index,
+    ) async {
+      if (index != null &&
+          _currentVerseIds.isNotEmpty &&
+          index < _currentVerseIds.length) {
         _currentIndex = index;
         final verse = _currentVerseIds[index];
         final isEn = _prefs.appLocale == 'en';
         final String title;
         if (verse.ayah == 0) {
-          title = isEn 
-              ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} - Basmalah' 
+          title = isEn
+              ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} - Basmalah'
               : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - البسملة';
         } else {
           title = isEn
               ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} - Ayah ${verse.ayah}'
               : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - الآية ${verse.ayah.toArabicDigits}';
         }
-        
+
         final artUri = await _getArtUri();
-        
-        _audioHandler.updateItem(MediaItem(
-          id: verse.verseId.toString(),
-          title: title,
-          artist: ReciterLocalization.localizeByLang(isEn, _currentReciter),
-          duration: _audioPlayer.duration,
-          artUri: artUri,
-        ));
+
+        _audioHandler.updateItem(
+          MediaItem(
+            id: verse.verseId.toString(),
+            title: title,
+            artist: ReciterLocalization.localizeByLang(isEn, _currentReciter),
+            duration: _audioPlayer.duration,
+            artUri: artUri,
+          ),
+        );
         add(AudioStateChanged(isPlaying: _audioPlayer.playing));
       }
     });
@@ -209,7 +225,11 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       onError: (Object e, StackTrace stackTrace) {
         add(const AudioStateChanged(isPlaying: false));
         if (e is PlayerException) {
-          add(const AudioErrorEvent("Network error: Check connection to stream audio."));
+          add(
+            const AudioErrorEvent(
+              "Network error: Check connection to stream audio.",
+            ),
+          );
         } else if (e is PlayerInterruptedException) {
           add(const AudioErrorEvent("Playback interrupted."));
         } else {
@@ -225,7 +245,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
   /// Returns the local path, downloading first if not yet cached.
   Future<String> _ensureLocalPath(int surah, int ayah, int verseId) async {
-    final existing = await _downloadManager.getLocalVersePath(_currentReciter, verseId);
+    final existing = await _downloadManager.getLocalVersePath(
+      _currentReciter,
+      verseId,
+    );
     if (existing != null) return existing;
     return _downloadManager.downloadVerse(_currentReciter, surah, ayah, null);
   }
@@ -265,7 +288,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     try {
       _playedCount = 0;
       final verse = VerseRef.fromId(event.verseId);
-      final bool needsBasmalah = !event.skipBasmalah &&
+      final bool needsBasmalah =
+          !event.skipBasmalah &&
           verse.ayah == 1 &&
           verse.surah != 1 &&
           verse.surah != 9;
@@ -323,13 +347,15 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       final artUri = await _getArtUri();
       if (_playlistGeneration != myGen) return;
 
-      await _audioHandler.updateItem(MediaItem(
-        id: verseQueue.first.verseId.toString(),
-        title: initialTitle,
-        artist: ReciterLocalization.localizeByLang(isEn, _currentReciter),
-        duration: _audioPlayer.duration,
-        artUri: artUri,
-      ));
+      await _audioHandler.updateItem(
+        MediaItem(
+          id: verseQueue.first.verseId.toString(),
+          title: initialTitle,
+          artist: ReciterLocalization.localizeByLang(isEn, _currentReciter),
+          duration: _audioPlayer.duration,
+          artUri: artUri,
+        ),
+      );
 
       // Commit state only after ALL async work is done and generation is valid.
       // This prevents a stale `completed` event (from the old surah, fired
@@ -341,7 +367,9 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       if (_playlistGeneration != myGen) return;
       await _audioPlayer.setAudioSource(playlist, initialIndex: 0);
       if (_playlistGeneration != myGen) return;
-      await _audioPlayer.setLoopMode(_currentRepeatCount == -1 ? LoopMode.one : LoopMode.off);
+      await _audioPlayer.setLoopMode(
+        _currentRepeatCount == -1 ? LoopMode.one : LoopMode.off,
+      );
       _audioPlayer.play();
       // Mark this generation as the ACTIVE one — only now is the player truly
       // running with this playlist. Stale completed events from the previous
@@ -369,7 +397,6 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           );
         }
       }
-
     } on PlayerException catch (_) {
       emit(const AudioError("audioErrorFileNotFound"));
     } on PlayerInterruptedException catch (_) {
@@ -432,18 +459,29 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     }
   }
 
-  Future<void> _onPlayPlaylist(PlayPlaylist event, Emitter<AudioState> emit) async {
+  Future<void> _onPlayPlaylist(
+    PlayPlaylist event,
+    Emitter<AudioState> emit,
+  ) async {
     emit(AudioLoading());
     try {
       _playedCount = 0;
-      _currentVerseIds = event.verseIds.map((id) => VerseRef.fromId(id)).toList();
+      _currentVerseIds = event.verseIds
+          .map((id) => VerseRef.fromId(id))
+          .toList();
       _currentIndex = event.startIndex;
 
-      final playlist = event.audioUrls.map((path) => _createAudioSource(path)).toList();
+      final playlist = event.audioUrls
+          .map((path) => _createAudioSource(path))
+          .toList();
 
       await _audioPlayer.stop();
-      // ignore: deprecated_member_use
-      await _audioPlayer.setAudioSource(ConcatenatingAudioSource(children: playlist), initialIndex: event.startIndex);
+
+      await _audioPlayer.setAudioSource(
+        // ignore: deprecated_member_use
+        ConcatenatingAudioSource(children: playlist),
+        initialIndex: event.startIndex,
+      );
       _audioPlayer.play();
       emit(AudioPlaying(_currentVerseIds[_currentIndex].verseId));
     } on PlayerException catch (_) {
@@ -464,7 +502,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     }
   }
 
-  Future<void> _onResumeAudio(ResumeAudio event, Emitter<AudioState> emit) async {
+  Future<void> _onResumeAudio(
+    ResumeAudio event,
+    Emitter<AudioState> emit,
+  ) async {
     _audioPlayer.play();
     if (_currentVerseIds.isNotEmpty) {
       emit(AudioPlaying(_currentVerseIds[_currentIndex].verseId));
@@ -488,7 +529,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     if (next != null) add(PlayVerse('', next.verseId));
   }
 
-  Future<void> _onPreviousAyah(PreviousAyah event, Emitter<AudioState> emit) async {
+  Future<void> _onPreviousAyah(
+    PreviousAyah event,
+    Emitter<AudioState> emit,
+  ) async {
     if (_currentVerseIds.isEmpty) return;
     final prev = _currentVerseIds[_currentIndex].previous;
     if (prev != null) add(PlayVerse('', prev.verseId, skipBasmalah: true));
@@ -497,13 +541,20 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   Future<void> _onNextSurah(NextSurah event, Emitter<AudioState> emit) async {
     if (_currentVerseIds.isEmpty) return;
     final currentSurah = _currentVerseIds[_currentIndex].surah;
-    if (currentSurah < 114) add(PlayVerse('', VerseRef(currentSurah + 1, 1).verseId));
+    if (currentSurah < 114) {
+      add(PlayVerse('', VerseRef(currentSurah + 1, 1).verseId));
+    }
   }
 
-  Future<void> _onPreviousSurah(PreviousSurah event, Emitter<AudioState> emit) async {
+  Future<void> _onPreviousSurah(
+    PreviousSurah event,
+    Emitter<AudioState> emit,
+  ) async {
     if (_currentVerseIds.isEmpty) return;
     final currentSurah = _currentVerseIds[_currentIndex].surah;
-    if (currentSurah > 1) add(PlayVerse('', VerseRef(currentSurah - 1, 1).verseId));
+    if (currentSurah > 1) {
+      add(PlayVerse('', VerseRef(currentSurah - 1, 1).verseId));
+    }
   }
 
   void _onStateChanged(AudioStateChanged event, Emitter<AudioState> emit) {
@@ -532,7 +583,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     }
   }
 
-  Future<void> _onChangeRepeatCount(ChangeRepeatCount event, Emitter<AudioState> emit) async {
+  Future<void> _onChangeRepeatCount(
+    ChangeRepeatCount event,
+    Emitter<AudioState> emit,
+  ) async {
     _currentRepeatCount = event.repeatCount;
     await _prefs.saveRepeatCount(event.repeatCount);
     if (_currentVerseIds.isNotEmpty) {
@@ -564,6 +618,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     _audioPlayer.dispose();
     return super.close();
   }
+
   // ---------------------------------------------------------------------------
   // Web-safe AudioSource helper
   // ---------------------------------------------------------------------------
@@ -574,9 +629,4 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       return AudioSource.file(path);
     }
   }
-
 }
-
-
-
-

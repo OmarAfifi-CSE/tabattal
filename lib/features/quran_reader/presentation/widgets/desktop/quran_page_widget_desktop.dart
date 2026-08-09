@@ -36,21 +36,20 @@ class QuranPageWidgetDesktop extends StatefulWidget {
   final int pageNumber;
   final void Function(int page, {String? verseKey})? onNavigateToPage;
   final String? highlightVerseKey;
-  
 
   const QuranPageWidgetDesktop({
     super.key,
     required this.pageNumber,
     this.onNavigateToPage,
     this.highlightVerseKey,
-    
   });
 
   @override
   State<QuranPageWidgetDesktop> createState() => _QuranPageWidgetDesktopState();
 }
 
-class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with SingleTickerProviderStateMixin {
+class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
+    with SingleTickerProviderStateMixin {
   int? _activeVerseId;
   OverlayEntry? _activeOverlayEntry;
   final GlobalKey _pageColumnKey = GlobalKey();
@@ -73,7 +72,10 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
     _bookmarkPulseAnimation = Tween<double>(begin: 0.15, end: 0.55).animate(
-      CurvedAnimation(parent: _bookmarkPulseController, curve: Curves.easeInOut),
+      CurvedAnimation(
+        parent: _bookmarkPulseController,
+        curve: Curves.easeInOut,
+      ),
     );
     if (widget.highlightVerseKey != null) {
       _activateBookmarkHighlight(widget.highlightVerseKey!);
@@ -118,7 +120,9 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
   void _activateBookmarkHighlight(String verseKey) {
     final parsed = ArabicTextUtils.parseVerseKey(verseKey);
     if (parsed == null) return;
-    setState(() => _bookmarkHighlightVerseId = parsed.surah * 1000 + parsed.ayah);
+    setState(
+      () => _bookmarkHighlightVerseId = parsed.surah * 1000 + parsed.ayah,
+    );
     // Auto-clear after 5 s so it doesn't stay permanently highlighted
     Future.delayed(const Duration(seconds: 5), () {
       if (mounted) setState(() => _bookmarkHighlightVerseId = null);
@@ -126,7 +130,11 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
   }
 
   /// Computes the screen rect occupied by [verseKey] using the page column layout.
-  Rect _calculateVerseScreenRect(String verseKey, List<LineData> lines, Offset fallbackPosition) {
+  Rect _calculateVerseScreenRect(
+    String verseKey,
+    List<LineData> lines,
+    Offset fallbackPosition,
+  ) {
     int minLine = 16;
     int maxLine = 0;
     for (final line in lines) {
@@ -138,14 +146,23 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
       }
     }
 
-    if (minLine > 15) return Rect.fromCenter(center: fallbackPosition, width: 0, height: 0);
+    if (minLine > 15) {
+      return Rect.fromCenter(center: fallbackPosition, width: 0, height: 0);
+    }
 
-    final renderBox = _pageColumnKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return Rect.fromCenter(center: fallbackPosition, width: 0, height: 0);
+    final renderBox =
+        _pageColumnKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) {
+      return Rect.fromCenter(center: fallbackPosition, width: 0, height: 0);
+    }
 
     final lineHeight = renderBox.size.height / 15;
-    final topOffset = renderBox.localToGlobal(Offset(0, (minLine - 1) * lineHeight));
-    final bottomOffset = renderBox.localToGlobal(Offset(0, maxLine * lineHeight));
+    final topOffset = renderBox.localToGlobal(
+      Offset(0, (minLine - 1) * lineHeight),
+    );
+    final bottomOffset = renderBox.localToGlobal(
+      Offset(0, maxLine * lineHeight),
+    );
 
     return Rect.fromLTRB(
       0,
@@ -155,7 +172,12 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
     );
   }
 
-  void _showVerseMenu(BuildContext context, Offset tapPosition, int verseId, List<LineData> lines) {
+  void _showVerseMenu(
+    BuildContext context,
+    Offset tapPosition,
+    int verseId,
+    List<LineData> lines,
+  ) {
     if (_activeOverlayEntry != null) _removeVerseMenu();
 
     setState(() => _activeVerseId = verseId);
@@ -191,7 +213,8 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
           position: tapPosition,
           verseRect: verseRect,
           verse: partialVerseForMenu,
-          onDismiss: ({bool keepHighlight = false}) => _removeVerseMenu(keepHighlight: keepHighlight),
+          onDismiss: ({bool keepHighlight = false}) =>
+              _removeVerseMenu(keepHighlight: keepHighlight),
           onClearHighlight: () {
             if (mounted) setState(() => _activeVerseId = null);
           },
@@ -214,9 +237,15 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
   // ---------------------------------------------------------------------------
 
   /// Scans forward from [lineNumber] to find if a new Surah starts on this page.
-  ({int ayah1Line, int surahId})? _findNextSurahStartOnPage(int lineNumber, List<LineData> lines) {
+  ({int ayah1Line, int surahId})? _findNextSurahStartOnPage(
+    int lineNumber,
+    List<LineData> lines,
+  ) {
     for (int l = lineNumber + 1; l <= 15; l++) {
-      final lineData = lines.firstWhere((e) => e.lineNumber == l, orElse: () => LineData(lineNumber: l, words: []));
+      final lineData = lines.firstWhere(
+        (e) => e.lineNumber == l,
+        orElse: () => LineData(lineNumber: l, words: []),
+      );
       if (lineData.words.isNotEmpty) {
         final vk = lineData.words.first.verseKey;
         final parsed = ArabicTextUtils.parseVerseKey(vk);
@@ -232,9 +261,14 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
   /// Scans backward from [lineNumber] to find the Surah on the line above.
   int? _findPreviousSurahId(int lineNumber, List<LineData> lines) {
     for (int l = lineNumber - 1; l >= 1; l--) {
-      final lineData = lines.firstWhere((e) => e.lineNumber == l, orElse: () => LineData(lineNumber: l, words: []));
+      final lineData = lines.firstWhere(
+        (e) => e.lineNumber == l,
+        orElse: () => LineData(lineNumber: l, words: []),
+      );
       if (lineData.words.isNotEmpty) {
-        return ArabicTextUtils.parseVerseKey(lineData.words.last.verseKey)?.surah;
+        return ArabicTextUtils.parseVerseKey(
+          lineData.words.last.verseKey,
+        )?.surah;
       }
     }
     return null;
@@ -244,13 +278,24 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
   int _countEmptyLinesBefore(int lineNumber, List<LineData> lines) {
     int count = 0;
     for (int l = lineNumber - 1; l >= 1; l--) {
-      final lineData = lines.firstWhere((e) => e.lineNumber == l, orElse: () => LineData(lineNumber: l, words: []));
-      if (lineData.words.isEmpty) { count++; } else { break; }
+      final lineData = lines.firstWhere(
+        (e) => e.lineNumber == l,
+        orElse: () => LineData(lineNumber: l, words: []),
+      );
+      if (lineData.words.isEmpty) {
+        count++;
+      } else {
+        break;
+      }
     }
     return count;
   }
 
-  Widget _buildEmptyLineWidget(int lineNumber, List<LineData> lines, MushafTheme mushafTheme) {
+  Widget _buildEmptyLineWidget(
+    int lineNumber,
+    List<LineData> lines,
+    MushafTheme mushafTheme,
+  ) {
     // ── Case A: A new Surah starts later on this page ──────────────────────
     final nextSurah = _findNextSurahStartOnPage(lineNumber, lines);
     if (nextSurah != null) {
@@ -286,7 +331,12 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
           ayah1Line == 2 && widget.pageNumber == 1;
 
       if (lineNumber == ayah1Line - 1) {
-        return mustSquashBothOnLineMinus1 ? Column(mainAxisSize: MainAxisSize.min, children: [header, basmala]) : basmala;
+        return mustSquashBothOnLineMinus1
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [header, basmala],
+              )
+            : basmala;
       } else if (lineNumber == ayah1Line - 2 && !mustSquashBothOnLineMinus1) {
         return header;
       }
@@ -361,7 +411,10 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
       height: 1.2,
     );
 
-    final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
+    final mushafTheme = context
+        .watch<SettingsBloc>()
+        .state
+        .effectiveMushafTheme;
 
     if (isBookmarkHighlighted) {
       return AnimatedBuilder(
@@ -371,7 +424,9 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
           onTap: () {},
           onLongPress: () {},
           child: Container(
-            color: mushafTheme.goldColor.withValues(alpha: _bookmarkPulseAnimation.value),
+            color: mushafTheme.goldColor.withValues(
+              alpha: _bookmarkPulseAnimation.value,
+            ),
             child: Text(
               displayText,
               style: wordTextStyle.copyWith(
@@ -421,7 +476,6 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
     required BookmarkState bookmarkState,
     required List<LineData> lines,
   }) {
-
     final List<Widget> wordWidgets = [];
     bool fatihahBasmalaAdded = false;
 
@@ -436,7 +490,10 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
           final isBookmarkHighlighted = _bookmarkHighlightVerseId == verseId;
           final isBookmarked = bookmarkState.isBookmarked(word.verseKey);
 
-          final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
+          final mushafTheme = context
+              .watch<SettingsBloc>()
+              .state
+              .effectiveMushafTheme;
 
           final backgroundColor = (isAudioHighlighted || isMenuHighlighted)
               ? mushafTheme.goldColor.withValues(alpha: 0.2)
@@ -467,11 +524,16 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
           );
 
           if (isBookmarkHighlighted) {
-            final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
+            final mushafTheme = context
+                .watch<SettingsBloc>()
+                .state
+                .effectiveMushafTheme;
             basmala = AnimatedBuilder(
               animation: _bookmarkPulseAnimation,
               builder: (context, _) => Container(
-                color: mushafTheme.goldColor.withValues(alpha: _bookmarkPulseAnimation.value),
+                color: mushafTheme.goldColor.withValues(
+                  alpha: _bookmarkPulseAnimation.value,
+                ),
                 child: Text(
                   '1 2 3',
                   style: TextStyle(
@@ -492,7 +554,12 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
                 if (_activeVerseId == verseId) {
                   _removeVerseMenu();
                 } else {
-                  _showVerseMenu(context, details.globalPosition, verseId, lines);
+                  _showVerseMenu(
+                    context,
+                    details.globalPosition,
+                    verseId,
+                    lines,
+                  );
                 }
               },
               onTap: () {},
@@ -501,7 +568,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
                 child: basmala,
               ),
-            )
+            ),
           );
           fatihahBasmalaAdded = true;
         }
@@ -510,16 +577,18 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
 
       final bool isBookmarked = bookmarkState.isBookmarked(word.verseKey);
 
-      wordWidgets.add(_buildWordWidget(
-        word: word,
-        verseId: verseId,
-        isMenuHighlighted: _activeVerseId == verseId,
-        isAudioHighlighted: playingVerseId == verseId,
-        isBookmarkHighlighted: _bookmarkHighlightVerseId == verseId,
-        isPermanentlyBookmarked: isBookmarked,
-        audioState: audioState,
-        lines: lines,
-      ));
+      wordWidgets.add(
+        _buildWordWidget(
+          word: word,
+          verseId: verseId,
+          isMenuHighlighted: _activeVerseId == verseId,
+          isAudioHighlighted: playingVerseId == verseId,
+          isBookmarkHighlighted: _bookmarkHighlightVerseId == verseId,
+          isPermanentlyBookmarked: isBookmarked,
+          audioState: audioState,
+          lines: lines,
+        ),
+      );
     }
 
     return Padding(
@@ -548,11 +617,16 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
     }
 
     final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final surahNumber = ArabicTextUtils.parseVerseKey(firstVerseKey)?.surah ?? 1;
-    final surahName = isEn ? "Surah ${QuranMetadata.getSurahNameEnglish(surahNumber)}" : QuranMetadata.getSurahNameWithTashkeel(surahNumber);
-    
+    final surahNumber =
+        ArabicTextUtils.parseVerseKey(firstVerseKey)?.surah ?? 1;
+    final surahName = isEn
+        ? "Surah ${QuranMetadata.getSurahNameEnglish(surahNumber)}"
+        : QuranMetadata.getSurahNameWithTashkeel(surahNumber);
+
     final juzNum = QuranMetadata.getJuzNumberByPage(widget.pageNumber);
-    final juzName = isEn ? AppLocalizations.of(context)!.juzListItem(juzNum.toString()) : QuranMetadata.getJuzNameWithTashkeel(juzNum);
+    final juzName = isEn
+        ? AppLocalizations.of(context)!.juzListItem(juzNum.toString())
+        : QuranMetadata.getJuzNameWithTashkeel(juzNum);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -572,71 +646,88 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
               _removeVerseMenu();
             }
           },
-        
-        child: BlocBuilder<BookmarkBloc, BookmarkState>(
-          builder: (context, bookmarkState) {
-            return BlocBuilder<AudioBloc, AudioState>(
-              builder: (context, audioState) {
-            final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
-            int? playingVerseId;
-            if (audioState is AudioPlaying) playingVerseId = audioState.currentVerseId;
-            if (audioState is AudioPaused) playingVerseId = audioState.currentVerseId;
 
-            // Pre-compute the verse key → integer ID mapping for fast lookup per word
-            final verseKeyToIntIdMap = <String, int>{
-              for (final line in lines)
-                for (final word in line.words)
-                  if (ArabicTextUtils.parseVerseKey(word.verseKey) != null)
-                    word.verseKey: ArabicTextUtils.verseKeyToVerseId(word.verseKey),
-            };
+          child: BlocBuilder<BookmarkBloc, BookmarkState>(
+            builder: (context, bookmarkState) {
+              return BlocBuilder<AudioBloc, AudioState>(
+                builder: (context, audioState) {
+                  final mushafTheme = context
+                      .watch<SettingsBloc>()
+                      .state
+                      .effectiveMushafTheme;
+                  int? playingVerseId;
+                  if (audioState is AudioPlaying) {
+                    playingVerseId = audioState.currentVerseId;
+                  }
+                  if (audioState is AudioPaused) {
+                    playingVerseId = audioState.currentVerseId;
+                  }
 
-            return MediaQuery(
-              data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
-              child: Directionality(
-                textDirection: TextDirection.rtl,
-                child: FittedBox(
-                  fit: BoxFit.contain,
-                  alignment: Alignment.center,
-                  child: SizedBox(
-                  // Use a fixed virtual canvas size instead of expensive IntrinsicWidth
-                  // Increased width from 460 to 490 to prevent horizontal overflow on dense lines like page 453
-                  width: 650, 
-                  height: 950,
-                  child: Column(
-                    key: _pageColumnKey,
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: List.generate(15, (index) {
-                        final lineNumber = index + 1;
-                        final lineData = lines.firstWhere(
-                          (l) => l.lineNumber == lineNumber,
-                          orElse: () => LineData(lineNumber: lineNumber, words: []),
-                        );
+                  // Pre-compute the verse key → integer ID mapping for fast lookup per word
+                  final verseKeyToIntIdMap = <String, int>{
+                    for (final line in lines)
+                      for (final word in line.words)
+                        if (ArabicTextUtils.parseVerseKey(word.verseKey) !=
+                            null)
+                          word.verseKey: ArabicTextUtils.verseKeyToVerseId(
+                            word.verseKey,
+                          ),
+                  };
 
-                        if (lineData.words.isEmpty) {
-                          return _buildEmptyLineWidget(lineNumber, lines, mushafTheme);
-                        }
+                  return MediaQuery(
+                    data: MediaQuery.of(
+                      context,
+                    ).copyWith(textScaler: TextScaler.noScaling),
+                    child: Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          // Use a fixed virtual canvas size instead of expensive IntrinsicWidth
+                          // Increased width from 460 to 490 to prevent horizontal overflow on dense lines like page 453
+                          width: 650,
+                          height: 950,
+                          child: Column(
+                            key: _pageColumnKey,
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: List.generate(15, (index) {
+                              final lineNumber = index + 1;
+                              final lineData = lines.firstWhere(
+                                (l) => l.lineNumber == lineNumber,
+                                orElse: () =>
+                                    LineData(lineNumber: lineNumber, words: []),
+                              );
 
-                        return _buildWordRow(
-                          lineWords: lineData.words,
-                          playingVerseId: playingVerseId,
-                          verseKeyToIntIdMap: verseKeyToIntIdMap,
-                          audioState: audioState,
-                          bookmarkState: bookmarkState,
-                          lines: lines,
-                        );
-                      }),
-                    ), // Column
-                  ), // SizedBox
-                ), // FittedBox
-              ), // Directionality
-            ); // MediaQuery
-          },
-        ); // BlocBuilder
-          },
-        ), // BlocBuilder
-      ), // QuranPageFrameDesktop
+                              if (lineData.words.isEmpty) {
+                                return _buildEmptyLineWidget(
+                                  lineNumber,
+                                  lines,
+                                  mushafTheme,
+                                );
+                              }
+
+                              return _buildWordRow(
+                                lineWords: lineData.words,
+                                playingVerseId: playingVerseId,
+                                verseKeyToIntIdMap: verseKeyToIntIdMap,
+                                audioState: audioState,
+                                bookmarkState: bookmarkState,
+                                lines: lines,
+                              );
+                            }),
+                          ), // Column
+                        ), // SizedBox
+                      ), // FittedBox
+                    ), // Directionality
+                  ); // MediaQuery
+                },
+              ); // BlocBuilder
+            },
+          ), // BlocBuilder
+        ), // QuranPageFrameDesktop
       ), // Center
     ); // GestureDetector
   }
@@ -646,40 +737,52 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
   // ---------------------------------------------------------------------------
 
   Widget _buildEmptyFrame() => QuranPageFrameDesktop(
-        pageNumber: widget.pageNumber,
-      onNavigateToPage: widget.onNavigateToPage,
-        surahName: '',
-        juzName: '',
-        child: const SizedBox(),
-      );
+    pageNumber: widget.pageNumber,
+    onNavigateToPage: widget.onNavigateToPage,
+    surahName: '',
+    juzName: '',
+    child: const SizedBox(),
+  );
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          QuranBloc(repository: context.read<QuranRepository>())..add(LoadPage(widget.pageNumber)),
+          QuranBloc(repository: context.read<QuranRepository>())
+            ..add(LoadPage(widget.pageNumber)),
       child: BlocBuilder<QuranBloc, QuranState>(
         buildWhen: (_, current) =>
-            current is QuranLoading || current is QuranLoaded || current is QuranError || current is QuranInitial,
+            current is QuranLoading ||
+            current is QuranLoaded ||
+            current is QuranError ||
+            current is QuranInitial,
         builder: (context, state) {
-          final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
+          final mushafTheme = context
+              .watch<SettingsBloc>()
+              .state
+              .effectiveMushafTheme;
           if (state is QuranLoading || !_isFontLoaded) {
             return QuranPageFrameDesktop(
               pageNumber: widget.pageNumber,
-      onNavigateToPage: widget.onNavigateToPage,
+              onNavigateToPage: widget.onNavigateToPage,
               surahName: '',
               juzName: '',
-              child: Center(child: CircularProgressIndicator(color: mushafTheme.goldColor)),
+              child: Center(
+                child: CircularProgressIndicator(color: mushafTheme.goldColor),
+              ),
             );
           }
           if (state is QuranError) {
             return QuranPageFrameDesktop(
               pageNumber: widget.pageNumber,
-      onNavigateToPage: widget.onNavigateToPage,
+              onNavigateToPage: widget.onNavigateToPage,
               surahName: '',
               juzName: '',
               child: Center(
-                child: Text(state.message, style: TextStyle(color: Colors.red, fontSize: 14.sp)),
+                child: Text(
+                  state.message,
+                  style: TextStyle(color: Colors.red, fontSize: 14.sp),
+                ),
               ),
             );
           }
@@ -690,11 +793,3 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop> with Si
     );
   }
 }
-
-
-
-
-
-
-
-

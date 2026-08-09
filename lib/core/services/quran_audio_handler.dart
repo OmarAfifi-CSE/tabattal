@@ -2,14 +2,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 
-enum QuranAudioAction {
-  nextAyah,
-  prevAyah,
-  nextSurah,
-  prevSurah,
-  timer,
-  stop,
-}
+enum QuranAudioAction { nextAyah, prevAyah, nextSurah, prevSurah, timer, stop }
 
 class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   final AudioPlayer _player = AudioPlayer();

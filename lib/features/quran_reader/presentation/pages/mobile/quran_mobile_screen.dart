@@ -38,7 +38,7 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
     super.initState();
     _currentPage = context.read<AudioPreferencesService>().lastReadPage;
     _pageController = PageController(initialPage: _currentPage - 1);
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         UpdateService.checkForUpdates(context);
@@ -104,10 +104,16 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
       SnackBar(
         content: Text(
           message,
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14.sp),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 14.sp,
+          ),
         ),
         backgroundColor: AppColors.verseMarkerGold,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.all(16.r),
       ),
@@ -116,12 +122,19 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
 
   void _navigateToPlayingVerse(BuildContext context, int verseId) {
     final verse = VerseRef.fromId(verseId);
-    context.read<QuranRepository>().getVersesBySurah(verse.surah).then((result) {
+    context.read<QuranRepository>().getVersesBySurah(verse.surah).then((
+      result,
+    ) {
       result.fold(
-        (failure) => debugPrint('[AudioBloc] Failed to resolve verse page: ${failure.toString()}'),
+        (failure) => debugPrint(
+          '[AudioBloc] Failed to resolve verse page: ${failure.toString()}',
+        ),
         (verses) {
           final int searchAyah = verse.ayah == 0 ? 1 : verse.ayah;
-          final SearchVerseModel? matchingVerse = verses.cast<SearchVerseModel>().where((v) => v.ayah == searchAyah).firstOrNull;
+          final SearchVerseModel? matchingVerse = verses
+              .cast<SearchVerseModel>()
+              .where((v) => v.ayah == searchAyah)
+              .firstOrNull;
           final targetPage = matchingVerse?.page;
           if (targetPage != null && targetPage != _currentPage) {
             _jumpToPage(targetPage, verseKey: null, animate: true);
@@ -142,83 +155,90 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
         statusBarColor: Colors.transparent,
         systemNavigationBarColor: Colors.transparent,
         systemNavigationBarDividerColor: Colors.transparent,
-        statusBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
-        systemNavigationBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
+        statusBarIconBrightness: isDarkMode
+            ? Brightness.light
+            : Brightness.dark,
+        systemNavigationBarIconBrightness: isDarkMode
+            ? Brightness.light
+            : Brightness.dark,
         systemNavigationBarContrastEnforced: false,
         systemStatusBarContrastEnforced: false,
       ),
       child: Scaffold(
         backgroundColor: AppColors.background,
-      drawer: QuranDrawerMobile(
-        currentPage: _currentPage,
-        onNavigateToPage: (page, {String? verseKey}) => _jumpToPage(page, verseKey: verseKey),
-      ),
-      body: SafeArea(
-        child: BlocListener<AudioBloc, AudioState>(
-          listener: _handleAudioStateChange,
-          child: Stack(
-            children: [
-              BlocBuilder<AudioBloc, AudioState>(
-                builder: (context, state) {
-                  final isVisible = state is! AudioIdle && state is! AudioError;
-                  final double paddingBottom = isVisible ? (_isAudioExpanded ? 170.h : 80.h) : 0;
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic,
-                    padding: EdgeInsets.only(bottom: paddingBottom),
-                    child: PageView.builder(
-                      controller: _pageController,
-                      allowImplicitScrolling: true,
-                      itemCount: QuranConstants.totalPages,
-                      scrollDirection: settingsState.scrollDirection,
-                      reverse: false,
-                      onPageChanged: (index) {
-                        setState(() => _currentPage = index + 1);
-                        context.read<AudioPreferencesService>().saveLastReadPage(_currentPage);
-                      },
-                      itemBuilder: (context, index) {
-                        final pageNumber = index + 1;
-                        return QuranPageWidgetMobile(
-                          key: ValueKey(pageNumber),
-                          pageNumber: pageNumber,
-                          onNavigateToPage: (page, {verseKey}) => _jumpToPage(page, verseKey: verseKey),
-                          highlightVerseKey: pageNumber == _currentPage ? _highlightVerseKey : null,
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
-              BlocBuilder<AudioBloc, AudioState>(
-                builder: (context, state) {
-                  final isVisible = state is! AudioIdle && state is! AudioError;
-                  return AnimatedPositioned(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic,
-                    bottom: isVisible ? 16.h : -200.h,
-                    left: 16.w,
-                    right: 16.w,
-                    child: MediaControlBarMobile(
-                      isExpanded: _isAudioExpanded,
-                      onToggleExpanded: () {
-                        setState(() => _isAudioExpanded = !_isAudioExpanded);
-                      },
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
+        drawer: QuranDrawerMobile(
+          currentPage: _currentPage,
+          onNavigateToPage: (page, {String? verseKey}) =>
+              _jumpToPage(page, verseKey: verseKey),
+        ),
+        body: SafeArea(
+          child: BlocListener<AudioBloc, AudioState>(
+            listener: _handleAudioStateChange,
+            child: Stack(
+              children: [
+                BlocBuilder<AudioBloc, AudioState>(
+                  builder: (context, state) {
+                    final isVisible =
+                        state is! AudioIdle && state is! AudioError;
+                    final double paddingBottom = isVisible
+                        ? (_isAudioExpanded ? 170.h : 80.h)
+                        : 0;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      padding: EdgeInsets.only(bottom: paddingBottom),
+                      child: PageView.builder(
+                        controller: _pageController,
+                        allowImplicitScrolling: true,
+                        itemCount: QuranConstants.totalPages,
+                        scrollDirection: settingsState.scrollDirection,
+                        reverse: false,
+                        onPageChanged: (index) {
+                          setState(() => _currentPage = index + 1);
+                          context
+                              .read<AudioPreferencesService>()
+                              .saveLastReadPage(_currentPage);
+                        },
+                        itemBuilder: (context, index) {
+                          final pageNumber = index + 1;
+                          return QuranPageWidgetMobile(
+                            key: ValueKey(pageNumber),
+                            pageNumber: pageNumber,
+                            onNavigateToPage: (page, {verseKey}) =>
+                                _jumpToPage(page, verseKey: verseKey),
+                            highlightVerseKey: pageNumber == _currentPage
+                                ? _highlightVerseKey
+                                : null,
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+                BlocBuilder<AudioBloc, AudioState>(
+                  builder: (context, state) {
+                    final isVisible =
+                        state is! AudioIdle && state is! AudioError;
+                    return AnimatedPositioned(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      bottom: isVisible ? 16.h : -200.h,
+                      left: 16.w,
+                      right: 16.w,
+                      child: MediaControlBarMobile(
+                        isExpanded: _isAudioExpanded,
+                        onToggleExpanded: () {
+                          setState(() => _isAudioExpanded = !_isAudioExpanded);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-
-
-
-
-
-
-

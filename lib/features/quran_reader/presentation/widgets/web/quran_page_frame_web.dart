@@ -16,7 +16,6 @@ class QuranPageFrameWeb extends StatelessWidget {
   final String surahName;
   final String juzName;
   final VoidCallback? onHeaderTap;
-  
 
   const QuranPageFrameWeb({
     super.key,
@@ -36,14 +35,16 @@ class QuranPageFrameWeb extends StatelessWidget {
     text.splitMapJoin(
       digitRegExp,
       onMatch: (Match match) {
-        spans.add(TextSpan(
-          text: '\n${match.group(0)}',
-          style: baseStyle.copyWith(
-            fontSize: baseStyle.fontSize! * 1.25,
-            fontWeight: FontWeight.w900,
-            fontFamily: 'Amiri',
+        spans.add(
+          TextSpan(
+            text: '\n${match.group(0)}',
+            style: baseStyle.copyWith(
+              fontSize: baseStyle.fontSize! * 1.25,
+              fontWeight: FontWeight.w900,
+              fontFamily: 'Amiri',
+            ),
           ),
-        ));
+        );
         return '';
       },
       onNonMatch: (String nonMatch) {
@@ -70,13 +71,22 @@ class QuranPageFrameWeb extends StatelessWidget {
     return rawY.clamp(minY, maxY);
   }
 
-  Widget _buildFrameInfoBox({required Widget child, required MushafTheme theme, EdgeInsetsGeometry? margin, EdgeInsetsGeometry? padding}) {
+  Widget _buildFrameInfoBox({
+    required Widget child,
+    required MushafTheme theme,
+    EdgeInsetsGeometry? margin,
+    EdgeInsetsGeometry? padding,
+  }) {
     return Container(
       margin: margin ?? (const EdgeInsets.symmetric(horizontal: 6)),
-      padding: padding ?? (const EdgeInsets.symmetric(horizontal: 4, vertical: 4)),
+      padding:
+          padding ?? (const EdgeInsets.symmetric(horizontal: 4, vertical: 4)),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        border: Border.all(color: theme.goldColor.withValues(alpha: 0.6), width: 1.0),
+        border: Border.all(
+          color: theme.goldColor.withValues(alpha: 0.6),
+          width: 1.0,
+        ),
         borderRadius: BorderRadius.circular(12),
         color: theme.backgroundColor,
       ),
@@ -89,8 +99,11 @@ class QuranPageFrameWeb extends StatelessWidget {
     final hizbMarkers = HizbData.pageHizbs[pageNumber];
     final isLeftPage = pageNumber % 2 == 0;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
-    
-    final mushafTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
+
+    final mushafTheme = context
+        .watch<SettingsBloc>()
+        .state
+        .effectiveMushafTheme;
 
     final TextStyle headerStyle = TextStyle(
       fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
@@ -125,13 +138,17 @@ class QuranPageFrameWeb extends StatelessWidget {
                       pageNumber: pageNumber,
                       hizbCutCenters: hizbMarkers != null
                           ? hizbMarkers
-                              .map((m) => calculateHizbMarkerYPosition(m['line'] as int, pageHeight))
-                              .toList()
+                                .map(
+                                  (m) => calculateHizbMarkerYPosition(
+                                    m['line'] as int,
+                                    pageHeight,
+                                  ),
+                                )
+                                .toList()
                           : [],
                       goldColor: mushafTheme.goldColor,
                       innerColor: mushafTheme.innerBorderColor,
                       backgroundColor: mushafTheme.backgroundColor,
-                      
                     ),
                     size: Size.infinite,
                   ),
@@ -157,16 +174,25 @@ class QuranPageFrameWeb extends StatelessWidget {
                     translation: const Offset(0.0, -0.5),
                     child: GestureDetector(
                       onTap: () async {
-                      onHeaderTap?.call();
-                      final result = await Navigator.push<dynamic>(context, MaterialPageRoute(builder: (_) => const QuranIndexViewWeb(initialIndex: 1)));
-                      if (result != null && onNavigateToPage != null) {
-                        if (result is Map<String, dynamic>) {
-                          onNavigateToPage!(result['page'] as int, verseKey: result['verseKey'] as String?);
-                        } else if (result is int) {
-                          onNavigateToPage!(result);
+                        onHeaderTap?.call();
+                        final result = await Navigator.push<dynamic>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const QuranIndexViewWeb(initialIndex: 1),
+                          ),
+                        );
+                        if (result != null && onNavigateToPage != null) {
+                          if (result is Map<String, dynamic>) {
+                            onNavigateToPage!(
+                              result['page'] as int,
+                              verseKey: result['verseKey'] as String?,
+                            );
+                          } else if (result is int) {
+                            onNavigateToPage!(result);
+                          }
                         }
-                      }
-                    },
+                      },
                       child: _buildFrameInfoBox(
                         theme: mushafTheme,
                         child: Text(
@@ -190,16 +216,25 @@ class QuranPageFrameWeb extends StatelessWidget {
                     translation: const Offset(0.0, -0.5),
                     child: GestureDetector(
                       onTap: () async {
-                      onHeaderTap?.call();
-                      final result = await Navigator.push<dynamic>(context, MaterialPageRoute(builder: (_) => const QuranIndexViewWeb(initialIndex: 0)));
-                      if (result != null && onNavigateToPage != null) {
-                        if (result is Map<String, dynamic>) {
-                          onNavigateToPage!(result['page'] as int, verseKey: result['verseKey'] as String?);
-                        } else if (result is int) {
-                          onNavigateToPage!(result);
+                        onHeaderTap?.call();
+                        final result = await Navigator.push<dynamic>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const QuranIndexViewWeb(initialIndex: 0),
+                          ),
+                        );
+                        if (result != null && onNavigateToPage != null) {
+                          if (result is Map<String, dynamic>) {
+                            onNavigateToPage!(
+                              result['page'] as int,
+                              verseKey: result['verseKey'] as String?,
+                            );
+                          } else if (result is int) {
+                            onNavigateToPage!(result);
+                          }
                         }
-                      }
-                    },
+                      },
                       child: _buildFrameInfoBox(
                         theme: mushafTheme,
                         child: FittedBox(
@@ -230,8 +265,15 @@ class QuranPageFrameWeb extends StatelessWidget {
                       child: _buildFrameInfoBox(
                         theme: mushafTheme,
                         margin: const EdgeInsets.symmetric(horizontal: 6),
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                        child: Icon(Icons.segment_rounded, color: mushafTheme.goldColor, size: 20),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 0,
+                        ),
+                        child: Icon(
+                          Icons.segment_rounded,
+                          color: mushafTheme.goldColor,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
@@ -249,7 +291,9 @@ class QuranPageFrameWeb extends StatelessWidget {
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          isEn ? pageNumber.toString() : pageNumber.toArabicDigits,
+                          isEn
+                              ? pageNumber.toString()
+                              : pageNumber.toArabicDigits,
                           style: TextStyle(
                             fontFamily: 'Amiri',
                             color: mushafTheme.textColor,
@@ -268,7 +312,10 @@ class QuranPageFrameWeb extends StatelessWidget {
                 if (hizbMarkers != null)
                   for (final marker in hizbMarkers)
                     Positioned(
-                      top: calculateHizbMarkerYPosition(marker['line'] as int, pageHeight),
+                      top: calculateHizbMarkerYPosition(
+                        marker['line'] as int,
+                        pageHeight,
+                      ),
                       left: isLeftPage ? (pageWidth * 0.057) : null,
                       right: !isLeftPage ? (pageWidth * 0.043) : null,
                       width: pageWidth * 0.12,
@@ -301,7 +348,8 @@ class QuranPageFrameWeb extends StatelessWidget {
                                     children: buildHizbLabelTextSpans(
                                       (marker['text'] as String).toArabicDigits,
                                       TextStyle(
-                                        fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
+                                        fontFamily:
+                                            'KFGQPC HAFS Uthmanic Script Regular',
                                         fontSize: 6,
                                         height: 1.2,
                                         color: mushafTheme.textColor,
@@ -318,7 +366,6 @@ class QuranPageFrameWeb extends StatelessWidget {
                         ),
                       ),
                     ),
-
               ],
             );
           },
@@ -327,11 +374,3 @@ class QuranPageFrameWeb extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-
-
-
