@@ -11,7 +11,7 @@ class AudioPreferencesService {
   static const String _keyPlayOnce = 'audio_play_once';
 
   static const String defaultCategory = 'مرتل';
-  static const String defaultReciter = 'محمود خليل الحصري';
+  static const String defaultReciter = 'محمد صديق المنشاوي';
   static const int defaultRepeatCount =
       0; // 0 = continue reading, -1 = infinite, >0 = count
 

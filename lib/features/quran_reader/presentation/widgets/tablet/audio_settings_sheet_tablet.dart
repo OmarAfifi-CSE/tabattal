@@ -297,128 +297,210 @@ class _SelectorButton<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<T>(
-      splashRadius: 0.1,
-      initialValue: value,
-      position: PopupMenuPosition.under,
-      color: AppColors.cardCream,
-      elevation: 4,
-      constraints: const BoxConstraints(minWidth: 200, maxWidth: 350),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.15)),
-      ),
-      onSelected: onChanged,
-      itemBuilder: (context) => items.map((item) {
-        final isSelected = item == value;
-        return PopupMenuItem<T>(
-          value: item,
-          height: 40,
-          padding: EdgeInsets.zero,
+    return LayoutBuilder(
+      builder: (context, layoutConstraints) {
+        return PopupMenuButton<T>(
+          splashRadius: 0.1,
+          position: PopupMenuPosition.under,
+          color: AppColors.cardCream,
+          elevation: 4,
+          constraints: BoxConstraints(
+            minWidth: layoutConstraints.maxWidth,
+            maxWidth: layoutConstraints.maxWidth,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.15)),
+          ),
+          clipBehavior: Clip.hardEdge,
+          onSelected: onChanged,
+          itemBuilder: (context) => [
+            PopupMenuItem<T>(
+              enabled: false,
+              padding: EdgeInsets.zero,
+              child: _PopupMenuScrollableContent<T>(
+                items: items,
+                value: value,
+                labelBuilder: labelBuilder,
+                maxHeight: 250.wH,
+                itemHeight: 40,
+              ),
+            ),
+          ],
           child: Container(
-            width: double.infinity,
-            height: 40,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            alignment: Alignment.centerRight,
-            color: isSelected
-                ? AppColors.accentGold.withValues(alpha: 0.1)
-                : Colors.transparent,
+            height: null,
+            width: MediaQuery.sizeOf(context).width,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCream,
+              borderRadius: BorderRadius.circular(10.wR),
+              border: Border.all(
+                color: AppColors.accentGold.withValues(alpha: 0.4),
+              ),
+            ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                if (isSelected)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Icon(
-                      Icons.check_rounded,
-                      color: AppColors.accentGold,
-                      size: 16,
-                    ),
-                  ),
+                Icon(icon, color: AppColors.accentGold, size: 18.wSp),
+                SizedBox(width: 8.wW),
                 Expanded(
-                  child: Text(
-                    labelBuilder(context, item),
-                    textAlign:
-                        Localizations.localeOf(context).languageCode == 'en'
-                        ? TextAlign.left
-                        : TextAlign.right,
-                    textDirection:
-                        Localizations.localeOf(context).languageCode == 'en'
-                        ? TextDirection.ltr
-                        : TextDirection.rtl,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textPrimary,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 10.wSp,
+                          color: AppColors.accentGold,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textDirection:
+                            Localizations.localeOf(context).languageCode == 'en'
+                            ? TextDirection.ltr
+                            : TextDirection.rtl,
+                      ),
+                      Text(
+                        labelBuilder(context, value),
+                        textAlign:
+                            Localizations.localeOf(context).languageCode == 'en'
+                            ? TextAlign.left
+                            : TextAlign.right,
+                        textDirection:
+                            Localizations.localeOf(context).languageCode == 'en'
+                            ? TextDirection.ltr
+                            : TextDirection.rtl,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14.wSp,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.accentGold,
+                  size: 20.wSp,
                 ),
               ],
             ),
           ),
         );
-      }).toList(),
-      child: Container(
-        height: null,
-        width: MediaQuery.sizeOf(context).width,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceCream,
-          borderRadius: BorderRadius.circular(10.wR),
-          border: Border.all(
-            color: AppColors.accentGold.withValues(alpha: 0.4),
+      },
+    );
+  }
+}
+
+class _PopupMenuScrollableContent<T> extends StatefulWidget {
+  final List<T> items;
+  final T value;
+  final String Function(BuildContext, T) labelBuilder;
+  final double maxHeight;
+  final double itemHeight;
+
+  const _PopupMenuScrollableContent({
+    required this.items,
+    required this.value,
+    required this.labelBuilder,
+    required this.maxHeight,
+    required this.itemHeight,
+  });
+
+  @override
+  State<_PopupMenuScrollableContent<T>> createState() => _PopupMenuScrollableContentState<T>();
+}
+
+class _PopupMenuScrollableContentState<T> extends State<_PopupMenuScrollableContent<T>> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    final index = widget.items.indexOf(widget.value);
+    double offset = 0;
+    if (index != -1) {
+      offset = (index * widget.itemHeight) - (widget.maxHeight / 2) + (widget.itemHeight / 2);
+      if (offset < 0) offset = 0;
+      double maxScroll = (widget.items.length * widget.itemHeight) - widget.maxHeight;
+      if (maxScroll < 0) maxScroll = 0;
+      if (offset > maxScroll) offset = maxScroll;
+    }
+    _scrollController = ScrollController(initialScrollOffset: offset);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: widget.maxHeight),
+      child: RawScrollbar(
+        controller: _scrollController,
+        thumbVisibility: true,
+        thickness: 4,
+        radius: const Radius.circular(8),
+        thumbColor: AppColors.accentGold.withValues(alpha: 0.5),
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: widget.items.map((item) {
+              final isSelected = item == widget.value;
+              return InkWell(
+                onTap: () => Navigator.pop(context, item),
+                child: Container(
+                  width: double.infinity,
+                  height: widget.itemHeight,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  alignment: Alignment.centerRight,
+                  color: isSelected
+                      ? AppColors.accentGold.withValues(alpha: 0.1)
+                      : Colors.transparent,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isSelected)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Icon(
+                            Icons.check_rounded,
+                            color: AppColors.accentGold,
+                            size: 16,
+                          ),
+                        ),
+                      Expanded(
+                        child: Text(
+                          widget.labelBuilder(context, item),
+                          textAlign:
+                              Localizations.localeOf(context).languageCode == 'en'
+                              ? TextAlign.left
+                              : TextAlign.right,
+                          textDirection:
+                              Localizations.localeOf(context).languageCode == 'en'
+                              ? TextDirection.ltr
+                              : TextDirection.rtl,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14.wSp,
+                            color: AppColors.textPrimary,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
           ),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.accentGold, size: 18.wSp),
-            SizedBox(width: 8.wW),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 10.wSp,
-                      color: AppColors.accentGold,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textDirection:
-                        Localizations.localeOf(context).languageCode == 'en'
-                        ? TextDirection.ltr
-                        : TextDirection.rtl,
-                  ),
-                  Text(
-                    labelBuilder(context, value),
-                    textAlign:
-                        Localizations.localeOf(context).languageCode == 'en'
-                        ? TextAlign.left
-                        : TextAlign.right,
-                    textDirection:
-                        Localizations.localeOf(context).languageCode == 'en'
-                        ? TextDirection.ltr
-                        : TextDirection.rtl,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14.wSp,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: AppColors.accentGold,
-              size: 20.wSp,
-            ),
-          ],
         ),
       ),
     );
