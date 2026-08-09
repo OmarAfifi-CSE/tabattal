@@ -54,6 +54,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
       final numAyahs = QuranMetadata.surahLengths[i - 1];
       // Use progress (0.0 to 1.0) instead of just bool so partial downloads are shown
       final progress = await _downloadManager.getSurahDownloadProgress(
+        _selectedCategory,
         _selectedReciter,
         i,
         numAyahs,
@@ -79,6 +80,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
     final numAyahs = QuranMetadata.surahLengths[surah - 1];
     try {
       await _downloadManager.downloadSurah(
+        _selectedCategory,
         _selectedReciter,
         surah,
         numAyahs,

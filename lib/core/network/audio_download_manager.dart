@@ -54,20 +54,20 @@ class AudioDownloadManager {
   };
 
   /// Helper to get the flat reciter path from any category
-  String _getReciterPath(String reciterName) {
-    for (final category in reciterCategories.values) {
-      if (category.containsKey(reciterName)) {
-        return category[reciterName]!;
+  static String getReciterPath(String categoryName, String reciterName) {
+    if (reciterCategories.containsKey(categoryName)) {
+      if (reciterCategories[categoryName]!.containsKey(reciterName)) {
+        return reciterCategories[categoryName]![reciterName]!;
       }
     }
     return 'Alafasy_128kbps'; // Default fallback
   }
 
   /// Returns the base directory for a specific reciter
-  Future<String> getReciterDirectory(String reciterKey) async {
+  Future<String> getReciterDirectory(String category, String reciterKey) async {
     if (kIsWeb) return ''; // Not supported on web
     final dir = await getApplicationDocumentsDirectory();
-    final reciterPath = reciterKey.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    final reciterPath = getReciterPath(category, reciterKey);
     final targetDir = Directory('${dir.path}/audio/$reciterPath');
     if (!await targetDir.exists()) {
       await targetDir.create(recursive: true);
@@ -76,9 +76,9 @@ class AudioDownloadManager {
   }
 
   /// Returns the local path for a specific verse if it exists, otherwise null
-  Future<String?> getLocalVersePath(String reciterKey, int verseId) async {
+  Future<String?> getLocalVersePath(String category, String reciterKey, int verseId) async {
     if (kIsWeb) return null;
-    final dirPath = await getReciterDirectory(reciterKey);
+    final dirPath = await getReciterDirectory(category, reciterKey);
     final file = File('$dirPath/$verseId.mp3');
     if (await file.exists()) {
       return file.path;
@@ -88,11 +88,12 @@ class AudioDownloadManager {
 
   /// Returns the local path for a specific verse if it exists, otherwise null
   Future<String> getVerseAudioPath(
+    String category,
     String reciterKey,
     int surah,
     int ayah,
   ) async {
-    final reciterPath = _getReciterPath(reciterKey);
+    final reciterPath = getReciterPath(category, reciterKey);
     final surahStr = surah.toString().padLeft(3, '0');
     final ayahStr = ayah.toString().padLeft(3, '0');
 
@@ -100,7 +101,7 @@ class AudioDownloadManager {
 
     if (kIsWeb) return url;
 
-    final dirPath = await getReciterDirectory(reciterKey);
+    final dirPath = await getReciterDirectory(category, reciterKey);
     final verseId = surah * 1000 + ayah;
     final savePath = '$dirPath/$verseId.mp3';
 
@@ -113,12 +114,13 @@ class AudioDownloadManager {
 
   /// Downloads a specific verse audio file
   Future<String> downloadVerse(
+    String category,
     String reciterKey,
     int surah,
     int ayah,
     Function(double)? onProgress,
   ) async {
-    final reciterPath = _getReciterPath(reciterKey);
+    final reciterPath = getReciterPath(category, reciterKey);
     final surahStr = surah.toString().padLeft(3, '0');
     final ayahStr = ayah.toString().padLeft(3, '0');
 
@@ -126,7 +128,7 @@ class AudioDownloadManager {
 
     if (kIsWeb) return url;
 
-    final dirPath = await getReciterDirectory(reciterKey);
+    final dirPath = await getReciterDirectory(category, reciterKey);
     final verseId = surah * 1000 + ayah;
     final savePath = '$dirPath/$verseId.mp3';
     final tempPath = '$savePath.temp';
@@ -181,12 +183,13 @@ class AudioDownloadManager {
 
   /// Checks if an entire Surah is already downloaded locally
   Future<bool> isSurahDownloaded(
+    String category,
     String reciterKey,
     int surah,
     int numAyahs,
   ) async {
     if (kIsWeb) return false;
-    final dirPath = await getReciterDirectory(reciterKey);
+    final dirPath = await getReciterDirectory(category, reciterKey);
     for (int ayah = 1; ayah <= numAyahs; ayah++) {
       final verseId = surah * 1000 + ayah;
       final file = File('$dirPath/$verseId.mp3');
@@ -198,9 +201,9 @@ class AudioDownloadManager {
   }
 
   /// Deletes all downloaded audio for a specific surah
-  Future<void> deleteSurah(String reciterKey, int surah, int numAyahs) async {
+  Future<void> deleteSurah(String category, String reciterKey, int surah, int numAyahs) async {
     if (kIsWeb) return;
-    final dirPath = await getReciterDirectory(reciterKey);
+    final dirPath = await getReciterDirectory(category, reciterKey);
     for (int ayah = 1; ayah <= numAyahs; ayah++) {
       final verseId = surah * 1000 + ayah;
       final file = File('$dirPath/$verseId.mp3');
@@ -213,12 +216,13 @@ class AudioDownloadManager {
   /// Returns download progress for a surah (0.0 to 1.0).
   /// Counts how many ayahs are already on disk vs total.
   Future<double> getSurahDownloadProgress(
+    String category,
     String reciterKey,
     int surah,
     int numAyahs,
   ) async {
     if (kIsWeb || numAyahs == 0) return 0.0;
-    final dirPath = await getReciterDirectory(reciterKey);
+    final dirPath = await getReciterDirectory(category, reciterKey);
     int count = 0;
     for (int ayah = 1; ayah <= numAyahs; ayah++) {
       final verseId = surah * 1000 + ayah;
@@ -229,6 +233,7 @@ class AudioDownloadManager {
 
   /// Downloads an entire Surah by downloading all its ayahs sequentially
   Future<void> downloadSurah(
+    String category,
     String reciterKey,
     int surah,
     int numAyahs, {
@@ -237,7 +242,7 @@ class AudioDownloadManager {
     int downloadedCount = 0;
 
     // Check what's already downloaded to initialize progress properly
-    final dirPath = await getReciterDirectory(reciterKey);
+    final dirPath = await getReciterDirectory(category, reciterKey);
     for (int ayah = 1; ayah <= numAyahs; ayah++) {
       final verseId = surah * 1000 + ayah;
       if (await File('$dirPath/$verseId.mp3').exists()) {
@@ -254,7 +259,7 @@ class AudioDownloadManager {
     for (int ayah = 1; ayah <= numAyahs; ayah++) {
       final verseId = surah * 1000 + ayah;
       if (!await File('$dirPath/$verseId.mp3').exists()) {
-        await downloadVerse(reciterKey, surah, ayah, null);
+        await downloadVerse(category, reciterKey, surah, ayah, null);
         downloadedCount++;
         if (onProgress != null) {
           onProgress(downloadedCount / numAyahs);
@@ -264,8 +269,8 @@ class AudioDownloadManager {
   }
 
   /// Constructs the streaming URL for a verse
-  String getStreamingUrl(String reciterKey, int surah, int ayah) {
-    final reciterPath = _getReciterPath(reciterKey);
+  String getStreamingUrl(String category, String reciterKey, int surah, int ayah) {
+    final reciterPath = getReciterPath(category, reciterKey);
     final surahStr = surah.toString().padLeft(3, '0');
     final ayahStr = ayah.toString().padLeft(3, '0');
     return 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
@@ -274,6 +279,7 @@ class AudioDownloadManager {
   /// Predictive Prefetching Queue Engine (Anti-Stuttering)
   /// Instantly fires background downloads for N+1, N+2...
   Future<void> prefetchVerses(
+    String category,
     String reciterKey,
     int currentSurah,
     int currentAyah, {
@@ -299,11 +305,11 @@ class AudioDownloadManager {
       if (_activePrefetches.containsKey(verseId)) continue;
 
       // Check if file already exists locally
-      final localPath = await getLocalVersePath(reciterKey, verseId);
+      final localPath = await getLocalVersePath(category, reciterKey, verseId);
       if (localPath != null) continue;
 
       // Launch background download task and catch errors silently since it's just prefetching
-      final downloadTask = downloadVerse(reciterKey, surah, ayah, null)
+      final downloadTask = downloadVerse(category, reciterKey, surah, ayah, null)
           .catchError((_) => '')
           .whenComplete(() {
             _activePrefetches.remove(verseId);

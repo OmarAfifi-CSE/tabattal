@@ -92,20 +92,8 @@ class _AudioSettingsSheetContentState
           0; // Fallback to default if saved value was removed
     }
 
-    // Find category for current reciter
-    final currentReciter = bloc.currentReciter;
-    String foundCategory = widget.audioPrefs.category;
-    String foundReciter = currentReciter;
-
-    for (final entry in AudioDownloadManager.reciterCategories.entries) {
-      if (entry.value.containsKey(currentReciter)) {
-        foundCategory = entry.key;
-        foundReciter = currentReciter;
-        break;
-      }
-    }
-    _selectedCategory = foundCategory;
-    _selectedReciter = foundReciter;
+    _selectedCategory = bloc.currentCategory;
+    _selectedReciter = bloc.currentReciter;
   }
 
   List<String> get _recitersForCategory =>
@@ -137,7 +125,7 @@ class _AudioSettingsSheetContentState
   }
 
   void _applyAndPlay() {
-    context.read<AudioBloc>().add(ChangeReciter(_selectedReciter));
+    context.read<AudioBloc>().add(ChangeReciter(_selectedCategory, _selectedReciter));
     if (widget.verseId != null) {
       context.read<AudioBloc>().add(PlayVerse('', widget.verseId!));
     }

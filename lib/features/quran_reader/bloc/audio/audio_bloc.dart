@@ -63,6 +63,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     return _cachedArtUri!;
   }
 
+  late String _currentCategory;
   late String _currentReciter;
   late int _currentRepeatCount;
 
@@ -73,6 +74,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   Timer? _sleepTimer;
 
   String get currentReciter => _currentReciter;
+  String get currentCategory => _currentCategory;
   int get currentRepeatCount => _currentRepeatCount;
 
   late bool _playOnce;
@@ -81,6 +83,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   AudioBloc(this._audioHandler, this._downloadManager, this._prefs)
     : _audioPlayer = _audioHandler.player,
       super(AudioIdle()) {
+    _currentCategory = _prefs.category;
     _currentReciter = _prefs.reciter;
     _currentRepeatCount = _prefs.repeatCount;
     _playOnce = _prefs.playOnce;
@@ -256,11 +259,12 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   /// Returns the local path, downloading first if not yet cached.
   Future<String> _ensureLocalPath(int surah, int ayah, int verseId) async {
     final existing = await _downloadManager.getLocalVersePath(
+      _currentCategory,
       _currentReciter,
       verseId,
     );
     if (existing != null) return existing;
-    return _downloadManager.downloadVerse(_currentReciter, surah, ayah, null);
+    return _downloadManager.downloadVerse(_currentCategory, _currentReciter, surah, ayah, null);
   }
 
   /// Returns up to [count] consecutive VerseRefs starting from [startVerse],
@@ -585,7 +589,9 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   }
 
   void _onChangeReciter(ChangeReciter event, Emitter<AudioState> emit) {
+    _currentCategory = event.categoryName;
     _currentReciter = event.reciterName;
+    _prefs.saveCategory(event.categoryName);
     _prefs.saveReciter(event.reciterName);
     if (state is AudioPlaying || state is AudioPaused) {
       if (_currentVerseIds.isNotEmpty) {

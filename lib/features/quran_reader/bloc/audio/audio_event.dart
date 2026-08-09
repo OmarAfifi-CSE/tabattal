@@ -66,12 +66,13 @@ class AudioErrorEvent extends AudioEvent {
 }
 
 class ChangeReciter extends AudioEvent {
+  final String categoryName;
   final String reciterName;
 
-  const ChangeReciter(this.reciterName);
+  const ChangeReciter(this.categoryName, this.reciterName);
 
   @override
-  List<Object> get props => [reciterName];
+  List<Object> get props => [categoryName, reciterName];
 }
 
 class ChangeRepeatCount extends AudioEvent {
