@@ -59,6 +59,12 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   late final Animation<double> _bookmarkPulseAnimation;
   int? _bookmarkHighlightVerseId;
 
+  // Cached data for O(1) lookups and avoiding re-parsing per frame
+  List<LineData>? _cachedLines;
+  Map<int, LineData> _lineMap = {};
+  final Map<String, int> _verseKeyToIntIdMap = {};
+  final Map<String, ({int surah, int ayah})> _parsedVerseKeys = {};
+
   // ---------------------------------------------------------------------------
   // Lifecycle
   // ---------------------------------------------------------------------------
@@ -110,8 +116,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
   Future<void> _loadPageFont() async {
     setState(() => _isFontLoaded = false);
-    // On Web, FontLoader.load() blocks the main thread. We delay it slightly
-    // so it doesn't drop frames during the PageView swipe animation.
+    // Delay slightly so it doesn't drop frames during the PageView swipe animation.
+    await Future.delayed(const Duration(milliseconds: 150));
     if (!mounted) return;
     await FontService.loadFontForPage(widget.pageNumber);
     if (mounted) setState(() => _isFontLoaded = true);
@@ -132,12 +138,11 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   /// Computes the screen rect occupied by [verseKey] using the page column layout.
   Rect _calculateVerseScreenRect(
     String verseKey,
-    List<LineData> lines,
     Offset fallbackPosition,
   ) {
     int minLine = 16;
     int maxLine = 0;
-    for (final line in lines) {
+    for (final line in _cachedLines ?? []) {
       for (final word in line.words) {
         if (word.verseKey == verseKey) {
           if (line.lineNumber < minLine) minLine = line.lineNumber;
@@ -176,14 +181,13 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     BuildContext context,
     Offset tapPosition,
     int verseId,
-    List<LineData> lines,
   ) {
     if (_activeOverlayEntry != null) _removeVerseMenu();
 
     setState(() => _activeVerseId = verseId);
 
     final verseKey = ArabicTextUtils.verseIdToVerseKey(verseId);
-    final verseRect = _calculateVerseScreenRect(verseKey, lines, tapPosition);
+    final verseRect = _calculateVerseScreenRect(verseKey, tapPosition);
 
     // A partial model carrying only the fields the menu needs (id + verseKey).
     final partialVerseForMenu = VerseModel(
@@ -237,18 +241,12 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   // ---------------------------------------------------------------------------
 
   /// Scans forward from [lineNumber] to find if a new Surah starts on this page.
-  ({int ayah1Line, int surahId})? _findNextSurahStartOnPage(
-    int lineNumber,
-    List<LineData> lines,
-  ) {
+  ({int ayah1Line, int surahId})? _findNextSurahStartOnPage(int lineNumber) {
     for (int l = lineNumber + 1; l <= 15; l++) {
-      final lineData = lines.firstWhere(
-        (e) => e.lineNumber == l,
-        orElse: () => LineData(lineNumber: l, words: []),
-      );
-      if (lineData.words.isNotEmpty) {
+      final lineData = _lineMap[l];
+      if (lineData != null && lineData.words.isNotEmpty) {
         final vk = lineData.words.first.verseKey;
-        final parsed = ArabicTextUtils.parseVerseKey(vk);
+        final parsed = _parsedVerseKeys[vk];
         if (parsed != null && parsed.ayah == 1) {
           return (ayah1Line: l, surahId: parsed.surah);
         }
@@ -259,30 +257,22 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   }
 
   /// Scans backward from [lineNumber] to find the Surah on the line above.
-  int? _findPreviousSurahId(int lineNumber, List<LineData> lines) {
+  int? _findPreviousSurahId(int lineNumber) {
     for (int l = lineNumber - 1; l >= 1; l--) {
-      final lineData = lines.firstWhere(
-        (e) => e.lineNumber == l,
-        orElse: () => LineData(lineNumber: l, words: []),
-      );
-      if (lineData.words.isNotEmpty) {
-        return ArabicTextUtils.parseVerseKey(
-          lineData.words.last.verseKey,
-        )?.surah;
+      final lineData = _lineMap[l];
+      if (lineData != null && lineData.words.isNotEmpty) {
+        return _parsedVerseKeys[lineData.words.last.verseKey]?.surah;
       }
     }
     return null;
   }
 
   /// Counts empty lines immediately before [lineNumber].
-  int _countEmptyLinesBefore(int lineNumber, List<LineData> lines) {
+  int _countEmptyLinesBefore(int lineNumber) {
     int count = 0;
     for (int l = lineNumber - 1; l >= 1; l--) {
-      final lineData = lines.firstWhere(
-        (e) => e.lineNumber == l,
-        orElse: () => LineData(lineNumber: l, words: []),
-      );
-      if (lineData.words.isEmpty) {
+      final lineData = _lineMap[l];
+      if (lineData == null || lineData.words.isEmpty) {
         count++;
       } else {
         break;
@@ -293,11 +283,10 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
   Widget _buildEmptyLineWidget(
     int lineNumber,
-    List<LineData> lines,
     MushafTheme mushafTheme,
   ) {
     // ── Case A: A new Surah starts later on this page ──────────────────────
-    final nextSurah = _findNextSurahStartOnPage(lineNumber, lines);
+    final nextSurah = _findNextSurahStartOnPage(lineNumber);
     if (nextSurah != null) {
       final (:ayah1Line, :surahId) = nextSurah;
       final header = SurahHeaderWidgetMobile(surahNumber: surahId);
@@ -319,12 +308,9 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       }
 
       // Determine whether the header should appear on this line or one earlier
-      final prevPrevLineData = lines.firstWhere(
-        (l) => l.lineNumber == ayah1Line - 2,
-        orElse: () => LineData(lineNumber: ayah1Line - 2, words: []),
-      );
+      final prevPrevLineData = _lineMap[ayah1Line - 2];
       final bool mustSquashBothOnLineMinus1 =
-          ayah1Line > 2 && prevPrevLineData.words.isNotEmpty ||
+          ayah1Line > 2 && prevPrevLineData != null && prevPrevLineData.words.isNotEmpty ||
           ayah1Line == 2 && widget.pageNumber == 1;
 
       if (lineNumber == ayah1Line - 1) {
@@ -346,11 +332,11 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       return SizedBox(height: 45.h);
     }
 
-    final previousSurahId = _findPreviousSurahId(lineNumber, lines);
+    final previousSurahId = _findPreviousSurahId(lineNumber);
     if (previousSurahId != null) {
       final upcomingSurahId = previousSurahId + 1;
       if (upcomingSurahId <= 114) {
-        final emptyLinesBefore = _countEmptyLinesBefore(lineNumber, lines);
+        final emptyLinesBefore = _countEmptyLinesBefore(lineNumber);
         final header = SurahHeaderWidgetMobile(surahNumber: upcomingSurahId);
         final basmala = Center(
           child: Text(
@@ -385,7 +371,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     required bool isBookmarkHighlighted,
     required bool isPermanentlyBookmarked,
     required AudioState audioState,
-    required List<LineData> lines,
   }) {
     final pageStr = widget.pageNumber.toString().padLeft(3, '0');
     final customFontFamily = 'QCF_P$pageStr';
@@ -395,7 +380,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       if (_activeVerseId == verseId) {
         _removeVerseMenu();
       } else {
-        _showVerseMenu(context, details.globalPosition, verseId, lines);
+        _showVerseMenu(context, details.globalPosition, verseId);
       }
     }
 
@@ -465,16 +450,14 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   Widget _buildWordRow({
     required List<WordModel> lineWords,
     required int? playingVerseId,
-    required Map<String, int> verseKeyToIntIdMap,
     required AudioState audioState,
     required BookmarkState bookmarkState,
-    required List<LineData> lines,
   }) {
     final List<Widget> wordWidgets = [];
     bool fatihahBasmalaAdded = false;
 
     for (final word in lineWords) {
-      final verseId = verseKeyToIntIdMap[word.verseKey] ?? 0;
+      final verseId = _verseKeyToIntIdMap[word.verseKey] ?? 0;
 
       // Al-Fatiha Basmala: replace individual QCF_P001 glyphs with a single unified widget
       if (word.verseKey == '1:1' && word.charTypeName != 'end') {
@@ -552,7 +535,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
                     context,
                     details.globalPosition,
                     verseId,
-                    lines,
                   );
                 }
               },
@@ -569,18 +551,20 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         continue;
       }
 
+      final isMenuHighlighted = _activeVerseId == verseId;
+      final isAudioHighlighted = playingVerseId == verseId;
+      final isBookmarkHighlighted = _bookmarkHighlightVerseId == verseId;
       final bool isBookmarked = bookmarkState.isBookmarked(word.verseKey);
 
       wordWidgets.add(
         _buildWordWidget(
           word: word,
           verseId: verseId,
-          isMenuHighlighted: _activeVerseId == verseId,
-          isAudioHighlighted: playingVerseId == verseId,
-          isBookmarkHighlighted: _bookmarkHighlightVerseId == verseId,
+          isMenuHighlighted: isMenuHighlighted,
+          isAudioHighlighted: isAudioHighlighted,
+          isBookmarkHighlighted: isBookmarkHighlighted,
           isPermanentlyBookmarked: isBookmarked,
           audioState: audioState,
-          lines: lines,
         ),
       );
     }
@@ -602,6 +586,26 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     final lines = state.lines;
     if (lines.isEmpty) return const SizedBox();
 
+    if (_cachedLines != lines) {
+      _cachedLines = lines;
+      _lineMap = {for (final line in lines) line.lineNumber: line};
+
+      _verseKeyToIntIdMap.clear();
+      _parsedVerseKeys.clear();
+
+      for (final line in lines) {
+        for (final word in line.words) {
+          final vk = word.verseKey;
+          if (_parsedVerseKeys.containsKey(vk)) continue;
+          final parsed = ArabicTextUtils.parseVerseKey(vk);
+          if (parsed != null) {
+            _parsedVerseKeys[vk] = parsed;
+            _verseKeyToIntIdMap[vk] = parsed.surah * 1000 + parsed.ayah;
+          }
+        }
+      }
+    }
+
     String firstVerseKey = '1:1';
     for (final line in lines) {
       if (line.words.isNotEmpty) {
@@ -611,8 +615,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     }
 
     final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final surahNumber =
-        ArabicTextUtils.parseVerseKey(firstVerseKey)?.surah ?? 1;
+    final surahNumber = _parsedVerseKeys[firstVerseKey]?.surah ?? 1;
     final surahName = isEn
         ? "Surah ${QuranMetadata.getSurahNameEnglish(surahNumber)}"
         : QuranMetadata.getSurahNameWithTashkeel(surahNumber);
@@ -655,16 +658,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
                   playingVerseId = audioState.currentVerseId;
                 }
 
-                // Pre-compute the verse key → integer ID mapping for fast lookup per word
-                final verseKeyToIntIdMap = <String, int>{
-                  for (final line in lines)
-                    for (final word in line.words)
-                      if (ArabicTextUtils.parseVerseKey(word.verseKey) != null)
-                        word.verseKey: ArabicTextUtils.verseKeyToVerseId(
-                          word.verseKey,
-                        ),
-                };
-
                 return MediaQuery(
                   data: MediaQuery.of(
                     context,
@@ -685,16 +678,11 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: List.generate(15, (index) {
                             final lineNumber = index + 1;
-                            final lineData = lines.firstWhere(
-                              (l) => l.lineNumber == lineNumber,
-                              orElse: () =>
-                                  LineData(lineNumber: lineNumber, words: []),
-                            );
+                            final lineData = _lineMap[lineNumber];
 
-                            if (lineData.words.isEmpty) {
+                            if (lineData == null || lineData.words.isEmpty) {
                               return _buildEmptyLineWidget(
                                 lineNumber,
-                                lines,
                                 mushafTheme,
                               );
                             }
@@ -702,10 +690,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
                             return _buildWordRow(
                               lineWords: lineData.words,
                               playingVerseId: playingVerseId,
-                              verseKeyToIntIdMap: verseKeyToIntIdMap,
                               audioState: audioState,
                               bookmarkState: bookmarkState,
-                              lines: lines,
                             );
                           }),
                         ), // Column
