@@ -273,6 +273,8 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                                                   'page_$rightPage',
                                                 ),
                                                 pageNumber: rightPage,
+                                                isCurrentPage:
+                                                    rightPage == _currentPage,
                                                 onNavigateToPage:
                                                     (page, {verseKey}) =>
                                                         _jumpToPage(
@@ -321,6 +323,8 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                                                     'page_$leftPage',
                                                   ),
                                                   pageNumber: leftPage,
+                                                  isCurrentPage:
+                                                      leftPage == _currentPage,
                                                   onNavigateToPage:
                                                       (page, {verseKey}) =>
                                                           _jumpToPage(
@@ -365,6 +369,8 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                                                 'page_$currentPage',
                                               ),
                                               pageNumber: currentPage,
+                                              isCurrentPage:
+                                                  currentPage == _currentPage,
                                               onNavigateToPage:
                                                   (page, {verseKey}) =>
                                                       _jumpToPage(

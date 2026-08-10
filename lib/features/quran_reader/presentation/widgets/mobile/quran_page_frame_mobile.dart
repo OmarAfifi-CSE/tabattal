@@ -157,10 +157,10 @@ class QuranPageFrameMobile extends StatelessWidget {
 
                 // ── LAYER 2: Quran text content ─────────────────────────────
                 Positioned(
-                  top: pageHeight * 0.04,
-                  bottom: pageHeight * 0.04,
-                  left: pageWidth * 0.08,
-                  right: pageWidth * 0.08,
+                  top: 0,
+                  bottom: 0,
+                  left: pageWidth * 0.09,
+                  right: pageWidth * 0.09,
                   child: RepaintBoundary(child: child),
                 ),
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../l10n/app_localizations.dart';
@@ -36,12 +37,14 @@ class QuranPageWidgetTablet extends StatefulWidget {
   final int pageNumber;
   final void Function(int page, {String? verseKey})? onNavigateToPage;
   final String? highlightVerseKey;
+  final bool isCurrentPage;
 
   const QuranPageWidgetTablet({
     super.key,
     required this.pageNumber,
     this.onNavigateToPage,
     this.highlightVerseKey,
+    this.isCurrentPage = false,
   });
 
   @override
@@ -58,6 +61,9 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
   late final AnimationController _bookmarkPulseController;
   late final Animation<double> _bookmarkPulseAnimation;
   int? _bookmarkHighlightVerseId;
+
+  double? _precomputedCanvasWidth;
+  double _lastComputedAvailH = 0;
 
   // Cached data for O(1) lookups and avoiding re-parsing per frame
   List<LineData>? _cachedLines;
@@ -91,7 +97,13 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
   @override
   void didUpdateWidget(QuranPageWidgetTablet oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.pageNumber != oldWidget.pageNumber) _loadPageFont();
+    if (widget.pageNumber != oldWidget.pageNumber) {
+      _loadPageFont();
+      _precomputedCanvasWidth = null;
+    }
+    if (!widget.isCurrentPage && oldWidget.isCurrentPage) {
+      _removeVerseMenu();
+    }
     if (widget.highlightVerseKey != oldWidget.highlightVerseKey) {
       if (widget.highlightVerseKey != null) {
         _activateBookmarkHighlight(widget.highlightVerseKey!);
@@ -135,6 +147,66 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
     });
   }
 
+  double _computeCanvasWidth(double availW, double availH) {
+    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+    final fontFamily = 'QCF_P$pageStr';
+    final fontSize = 32.sp;
+    var maxLineWidth = 0.0;
+
+    for (final lineData in _lineMap.values) {
+      if (lineData.words.isEmpty) continue;
+      var lineWidth = 0.0;
+      for (final word in lineData.words) {
+        final text = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
+        if (text.isEmpty) continue;
+        final tp = TextPainter(
+          text: TextSpan(
+            text: text,
+            style: TextStyle(fontFamily: fontFamily, fontSize: fontSize),
+          ),
+          textDirection: TextDirection.rtl,
+        )..layout();
+        lineWidth += tp.width;
+      }
+      if (lineWidth > maxLineWidth) maxLineWidth = lineWidth;
+    }
+
+    int textLineCount = 0;
+    int surahHeaderCount = 0;
+    int spacerCount = 0;
+
+    for (int lineNumber = 1; lineNumber <= 15; lineNumber++) {
+      final lineData = _lineMap[lineNumber];
+      if (lineData != null && lineData.words.isNotEmpty) {
+        textLineCount++;
+      } else {
+        final nextSurah = _findNextSurahStartOnPage(lineNumber);
+        if (nextSurah != null && lineNumber == nextSurah.ayah1Line - 1) {
+          surahHeaderCount++;
+        } else {
+          spacerCount++;
+        }
+      }
+    }
+
+    final textLineH = fontSize * 1.5 + 4.0.h;
+    final totalChildrenH =
+        textLineCount * textLineH +
+        surahHeaderCount * 85.0.h +
+        spacerCount * ((widget.pageNumber == 1 || widget.pageNumber == 2) ? 0.0 : 45.0.h);
+
+    const paddingFactor = 1.0 / (1.0 - 0.027 - 0.032);
+    final minCanvasWForHeight =
+        availW > 0 && availH > 0
+            ? totalChildrenH * paddingFactor * availW / availH
+            : 0.0;
+
+    final textMeasuredW = maxLineWidth > 0 ? maxLineWidth : 490.w;
+    return textMeasuredW > minCanvasWForHeight
+        ? textMeasuredW
+        : minCanvasWForHeight;
+  }
+
   /// Computes the screen rect occupied by [verseKey] using the page column layout.
   Rect _calculateVerseScreenRect(
     String verseKey,
@@ -159,6 +231,30 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
         _pageColumnKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) {
       return Rect.fromCenter(center: fallbackPosition, width: 0, height: 0);
+    }
+
+    if (widget.pageNumber == 1 || widget.pageNumber == 2) {
+      final flex = renderBox as RenderFlex;
+      double canvasTop = 0;
+      double canvasBottom = renderBox.size.height;
+      RenderBox? child = flex.firstChild;
+      int childIndex = 1;
+      while (child != null) {
+        final childData = child.parentData! as FlexParentData;
+        if (childIndex == minLine) canvasTop = childData.offset.dy;
+        if (childIndex == maxLine) {
+          canvasBottom = childData.offset.dy + child.size.height;
+        }
+        if (childIndex >= maxLine) break;
+        childIndex++;
+        child = flex.childAfter(child);
+      }
+      return Rect.fromLTRB(
+        0,
+        flex.localToGlobal(Offset(0, canvasTop)).dy,
+        MediaQuery.sizeOf(context).width,
+        flex.localToGlobal(Offset(0, canvasBottom)).dy,
+      );
     }
 
     final lineHeight = renderBox.size.height / 15;
@@ -318,9 +414,13 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
 
       if (lineNumber == ayah1Line - 1) {
         return mustSquashBothOnLineMinus1
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [header, basmala],
+            ? Transform.scale(
+                scale: 0.85,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [header, basmala],
+                ),
               )
             : basmala;
       } else if (lineNumber == ayah1Line - 2 && !mustSquashBothOnLineMinus1) {
@@ -330,9 +430,8 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
     }
 
     // ── Case B: Trailing empty lines at end of page ────────────────────────
-    // Pages 1 & 2 use these lines as padding for decorative frames.
     if (widget.pageNumber == 1 || widget.pageNumber == 2) {
-      return SizedBox(height: 45.h);
+      return const SizedBox(height: 0);
     }
 
     final previousSurahId = _findPreviousSurahId(lineNumber);
@@ -670,40 +769,61 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
                   ).copyWith(textScaler: TextScaler.noScaling),
                   child: Directionality(
                     textDirection: TextDirection.rtl,
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      alignment: Alignment.center,
-                      child: SizedBox(
-                        // Use a fixed virtual canvas size instead of expensive IntrinsicWidth
-                        // Increased width from 460 to 490 to prevent horizontal overflow on dense lines like page 453
-                        width: 650,
-                        height: 1050,
-                        child: Column(
-                          key: _pageColumnKey,
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: List.generate(15, (index) {
-                            final lineNumber = index + 1;
-                            final lineData = _lineMap[lineNumber];
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final availW = constraints.maxWidth;
+                        final availH = constraints.maxHeight;
 
-                            if (lineData == null || lineData.words.isEmpty) {
-                              return _buildEmptyLineWidget(
-                                lineNumber,
-                                mushafTheme,
-                              );
-                            }
+                        if (_lineMap.isNotEmpty &&
+                            (_precomputedCanvasWidth == null ||
+                                (availH - _lastComputedAvailH).abs() > 1.0)) {
+                          _lastComputedAvailH = availH;
+                          _precomputedCanvasWidth =
+                              _computeCanvasWidth(availW, availH);
+                        }
 
-                            return _buildWordRow(
-                              lineWords: lineData.words,
-                              playingVerseId: playingVerseId,
-                              audioState: audioState,
-                              bookmarkState: bookmarkState,
-                            );
-                          }),
-                        ), // Column
-                      ), // SizedBox
-                    ), // FittedBox
+                        final canvasW = _precomputedCanvasWidth ?? 490.w;
+                        final canvasH = availH * canvasW / availW;
+                        return FittedBox(
+                          fit: BoxFit.contain,
+                          alignment: Alignment.center,
+                          child: SizedBox(
+                            width: canvasW,
+                            height: canvasH,
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                top: canvasH * 0.027,
+                                bottom: canvasH * 0.032,
+                              ),
+                              child: Column(
+                                key: _pageColumnKey,
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: List.generate(15, (index) {
+                                  final lineNumber = index + 1;
+                                  final lineData = _lineMap[lineNumber];
+
+                                  if (lineData == null || lineData.words.isEmpty) {
+                                    return _buildEmptyLineWidget(
+                                      lineNumber,
+                                      mushafTheme,
+                                    );
+                                  }
+
+                                  return _buildWordRow(
+                                    lineWords: lineData.words,
+                                    playingVerseId: playingVerseId,
+                                    audioState: audioState,
+                                    bookmarkState: bookmarkState,
+                                  );
+                                 }).toList(),
+                              ), // Column
+                            ), // Padding
+                          ), // SizedBox
+                        ); // FittedBox
+                      },
+                    ), // LayoutBuilder
                   ), // Directionality
                 ); // MediaQuery
               },

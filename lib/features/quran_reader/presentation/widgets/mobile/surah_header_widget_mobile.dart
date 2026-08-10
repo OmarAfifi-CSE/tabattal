@@ -154,104 +154,104 @@ class SurahHeaderWidgetMobile extends StatelessWidget {
         ? mushafTheme.textColor
         : mushafTheme.goldColor;
 
-    return SizedBox(
-      width: canvasWidth,
-      child: FittedBox(
-        fit: BoxFit.fitWidth,
-        child: SizedBox(
-          width: canvasWidth,
-          height: 85.0.h,
-          child: Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
-            children: [
-              // 1. The decorative frame from QCF_BSML
-              SizedBox(
-                width: canvasWidth,
-                child: Transform.scale(
-                  scaleX: 1.0,
-                  scaleY: 1.8,
-                  child: FittedBox(
-                    fit: BoxFit.fitWidth,
-                    child: Text(
-                      '\u00F2',
-                      style: TextStyle(
-                        fontFamily: 'QCF_BSML',
-                        fontSize: 60.0.sp,
-                        color: mushafTheme.goldColor,
-                        height: 1.0,
-                      ),
+    // Always render the header at the reference canvas width and let
+    // FittedBox scale it uniformly to whatever width the Column provides.
+    // This keeps all internal positions (surah name, oval text) proportional.
+    return FittedBox(
+      fit: BoxFit.fitWidth,
+      child: SizedBox(
+        width: canvasWidth,
+        height: 85.0.h,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            // 1. The decorative frame from QCF_BSML
+            SizedBox(
+              width: canvasWidth,
+              child: Transform.scale(
+                scaleX: 1.0,
+                scaleY: 1.8,
+                child: FittedBox(
+                  fit: BoxFit.fitWidth,
+                  child: Text(
+                    '\u00F2',
+                    style: TextStyle(
+                      fontFamily: 'QCF_BSML',
+                      fontSize: 60.0.sp,
+                      color: mushafTheme.goldColor,
+                      height: 1.0,
                     ),
                   ),
                 ),
               ),
+            ),
 
-              // 2. The Surah Name from QCF_Surah
-              Transform.translate(
-                offset: Offset(
-                  -10.0.w,
-                  11.0.h,
-                ), // Calibrated center tweak for this ornament
-                child: Text(
-                  '${_getSurahNameGlyph(surahNumber)}${String.fromCharCode(0xE903)}',
-                  style: TextStyle(
-                    fontFamily: 'QCF_Surah',
-                    fontSize: 46.0.sp,
-                    color: innerTextColor,
-                    height: 1.0,
-                  ),
+            // 2. The Surah Name from QCF_Surah
+            Transform.translate(
+              offset: Offset(
+                -10.0.w,
+                11.0.h,
+              ), // Calibrated center tweak for this ornament
+              child: Text(
+                '${_getSurahNameGlyph(surahNumber)}${String.fromCharCode(0xE903)}',
+                style: TextStyle(
+                  fontFamily: 'QCF_Surah',
+                  fontSize: 46.0.sp,
+                  color: innerTextColor,
+                  height: 1.0,
                 ),
               ),
+            ),
 
-              // 3. Right Oval Text (Verses count)
-              Positioned(
-                right: 77.0.w, // Calibrated position within virtual canvas
-                top: 34.0.h,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'آياتها',
-                      style: TextStyle(
-                        fontFamily: 'Amiri',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14.0.sp,
-                        color: innerTextColor,
-                        height: 1.0,
-                      ),
+            // 3. Right Oval Text (Verses count) — in canvasWidth coords
+            Positioned(
+              right: 77.0.w,
+              top: 34.0.h,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'آياتها',
+                    style: TextStyle(
+                      fontFamily: 'Amiri',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.0.sp,
+                      color: innerTextColor,
+                      height: 1.0,
                     ),
-                    Text(
-                      versesCount.toArabicDigits,
-                      style: TextStyle(
-                        fontFamily: 'Amiri',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.0.sp,
-                        color: innerTextColor,
-                        height: 1.0,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // 4. Left Oval Text (Revelation place)
-              Positioned(
-                left: 74.0.w, // Calibrated position within virtual canvas
-                top: 38.0.h,
-                child: Text(
-                  revelationPlace,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Amiri',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14.0.sp,
-                    color: innerTextColor,
-                    height: 1.0,
                   ),
+                  Text(
+                    versesCount.toArabicDigits,
+                    style: TextStyle(
+                      fontFamily: 'Amiri',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.0.sp,
+                      color: innerTextColor,
+                      height: 1.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 4. Left Oval Text (Revelation place) — in canvasWidth coords
+            Positioned(
+              left: 74.0.w,
+              top: 38.0.h,
+              child: Text(
+                revelationPlace,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Amiri',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14.0.sp,
+                  color: innerTextColor,
+                  height: 1.0,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

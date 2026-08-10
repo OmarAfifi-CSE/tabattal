@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../l10n/app_localizations.dart';
@@ -36,12 +37,14 @@ class QuranPageWidgetMobile extends StatefulWidget {
   final int pageNumber;
   final void Function(int page, {String? verseKey})? onNavigateToPage;
   final String? highlightVerseKey;
+  final bool isCurrentPage;
 
   const QuranPageWidgetMobile({
     super.key,
     required this.pageNumber,
     this.onNavigateToPage,
     this.highlightVerseKey,
+    this.isCurrentPage = false,
   });
 
   @override
@@ -58,6 +61,14 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   late final AnimationController _bookmarkPulseController;
   late final Animation<double> _bookmarkPulseAnimation;
   int? _bookmarkHighlightVerseId;
+
+  // Pre-computed canvas width: measured synchronously via TextPainter once per page.
+  // Replaces the old two-pass postFrameCallback approach that caused the
+  // compress → expand animation flash and RenderBox layout assertion.
+  double? _precomputedCanvasWidth;
+  // Track the availH used during last computation so we recompute if it
+  // changes (e.g. audio bar appearing/disappearing changes available height).
+  double _lastComputedAvailH = 0;
 
   // Cached data for O(1) lookups and avoiding re-parsing per frame
   List<LineData>? _cachedLines;
@@ -91,7 +102,14 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   @override
   void didUpdateWidget(QuranPageWidgetMobile oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.pageNumber != oldWidget.pageNumber) _loadPageFont();
+    if (widget.pageNumber != oldWidget.pageNumber) {
+      _loadPageFont();
+      _precomputedCanvasWidth = null; // Reset so new page gets its own measurement
+    }
+    // Dismiss the verse menu when the user swipes to a different page.
+    if (!widget.isCurrentPage && oldWidget.isCurrentPage) {
+      _removeVerseMenu();
+    }
     if (widget.highlightVerseKey != oldWidget.highlightVerseKey) {
       if (widget.highlightVerseKey != null) {
         _activateBookmarkHighlight(widget.highlightVerseKey!);
@@ -135,6 +153,84 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     });
   }
 
+  /// Pre-computes the canvas width by:
+  /// 1. Measuring the maximum text line width via [TextPainter].
+  /// 2. Computing the minimum canvas width needed so that canvasH (= availH × canvasW / availW)
+  ///    is tall enough for ALL 15 Column slots — including SurahHeaders (85.h),
+  ///    basmala spacers (45.h), and empty-page padding (45.h per slot).
+  /// Taking the maximum of both values ensures no Column overflow on any page.
+  double _computeCanvasWidth(double availW, double availH) {
+    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+    final fontFamily = 'QCF_P$pageStr';
+    final fontSize = 32.sp;
+    var maxLineWidth = 0.0;
+
+    for (final lineData in _lineMap.values) {
+      if (lineData.words.isEmpty) continue;
+      var lineWidth = 0.0;
+      for (final word in lineData.words) {
+        final text = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
+        if (text.isEmpty) continue;
+        final tp = TextPainter(
+          text: TextSpan(
+            text: text,
+            style: TextStyle(fontFamily: fontFamily, fontSize: fontSize),
+          ),
+          textDirection: TextDirection.rtl,
+        )..layout();
+        lineWidth += tp.width;
+      }
+      if (lineWidth > maxLineWidth) maxLineWidth = lineWidth;
+    }
+
+    // Count slot types across the 15 Column children.
+    int textLineCount = 0;
+    int surahHeaderCount = 0; // header = 85.h
+    int spacerCount = 0; // empty spacers = 45.h each
+
+    for (int lineNumber = 1; lineNumber <= 15; lineNumber++) {
+      final lineData = _lineMap[lineNumber];
+      if (lineData != null && lineData.words.isNotEmpty) {
+        textLineCount++;
+      } else {
+        // This is an empty slot — can be a surah header or a spacer.
+        // Surah headers appear at most once (first empty line before new surah).
+        final nextSurah = _findNextSurahStartOnPage(lineNumber);
+        if (nextSurah != null && lineNumber == nextSurah.ayah1Line - 1) {
+          surahHeaderCount++;
+        } else {
+          spacerCount++;
+        }
+      }
+    }
+
+    // Estimate total children height in canvas (unscaled) units.
+    // Text line height: fontSize × 1.5 lineHeight + 4.h vertical padding.
+    final textLineH = fontSize * 1.5 + 4.0.h;
+    final surahHeaderH = 85.0.h;
+    // Pages 1 & 2 trailing slots are zero-height (SizedBox(height:0)).
+    final spacerH =
+        (widget.pageNumber == 1 || widget.pageNumber == 2) ? 0.0 : 45.0.h;
+    final totalChildrenH =
+        textLineCount * textLineH +
+        surahHeaderCount * surahHeaderH +
+        spacerCount * spacerH;
+
+    // The Column lives inside Padding(top: canvasH*0.027, bottom: canvasH*0.032),
+    // reducing the available height by 5.9%. Account for this so the Column
+    // never overflows and has proper breathing room between rows.
+    const paddingFactor = 1.0 / (1.0 - 0.027 - 0.032); // ≈ 1.063
+    final minCanvasWForHeight =
+        availW > 0 && availH > 0
+            ? totalChildrenH * paddingFactor * availW / availH
+            : 0.0;
+
+    final textMeasuredW = maxLineWidth > 0 ? maxLineWidth : 490.w;
+    return textMeasuredW > minCanvasWForHeight
+        ? textMeasuredW
+        : minCanvasWForHeight;
+  }
+
   /// Computes the screen rect occupied by [verseKey] using the page column layout.
   Rect _calculateVerseScreenRect(
     String verseKey,
@@ -159,6 +255,35 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         _pageColumnKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) {
       return Rect.fromCenter(center: fallbackPosition, width: 0.w, height: 0.h);
+    }
+
+    // For pages 1 & 2, the Column children have non-uniform heights
+    // (surah header >> basmala > text lines >> zero-height spacers), so the
+    // uniform height/15 estimate gives completely wrong screen positions.
+    // Walk the RenderFlex render tree to get exact canvas-space child offsets,
+    // then convert to screen space via localToGlobal (handles FittedBox scaling).
+    if (widget.pageNumber == 1 || widget.pageNumber == 2) {
+      final flex = renderBox as RenderFlex;
+      double canvasTop = 0;
+      double canvasBottom = renderBox.size.height;
+      RenderBox? child = flex.firstChild;
+      int childIndex = 1;
+      while (child != null) {
+        final childData = child.parentData! as FlexParentData;
+        if (childIndex == minLine) canvasTop = childData.offset.dy;
+        if (childIndex == maxLine) {
+          canvasBottom = childData.offset.dy + child.size.height;
+        }
+        if (childIndex >= maxLine) break;
+        childIndex++;
+        child = flex.childAfter(child);
+      }
+      return Rect.fromLTRB(
+        0,
+        flex.localToGlobal(Offset(0, canvasTop)).dy,
+        MediaQuery.sizeOf(context).width,
+        flex.localToGlobal(Offset(0, canvasBottom)).dy,
+      );
     }
 
     final lineHeight = renderBox.size.height / 15;
@@ -289,6 +414,10 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     final nextSurah = _findNextSurahStartOnPage(lineNumber);
     if (nextSurah != null) {
       final (:ayah1Line, :surahId) = nextSurah;
+      // SurahHeaderWidgetMobile uses FittedBox(fitWidth) which NEEDS tight width
+      // constraints to scale properly. Center converts tight→loose constraints,
+      // so we omit Center and let the outer Column's CrossAxisAlignment.stretch
+      // provide the tight width directly.
       final header = SurahHeaderWidgetMobile(surahNumber: surahId);
       final basmala = Center(
         child: Text(
@@ -315,9 +444,14 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
       if (lineNumber == ayah1Line - 1) {
         return mustSquashBothOnLineMinus1
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [header, basmala],
+            ? Transform.scale(
+                scale: 0.85,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  // stretch so header gets tight width and FittedBox scales correctly
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [header, basmala],
+                ),
               )
             : basmala;
       } else if (lineNumber == ayah1Line - 2 && !mustSquashBothOnLineMinus1) {
@@ -327,9 +461,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     }
 
     // ── Case B: Trailing empty lines at end of page ────────────────────────
-    // Pages 1 & 2 use these lines as padding for decorative frames.
     if (widget.pageNumber == 1 || widget.pageNumber == 2) {
-      return SizedBox(height: 45.h);
+      return const SizedBox(height: 0);
     }
 
     final previousSurahId = _findPreviousSurahId(lineNumber);
@@ -664,39 +797,64 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
                   ).copyWith(textScaler: TextScaler.noScaling),
                   child: Directionality(
                     textDirection: TextDirection.rtl,
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      alignment: Alignment.center,
-                      child: SizedBox(
-                        // Fixed virtual canvas size for mobile
-                        width: 490.w,
-                        height: 1100.h,
-                        child: Column(
-                          key: _pageColumnKey,
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: List.generate(15, (index) {
-                            final lineNumber = index + 1;
-                            final lineData = _lineMap[lineNumber];
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final availW = constraints.maxWidth;
+                        final availH = constraints.maxHeight;
 
-                            if (lineData == null || lineData.words.isEmpty) {
-                              return _buildEmptyLineWidget(
-                                lineNumber,
-                                mushafTheme,
-                              );
-                            }
+                        // Compute (or recompute) canvas width when:
+                        // – first build with data (_precomputedCanvasWidth == null)
+                        // – availH changed by more than 1px (audio bar appear/disappear)
+                        if (_lineMap.isNotEmpty &&
+                            (_precomputedCanvasWidth == null ||
+                                (availH - _lastComputedAvailH).abs() > 1.0)) {
+                          _lastComputedAvailH = availH;
+                          _precomputedCanvasWidth =
+                              _computeCanvasWidth(availW, availH);
+                        }
 
-                            return _buildWordRow(
-                              lineWords: lineData.words,
-                              playingVerseId: playingVerseId,
-                              audioState: audioState,
-                              bookmarkState: bookmarkState,
-                            );
-                          }),
-                        ), // Column
-                      ), // SizedBox
-                    ), // FittedBox
+                        final canvasW = _precomputedCanvasWidth ?? 490.w;
+                        final canvasH = availH * canvasW / availW;
+                        return FittedBox(
+                          fit: BoxFit.contain,
+                          alignment: Alignment.center,
+                          child: SizedBox(
+                            width: canvasW,
+                            height: canvasH,
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                top: canvasH * 0.027,
+                                bottom: canvasH * 0.032,
+                              ),
+                              child: Column(
+                                key: _pageColumnKey,
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: List.generate(15, (index) {
+                                  final lineNumber = index + 1;
+                                  final lineData = _lineMap[lineNumber];
+
+                                  if (lineData == null || lineData.words.isEmpty) {
+                                    return _buildEmptyLineWidget(
+                                      lineNumber,
+                                      mushafTheme,
+                                    );
+                                  }
+
+                                  return _buildWordRow(
+                                    lineWords: lineData.words,
+                                    playingVerseId: playingVerseId,
+                                    audioState: audioState,
+                                    bookmarkState: bookmarkState,
+                                  );
+                                }).toList(),
+                              ), // Column
+                            ), // Padding
+                          ), // SizedBox
+                        ); // FittedBox
+                      },
+                    ), // LayoutBuilder
                   ), // Directionality
                 ); // MediaQuery
               },
