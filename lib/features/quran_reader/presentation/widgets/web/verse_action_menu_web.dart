@@ -16,6 +16,9 @@ import '../../../bloc/bookmark/bookmark_state.dart';
 import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_state.dart';
 import '../../../bloc/audio/audio_event.dart';
+import '../../../bloc/hifz/hifz_bloc.dart';
+import '../../../bloc/hifz/hifz_event.dart';
+import '../../../bloc/hifz/hifz_state.dart';
 
 class OverlayPositionDelegate extends SingleChildLayoutDelegate {
   final Offset tapPosition;
@@ -1115,6 +1118,29 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                   verseId: widget.verse.id,
                                 );
                               }
+                            },
+                          );
+                        },
+                      ),
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: AppColors.divider,
+                      ),
+                      BlocBuilder<HifzBloc, HifzState>(
+                        builder: (context, hifzState) {
+                          final isHifzActive = hifzState.isHifzModeActive;
+                          return _buildMenuItem(
+                            isHifzActive
+                                ? Icons.visibility_off_outlined
+                                : Icons.school_outlined,
+                            isHifzActive
+                                ? 'إيقاف وضع الحفظ'
+                                : 'تفعيل وضع الحفظ',
+                            () {
+                              context.read<HifzBloc>().add(
+                                const ToggleHifzMode(),
+                              );
                             },
                           );
                         },

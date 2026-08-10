@@ -1,4 +1,5 @@
 import '../../widgets/drawer/tablet/quran_drawer_tablet.dart';
+import '../../widgets/hifz/hifz_toolbar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -400,7 +401,8 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                           );
                         },
                       ),
-                      BlocBuilder<AudioBloc, AudioState>(
+                const HifzToolbarWidget(),
+                BlocBuilder<AudioBloc, AudioState>(
                         builder: (context, state) {
                           final isVisible =
                               state is! AudioIdle && state is! AudioError;

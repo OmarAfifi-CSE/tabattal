@@ -33,4 +33,7 @@ class AppColors {
   static Color get borderLight =>
       _theme.innerBorderColor.withValues(alpha: 0.3);
   static Color get borderMedium => _theme.innerBorderColor;
+
+  static Color get cardBackground => _theme.backgroundColor;
+  static Color get textSecondary => _theme.textColor.withValues(alpha: 0.7);
 }

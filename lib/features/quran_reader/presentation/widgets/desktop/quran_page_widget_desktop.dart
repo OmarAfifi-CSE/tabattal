@@ -14,6 +14,9 @@ import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_state.dart';
 import '../../../bloc/bookmark/bookmark_bloc.dart';
 import '../../../bloc/bookmark/bookmark_state.dart';
+import '../../../bloc/hifz/hifz_bloc.dart';
+import '../../../bloc/hifz/hifz_event.dart';
+import '../../../bloc/hifz/hifz_state.dart';
 import '../../../domain/repositories/quran_repository.dart';
 import 'quran_page_frame_desktop.dart';
 import 'verse_action_menu_desktop.dart';
@@ -483,12 +486,37 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
     required bool isPermanentlyBookmarked,
     required AudioState audioState,
     required MushafTheme mushafTheme,
+    required HifzState hifzState,
   }) {
     final pageStr = widget.pageNumber.toString().padLeft(3, '0');
     final customFontFamily = 'QCF_P$pageStr';
     final displayText = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
+    final wordKey = '${word.verseKey}:${word.id}';
+
+    bool isWordMasked = false;
+    if (hifzState.isHifzModeActive && word.charTypeName != 'end') {
+      final isVerseRevealed = hifzState.revealedVerseKeys.contains(word.verseKey);
+      final isWordRevealed = hifzState.revealedWordKeys.contains(wordKey);
+
+      if (!isVerseRevealed && !isWordRevealed) {
+        if (hifzState.maskingType == HifzMaskingType.fullVerse) {
+          isWordMasked = true;
+        } else if (hifzState.maskingType == HifzMaskingType.wordByWord) {
+          isWordMasked = true;
+        }
+      }
+    }
 
     void handleTap(TapUpDetails details) {
+      if (hifzState.isHifzModeActive && isWordMasked) {
+        if (hifzState.maskingType == HifzMaskingType.wordByWord) {
+          context.read<HifzBloc>().add(ToggleWordReveal(wordKey));
+        } else {
+          context.read<HifzBloc>().add(ToggleVerseReveal(word.verseKey));
+        }
+        return;
+      }
+
       if (_activeVerseId == verseId) {
         _removeVerseMenu();
       } else {
@@ -501,6 +529,28 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
       fontSize: 42,
       height: 1.2,
     );
+
+    if (isWordMasked) {
+      return GestureDetector(
+        onTapUp: handleTap,
+        onTap: () {},
+        onLongPress: () {},
+        child: Container(
+          margin: EdgeInsets.zero,
+          padding: EdgeInsets.zero,
+          decoration: BoxDecoration(
+            color: mushafTheme.textColor.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+          child: Text(
+            displayText,
+            style: wordTextStyle.copyWith(
+              color: Colors.transparent,
+            ),
+          ),
+        ),
+      );
+    }
 
     if (isBookmarkHighlighted) {
       return AnimatedBuilder(
@@ -560,16 +610,60 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
     required AudioState audioState,
     required BookmarkState bookmarkState,
     required MushafTheme mushafTheme,
+    required HifzState hifzState,
   }) {
     final List<Widget> wordWidgets = [];
     bool fatihahBasmalaAdded = false;
 
-    for (final word in lineWords) {
+    final isFullVerseMode = hifzState.isHifzModeActive &&
+        hifzState.maskingType == HifzMaskingType.fullVerse;
+
+    int i = 0;
+    while (i < lineWords.length) {
+      final word = lineWords[i];
       final verseId = _verseKeyToIntIdMap[word.verseKey] ?? 0;
 
       // Al-Fatiha Basmala: replace individual QCF_P001 glyphs with a single unified widget
       if (word.verseKey == '1:1' && word.charTypeName != 'end') {
         if (!fatihahBasmalaAdded) {
+          final isBasmalaMasked = hifzState.isHifzModeActive &&
+              !hifzState.revealedVerseKeys.contains('1:1');
+
+          if (isBasmalaMasked) {
+            wordWidgets.add(
+              GestureDetector(
+                onTapUp: (_) {
+                  context.read<HifzBloc>().add(const ToggleVerseReveal('1:1'));
+                },
+                onTap: () {},
+                onLongPress: () {},
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.0.w),
+                  child: Container(
+                    margin: EdgeInsets.zero,
+                    padding: EdgeInsets.zero,
+                    decoration: BoxDecoration(
+                      color: mushafTheme.textColor.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                    child: Text(
+                      '1 2 3',
+                      style: TextStyle(
+                        fontFamily: 'QCF_BSML',
+                        fontSize: 26.sp,
+                        color: Colors.transparent,
+                        height: 1.0.h,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+            fatihahBasmalaAdded = true;
+            i++;
+            continue;
+          }
+
           final isMenuHighlighted = _activeVerseId == verseId;
           final isAudioHighlighted = playingVerseId == verseId;
           final isBookmarkHighlighted = _bookmarkHighlightVerseId == verseId;
@@ -647,7 +741,69 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
           );
           fatihahBasmalaAdded = true;
         }
+        i++;
         continue;
+      }
+
+      // Check if this word should be masked in full verse mode
+      if (isFullVerseMode && word.charTypeName != 'end') {
+        final isVerseRevealed =
+            hifzState.revealedVerseKeys.contains(word.verseKey);
+
+        if (!isVerseRevealed) {
+          final currentVerseKey = word.verseKey;
+          final List<WordModel> maskedRun = [];
+
+          while (i < lineWords.length &&
+              lineWords[i].verseKey == currentVerseKey &&
+              lineWords[i].charTypeName != 'end') {
+            maskedRun.add(lineWords[i]);
+            i++;
+          }
+
+          final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+          final customFontFamily = 'QCF_P$pageStr';
+          final wordTextStyle = AppTextStyles.quranText.copyWith(
+            fontFamily: customFontFamily,
+            fontSize: 42,
+            height: 1.2,
+          );
+
+          wordWidgets.add(
+            GestureDetector(
+              onTapUp: (_) {
+                context
+                    .read<HifzBloc>()
+                    .add(ToggleVerseReveal(currentVerseKey));
+              },
+              onTap: () {},
+              onLongPress: () {},
+              child: Container(
+                margin: EdgeInsets.zero,
+                padding: EdgeInsets.zero,
+                decoration: BoxDecoration(
+                  color: mushafTheme.textColor.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  textDirection: TextDirection.rtl,
+                  children: maskedRun.map((w) {
+                    final displayText =
+                        w.codeV1.isNotEmpty ? w.codeV1 : w.textUthmani;
+                    return Text(
+                      displayText,
+                      style: wordTextStyle.copyWith(
+                        color: Colors.transparent,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          );
+          continue;
+        }
       }
 
       final isMenuHighlighted = _activeVerseId == verseId;
@@ -665,8 +821,10 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
           isPermanentlyBookmarked: isBookmarked,
           audioState: audioState,
           mushafTheme: mushafTheme,
+          hifzState: hifzState,
         ),
       );
+      i++;
     }
 
     return Padding(
@@ -733,103 +891,111 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
           _removeVerseMenu();
         }
       },
-      child: QuranPageFrameDesktop(
-        pageNumber: widget.pageNumber,
-        onNavigateToPage: widget.onNavigateToPage,
-        surahName: surahName,
-        juzName: juzName,
-        onHeaderTap: () {
-          if (_activeOverlayEntry != null) {
-            _removeVerseMenu();
-          }
-        },
-        child: BlocBuilder<BookmarkBloc, BookmarkState>(
-          builder: (context, bookmarkState) {
-            return BlocBuilder<AudioBloc, AudioState>(
-              builder: (context, audioState) {
-                final mushafTheme = context
-                    .watch<SettingsBloc>()
-                    .state
-                    .effectiveMushafTheme;
-                int? playingVerseId;
-                if (audioState is AudioPlaying) {
-                  playingVerseId = audioState.currentVerseId;
-                }
-                if (audioState is AudioPaused) {
-                  playingVerseId = audioState.currentVerseId;
-                }
-
-                return MediaQuery(
-                  data: MediaQuery.of(
-                    context,
-                  ).copyWith(textScaler: TextScaler.noScaling),
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final availW = constraints.maxWidth;
-                        final availH = constraints.maxHeight;
-
-                        if (_lineMap.isNotEmpty &&
-                            (_precomputedCanvasWidth == null ||
-                                (availH - _lastComputedAvailH).abs() > 1.0)) {
-                          _lastComputedAvailH = availH;
-                          _precomputedCanvasWidth =
-                              _computeCanvasWidth(availW, availH);
-                        }
-
-                        final canvasW = _precomputedCanvasWidth ?? 490.w;
-                        final canvasH = availH * canvasW / availW;
-                        return FittedBox(
-                          fit: BoxFit.contain,
-                          alignment: Alignment.center,
-                          child: SizedBox(
-                            width: canvasW,
-                            height: canvasH,
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                top: canvasH * 0.027,
-                                bottom: canvasH * 0.032,
-                              ),
-                              child: Column(
-                                key: _pageColumnKey,
-                                mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: List.generate(15, (index) {
-                                  final lineNumber = index + 1;
-                                  final lineData = _lineMap[lineNumber];
-
-                                  if (lineData == null || lineData.words.isEmpty) {
-                                    return _buildEmptyLineWidget(
-                                      lineNumber,
-                                      mushafTheme,
-                                    );
-                                  }
-
-                                  return _buildWordRow(
-                                    lineWords: lineData.words,
-                                    playingVerseId: playingVerseId,
-                                    audioState: audioState,
-                                    bookmarkState: bookmarkState,
-                                    mushafTheme: mushafTheme,
-                                  );
-                                 }).toList(),
-                              ), // Column
-                            ), // Padding
-                          ), // SizedBox
-                        ); // FittedBox
-                      },
-                    ), // LayoutBuilder
-                  ), // Directionality
-                ); // MediaQuery
-              },
-            ); // BlocBuilder
+      child: Center(
+        child: QuranPageFrameDesktop(
+          pageNumber: widget.pageNumber,
+          onNavigateToPage: widget.onNavigateToPage,
+          surahName: surahName,
+          juzName: juzName,
+          onHeaderTap: () {
+            if (_activeOverlayEntry != null) {
+              _removeVerseMenu();
+            }
           },
-        ), // QuranPageFrameDesktop
-      ), // Center
-    ); // GestureDetector
+          child: BlocBuilder<BookmarkBloc, BookmarkState>(
+            builder: (context, bookmarkState) {
+              return BlocBuilder<HifzBloc, HifzState>(
+                builder: (context, hifzState) {
+                  return BlocBuilder<AudioBloc, AudioState>(
+                    builder: (context, audioState) {
+                      final mushafTheme = context
+                          .watch<SettingsBloc>()
+                          .state
+                          .effectiveMushafTheme;
+                      int? playingVerseId;
+                      if (audioState is AudioPlaying) {
+                        playingVerseId = audioState.currentVerseId;
+                      }
+                      if (audioState is AudioPaused) {
+                        playingVerseId = audioState.currentVerseId;
+                      }
+
+                      return MediaQuery(
+                        data: MediaQuery.of(
+                          context,
+                        ).copyWith(textScaler: TextScaler.noScaling),
+                        child: Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final availW = constraints.maxWidth;
+                              final availH = constraints.maxHeight;
+
+                              if (_lineMap.isNotEmpty &&
+                                  (_precomputedCanvasWidth == null ||
+                                      (availH - _lastComputedAvailH).abs() > 1.0)) {
+                                _lastComputedAvailH = availH;
+                                _precomputedCanvasWidth =
+                                    _computeCanvasWidth(availW, availH);
+                              }
+
+                              final canvasW = _precomputedCanvasWidth ?? 490.w;
+                              final canvasH = availH * canvasW / availW;
+                              return FittedBox(
+                                fit: BoxFit.contain,
+                                alignment: Alignment.center,
+                                child: SizedBox(
+                                  width: canvasW,
+                                  height: canvasH,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                      top: canvasH * 0.027,
+                                      bottom: canvasH * 0.032,
+                                    ),
+                                    child: Column(
+                                      key: _pageColumnKey,
+                                      mainAxisSize: MainAxisSize.max,
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: List.generate(15, (index) {
+                                        final lineNumber = index + 1;
+                                        final lineData = _lineMap[lineNumber];
+
+                                        if (lineData == null || lineData.words.isEmpty) {
+                                          return _buildEmptyLineWidget(
+                                            lineNumber,
+                                            mushafTheme,
+                                          );
+                                        }
+
+                                        return _buildWordRow(
+                                          lineWords: lineData.words,
+                                          playingVerseId: playingVerseId,
+                                          audioState: audioState,
+                                          bookmarkState: bookmarkState,
+                                          mushafTheme: mushafTheme,
+                                          hifzState: hifzState,
+                                        );
+                                      }).toList(),
+                                    ), // Column
+                                  ), // Padding
+                                ), // SizedBox
+                              ); // FittedBox
+                            },
+                          ), // LayoutBuilder
+                        ), // Directionality
+                      ); // MediaQuery
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ),
+    );
   }
+
 
   // ---------------------------------------------------------------------------
   // Build

@@ -13,6 +13,7 @@ import '../quran_full_tafsir_view.dart';
 import '../quran_translation_view.dart';
 import '../quran_audio_manager_view.dart';
 import 'quran_bookmarks_view_desktop.dart';
+import '../../../pages/hifz/hifz_dashboard_screen.dart';
 import '../../../../../settings/bloc/settings_bloc.dart';
 import '../../../../../settings/bloc/settings_event.dart';
 import '../../../../../settings/bloc/settings_state.dart';
@@ -142,6 +143,24 @@ class QuranDrawerDesktop extends StatelessWidget {
                     } else if (result is int) {
                       onNavigateToPage(result);
                     }
+                  },
+                ),
+
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.auto_stories_rounded,
+                  title: l10n.drawerHifz,
+                  subtitle: l10n.drawerHifzSubtitle,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => HifzDashboardScreen(
+                          onNavigateToPage: onNavigateToPage,
+                        ),
+                      ),
+                    );
                   },
                 ),
 

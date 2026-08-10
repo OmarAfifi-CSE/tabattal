@@ -139,6 +139,42 @@ class AppLocalizationsAr extends AppLocalizations {
   String get themeScrollVertical => 'رأسي';
 
   @override
+  String get drawerHifz => 'الحفظ والمراجعة';
+
+  @override
+  String get drawerHifzSubtitle => 'مُساعد تكرار واختبار الحفظ';
+
+  @override
+  String get hifzModeToggle => 'وضع الحفظ والتظليل';
+
+  @override
+  String get hifzMaskFull => 'إخفاء الآيات كاملة';
+
+  @override
+  String get hifzMaskTail => 'إخفاء أواخر الآيات';
+
+  @override
+  String get hifzMaskWord => 'إخفاء الكلمات';
+
+  @override
+  String get hifzDashboardTitle => 'لوحة الحفظ والمراجعة';
+
+  @override
+  String get hifzCreatePlan => 'إنشاء خطة حفظ جديدة';
+
+  @override
+  String get hifzNoPlans => 'لا توجد خطط حفظ حالية. أنشئ خطة جديدة للبدء!';
+
+  @override
+  String get hifzStreak => 'التتابع اليومي';
+
+  @override
+  String get hifzQuizTitle => 'الاختبار الذاتي';
+
+  @override
+  String get hifzProgress => 'نسبة الإنجاز';
+
+  @override
   String get audioTypeLabel => 'النوع';
 
   @override

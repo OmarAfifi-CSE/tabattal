@@ -21,6 +21,9 @@ import 'surah_header_widget_web.dart';
 import '../../../../../core/services/font_service.dart';
 import '../../../../settings/bloc/settings_bloc.dart';
 import '../../../../../core/theme/mushaf_theme.dart';
+import '../../../bloc/hifz/hifz_bloc.dart';
+import '../../../bloc/hifz/hifz_event.dart';
+import '../../../bloc/hifz/hifz_state.dart';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -487,12 +490,40 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
     required bool isPermanentlyBookmarked,
     required AudioState audioState,
     required MushafTheme mushafTheme,
+    required HifzState hifzState,
   }) {
     final pageStr = widget.pageNumber.toString().padLeft(3, '0');
     final customFontFamily = 'QCF_P$pageStr';
     final displayText = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
+    final wordKey = '${word.verseKey}:${word.id}';
+
+    bool isWordMasked = false;
+    if (hifzState.isHifzModeActive && word.charTypeName != 'end') {
+      final isVerseRevealed = hifzState.revealedVerseKeys.contains(word.verseKey);
+      final isWordRevealed = hifzState.revealedWordKeys.contains(wordKey);
+
+      if (!isVerseRevealed && !isWordRevealed) {
+        if (hifzState.maskingType == HifzMaskingType.fullVerse) {
+          isWordMasked = true;
+        } else if (hifzState.maskingType == HifzMaskingType.verseTail &&
+            word.id > 1) {
+          isWordMasked = true;
+        } else if (hifzState.maskingType == HifzMaskingType.wordByWord) {
+          isWordMasked = true;
+        }
+      }
+    }
 
     void handleTap(TapUpDetails details) {
+      if (hifzState.isHifzModeActive && isWordMasked) {
+        if (hifzState.maskingType == HifzMaskingType.wordByWord) {
+          context.read<HifzBloc>().add(ToggleWordReveal(wordKey));
+        } else {
+          context.read<HifzBloc>().add(ToggleVerseReveal(word.verseKey));
+        }
+        return;
+      }
+
       if (_activeVerseId == verseId) {
         _removeVerseMenu();
       } else {
@@ -505,6 +536,28 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
       fontSize: 42,
       height: 1.2,
     );
+
+    if (isWordMasked) {
+      return GestureDetector(
+        onTapUp: handleTap,
+        onTap: () {},
+        onLongPress: () {},
+        child: Container(
+          margin: EdgeInsets.zero,
+          padding: EdgeInsets.zero,
+          decoration: BoxDecoration(
+            color: mushafTheme.textColor.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            displayText,
+            style: wordTextStyle.copyWith(
+              color: Colors.transparent,
+            ),
+          ),
+        ),
+      );
+    }
 
     if (isBookmarkHighlighted) {
       return AnimatedBuilder(
@@ -564,16 +617,60 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
     required AudioState audioState,
     required BookmarkState bookmarkState,
     required MushafTheme mushafTheme,
+    required HifzState hifzState,
   }) {
     final List<Widget> wordWidgets = [];
     bool fatihahBasmalaAdded = false;
 
-    for (final word in lineWords) {
+    final isFullVerseMode = hifzState.isHifzModeActive &&
+        hifzState.maskingType == HifzMaskingType.fullVerse;
+
+    int i = 0;
+    while (i < lineWords.length) {
+      final word = lineWords[i];
       final verseId = _verseKeyToIntIdMap[word.verseKey] ?? 0;
 
       // Al-Fatiha Basmala: replace individual QCF_P001 glyphs with a single unified widget
       if (word.verseKey == '1:1' && word.charTypeName != 'end') {
         if (!fatihahBasmalaAdded) {
+          final isBasmalaMasked = hifzState.isHifzModeActive &&
+              !hifzState.revealedVerseKeys.contains('1:1');
+
+          if (isBasmalaMasked) {
+            wordWidgets.add(
+              GestureDetector(
+                onTapUp: (_) {
+                  context.read<HifzBloc>().add(const ToggleVerseReveal('1:1'));
+                },
+                onTap: () {},
+                onLongPress: () {},
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Container(
+                    margin: EdgeInsets.zero,
+                    padding: EdgeInsets.zero,
+                    decoration: BoxDecoration(
+                      color: mushafTheme.textColor.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      '1 2 3',
+                      style: TextStyle(
+                        fontFamily: 'QCF_BSML',
+                        fontSize: 26,
+                        color: Colors.transparent,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+            fatihahBasmalaAdded = true;
+            i++;
+            continue;
+          }
+
           final isMenuHighlighted = _activeVerseId == verseId;
           final isAudioHighlighted = playingVerseId == verseId;
           final isBookmarkHighlighted = _bookmarkHighlightVerseId == verseId;
@@ -651,7 +748,69 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
           );
           fatihahBasmalaAdded = true;
         }
+        i++;
         continue;
+      }
+
+      // Check if this word should be masked in full verse mode
+      if (isFullVerseMode && word.charTypeName != 'end') {
+        final isVerseRevealed =
+            hifzState.revealedVerseKeys.contains(word.verseKey);
+
+        if (!isVerseRevealed) {
+          final currentVerseKey = word.verseKey;
+          final List<WordModel> maskedRun = [];
+
+          while (i < lineWords.length &&
+              lineWords[i].verseKey == currentVerseKey &&
+              lineWords[i].charTypeName != 'end') {
+            maskedRun.add(lineWords[i]);
+            i++;
+          }
+
+          final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+          final customFontFamily = 'QCF_P$pageStr';
+          final wordTextStyle = AppTextStyles.quranText.copyWith(
+            fontFamily: customFontFamily,
+            fontSize: 42,
+            height: 1.2,
+          );
+
+          wordWidgets.add(
+            GestureDetector(
+              onTapUp: (_) {
+                context
+                    .read<HifzBloc>()
+                    .add(ToggleVerseReveal(currentVerseKey));
+              },
+              onTap: () {},
+              onLongPress: () {},
+              child: Container(
+                margin: EdgeInsets.zero,
+                padding: EdgeInsets.zero,
+                decoration: BoxDecoration(
+                  color: mushafTheme.textColor.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  textDirection: TextDirection.rtl,
+                  children: maskedRun.map((w) {
+                    final displayText =
+                        w.codeV1.isNotEmpty ? w.codeV1 : w.textUthmani;
+                    return Text(
+                      displayText,
+                      style: wordTextStyle.copyWith(
+                        color: Colors.transparent,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          );
+          continue;
+        }
       }
 
       final isMenuHighlighted = _activeVerseId == verseId;
@@ -669,8 +828,10 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
           isPermanentlyBookmarked: isBookmarked,
           audioState: audioState,
           mushafTheme: mushafTheme,
+          hifzState: hifzState,
         ),
       );
+      i++;
     }
 
     return Padding(
@@ -684,6 +845,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
       ),
     );
   }
+
 
   /// Builds the full loaded page content with all 15 line slots.
   Widget _buildLoadedPage(QuranLoaded state) {
@@ -812,22 +974,27 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
                                       );
                                     }
 
-                                    return _buildWordRow(
-                                      lineWords: lineData.words,
-                                      playingVerseId: playingVerseId,
-                                      audioState: audioState,
-                                      bookmarkState: bookmarkState,
-                                      mushafTheme: mushafTheme,
+                                    return BlocBuilder<HifzBloc, HifzState>(
+                                      builder: (context, hifzState) {
+                                        return _buildWordRow(
+                                          lineWords: lineData.words,
+                                          playingVerseId: playingVerseId,
+                                          audioState: audioState,
+                                          bookmarkState: bookmarkState,
+                                          mushafTheme: mushafTheme,
+                                          hifzState: hifzState,
+                                        );
+                                      },
                                     );
-                                   }).toList(),
+                                  }).toList(),
                                 ), // Column
                               ), // Padding
                             ), // SizedBox
                           ); // FittedBox
                         },
                       ), // LayoutBuilder
-                    ),
-                  );
+                    ), // Directionality
+                  ); // MediaQuery
                 },
               );
             },
