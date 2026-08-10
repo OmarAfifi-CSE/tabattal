@@ -1135,8 +1135,8 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                 ? Icons.visibility_off_outlined
                                 : Icons.school_outlined,
                             isHifzActive
-                                ? 'إيقاف وضع الحفظ'
-                                : 'تفعيل وضع الحفظ',
+                                ? l10n.hifzDisableMode
+                                : l10n.hifzEnableMode,
                             () {
                               context.read<HifzBloc>().add(
                                 const ToggleHifzMode(),

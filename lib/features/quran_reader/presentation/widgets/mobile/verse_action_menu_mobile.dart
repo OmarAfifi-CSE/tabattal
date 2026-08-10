@@ -1134,8 +1134,8 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                 ? Icons.visibility_off_outlined
                                 : Icons.school_outlined,
                             isHifzActive
-                                ? 'إيقاف وضع الحفظ'
-                                : 'تفعيل وضع الحفظ',
+                                ? l10n.hifzDisableMode
+                                : l10n.hifzEnableMode,
                             () {
                               context.read<HifzBloc>().add(
                                 const ToggleHifzMode(),

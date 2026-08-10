@@ -23,9 +23,8 @@ import 'core/network/audio_download_manager.dart';
 import 'core/services/audio_preferences_service.dart';
 import 'core/bloc/locale/locale_cubit.dart';
 import 'features/settings/bloc/settings_bloc.dart';
-import 'features/quran_reader/bloc/hifz/hifz_bloc.dart';
-import 'features/quran_reader/bloc/hifz/hifz_event.dart';
 import 'features/settings/bloc/settings_state.dart';
+import 'features/quran_reader/bloc/hifz/hifz_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -88,7 +87,7 @@ class TabattalApp extends StatelessWidget {
             create: (_) => SettingsBloc(prefs: container.sharedPreferences),
           ),
           BlocProvider<HifzBloc>(
-            create: (_) => HifzBloc()..add(const LoadHifzData()),
+            create: (_) => HifzBloc(),
           ),
         ],
         child: BlocBuilder<SettingsBloc, SettingsState>(

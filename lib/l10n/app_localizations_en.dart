@@ -139,41 +139,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeScrollVertical => 'Vertical';
 
   @override
-  String get drawerHifz => 'Memorization & Revision';
+  String get hifzEnableMode => 'Enable Hifz Mode';
 
   @override
-  String get drawerHifzSubtitle => 'Hifz companion & self quiz';
+  String get hifzDisableMode => 'Disable Hifz Mode';
 
   @override
-  String get hifzModeToggle => 'Hifz Masking Mode';
+  String get hifzMaskFull => 'Hide Verses';
 
   @override
-  String get hifzMaskFull => 'Full Verse Masking';
-
-  @override
-  String get hifzMaskTail => 'Verse Tail Masking';
-
-  @override
-  String get hifzMaskWord => 'Word-by-Word Masking';
-
-  @override
-  String get hifzDashboardTitle => 'Hifz & Revision Companion';
-
-  @override
-  String get hifzCreatePlan => 'Create Memorization Plan';
-
-  @override
-  String get hifzNoPlans =>
-      'No active memorization plans. Create one to start!';
-
-  @override
-  String get hifzStreak => 'Daily Streak';
-
-  @override
-  String get hifzQuizTitle => 'Self Quiz';
-
-  @override
-  String get hifzProgress => 'Progress';
+  String get hifzMaskWord => 'Hide Words';
 
   @override
   String get audioTypeLabel => 'Type';

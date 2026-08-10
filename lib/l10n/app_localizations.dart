@@ -356,77 +356,29 @@ abstract class AppLocalizations {
   /// **'رأسي'**
   String get themeScrollVertical;
 
-  /// No description provided for @drawerHifz.
+  /// No description provided for @hifzEnableMode.
   ///
   /// In ar, this message translates to:
-  /// **'الحفظ والمراجعة'**
-  String get drawerHifz;
+  /// **'تفعيل وضع الحفظ'**
+  String get hifzEnableMode;
 
-  /// No description provided for @drawerHifzSubtitle.
+  /// No description provided for @hifzDisableMode.
   ///
   /// In ar, this message translates to:
-  /// **'مُساعد تكرار واختبار الحفظ'**
-  String get drawerHifzSubtitle;
-
-  /// No description provided for @hifzModeToggle.
-  ///
-  /// In ar, this message translates to:
-  /// **'وضع الحفظ والتظليل'**
-  String get hifzModeToggle;
+  /// **'إيقاف وضع الحفظ'**
+  String get hifzDisableMode;
 
   /// No description provided for @hifzMaskFull.
   ///
   /// In ar, this message translates to:
-  /// **'إخفاء الآيات كاملة'**
+  /// **'إخفاء الآيات'**
   String get hifzMaskFull;
-
-  /// No description provided for @hifzMaskTail.
-  ///
-  /// In ar, this message translates to:
-  /// **'إخفاء أواخر الآيات'**
-  String get hifzMaskTail;
 
   /// No description provided for @hifzMaskWord.
   ///
   /// In ar, this message translates to:
   /// **'إخفاء الكلمات'**
   String get hifzMaskWord;
-
-  /// No description provided for @hifzDashboardTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'لوحة الحفظ والمراجعة'**
-  String get hifzDashboardTitle;
-
-  /// No description provided for @hifzCreatePlan.
-  ///
-  /// In ar, this message translates to:
-  /// **'إنشاء خطة حفظ جديدة'**
-  String get hifzCreatePlan;
-
-  /// No description provided for @hifzNoPlans.
-  ///
-  /// In ar, this message translates to:
-  /// **'لا توجد خطط حفظ حالية. أنشئ خطة جديدة للبدء!'**
-  String get hifzNoPlans;
-
-  /// No description provided for @hifzStreak.
-  ///
-  /// In ar, this message translates to:
-  /// **'التتابع اليومي'**
-  String get hifzStreak;
-
-  /// No description provided for @hifzQuizTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'الاختبار الذاتي'**
-  String get hifzQuizTitle;
-
-  /// No description provided for @hifzProgress.
-  ///
-  /// In ar, this message translates to:
-  /// **'نسبة الإنجاز'**
-  String get hifzProgress;
 
   /// No description provided for @audioTypeLabel.
   ///
