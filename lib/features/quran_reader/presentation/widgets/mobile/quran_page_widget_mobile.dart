@@ -66,8 +66,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   // Replaces the old two-pass postFrameCallback approach that caused the
   // compress → expand animation flash and RenderBox layout assertion.
   double? _precomputedCanvasWidth;
-  // Track the availH used during last computation so we recompute if it
-  // changes (e.g. audio bar appearing/disappearing changes available height).
+  double? _cachedMaxLineWidth;
   double _lastComputedAvailH = 0;
 
   // Cached data for O(1) lookups and avoiding re-parsing per frame
@@ -134,6 +133,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
   Future<void> _loadPageFont() async {
     setState(() => _isFontLoaded = false);
+    _cachedMaxLineWidth = null;
     // Delay slightly so it doesn't drop frames during the PageView swipe animation.
     await Future.delayed(const Duration(milliseconds: 150));
     if (!mounted) return;
@@ -160,28 +160,32 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   ///    basmala spacers (45.h), and empty-page padding (45.h per slot).
   /// Taking the maximum of both values ensures no Column overflow on any page.
   double _computeCanvasWidth(double availW, double availH) {
-    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-    final fontFamily = 'QCF_P$pageStr';
     final fontSize = 32.sp;
-    var maxLineWidth = 0.0;
+    if (_cachedMaxLineWidth == null) {
+      final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+      final fontFamily = 'QCF_P$pageStr';
+      var maxLW = 0.0;
 
-    for (final lineData in _lineMap.values) {
-      if (lineData.words.isEmpty) continue;
-      var lineWidth = 0.0;
-      for (final word in lineData.words) {
-        final text = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
-        if (text.isEmpty) continue;
-        final tp = TextPainter(
-          text: TextSpan(
-            text: text,
-            style: TextStyle(fontFamily: fontFamily, fontSize: fontSize),
-          ),
-          textDirection: TextDirection.rtl,
-        )..layout();
-        lineWidth += tp.width;
+      for (final lineData in _lineMap.values) {
+        if (lineData.words.isEmpty) continue;
+        var lineWidth = 0.0;
+        for (final word in lineData.words) {
+          final text = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
+          if (text.isEmpty) continue;
+          final tp = TextPainter(
+            text: TextSpan(
+              text: text,
+              style: TextStyle(fontFamily: fontFamily, fontSize: fontSize),
+            ),
+            textDirection: TextDirection.rtl,
+          )..layout();
+          lineWidth += tp.width;
+        }
+        if (lineWidth > maxLW) maxLW = lineWidth;
       }
-      if (lineWidth > maxLineWidth) maxLineWidth = lineWidth;
+      _cachedMaxLineWidth = maxLW;
     }
+    final maxLineWidth = _cachedMaxLineWidth!;
 
     // Count slot types across the 15 Column children.
     int textLineCount = 0;
@@ -504,6 +508,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     required bool isBookmarkHighlighted,
     required bool isPermanentlyBookmarked,
     required AudioState audioState,
+    required MushafTheme mushafTheme,
   }) {
     final pageStr = widget.pageNumber.toString().padLeft(3, '0');
     final customFontFamily = 'QCF_P$pageStr';
@@ -522,11 +527,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       fontSize: 32.sp,
       height: 1.5.h,
     );
-
-    final mushafTheme = context
-        .watch<SettingsBloc>()
-        .state
-        .effectiveMushafTheme;
 
     if (isBookmarkHighlighted) {
       return AnimatedBuilder(
@@ -585,6 +585,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     required int? playingVerseId,
     required AudioState audioState,
     required BookmarkState bookmarkState,
+    required MushafTheme mushafTheme,
   }) {
     final List<Widget> wordWidgets = [];
     bool fatihahBasmalaAdded = false;
@@ -599,11 +600,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
           final isAudioHighlighted = playingVerseId == verseId;
           final isBookmarkHighlighted = _bookmarkHighlightVerseId == verseId;
           final isBookmarked = bookmarkState.isBookmarked(word.verseKey);
-
-          final mushafTheme = context
-              .watch<SettingsBloc>()
-              .state
-              .effectiveMushafTheme;
 
           final backgroundColor = (isAudioHighlighted || isMenuHighlighted)
               ? mushafTheme.goldColor.withValues(alpha: 0.2)
@@ -634,10 +630,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
           );
 
           if (isBookmarkHighlighted) {
-            final mushafTheme = context
-                .watch<SettingsBloc>()
-                .state
-                .effectiveMushafTheme;
             basmala = AnimatedBuilder(
               animation: _bookmarkPulseAnimation,
               builder: (context, _) => Container(
@@ -698,6 +690,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
           isBookmarkHighlighted: isBookmarkHighlighted,
           isPermanentlyBookmarked: isBookmarked,
           audioState: audioState,
+          mushafTheme: mushafTheme,
         ),
       );
     }
@@ -721,6 +714,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
     if (_cachedLines != lines) {
       _cachedLines = lines;
+      _cachedMaxLineWidth = null;
       _lineMap = {for (final line in lines) line.lineNumber: line};
 
       _verseKeyToIntIdMap.clear();
@@ -847,6 +841,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
                                     playingVerseId: playingVerseId,
                                     audioState: audioState,
                                     bookmarkState: bookmarkState,
+                                    mushafTheme: mushafTheme,
                                   );
                                 }).toList(),
                               ), // Column

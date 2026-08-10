@@ -199,6 +199,13 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                   child: Stack(
                     children: [
                       BlocBuilder<AudioBloc, AudioState>(
+                        buildWhen: (previous, current) {
+                          final prevVisible =
+                              previous is! AudioIdle && previous is! AudioError;
+                          final currVisible =
+                              current is! AudioIdle && current is! AudioError;
+                          return prevVisible != currVisible;
+                        },
                         builder: (context, state) {
                           final isVisible =
                               state is! AudioIdle && state is! AudioError;

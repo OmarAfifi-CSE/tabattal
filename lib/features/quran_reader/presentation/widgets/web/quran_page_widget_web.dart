@@ -62,6 +62,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
   int? _bookmarkHighlightVerseId;
 
   double? _precomputedCanvasWidth;
+  double? _cachedMaxLineWidth;
   double _lastComputedAvailH = 0;
 
   // Cached data for O(1) lookups and avoiding re-parsing per frame
@@ -99,6 +100,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
     if (widget.pageNumber != oldWidget.pageNumber) {
       _loadPageFont();
       _precomputedCanvasWidth = null;
+      _cachedMaxLineWidth = null;
     }
     if (!widget.isCurrentPage && oldWidget.isCurrentPage) {
       _removeVerseMenu();
@@ -149,29 +151,32 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
   // Web widgets must NOT use ScreenUtil. We use 32.0 logical pixels for the
   // font size — matching the value used in the non-web platform widgets.
   double _computeCanvasWidth(double availW, double availH) {
-    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-    const fontFamily = 'QCF_P'; // prefix; pageStr appended per word
-    const fontSize = 32.0; // logical pixels, no ScreenUtil on web
-    var maxLineWidth = 0.0;
+    if (_cachedMaxLineWidth == null) {
+      final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+      final fontFamily = 'QCF_P$pageStr';
+      const fontSize = 42.0;
+      var maxLW = 0.0;
 
-    for (final lineData in _lineMap.values) {
-      if (lineData.words.isEmpty) continue;
-      var lineWidth = 0.0;
-      final pageFontFamily = '$fontFamily$pageStr';
-      for (final word in lineData.words) {
-        final text = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
-        if (text.isEmpty) continue;
-        final tp = TextPainter(
-          text: TextSpan(
-            text: text,
-            style: TextStyle(fontFamily: pageFontFamily, fontSize: fontSize),
-          ),
-          textDirection: TextDirection.rtl,
-        )..layout();
-        lineWidth += tp.width;
+      for (final lineData in _lineMap.values) {
+        if (lineData.words.isEmpty) continue;
+        var lineWidth = 0.0;
+        for (final word in lineData.words) {
+          final text = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
+          if (text.isEmpty) continue;
+          final tp = TextPainter(
+            text: TextSpan(
+              text: text,
+              style: TextStyle(fontFamily: fontFamily, fontSize: fontSize),
+            ),
+            textDirection: TextDirection.rtl,
+          )..layout();
+          lineWidth += tp.width;
+        }
+        if (lineWidth > maxLW) maxLW = lineWidth;
       }
-      if (lineWidth > maxLineWidth) maxLineWidth = lineWidth;
+      _cachedMaxLineWidth = maxLW;
     }
+    final maxLineWidth = _cachedMaxLineWidth!;
 
     int textLineCount = 0;
     int surahHeaderCount = 0;
@@ -192,7 +197,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
     }
 
     // No ScreenUtil on web: use raw logical pixels for height estimates.
-    const textLineH = fontSize * 1.5 + 4.0; // approx text row height
+    const textLineH = 42.0 * 1.5 + 4.0; // approx text row height
     const surahHeaderH = 85.0;
     final totalChildrenH =
         textLineCount * textLineH +
@@ -481,6 +486,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
     required bool isBookmarkHighlighted,
     required bool isPermanentlyBookmarked,
     required AudioState audioState,
+    required MushafTheme mushafTheme,
   }) {
     final pageStr = widget.pageNumber.toString().padLeft(3, '0');
     final customFontFamily = 'QCF_P$pageStr';
@@ -499,11 +505,6 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
       fontSize: 42,
       height: 1.2,
     );
-
-    final mushafTheme = context
-        .watch<SettingsBloc>()
-        .state
-        .effectiveMushafTheme;
 
     if (isBookmarkHighlighted) {
       return AnimatedBuilder(
@@ -562,6 +563,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
     required int? playingVerseId,
     required AudioState audioState,
     required BookmarkState bookmarkState,
+    required MushafTheme mushafTheme,
   }) {
     final List<Widget> wordWidgets = [];
     bool fatihahBasmalaAdded = false;
@@ -576,11 +578,6 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
           final isAudioHighlighted = playingVerseId == verseId;
           final isBookmarkHighlighted = _bookmarkHighlightVerseId == verseId;
           final isBookmarked = bookmarkState.isBookmarked(word.verseKey);
-
-          final mushafTheme = context
-              .watch<SettingsBloc>()
-              .state
-              .effectiveMushafTheme;
 
           final backgroundColor = (isAudioHighlighted || isMenuHighlighted)
               ? mushafTheme.goldColor.withValues(alpha: 0.2)
@@ -611,10 +608,6 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
           );
 
           if (isBookmarkHighlighted) {
-            final mushafTheme = context
-                .watch<SettingsBloc>()
-                .state
-                .effectiveMushafTheme;
             basmala = AnimatedBuilder(
               animation: _bookmarkPulseAnimation,
               builder: (context, _) => Container(
@@ -675,6 +668,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
           isBookmarkHighlighted: isBookmarkHighlighted,
           isPermanentlyBookmarked: isBookmarked,
           audioState: audioState,
+          mushafTheme: mushafTheme,
         ),
       );
     }
@@ -698,6 +692,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
 
     if (_cachedLines != lines) {
       _cachedLines = lines;
+      _cachedMaxLineWidth = null;
       _lineMap = {for (final line in lines) line.lineNumber: line};
 
       _verseKeyToIntIdMap.clear();
@@ -822,6 +817,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
                                       playingVerseId: playingVerseId,
                                       audioState: audioState,
                                       bookmarkState: bookmarkState,
+                                      mushafTheme: mushafTheme,
                                     );
                                    }).toList(),
                                 ), // Column

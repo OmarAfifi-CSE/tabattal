@@ -177,6 +177,13 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
             child: Stack(
               children: [
                 BlocBuilder<AudioBloc, AudioState>(
+                  buildWhen: (previous, current) {
+                    final prevVisible =
+                        previous is! AudioIdle && previous is! AudioError;
+                    final currVisible =
+                        current is! AudioIdle && current is! AudioError;
+                    return prevVisible != currVisible;
+                  },
                   builder: (context, state) {
                     final isVisible =
                         state is! AudioIdle && state is! AudioError;
@@ -201,15 +208,17 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                         },
                         itemBuilder: (context, index) {
                           final pageNumber = index + 1;
-                          return QuranPageWidgetMobile(
-                            key: ValueKey(pageNumber),
-                            pageNumber: pageNumber,
-                            isCurrentPage: pageNumber == _currentPage,
-                            onNavigateToPage: (page, {verseKey}) =>
-                                _jumpToPage(page, verseKey: verseKey),
-                            highlightVerseKey: pageNumber == _currentPage
-                                ? _highlightVerseKey
-                                : null,
+                          return RepaintBoundary(
+                            child: QuranPageWidgetMobile(
+                              key: ValueKey(pageNumber),
+                              pageNumber: pageNumber,
+                              isCurrentPage: pageNumber == _currentPage,
+                              onNavigateToPage: (page, {verseKey}) =>
+                                  _jumpToPage(page, verseKey: verseKey),
+                              highlightVerseKey: pageNumber == _currentPage
+                                  ? _highlightVerseKey
+                                  : null,
+                            ),
                           );
                         },
                       ),
