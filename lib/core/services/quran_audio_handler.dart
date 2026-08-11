@@ -13,7 +13,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
   QuranAudioHandler() {
     _player.playbackEventStream.map(_transformEvent).listen((state) {
-      if (!playbackState.isClosed) {
+      if (!playbackState.isClosed && _player.processingState != ProcessingState.idle) {
         playbackState.add(state);
       }
     });
@@ -27,21 +27,26 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   PlaybackState _transformEvent(PlaybackEvent event) {
+    final isIdle = _player.processingState == ProcessingState.idle;
     return PlaybackState(
-      controls: [
-        MediaControl.rewind, // Previous Surah
-        MediaControl.skipToPrevious, // Previous Ayah
-        if (_player.playing) MediaControl.pause else MediaControl.play,
-        MediaControl.skipToNext, // Next Ayah
-        MediaControl.fastForward, // Next Surah
-        MediaControl.stop,
-      ],
-      systemActions: const {
-        MediaAction.seek,
-        MediaAction.seekForward,
-        MediaAction.seekBackward,
-      },
-      androidCompactActionIndices: const [1, 2, 3],
+      controls: isIdle
+          ? []
+          : [
+              MediaControl.rewind, // Previous Surah
+              MediaControl.skipToPrevious, // Previous Ayah
+              if (_player.playing) MediaControl.pause else MediaControl.play,
+              MediaControl.skipToNext, // Next Ayah
+              MediaControl.fastForward, // Next Surah
+              MediaControl.stop,
+            ],
+      systemActions: isIdle
+          ? const {}
+          : const {
+              MediaAction.seek,
+              MediaAction.seekForward,
+              MediaAction.seekBackward,
+            },
+      androidCompactActionIndices: isIdle ? const [] : const [1, 2, 3],
       processingState: const {
         ProcessingState.idle: AudioProcessingState.idle,
         ProcessingState.loading: AudioProcessingState.loading,
@@ -75,8 +80,42 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     _isStopping = true;
     _actionSubject.add(QuranAudioAction.stop);
     await _player.stop();
+    mediaItem.add(null);
+    playbackState.add(
+      PlaybackState(
+        controls: [],
+        systemActions: const {},
+        processingState: AudioProcessingState.idle,
+        playing: false,
+      ),
+    );
     await super.stop();
     _isStopping = false;
+  }
+
+  /// Displays an offline/stopped notification informing the user where playback stopped.
+  Future<void> showStoppedNotification({
+    required String title,
+    required String subtitle,
+  }) async {
+    await _player.stop();
+    final artUri = mediaItem.valueOrNull?.artUri;
+    mediaItem.add(
+      MediaItem(
+        id: 'stopped_offline',
+        title: title,
+        artist: subtitle,
+        artUri: artUri,
+      ),
+    );
+    playbackState.add(
+      PlaybackState(
+        controls: const [MediaControl.stop],
+        systemActions: const {},
+        processingState: AudioProcessingState.completed,
+        playing: false,
+      ),
+    );
   }
 
   @override

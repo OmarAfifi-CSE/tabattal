@@ -73,7 +73,7 @@ Future<DependencyContainer> configureDependencies() async {
       androidNotificationChannelName: lookupAppLocalizations(
         PlatformDispatcher.instance.locale,
       ).notificationChannelRecitations,
-      androidNotificationOngoing: true,
+      androidNotificationOngoing: false,
       androidStopForegroundOnPause: true,
     ),
   );

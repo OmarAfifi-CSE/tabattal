@@ -83,7 +83,7 @@
     }
   },
   "downloadingTafsirBackground": "جاري تحميل باقي التفسير في الخلفية...",
-  "tafsirNotAvailableLocally": "تفسير هذه الآية غير متوفر محلياً",
+  "tafsirNotAvailableLocally": "تفسير هذه الآية غير متوفر محليًا",
   "tafsirPartialDownloadHint": "تم تحميل {percent}% من التفسير. هل ترغب في استكمال التحميل؟",
   "@tafsirPartialDownloadHint": {
     "placeholders": {
@@ -217,6 +217,7 @@
   "themeMushafColor": "لون المصحف",
   "timerCancelled": "تم إلغاء المؤقت",
   "audioErrorFileNotFound": "الملف الصوتي غير متوفر.",
+  "audioErrorNoInternet": "هذه الآيات غير محملة مسبقًا وتتطلب اتصالًا بالإنترنت لتشغيلها.",
   "audioErrorPlayback": "حدث خطأ أثناء تشغيل التلاوة.",
   "audioErrorPlaylist": "حدث خطأ أثناء تشغيل القائمة.",
   "sleepTimerStopped": "سيتم إيقاف التلاوة بعد {minutes} دقائق",

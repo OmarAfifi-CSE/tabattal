@@ -557,7 +557,7 @@ abstract class AppLocalizations {
   /// No description provided for @tafsirNotAvailableLocally.
   ///
   /// In ar, this message translates to:
-  /// **'تفسير هذه الآية غير متوفر محلياً'**
+  /// **'تفسير هذه الآية غير متوفر محليًا'**
   String get tafsirNotAvailableLocally;
 
   /// No description provided for @tafsirPartialDownloadHint.
@@ -745,6 +745,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الملف الصوتي غير متوفر.'**
   String get audioErrorFileNotFound;
+
+  /// No description provided for @audioErrorNoInternet.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه الآيات غير محملة مسبقًا وتتطلب اتصالًا بالإنترنت لتشغيلها.'**
+  String get audioErrorNoInternet;
 
   /// No description provided for @audioErrorPlayback.
   ///

@@ -210,12 +210,12 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         final String title;
         if (verse.ayah == 0) {
           title = isEn
-              ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} - Basmalah'
-              : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - البسملة';
+              ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} • Basmalah'
+              : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} • البسملة';
         } else {
           title = isEn
-              ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} - Ayah ${verse.ayah}'
-              : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - الآية ${verse.ayah.toArabicDigits}';
+              ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} • Ayah ${verse.ayah}'
+              : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} • آية ${verse.ayah.toArabicDigits}';
         }
 
         final artUri = await _getArtUri();
@@ -235,18 +235,24 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
     _playbackEventSubscription = _audioPlayer.playbackEventStream.listen(
       (event) {},
-      onError: (Object e, StackTrace stackTrace) {
-        add(const AudioStateChanged(isPlaying: false));
-        if (e is PlayerException) {
-          add(
-            const AudioErrorEvent(
-              "Network error: Check connection to stream audio.",
-            ),
-          );
-        } else if (e is PlayerInterruptedException) {
-          add(const AudioErrorEvent("Playback interrupted."));
+      onError: (Object e, StackTrace stackTrace) async {
+        _playlistGeneration++;
+        _activePlaylistGeneration = 0;
+        _currentVerseIds = [];
+        _currentIndex = 0;
+        _playedCount = 0;
+
+        try {
+          await _audioPlayer.stop();
+          await _audioHandler.stop();
+        } catch (_) {}
+
+        if (_isNetworkError(e)) {
+          add(const AudioErrorEvent("audioErrorNoInternet"));
+        } else if (e is PlayerException) {
+          add(const AudioErrorEvent("audioErrorFileNotFound"));
         } else {
-          add(const AudioErrorEvent("Failed to play audio."));
+          add(const AudioErrorEvent("audioErrorPlayback"));
         }
       },
     );
@@ -255,6 +261,86 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
+
+  bool _isNetworkError(Object error) {
+    if (error is SocketException ||
+        error is TimeoutException ||
+        error is HttpException) {
+      return true;
+    }
+    final errStr = error.toString().toLowerCase();
+    return errStr.contains('socketexception') ||
+        errStr.contains('failed host lookup') ||
+        errStr.contains('no internet') ||
+        errStr.contains('connection refused') ||
+        errStr.contains('connection closed') ||
+        errStr.contains('clientexception') ||
+        errStr.contains('network') ||
+        errStr.contains('offline') ||
+        errStr.contains('connection timed out') ||
+        errStr.contains('software caused connection abort');
+  }
+
+  Future<void> _handleAudioError(
+    Object error,
+    Emitter<AudioState> emit, {
+    String defaultErrorKey = "audioErrorPlayback",
+  }) async {
+    final VerseRef? stoppedVerse =
+        _currentVerseIds.isNotEmpty && _currentIndex < _currentVerseIds.length
+            ? _currentVerseIds[_currentIndex]
+            : null;
+
+    _playlistGeneration++;
+    _activePlaylistGeneration = 0;
+    _currentVerseIds = [];
+    _currentIndex = 0;
+    _playedCount = 0;
+
+    final isNetwork = _isNetworkError(error);
+
+    if (isNetwork && stoppedVerse != null && stoppedVerse.ayah > 0) {
+      try {
+        final isEn = _prefs.appLocale == 'en';
+        final surahName = isEn
+            ? QuranMetadata.getSurahNameEnglish(stoppedVerse.surah)
+            : QuranMetadata.getSurahNameWithTashkeel(stoppedVerse.surah);
+        final ayahStr = isEn
+            ? stoppedVerse.ayah.toString()
+            : stoppedVerse.ayah.toArabicDigits;
+
+        final title = isEn
+            ? 'Surah $surahName • Ayah $ayahStr (Stopped)'
+            : '$surahName • آية $ayahStr (توقفت)';
+        final subtitle = isEn
+            ? 'Internet required for non-downloaded ayahs'
+            : 'يلزم الإنترنت لتشغيل الآيات غير المحملة';
+
+        await _audioHandler.showStoppedNotification(
+          title: title,
+          subtitle: subtitle,
+        );
+      } catch (_) {
+        try {
+          await _audioPlayer.stop();
+          await _audioHandler.stop();
+        } catch (_) {}
+      }
+    } else {
+      try {
+        await _audioPlayer.stop();
+        await _audioHandler.stop();
+      } catch (_) {}
+    }
+
+    if (isNetwork) {
+      emit(const AudioError("audioErrorNoInternet"));
+    } else if (error is PlayerException) {
+      emit(const AudioError("audioErrorFileNotFound"));
+    } else {
+      emit(AudioError(defaultErrorKey));
+    }
+  }
 
   /// Returns the local path, downloading first if not yet cached.
   Future<String> _ensureLocalPath(int surah, int ayah, int verseId) async {
@@ -352,12 +438,12 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       final String initialTitle;
       if (verseQueue.first.ayah == 0) {
         initialTitle = isEn
-            ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} - Basmalah'
-            : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - البسملة';
+            ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} • Basmalah'
+            : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} • البسملة';
       } else {
         initialTitle = isEn
-            ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} - Ayah ${verse.ayah}'
-            : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} - الآية ${verse.ayah.toArabicDigits}';
+            ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} • Ayah ${verse.ayah}'
+            : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} • آية ${verse.ayah.toArabicDigits}';
       }
 
       final artUri = await _getArtUri();
@@ -413,12 +499,12 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           );
         }
       }
-    } on PlayerException catch (_) {
-      emit(const AudioError("audioErrorFileNotFound"));
+    } on PlayerException catch (e) {
+      await _handleAudioError(e, emit, defaultErrorKey: "audioErrorFileNotFound");
     } on PlayerInterruptedException catch (_) {
       // Interrupted by a new play request — expected
-    } catch (_) {
-      emit(const AudioError("audioErrorPlayback"));
+    } catch (e) {
+      await _handleAudioError(e, emit);
     }
   }
 
@@ -500,12 +586,12 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       );
       _audioPlayer.play();
       emit(AudioPlaying(_currentVerseIds[_currentIndex].verseId));
-    } on PlayerException catch (_) {
-      emit(const AudioError("audioErrorPlaylist"));
+    } on PlayerException catch (e) {
+      await _handleAudioError(e, emit, defaultErrorKey: "audioErrorPlaylist");
     } on PlayerInterruptedException catch (_) {
       // Interrupted
-    } catch (_) {
-      emit(const AudioError("audioErrorPlaylist"));
+    } catch (e) {
+      await _handleAudioError(e, emit, defaultErrorKey: "audioErrorPlaylist");
     }
   }
 

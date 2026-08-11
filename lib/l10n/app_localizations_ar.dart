@@ -241,7 +241,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'جاري تحميل باقي التفسير في الخلفية...';
 
   @override
-  String get tafsirNotAvailableLocally => 'تفسير هذه الآية غير متوفر محلياً';
+  String get tafsirNotAvailableLocally => 'تفسير هذه الآية غير متوفر محليًا';
 
   @override
   String tafsirPartialDownloadHint(int percent) {
@@ -360,6 +360,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get audioErrorFileNotFound => 'الملف الصوتي غير متوفر.';
+
+  @override
+  String get audioErrorNoInternet =>
+      'هذه الآيات غير محملة مسبقًا وتتطلب اتصالًا بالإنترنت لتشغيلها.';
 
   @override
   String get audioErrorPlayback => 'حدث خطأ أثناء تشغيل التلاوة.';

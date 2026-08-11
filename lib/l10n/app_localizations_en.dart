@@ -363,6 +363,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audioErrorFileNotFound => 'Audio file not available.';
 
   @override
+  String get audioErrorNoInternet =>
+      'These ayahs are not downloaded and require an internet connection to stream.';
+
+  @override
   String get audioErrorPlayback => 'Error playing audio.';
 
   @override

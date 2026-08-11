@@ -101,12 +101,16 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
 
   void _showErrorSnackBar(String messageKey) {
     String message = messageKey;
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
     if (context.mounted) {
       final l10n = AppLocalizations.of(context);
       if (l10n != null) {
         switch (messageKey) {
           case 'audioErrorFileNotFound':
             message = l10n.audioErrorFileNotFound;
+            break;
+          case 'audioErrorNoInternet':
+            message = l10n.audioErrorNoInternet;
             break;
           case 'audioErrorPlayback':
             message = l10n.audioErrorPlayback;
@@ -120,12 +124,15 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
+        content: Directionality(
+          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+          child: Text(
+            message,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
           ),
         ),
         backgroundColor: AppColors.verseMarkerGold,
