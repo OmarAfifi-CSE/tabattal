@@ -593,10 +593,24 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     _currentReciter = event.reciterName;
     _prefs.saveCategory(event.categoryName);
     _prefs.saveReciter(event.reciterName);
+
     if (state is AudioPlaying || state is AudioPaused) {
       if (_currentVerseIds.isNotEmpty) {
+        int validIndex = _currentIndex;
+        if (_audioPlayer.currentIndex != null &&
+            _audioPlayer.currentIndex! >= 0 &&
+            _audioPlayer.currentIndex! < _currentVerseIds.length) {
+          validIndex = _audioPlayer.currentIndex!;
+        }
+
+        final currentVerse = _currentVerseIds[validIndex];
+        final targetVerseId = currentVerse.ayah == 0
+            ? VerseRef(currentVerse.surah, 1).verseId
+            : currentVerse.verseId;
+        final bool skipBasmalah = currentVerse.ayah > 0;
+
         _playedCount = 0;
-        add(PlayVerse('', _currentVerseIds[_currentIndex].verseId));
+        add(PlayVerse('', targetVerseId, skipBasmalah: skipBasmalah));
       }
     }
   }
