@@ -527,7 +527,7 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                                   textDirection:
                                                       TextDirection.rtl,
                                                   child: Container(
-                                                    width: double.infinity,
+                                                    width: MediaQuery.sizeOf(context).width,
                                                     height: 36.h,
                                                     padding:
                                                         EdgeInsets.symmetric(
@@ -913,7 +913,7 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                 child: SingleChildScrollView(
                                   physics: const BouncingScrollPhysics(),
                                   child: SizedBox(
-                                    width: double.infinity,
+                                    width: MediaQuery.sizeOf(context).width,
                                     child: MixedDirectionText(
                                       text: strippedText,
                                       style: AppTextStyles.menuItemText

@@ -508,7 +508,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                       height: 36,
                       padding: EdgeInsets.zero,
                       child: Container(
-                        width: double.infinity,
+                        width: MediaQuery.sizeOf(context).width,
                         height: 36,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         alignment: Alignment.centerRight,

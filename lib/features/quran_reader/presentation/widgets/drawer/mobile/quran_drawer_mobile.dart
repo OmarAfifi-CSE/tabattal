@@ -269,7 +269,7 @@ class QuranDrawerMobile extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     return Container(
-      width: double.infinity,
+      width: MediaQuery.sizeOf(context).width,
       padding: EdgeInsets.fromLTRB(20.w, 32.h, 20.w, 24.h),
       decoration: BoxDecoration(
         color: AppColors.accentGold.withValues(alpha: 0.08),

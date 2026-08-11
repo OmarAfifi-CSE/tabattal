@@ -196,7 +196,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                 const SizedBox(height: 14),
                 // Download All button
                 SizedBox(
-                  width: double.infinity,
+                  width: MediaQuery.sizeOf(context).width,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.accentGold,
@@ -407,7 +407,7 @@ class _InlineDropdown extends StatelessWidget {
             height: 40,
             padding: EdgeInsets.zero,
             child: Container(
-              width: double.infinity,
+              width: MediaQuery.sizeOf(context).width,
               height: 40,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               alignment: Alignment.centerRight,
@@ -436,7 +436,7 @@ class _InlineDropdown extends StatelessWidget {
       },
       child: Container(
         height: 40,
-        width: double.infinity,
+        width: MediaQuery.sizeOf(context).width,
         padding: const EdgeInsets.only(left: 14, right: 14),
         decoration: BoxDecoration(
           color: AppColors.surfaceCream,

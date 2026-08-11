@@ -450,7 +450,7 @@ class _PopupMenuScrollableContentState<T> extends State<_PopupMenuScrollableCont
               return InkWell(
                 onTap: () => Navigator.pop(context, item),
                 child: Container(
-                  width: double.infinity,
+                  width: MediaQuery.sizeOf(context).width,
                   height: widget.itemHeight,
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   alignment: AlignmentDirectional.centerStart,

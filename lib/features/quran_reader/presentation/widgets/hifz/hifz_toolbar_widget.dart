@@ -34,7 +34,7 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
         final double bubbleSize = isWeb ? 46.0 : 42.r;
         final double toolbarHeight = isWeb ? 46.0 : 42.r; // Exact same height as bubble size!
         final double minMargin = isWeb ? 10.0 : 8.w;
-        final double maxTop = (screenSize.height - toolbarHeight - (isWeb ? 70.0 : 110.h)).clamp(4.0, double.infinity);
+        final double maxTop = (screenSize.height - toolbarHeight - (isWeb ? 70.0 : 110.h)).clamp(4.0, screenSize.height);
 
         // Default position at VERY TOP LEFT
         _top ??= (isWeb ? 6.0 : 4.h).clamp(4.0, maxTop);
@@ -42,7 +42,7 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
 
         return Builder(
           builder: (builderContext) {
-            final double maxLeft = (screenSize.width - (_isMinimized ? bubbleSize : 340.w) - minMargin).clamp(minMargin, double.infinity);
+            final double maxLeft = (screenSize.width - (_isMinimized ? bubbleSize : (isWeb ? 340.0 : 340.w)) - minMargin).clamp(minMargin, screenSize.width);
             final bool isOnRightHalf = (_left! + bubbleSize / 2) > (screenSize.width / 2);
             final Alignment transitionAlignment = isOnRightHalf ? Alignment.centerRight : Alignment.centerLeft;
 
