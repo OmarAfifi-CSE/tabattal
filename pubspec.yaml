@@ -29,6 +29,7 @@ dependencies:
   sqflite_common_ffi_web: ^1.1.2
   archive: ^4.0.9
   in_app_update: ^5.0.0
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:

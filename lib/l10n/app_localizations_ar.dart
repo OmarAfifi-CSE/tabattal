@@ -389,4 +389,61 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tafsirEnTazkirul => 'تذكير القرآن';
+
+  @override
+  String get menuShareCard => 'مشاركة الآيات';
+
+  @override
+  String get verseCardTitle => 'مشاركة الآيات';
+
+  @override
+  String get verseCardShareImage => 'مشاركة البطاقة';
+
+  @override
+  String get verseCardSaveImage => 'حفظ الصورة';
+
+  @override
+  String get verseCardShareText => 'مشاركة النص';
+
+  @override
+  String get verseCardCopyText => 'نسخ النص';
+
+  @override
+  String get verseCardCopiedSuccess => 'تم نسخ النص بنجاح';
+
+  @override
+  String get verseCardFormatLabel => 'نوع المشاركة';
+
+  @override
+  String get verseCardFormatImage => 'بطاقة الآيات';
+
+  @override
+  String get verseCardFormatText => 'نص قرآني';
+
+  @override
+  String get verseCardFormatFullPage => 'صفحة كاملة';
+
+  @override
+  String get verseCardShare => 'مشاركة البطاقة';
+
+  @override
+  String get verseCardSave => 'حفظ الصورة';
+
+  @override
+  String get verseCardSavedSuccess => 'تم حفظ الصورة بنجاح';
+
+  @override
+  String get verseCardIncludeTafsir => 'إدراج التفسير / الترجمة';
+
+  @override
+  String get verseCardIncludeBranding => 'شعار التطبيق';
+
+  @override
+  String get verseCardVerseRange => 'نطاق الآيات';
+
+  @override
+  String get verseCardStartAyah => 'اختر آية البداية';
+
+  @override
+  String get verseCardEndAyah => 'اختر آية النهاية';
 }

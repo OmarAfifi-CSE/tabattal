@@ -17,6 +17,7 @@ import '../../../../settings/bloc/settings_bloc.dart';
 import 'package:flutter/services.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/services/update_service.dart';
+import '../../widgets/verse_card_generator_sheet.dart';
 
 class QuranMobileScreen extends StatefulWidget {
   final int? initialPage;
@@ -33,12 +34,14 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
   int _currentPage = 1;
   String? _highlightVerseKey;
   bool _isAudioExpanded = true;
+  final GlobalKey _currentPageRepaintKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
     _currentPage = context.read<AudioPreferencesService>().lastReadPage;
     _pageController = PageController(initialPage: _currentPage - 1);
+    QuranPageRepaintRegistry.currentPageKey = _currentPageRepaintKey;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -209,7 +212,9 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                         },
                         itemBuilder: (context, index) {
                           final pageNumber = index + 1;
+                          final isCurrentPage = pageNumber == _currentPage;
                           return RepaintBoundary(
+                            key: isCurrentPage ? _currentPageRepaintKey : null,
                             child: QuranPageWidgetMobile(
                               key: ValueKey(pageNumber),
                               pageNumber: pageNumber,

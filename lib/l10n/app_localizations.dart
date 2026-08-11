@@ -799,6 +799,120 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تذكير القرآن'**
   String get tafsirEnTazkirul;
+
+  /// No description provided for @menuShareCard.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة الآيات'**
+  String get menuShareCard;
+
+  /// No description provided for @verseCardTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة الآيات'**
+  String get verseCardTitle;
+
+  /// No description provided for @verseCardShareImage.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة البطاقة'**
+  String get verseCardShareImage;
+
+  /// No description provided for @verseCardSaveImage.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ الصورة'**
+  String get verseCardSaveImage;
+
+  /// No description provided for @verseCardShareText.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة النص'**
+  String get verseCardShareText;
+
+  /// No description provided for @verseCardCopyText.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخ النص'**
+  String get verseCardCopyText;
+
+  /// No description provided for @verseCardCopiedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم نسخ النص بنجاح'**
+  String get verseCardCopiedSuccess;
+
+  /// No description provided for @verseCardFormatLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'نوع المشاركة'**
+  String get verseCardFormatLabel;
+
+  /// No description provided for @verseCardFormatImage.
+  ///
+  /// In ar, this message translates to:
+  /// **'بطاقة الآيات'**
+  String get verseCardFormatImage;
+
+  /// No description provided for @verseCardFormatText.
+  ///
+  /// In ar, this message translates to:
+  /// **'نص قرآني'**
+  String get verseCardFormatText;
+
+  /// No description provided for @verseCardFormatFullPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'صفحة كاملة'**
+  String get verseCardFormatFullPage;
+
+  /// No description provided for @verseCardShare.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة البطاقة'**
+  String get verseCardShare;
+
+  /// No description provided for @verseCardSave.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ الصورة'**
+  String get verseCardSave;
+
+  /// No description provided for @verseCardSavedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حفظ الصورة بنجاح'**
+  String get verseCardSavedSuccess;
+
+  /// No description provided for @verseCardIncludeTafsir.
+  ///
+  /// In ar, this message translates to:
+  /// **'إدراج التفسير / الترجمة'**
+  String get verseCardIncludeTafsir;
+
+  /// No description provided for @verseCardIncludeBranding.
+  ///
+  /// In ar, this message translates to:
+  /// **'شعار التطبيق'**
+  String get verseCardIncludeBranding;
+
+  /// No description provided for @verseCardVerseRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'نطاق الآيات'**
+  String get verseCardVerseRange;
+
+  /// No description provided for @verseCardStartAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر آية البداية'**
+  String get verseCardStartAyah;
+
+  /// No description provided for @verseCardEndAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر آية النهاية'**
+  String get verseCardEndAyah;
 }
 
 class _AppLocalizationsDelegate

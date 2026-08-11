@@ -390,4 +390,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tafsirEnTazkirul => 'Tazkirul Quran';
+
+  @override
+  String get menuShareCard => 'Share Verses';
+
+  @override
+  String get verseCardTitle => 'Share Verses';
+
+  @override
+  String get verseCardShareImage => 'Share Card';
+
+  @override
+  String get verseCardSaveImage => 'Save Image';
+
+  @override
+  String get verseCardShareText => 'Share Text';
+
+  @override
+  String get verseCardCopyText => 'Copy Text';
+
+  @override
+  String get verseCardCopiedSuccess => 'Text copied successfully';
+
+  @override
+  String get verseCardFormatLabel => 'Share Format';
+
+  @override
+  String get verseCardFormatImage => 'Verse Card';
+
+  @override
+  String get verseCardFormatText => 'Plain Text';
+
+  @override
+  String get verseCardFormatFullPage => 'Full Page';
+
+  @override
+  String get verseCardShare => 'Share Card';
+
+  @override
+  String get verseCardSave => 'Save Image';
+
+  @override
+  String get verseCardSavedSuccess => 'Image saved successfully';
+
+  @override
+  String get verseCardIncludeTafsir => 'Include Tafsir / Translation';
+
+  @override
+  String get verseCardIncludeBranding => 'App Logo';
+
+  @override
+  String get verseCardVerseRange => 'Verse Range';
+
+  @override
+  String get verseCardStartAyah => 'Select Start Ayah';
+
+  @override
+  String get verseCardEndAyah => 'Select End Ayah';
 }

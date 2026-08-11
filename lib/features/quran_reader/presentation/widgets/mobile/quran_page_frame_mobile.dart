@@ -17,6 +17,7 @@ class QuranPageFrameMobile extends StatelessWidget {
   final String surahName;
   final String juzName;
   final VoidCallback? onHeaderTap;
+  final bool showHeaderMenu;
 
   const QuranPageFrameMobile({
     super.key,
@@ -26,6 +27,7 @@ class QuranPageFrameMobile extends StatelessWidget {
     required this.surahName,
     required this.juzName,
     this.onHeaderTap,
+    this.showHeaderMenu = true,
   });
 
   /// Builds inline text spans for a Hizb label, making the digit larger and on a new line.
@@ -253,32 +255,33 @@ class QuranPageFrameMobile extends StatelessWidget {
                 ),
 
                 // Hamburger Menu
-                Positioned(
-                  top: pageHeight * 0.02,
-                  right: pageWidth * 0.07,
-                  child: FractionalTranslation(
-                    translation: const Offset(0, -0.5),
-                    child: GestureDetector(
-                      onTap: () {
-                        onHeaderTap?.call();
-                        Scaffold.of(context).openDrawer();
-                      },
-                      child: _buildFrameInfoBox(
-                        theme: mushafTheme,
-                        margin: EdgeInsets.symmetric(horizontal: 6.w),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 4.w,
-                          vertical: 0.h,
-                        ),
-                        child: Icon(
-                          Icons.segment_rounded,
-                          color: mushafTheme.goldColor,
-                          size: 24.sp,
+                if (showHeaderMenu)
+                  Positioned(
+                    top: pageHeight * 0.02,
+                    right: pageWidth * 0.07,
+                    child: FractionalTranslation(
+                      translation: const Offset(0, -0.5),
+                      child: GestureDetector(
+                        onTap: () {
+                          onHeaderTap?.call();
+                          Scaffold.of(context).openDrawer();
+                        },
+                        child: _buildFrameInfoBox(
+                          theme: mushafTheme,
+                          margin: EdgeInsets.symmetric(horizontal: 6.w),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 4.w,
+                            vertical: 0.h,
+                          ),
+                          child: Icon(
+                            Icons.segment_rounded,
+                            color: mushafTheme.goldColor,
+                            size: 24.sp,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
 
                 // ── LAYER 4: Page Number (bottom cut) ──────────────────────
                 Positioned(

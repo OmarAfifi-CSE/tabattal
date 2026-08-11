@@ -19,6 +19,7 @@ import '../../../bloc/audio/audio_event.dart';
 import '../../../bloc/hifz/hifz_bloc.dart';
 import '../../../bloc/hifz/hifz_event.dart';
 import '../../../bloc/hifz/hifz_state.dart';
+import '../verse_card_generator_sheet.dart';
 
 class OverlayPositionDelegate extends SingleChildLayoutDelegate {
   final Offset tapPosition;
@@ -1142,6 +1143,31 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                 const ToggleHifzMode(),
                               );
                             },
+                          );
+                        },
+                      ),
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: AppColors.divider,
+                      ),
+                      _buildMenuItem(
+                        Icons.style_outlined,
+                        l10n.menuShareCard,
+                        () {
+                          final qState = context.read<QuranBloc>().state;
+                          String? tafsirText;
+                          String? translationText;
+                          if (qState is TafsirLoaded) {
+                            tafsirText = qState.tafsir.text;
+                          } else if (qState is TranslationLoaded) {
+                            translationText = qState.translation.text;
+                          }
+                          showVerseCardGeneratorModal(
+                            context,
+                            verse: widget.verse,
+                            tafsirText: tafsirText,
+                            translationText: translationText,
                           );
                         },
                       ),
