@@ -25,6 +25,9 @@ class MushafTheme extends Equatable {
     innerBorderColor,
   ];
 
+  /// Returns true if the theme background is dark (luminance < 0.45).
+  bool get isDarkTheme => backgroundColor.computeLuminance() < 0.45;
+
   // The 4 color themes
   static const MushafTheme cream = MushafTheme(
     id: 'cream',
@@ -58,6 +61,54 @@ class MushafTheme extends Equatable {
     innerBorderColor: Color(0xFFD6E4EE),
   );
 
+  static const MushafTheme parchment = MushafTheme(
+    id: 'parchment',
+    backgroundColor: Color(0xFFF5EBE0),
+    textColor: Color(0xFF3A2D21),
+    goldColor: Color(0xFF9C7A44),
+    innerBorderColor: Color(0xFFE3D4C1),
+  );
+
+  static const MushafTheme roseGold = MushafTheme(
+    id: 'roseGold',
+    backgroundColor: Color(0xFFFDF8F5),
+    textColor: Color(0xFF38282A),
+    goldColor: Color(0xFFD89A88),
+    innerBorderColor: Color(0xFFF0DCD5),
+  );
+
+  static const MushafTheme slate = MushafTheme(
+    id: 'slate',
+    backgroundColor: Color(0xFFF4F5F7),
+    textColor: Color(0xFF1E252B),
+    goldColor: Color(0xFF7D8C9E),
+    innerBorderColor: Color(0xFFD8DFE8),
+  );
+
+  static const MushafTheme olive = MushafTheme(
+    id: 'olive',
+    backgroundColor: Color(0xFFF7F8F2),
+    textColor: Color(0xFF252B1E),
+    goldColor: Color(0xFF9A9D49),
+    innerBorderColor: Color(0xFFDFE3D1),
+  );
+
+  static const MushafTheme emerald = MushafTheme(
+    id: 'emerald',
+    backgroundColor: Color(0xFF0A1F18),
+    textColor: Color(0xFFF5F0E6),
+    goldColor: Color(0xFFD4AF37),
+    innerBorderColor: Color(0xFF1D3B30),
+  );
+
+  static const MushafTheme burgundy = MushafTheme(
+    id: 'burgundy',
+    backgroundColor: Color(0xFF1A0C14),
+    textColor: Color(0xFFF8EEF2),
+    goldColor: Color(0xFFE0B36C),
+    innerBorderColor: Color(0xFF331B28),
+  );
+
   // Dark Mode override
   static const MushafTheme dark = MushafTheme(
     id: 'dark',
@@ -67,7 +118,18 @@ class MushafTheme extends Equatable {
     innerBorderColor: Color(0xFF2C2C2C),
   );
 
-  static const List<MushafTheme> values = [cream, white, mint, iceBlue];
+  static const List<MushafTheme> values = [
+    cream,
+    white,
+    parchment,
+    roseGold,
+    mint,
+    olive,
+    iceBlue,
+    slate,
+    emerald,
+    burgundy,
+  ];
 
   static MushafTheme fromId(String id) {
     switch (id) {
@@ -77,6 +139,18 @@ class MushafTheme extends Equatable {
         return mint;
       case 'iceBlue':
         return iceBlue;
+      case 'parchment':
+        return parchment;
+      case 'roseGold':
+        return roseGold;
+      case 'slate':
+        return slate;
+      case 'olive':
+        return olive;
+      case 'emerald':
+        return emerald;
+      case 'burgundy':
+        return burgundy;
       case 'dark':
         return dark;
       case 'cream':

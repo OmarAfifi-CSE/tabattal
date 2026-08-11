@@ -127,6 +127,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get themeIceBlue => 'أزرق ثلجي';
 
   @override
+  String get themeParchment => 'عتيق';
+
+  @override
+  String get themeRoseGold => 'روز جولد';
+
+  @override
+  String get themeSlate => 'رخامي';
+
+  @override
+  String get themeOlive => 'زيتوني';
+
+  @override
+  String get themeEmerald => 'زمردي';
+
+  @override
+  String get themeSapphire => 'كحلي';
+
+  @override
+  String get themeBurgundy => 'عنابي';
+
+  @override
   String get themeDark => 'ليلي';
 
   @override

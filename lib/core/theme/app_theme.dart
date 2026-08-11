@@ -54,17 +54,18 @@ const SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(
 Widget appDirectionalityBuilder(BuildContext context, Widget? child) {
   final settingsState = context.watch<SettingsBloc>().state;
   final effectiveTheme = settingsState.effectiveMushafTheme;
-  final isDarkMode = effectiveTheme.id == 'dark';
+  final isDarkStatusBar = effectiveTheme.isDarkTheme;
 
-  AppColors.isDarkMode = isDarkMode;
+  AppColors.isDarkMode = settingsState.themeMode == ThemeMode.dark;
   AppColors.currentMushafTheme = effectiveTheme;
 
   final overlayStyle = SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     systemNavigationBarColor: Colors.transparent,
     systemNavigationBarDividerColor: Colors.transparent,
-    statusBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
-    systemNavigationBarIconBrightness: isDarkMode
+    statusBarIconBrightness: isDarkStatusBar ? Brightness.light : Brightness.dark,
+    statusBarBrightness: isDarkStatusBar ? Brightness.dark : Brightness.light,
+    systemNavigationBarIconBrightness: isDarkStatusBar
         ? Brightness.light
         : Brightness.dark,
     systemNavigationBarContrastEnforced: false,

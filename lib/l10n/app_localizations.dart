@@ -332,6 +332,48 @@ abstract class AppLocalizations {
   /// **'أزرق ثلجي'**
   String get themeIceBlue;
 
+  /// No description provided for @themeParchment.
+  ///
+  /// In ar, this message translates to:
+  /// **'عتيق'**
+  String get themeParchment;
+
+  /// No description provided for @themeRoseGold.
+  ///
+  /// In ar, this message translates to:
+  /// **'روز جولد'**
+  String get themeRoseGold;
+
+  /// No description provided for @themeSlate.
+  ///
+  /// In ar, this message translates to:
+  /// **'رخامي'**
+  String get themeSlate;
+
+  /// No description provided for @themeOlive.
+  ///
+  /// In ar, this message translates to:
+  /// **'زيتوني'**
+  String get themeOlive;
+
+  /// No description provided for @themeEmerald.
+  ///
+  /// In ar, this message translates to:
+  /// **'زمردي'**
+  String get themeEmerald;
+
+  /// No description provided for @themeSapphire.
+  ///
+  /// In ar, this message translates to:
+  /// **'كحلي'**
+  String get themeSapphire;
+
+  /// No description provided for @themeBurgundy.
+  ///
+  /// In ar, this message translates to:
+  /// **'عنابي'**
+  String get themeBurgundy;
+
   /// No description provided for @themeDark.
   ///
   /// In ar, this message translates to:

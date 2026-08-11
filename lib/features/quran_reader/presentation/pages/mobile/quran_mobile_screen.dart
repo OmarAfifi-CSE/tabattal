@@ -152,17 +152,16 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
   Widget build(BuildContext context) {
     // Watch SettingsBloc so this screen rebuilds instantly on theme change
     final settingsState = context.watch<SettingsBloc>().state;
-    final isDarkMode = settingsState.effectiveMushafTheme.id == 'dark';
+    final isDark = settingsState.effectiveMushafTheme.isDarkTheme;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         systemNavigationBarColor: Colors.transparent,
         systemNavigationBarDividerColor: Colors.transparent,
-        statusBarIconBrightness: isDarkMode
-            ? Brightness.light
-            : Brightness.dark,
-        systemNavigationBarIconBrightness: isDarkMode
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        systemNavigationBarIconBrightness: isDark
             ? Brightness.light
             : Brightness.dark,
         systemNavigationBarContrastEnforced: false,

@@ -270,10 +270,12 @@ class QuranDrawerTablet extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Container(
       width: MediaQuery.sizeOf(context).width,
-      padding: EdgeInsets.fromLTRB(20.w, 32.h, 20.w, 24.h),
+      padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 14.h),
       decoration: BoxDecoration(
         color: AppColors.accentGold.withValues(alpha: 0.08),
-        border: Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
+        border: Border(
+          bottom: BorderSide(color: AppColors.divider, width: 1.w),
+        ),
       ),
       child: Column(
         children: [
@@ -282,7 +284,7 @@ class QuranDrawerTablet extends StatelessWidget {
             color: AppColors.accentGold.withValues(alpha: 0.8),
             size: 32.sp,
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 10.h),
           Text(
             '\uFD71 وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا \uFD70',
             textAlign: TextAlign.center,
@@ -552,6 +554,8 @@ class ScrollDirectionToggle extends StatelessWidget {
     final isHorizontal = scrollDirection == Axis.horizontal;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
+    final activeTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
+
     // In RTL, Alignment.centerRight corresponds to the first item visually.
     final horizontalAlignment = isArabic
         ? Alignment.centerRight
@@ -577,7 +581,7 @@ class ScrollDirectionToggle extends StatelessWidget {
               child: Container(
                 margin: EdgeInsets.all(4.r),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceCream,
+                  color: activeTheme.backgroundColor,
                   borderRadius: BorderRadius.circular(8.r),
                   boxShadow: [
                     BoxShadow(
@@ -606,7 +610,7 @@ class ScrollDirectionToggle extends StatelessWidget {
                             Icons.swap_horiz_rounded,
                             size: 18.sp,
                             color: isHorizontal
-                                ? AppColors.accentGold
+                                ? activeTheme.goldColor
                                 : AppColors.textPrimary.withValues(alpha: 0.6),
                           ),
                           SizedBox(width: 6.w),
@@ -618,7 +622,7 @@ class ScrollDirectionToggle extends StatelessWidget {
                                   ? FontWeight.bold
                                   : FontWeight.w500,
                               color: isHorizontal
-                                  ? AppColors.accentGold
+                                  ? activeTheme.goldColor
                                   : AppColors.textPrimary.withValues(
                                       alpha: 0.6,
                                     ),
@@ -641,7 +645,7 @@ class ScrollDirectionToggle extends StatelessWidget {
                             Icons.swap_vert_rounded,
                             size: 18.sp,
                             color: !isHorizontal
-                                ? AppColors.accentGold
+                                ? activeTheme.goldColor
                                 : AppColors.textPrimary.withValues(alpha: 0.6),
                           ),
                           SizedBox(width: 6.w),
@@ -653,7 +657,7 @@ class ScrollDirectionToggle extends StatelessWidget {
                                   ? FontWeight.bold
                                   : FontWeight.w500,
                               color: !isHorizontal
-                                  ? AppColors.accentGold
+                                  ? activeTheme.goldColor
                                   : AppColors.textPrimary.withValues(
                                       alpha: 0.6,
                                     ),
@@ -689,6 +693,18 @@ class _ThemePickerSheet extends StatelessWidget {
         return l10n.themeMint;
       case 'iceBlue':
         return l10n.themeIceBlue;
+      case 'parchment':
+        return l10n.themeParchment;
+      case 'roseGold':
+        return l10n.themeRoseGold;
+      case 'slate':
+        return l10n.themeSlate;
+      case 'olive':
+        return l10n.themeOlive;
+      case 'emerald':
+        return l10n.themeEmerald;
+      case 'burgundy':
+        return l10n.themeBurgundy;
       case 'dark':
         return l10n.themeDark;
       default:
@@ -758,7 +774,7 @@ class _ThemePickerSheet extends StatelessWidget {
                               isDark
                                   ? Icons.dark_mode_rounded
                                   : Icons.light_mode_rounded,
-                              color: AppColors.accentGold,
+                              color: state.effectiveMushafTheme.goldColor,
                             ),
                             SizedBox(width: 12.w),
                             Text(
@@ -773,8 +789,21 @@ class _ThemePickerSheet extends StatelessWidget {
                         ),
                         Switch(
                           value: isDark,
-                          activeThumbColor: state.effectiveMushafTheme.goldColor,
-                          activeTrackColor: state.effectiveMushafTheme.goldColor.withValues(alpha: 0.5),
+                          thumbColor: WidgetStateProperty.resolveWith<Color>((states) {
+                            if (states.contains(WidgetState.selected)) {
+                              return state.effectiveMushafTheme.goldColor;
+                            }
+                            return state.effectiveMushafTheme.textColor.withValues(alpha: 0.75);
+                          }),
+                          trackColor: WidgetStateProperty.resolveWith<Color>((states) {
+                            if (states.contains(WidgetState.selected)) {
+                              return state.effectiveMushafTheme.goldColor.withValues(alpha: 0.45);
+                            }
+                            return state.effectiveMushafTheme.innerBorderColor;
+                          }),
+                          trackOutlineColor: WidgetStateProperty.resolveWith<Color>((states) {
+                            return state.effectiveMushafTheme.goldColor.withValues(alpha: 0.35);
+                          }),
                           onChanged: (val) {
                             context.read<SettingsBloc>().add(
                               ToggleThemeMode(
@@ -804,13 +833,21 @@ class _ThemePickerSheet extends StatelessWidget {
                 ),
                 SizedBox(height: 12.h),
 
-                // Grid of colors
+                // Grid of colors (5x2 perfectly symmetrical layout)
                 Directionality(
                   textDirection: TextDirection.rtl,
-                  child: Wrap(
-                    spacing: 12.w,
-                    runSpacing: 12.h,
-                    children: MushafTheme.values.map((theme) {
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 5,
+                      mainAxisSpacing: 12.h,
+                      crossAxisSpacing: 6.w,
+                      childAspectRatio: 0.80,
+                    ),
+                    itemCount: MushafTheme.values.length,
+                    itemBuilder: (context, index) {
+                      final theme = MushafTheme.values[index];
                       final isSelected = state.mushafTheme.id == theme.id;
                       return GestureDetector(
                         onTap: () {
@@ -831,7 +868,7 @@ class _ThemePickerSheet extends StatelessWidget {
                                   color: isSelected
                                       ? theme.goldColor
                                       : AppColors.borderLight,
-                                  width: isSelected ? 3 : 1,
+                                  width: isSelected ? 2.5 : 1,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
@@ -847,26 +884,31 @@ class _ThemePickerSheet extends StatelessWidget {
                                   ? Icon(
                                       Icons.check_rounded,
                                       color: theme.goldColor,
+                                      size: 20.sp,
                                     )
                                   : null,
                             ),
-                            SizedBox(height: 8.h),
-                            Text(
-                              _getThemeName(context, theme.id),
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: isSelected
-                                    ? theme.goldColor
-                                    : AppColors.textPrimary,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
+                            SizedBox(height: 6.h),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                _getThemeName(context, theme.id),
+                                maxLines: 1,
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  color: isSelected
+                                      ? theme.goldColor
+                                      : AppColors.textPrimary,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       );
-                    }).toList(),
+                    },
                   ),
                 ),
               ],

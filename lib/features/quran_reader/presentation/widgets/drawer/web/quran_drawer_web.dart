@@ -269,7 +269,7 @@ class QuranDrawerWeb extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Container(
       width: MediaQuery.sizeOf(context).width,
-      padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
       decoration: BoxDecoration(
         color: AppColors.accentGold.withValues(alpha: 0.08),
         border: Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
@@ -281,7 +281,7 @@ class QuranDrawerWeb extends StatelessWidget {
             color: AppColors.accentGold.withValues(alpha: 0.8),
             size: 32,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           Text(
             '\uFD71 وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا \uFD70',
             textAlign: TextAlign.center,
@@ -688,6 +688,18 @@ class _ThemePickerSheet extends StatelessWidget {
         return l10n.themeMint;
       case 'iceBlue':
         return l10n.themeIceBlue;
+      case 'parchment':
+        return l10n.themeParchment;
+      case 'roseGold':
+        return l10n.themeRoseGold;
+      case 'slate':
+        return l10n.themeSlate;
+      case 'olive':
+        return l10n.themeOlive;
+      case 'emerald':
+        return l10n.themeEmerald;
+      case 'burgundy':
+        return l10n.themeBurgundy;
       case 'dark':
         return l10n.themeDark;
       default:
@@ -757,7 +769,7 @@ class _ThemePickerSheet extends StatelessWidget {
                               isDark
                                   ? Icons.dark_mode_rounded
                                   : Icons.light_mode_rounded,
-                              color: AppColors.accentGold,
+                              color: state.effectiveMushafTheme.goldColor,
                             ),
                             const SizedBox(width: 12),
                             Text(
@@ -772,8 +784,21 @@ class _ThemePickerSheet extends StatelessWidget {
                         ),
                         Switch(
                           value: isDark,
-                          activeThumbColor: state.effectiveMushafTheme.goldColor,
-                          activeTrackColor: state.effectiveMushafTheme.goldColor.withValues(alpha: 0.5),
+                          thumbColor: WidgetStateProperty.resolveWith<Color>((states) {
+                            if (states.contains(WidgetState.selected)) {
+                              return state.effectiveMushafTheme.goldColor;
+                            }
+                            return state.effectiveMushafTheme.textColor.withValues(alpha: 0.75);
+                          }),
+                          trackColor: WidgetStateProperty.resolveWith<Color>((states) {
+                            if (states.contains(WidgetState.selected)) {
+                              return state.effectiveMushafTheme.goldColor.withValues(alpha: 0.45);
+                            }
+                            return state.effectiveMushafTheme.innerBorderColor;
+                          }),
+                          trackOutlineColor: WidgetStateProperty.resolveWith<Color>((states) {
+                            return state.effectiveMushafTheme.goldColor.withValues(alpha: 0.35);
+                          }),
                           onChanged: (val) {
                             context.read<SettingsBloc>().add(
                               ToggleThemeMode(
@@ -803,13 +828,21 @@ class _ThemePickerSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Grid of colors
+                // Grid of colors (5x2 perfectly symmetrical layout)
                 Directionality(
                   textDirection: TextDirection.rtl,
-                  child: Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: MushafTheme.values.map((theme) {
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 5,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 6,
+                      childAspectRatio: 0.80,
+                    ),
+                    itemCount: MushafTheme.values.length,
+                    itemBuilder: (context, index) {
+                      final theme = MushafTheme.values[index];
                       final isSelected = state.mushafTheme.id == theme.id;
                       return GestureDetector(
                         onTap: () {
@@ -830,7 +863,7 @@ class _ThemePickerSheet extends StatelessWidget {
                                   color: isSelected
                                       ? theme.goldColor
                                       : AppColors.borderLight,
-                                  width: isSelected ? 3 : 1,
+                                  width: isSelected ? 2.5 : 1,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
@@ -846,26 +879,31 @@ class _ThemePickerSheet extends StatelessWidget {
                                   ? Icon(
                                       Icons.check_rounded,
                                       color: theme.goldColor,
+                                      size: 20,
                                     )
                                   : null,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _getThemeName(context, theme.id),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isSelected
-                                    ? theme.goldColor
-                                    : AppColors.textPrimary,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
+                            const SizedBox(height: 6),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                _getThemeName(context, theme.id),
+                                maxLines: 1,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isSelected
+                                      ? theme.goldColor
+                                      : AppColors.textPrimary,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       );
-                    }).toList(),
+                    },
                   ),
                 ),
               ],

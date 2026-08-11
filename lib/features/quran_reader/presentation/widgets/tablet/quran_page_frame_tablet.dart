@@ -112,13 +112,16 @@ class QuranPageFrameTablet extends StatelessWidget {
       fontWeight: FontWeight.bold,
     );
 
+    final isDark = mushafTheme.isDarkTheme;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         systemNavigationBarColor: Colors.transparent,
         systemNavigationBarDividerColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         systemNavigationBarContrastEnforced: false,
         systemStatusBarContrastEnforced: false,
       ),

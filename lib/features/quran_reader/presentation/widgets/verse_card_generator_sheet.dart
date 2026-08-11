@@ -8,11 +8,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/constants/quran_metadata.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/mixed_direction_text.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../settings/bloc/settings_bloc.dart';
 import '../../data/models/verse_model.dart';
 
 /// Global registry for the current Quran page repaint boundary key.
@@ -98,21 +101,93 @@ class VerseCardTheme {
   static const List<VerseCardTheme> themes = [
     VerseCardTheme(
       name: 'كريمي',
-      backgroundColor: Color(0xFFFDFBF7),
+      backgroundColor: Color(0xFFFBF7F0),
       cardBackground: Color(0xFFF7F2E7),
-      primaryTextColor: Color(0xFF2C1D11),
+      primaryTextColor: Color(0xFF2C2520),
       secondaryTextColor: Color(0xFF5D4A3A),
-      accentColor: Color(0xFFC5A059),
-      borderColor: Color(0xFFE8DCC4),
+      accentColor: Color(0xFFB59A53),
+      borderColor: Color(0xFFEAD8BA),
+    ),
+    VerseCardTheme(
+      name: 'أبيض',
+      backgroundColor: Color(0xFFFFFFFF),
+      cardBackground: Color(0xFFF7F7F7),
+      primaryTextColor: Color(0xFF1E1E1E),
+      secondaryTextColor: Color(0xFF555555),
+      accentColor: Color(0xFFC7A263),
+      borderColor: Color(0xFFF0E5D1),
+    ),
+    VerseCardTheme(
+      name: 'عتيق',
+      backgroundColor: Color(0xFFF5EBE0),
+      cardBackground: Color(0xFFEFE3D3),
+      primaryTextColor: Color(0xFF3A2D21),
+      secondaryTextColor: Color(0xFF6E5642),
+      accentColor: Color(0xFF9C7A44),
+      borderColor: Color(0xFFE3D4C1),
+    ),
+    VerseCardTheme(
+      name: 'روز جولد',
+      backgroundColor: Color(0xFFFDF8F5),
+      cardBackground: Color(0xFFF7ECE7),
+      primaryTextColor: Color(0xFF38282A),
+      secondaryTextColor: Color(0xFF6B5154),
+      accentColor: Color(0xFFD89A88),
+      borderColor: Color(0xFFF0DCD5),
+    ),
+    VerseCardTheme(
+      name: 'نعناعي',
+      backgroundColor: Color(0xFFF0F7F4),
+      cardBackground: Color(0xFFE1EFEA),
+      primaryTextColor: Color(0xFF1B3B2B),
+      secondaryTextColor: Color(0xFF436B56),
+      accentColor: Color(0xFF5B8A72),
+      borderColor: Color(0xFFD6E8DB),
+    ),
+    VerseCardTheme(
+      name: 'زيتوني',
+      backgroundColor: Color(0xFFF7F8F2),
+      cardBackground: Color(0xFFECEFE5),
+      primaryTextColor: Color(0xFF252B1E),
+      secondaryTextColor: Color(0xFF535C48),
+      accentColor: Color(0xFF9A9D49),
+      borderColor: Color(0xFFDFE3D1),
+    ),
+    VerseCardTheme(
+      name: 'ثلجي',
+      backgroundColor: Color(0xFFF4F8FA),
+      cardBackground: Color(0xFFE5F0F5),
+      primaryTextColor: Color(0xFF1D2830),
+      secondaryTextColor: Color(0xFF425A70),
+      accentColor: Color(0xFF7B99AD),
+      borderColor: Color(0xFFD6E4EE),
+    ),
+    VerseCardTheme(
+      name: 'رخامي',
+      backgroundColor: Color(0xFFF4F5F7),
+      cardBackground: Color(0xFFE8ECF0),
+      primaryTextColor: Color(0xFF1E252B),
+      secondaryTextColor: Color(0xFF4C5866),
+      accentColor: Color(0xFF7D8C9E),
+      borderColor: Color(0xFFD8DFE8),
     ),
     VerseCardTheme(
       name: 'زمردي',
-      backgroundColor: Color(0xFF071F17),
-      cardBackground: Color(0xFF0E2E23),
+      backgroundColor: Color(0xFF0A1F18),
+      cardBackground: Color(0xFF132D24),
       primaryTextColor: Color(0xFFFAF6F0),
       secondaryTextColor: Color(0xFFD0C3B0),
       accentColor: Color(0xFFD4AF37),
-      borderColor: Color(0xFF2A5043),
+      borderColor: Color(0xFF1D3B30),
+    ),
+    VerseCardTheme(
+      name: 'عنابي',
+      backgroundColor: Color(0xFF1A0C14),
+      cardBackground: Color(0xFF27131F),
+      primaryTextColor: Color(0xFFF8EEF2),
+      secondaryTextColor: Color(0xFFC7A5B5),
+      accentColor: Color(0xFFE0B36C),
+      borderColor: Color(0xFF331B28),
     ),
     VerseCardTheme(
       name: 'ليلي',
@@ -122,24 +197,6 @@ class VerseCardTheme {
       secondaryTextColor: Color(0xFF8B949E),
       accentColor: Color(0xFFE2C044),
       borderColor: Color(0xFF30363D),
-    ),
-    VerseCardTheme(
-      name: 'نعناعي',
-      backgroundColor: Color(0xFFF0F7F4),
-      cardBackground: Color(0xFFE1EFEA),
-      primaryTextColor: Color(0xFF1B3B2B),
-      secondaryTextColor: Color(0xFF436B56),
-      accentColor: Color(0xFF2E7D32),
-      borderColor: Color(0xFFC8E6C9),
-    ),
-    VerseCardTheme(
-      name: 'ثلجي',
-      backgroundColor: Color(0xFFF0F8FF),
-      cardBackground: Color(0xFFE1F5FE),
-      primaryTextColor: Color(0xFF0A2540),
-      secondaryTextColor: Color(0xFF425A70),
-      accentColor: Color(0xFF0288D1),
-      borderColor: Color(0xFFB3E5FC),
     ),
   ];
 }
@@ -192,11 +249,60 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   @override
   void initState() {
     super.initState();
+    _selectedThemeIndex = _getInitialThemeIndex();
     _startAyah = widget.verse.verseNumber;
     _endAyah = widget.verse.verseNumber;
     _totalAyahsInSurah = QuranMetadata.getVerseCountForSurah(_surahNumber);
     _loadVerseTextAndFont();
     _loadFullPageData();
+  }
+
+  int _getInitialThemeIndex() {
+    try {
+      final settingsState = context.read<SettingsBloc>().state;
+      final activeThemeId = settingsState.effectiveMushafTheme.id;
+      final String targetName;
+      switch (activeThemeId) {
+        case 'white':
+          targetName = 'أبيض';
+          break;
+        case 'parchment':
+          targetName = 'عتيق';
+          break;
+        case 'roseGold':
+          targetName = 'روز جولد';
+          break;
+        case 'mint':
+          targetName = 'نعناعي';
+          break;
+        case 'olive':
+          targetName = 'زيتوني';
+          break;
+        case 'iceBlue':
+          targetName = 'ثلجي';
+          break;
+        case 'slate':
+          targetName = 'رخامي';
+          break;
+        case 'emerald':
+          targetName = 'زمردي';
+          break;
+        case 'burgundy':
+          targetName = 'عنابي';
+          break;
+        case 'dark':
+          targetName = 'ليلي';
+          break;
+        case 'cream':
+        default:
+          targetName = 'كريمي';
+          break;
+      }
+      final idx = VerseCardTheme.themes.indexWhere((t) => t.name == targetName);
+      return idx != -1 ? idx : 0;
+    } catch (_) {
+      return 0;
+    }
   }
 
   int _getMaxEndAyah(int start) {
@@ -573,9 +679,10 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
       }
 
       final surahName = QuranMetadata.getSurahName(_surahNumber);
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = _startAyah == _endAyah
-          ? 'Verse_${_surahNumber}_$_startAyah.png'
-          : 'Verse_${_surahNumber}_${_startAyah}_to_$_endAyah.png';
+          ? 'Verse_${_surahNumber}_${_startAyah}_$timestamp.png'
+          : 'Verse_${_surahNumber}_${_startAyah}_to_${_endAyah}_$timestamp.png';
 
       if (kIsWeb) {
         await Share.shareXFiles([
@@ -587,6 +694,19 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
         ]);
       } else {
         final tempDir = await getTemporaryDirectory();
+
+        // Auto-cleanup previous temporary verse card share files to keep device storage clean
+        try {
+          final oldFiles = tempDir.listSync().whereType<File>().where(
+                (file) => file.path.contains('Verse_') && file.path.endsWith('.png'),
+              );
+          for (final oldFile in oldFiles) {
+            try {
+              oldFile.deleteSync();
+            } catch (_) {}
+          }
+        } catch (_) {}
+
         final tempFile = File('${tempDir.path}/$fileName');
         await tempFile.writeAsBytes(imageBytes);
 
