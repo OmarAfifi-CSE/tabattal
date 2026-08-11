@@ -1152,7 +1152,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                         color: AppColors.divider,
                       ),
                       _buildMenuItem(
-                        Icons.style_outlined,
+                        Icons.share_outlined,
                         l10n.menuShareCard,
                         () {
                           final qState = context.read<QuranBloc>().state;
