@@ -961,6 +961,60 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اختر آية النهاية'**
   String get verseCardEndAyah;
+
+  /// No description provided for @topicSectionsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأقسام والموضوعات القرآنية'**
+  String get topicSectionsTitle;
+
+  /// No description provided for @topicSupplications.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدعية القرآن'**
+  String get topicSupplications;
+
+  /// No description provided for @topicTaqwa.
+  ///
+  /// In ar, this message translates to:
+  /// **'التقوى والإحسان'**
+  String get topicTaqwa;
+
+  /// No description provided for @topicPatience.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصبر والفرج'**
+  String get topicPatience;
+
+  /// No description provided for @topicMercy.
+  ///
+  /// In ar, this message translates to:
+  /// **'التبشير والرحمة'**
+  String get topicMercy;
+
+  /// No description provided for @topicWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإنذار والوعيد'**
+  String get topicWarning;
+
+  /// No description provided for @topicProphets.
+  ///
+  /// In ar, this message translates to:
+  /// **'قصص الأنبياء'**
+  String get topicProphets;
+
+  /// No description provided for @topicMorals.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأخلاق والمعاملات'**
+  String get topicMorals;
+
+  /// No description provided for @topicCreation.
+  ///
+  /// In ar, this message translates to:
+  /// **'التفكر والخلق'**
+  String get topicCreation;
 }
 
 class _AppLocalizationsDelegate

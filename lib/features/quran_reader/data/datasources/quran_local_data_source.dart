@@ -6,6 +6,7 @@ import '../models/search_verse_model.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/utils/arabic_text_utils.dart';
 import '../../../../core/constants/quran_constants.dart';
+import '../../../../core/constants/quran_topics.dart';
 
 abstract class QuranLocalDataSource {
   Future<List<WordModel>> getWordsByPage(int pageNumber);
@@ -15,6 +16,7 @@ abstract class QuranLocalDataSource {
   Future<List<Map<String, dynamic>>> getSurahsIndex();
   Future<int> getPageForVerse(String verseKey);
   Future<List<SearchVerseModel>> getVersesBySurah(int surahId);
+  Future<List<SearchVerseModel>> getVersesByRanges(List<VerseRange> ranges);
   Future<List<Map<String, dynamic>>> getTafsirsBySurah(
     int surahId,
     int resourceId,
@@ -159,17 +161,36 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       final db = await databaseHelper.database;
       final allVerses = await _getAllVerses(db);
 
-      final smartQuery = ArabicTextUtils.normalizeArabicDiacritics(
-        query,
-      ).replaceAll(' ', '');
-      if (smartQuery.isEmpty) return [];
+      String cleaned = query.trim();
+      cleaned = cleaned.replaceAll(
+        RegExp(r'^(سورة|سوره|surah)\s*', caseSensitive: false),
+        '',
+      );
+      if (cleaned.isEmpty) cleaned = query.trim();
+
+      final rawKeywords = cleaned.split(RegExp(r'[,،|]+'));
+      final keywords = rawKeywords
+          .map((k) => ArabicTextUtils.normalizeArabicDiacritics(k.trim()).replaceAll(' ', ''))
+          .where((k) => k.isNotEmpty)
+          .toList();
+
+      if (keywords.isEmpty) return [];
 
       final results = <SearchVerseModel>[];
       for (final verse in allVerses) {
         final smartVerse = ArabicTextUtils.normalizeArabicDiacritics(
           verse.textClean,
-        );
-        if (smartVerse.replaceAll(' ', '').contains(smartQuery)) {
+        ).replaceAll(' ', '');
+
+        bool matches = false;
+        for (final kw in keywords) {
+          if (smartVerse.contains(kw)) {
+            matches = true;
+            break;
+          }
+        }
+
+        if (matches) {
           results.add(verse);
           if (results.length >= 100) break;
         }
@@ -178,6 +199,29 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       return results;
     } catch (e) {
       throw CacheException('Search database error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<SearchVerseModel>> getVersesByRanges(
+    List<VerseRange> ranges,
+  ) async {
+    try {
+      final db = await databaseHelper.database;
+      final allVerses = await _getAllVerses(db);
+
+      final results = <SearchVerseModel>[];
+      for (final verse in allVerses) {
+        for (final range in ranges) {
+          if (range.contains(verse.surah, verse.ayah)) {
+            results.add(verse);
+            break;
+          }
+        }
+      }
+      return results;
+    } catch (e) {
+      throw CacheException('Get topic verses error: ${e.toString()}');
     }
   }
 

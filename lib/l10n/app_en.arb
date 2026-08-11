@@ -260,5 +260,14 @@
   "verseCardIncludeBranding": "App Logo",
   "verseCardVerseRange": "Verse Range",
   "verseCardStartAyah": "Select Start Ayah",
-  "verseCardEndAyah": "Select End Ayah"
+  "verseCardEndAyah": "Select End Ayah",
+  "topicSectionsTitle": "Quranic Topics & Categories",
+  "topicSupplications": "Quranic Duas",
+  "topicTaqwa": "Taqwa & Goodness",
+  "topicPatience": "Patience & Relief",
+  "topicMercy": "Mercy & Hope",
+  "topicWarning": "Warning & Reminders",
+  "topicProphets": "Prophets Stories",
+  "topicMorals": "Morals & Ethics",
+  "topicCreation": "Creation & Universe"
 }

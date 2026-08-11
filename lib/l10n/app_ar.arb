@@ -259,5 +259,14 @@
   "verseCardIncludeBranding": "شعار التطبيق",
   "verseCardVerseRange": "نطاق الآيات",
   "verseCardStartAyah": "اختر آية البداية",
-  "verseCardEndAyah": "اختر آية النهاية"
+  "verseCardEndAyah": "اختر آية النهاية",
+  "topicSectionsTitle": "الأقسام والموضوعات القرآنية",
+  "topicSupplications": "أدعية القرآن",
+  "topicTaqwa": "التقوى والإحسان",
+  "topicPatience": "الصبر والفرج",
+  "topicMercy": "التبشير والرحمة",
+  "topicWarning": "الإنذار والوعيد",
+  "topicProphets": "قصص الأنبياء",
+  "topicMorals": "الأخلاق والمعاملات",
+  "topicCreation": "التفكر والخلق"
 }

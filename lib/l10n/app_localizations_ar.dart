@@ -471,4 +471,31 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get verseCardEndAyah => 'اختر آية النهاية';
+
+  @override
+  String get topicSectionsTitle => 'الأقسام والموضوعات القرآنية';
+
+  @override
+  String get topicSupplications => 'أدعية القرآن';
+
+  @override
+  String get topicTaqwa => 'التقوى والإحسان';
+
+  @override
+  String get topicPatience => 'الصبر والفرج';
+
+  @override
+  String get topicMercy => 'التبشير والرحمة';
+
+  @override
+  String get topicWarning => 'الإنذار والوعيد';
+
+  @override
+  String get topicProphets => 'قصص الأنبياء';
+
+  @override
+  String get topicMorals => 'الأخلاق والمعاملات';
+
+  @override
+  String get topicCreation => 'التفكر والخلق';
 }

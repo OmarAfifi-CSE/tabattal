@@ -472,4 +472,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verseCardEndAyah => 'Select End Ayah';
+
+  @override
+  String get topicSectionsTitle => 'Quranic Topics & Categories';
+
+  @override
+  String get topicSupplications => 'Quranic Duas';
+
+  @override
+  String get topicTaqwa => 'Taqwa & Goodness';
+
+  @override
+  String get topicPatience => 'Patience & Relief';
+
+  @override
+  String get topicMercy => 'Mercy & Hope';
+
+  @override
+  String get topicWarning => 'Warning & Reminders';
+
+  @override
+  String get topicProphets => 'Prophets Stories';
+
+  @override
+  String get topicMorals => 'Morals & Ethics';
+
+  @override
+  String get topicCreation => 'Creation & Universe';
 }

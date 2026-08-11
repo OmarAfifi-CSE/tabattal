@@ -8,6 +8,7 @@ import '../../../../../quran_reader/domain/repositories/quran_repository.dart';
 import '../../../../../quran_reader/data/models/search_verse_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
+import '../../../../../../core/constants/quran_topics.dart';
 
 class QuranSearchScreenDesktop extends StatefulWidget {
   const QuranSearchScreenDesktop({super.key});
@@ -25,6 +26,9 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
   bool _isLoading = false;
   List<SearchVerseModel> _results = [];
   bool _isNumericSearch = false;
+
+  QuranTopic? _selectedTopic;
+  QuranSubTopic? _selectedSubTopic;
 
   Map<int, int> _surahPageMap = {};
   bool _surahMapLoaded = false;
@@ -98,10 +102,105 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
   }
 
   void _onSearchChanged(String query) {
+    if (_selectedTopic != null) {
+      setState(() {
+        _selectedTopic = null;
+        _selectedSubTopic = null;
+      });
+    }
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
       _performSearch(query.trim());
     });
+  }
+
+  void _selectTopic(QuranTopic topic) async {
+    setState(() {
+      _selectedTopic = topic;
+      _selectedSubTopic = null;
+      _isLoading = true;
+    });
+
+    List<VerseRange> ranges = [];
+    if (topic.subTopics != null && topic.subTopics!.isNotEmpty) {
+      for (final sub in topic.subTopics!) {
+        ranges.addAll(sub.verseRanges);
+      }
+    } else {
+      ranges = topic.verseRanges;
+    }
+
+    final res = await _repository.getVersesByRanges(ranges);
+    res.fold(
+      (f) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _results = [];
+          });
+        }
+      },
+      (results) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _isNumericSearch = false;
+            _results = results;
+          });
+        }
+      },
+    );
+  }
+
+  void _selectSubTopic(QuranSubTopic? subTopic) async {
+    if (_selectedTopic == null) return;
+    setState(() {
+      _selectedSubTopic = subTopic;
+      _isLoading = true;
+    });
+
+    List<VerseRange> ranges = [];
+    if (subTopic != null) {
+      ranges = subTopic.verseRanges;
+    } else if (_selectedTopic!.subTopics != null) {
+      for (final sub in _selectedTopic!.subTopics!) {
+        ranges.addAll(sub.verseRanges);
+      }
+    } else {
+      ranges = _selectedTopic!.verseRanges;
+    }
+
+    final res = await _repository.getVersesByRanges(ranges);
+    res.fold(
+      (f) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _results = [];
+          });
+        }
+      },
+      (results) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _isNumericSearch = false;
+            _results = results;
+          });
+        }
+      },
+    );
+  }
+
+  void _clearSelectedTopic() {
+    setState(() {
+      _selectedTopic = null;
+      _selectedSubTopic = null;
+      _results = [];
+    });
+    if (_searchController.text.isNotEmpty) {
+      _onSearchChanged(_searchController.text);
+    }
   }
 
   Future<void> _performSearch(String query) async {
@@ -179,6 +278,39 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
     return c;
   }
 
+  List<int> _getMatchingSurahs(String rawQuery) {
+    final queryText = rawQuery.trim();
+    if (queryText.isEmpty) return [];
+
+    String cleaned = queryText.replaceAll(
+      RegExp(r'^(سورة|سوره|surah)\s*', caseSensitive: false),
+      '',
+    );
+    if (cleaned.isEmpty) return [];
+
+    final normQuery = _smartNormalize(cleaned);
+    if (normQuery.isEmpty) return [];
+
+    final exactMatches = <int>[];
+    final partialMatches = <int>[];
+
+    for (int i = 1; i <= 114; i++) {
+      final arabicName = QuranMetadata.getSurahName(i);
+      final englishName = QuranMetadata.getSurahNameEnglish(i);
+
+      final normArabic = _smartNormalize(arabicName);
+      final normEnglish = englishName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+      if (normArabic == normQuery || normEnglish == normQuery.toLowerCase()) {
+        exactMatches.add(i);
+      } else if (normArabic.contains(normQuery) || normEnglish.contains(normQuery.toLowerCase())) {
+        partialMatches.add(i);
+      }
+    }
+
+    return [...exactMatches, ...partialMatches];
+  }
+
   List<TextSpan> _getHighlightedUthmani(
     String textClean,
     String textUthmani,
@@ -186,73 +318,61 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
   ) {
     if (query.isEmpty) return [TextSpan(text: textUthmani)];
 
-    final queryWords = query
-        .trim()
-        .split(RegExp(r'\s+'))
-        .map(_smartNormalize)
-        .where((w) => w.isNotEmpty)
-        .toList();
+    String cleanedQuery = query.trim().replaceAll(
+      RegExp(r'^(سورة|سوره|surah)\s*', caseSensitive: false),
+      '',
+    );
+    if (cleanedQuery.isEmpty) cleanedQuery = query.trim();
+
+    final rawTerms = cleanedQuery.split(RegExp(r'[,،|]+'));
+    final queryWords = <String>[];
+    for (final term in rawTerms) {
+      for (final w in term.trim().split(RegExp(r'\s+'))) {
+        final norm = _smartNormalize(w);
+        if (norm.isNotEmpty) queryWords.add(norm);
+      }
+    }
     if (queryWords.isEmpty) return [TextSpan(text: textUthmani)];
 
     final cleanWords = textClean.split(' ');
     final uthmaniWords = textUthmani.split(' ');
 
-    int startWordIdx = -1;
-    int endWordIdx = -1;
+    final spans = <TextSpan>[];
 
-    for (int i = 0; i <= cleanWords.length - queryWords.length; i++) {
-      bool match = true;
-      for (int j = 0; j < queryWords.length; j++) {
-        if (!_smartNormalize(cleanWords[i + j]).contains(queryWords[j])) {
-          match = false;
+    for (int i = 0; i < uthmaniWords.length; i++) {
+      final cleanW = i < cleanWords.length ? _smartNormalize(cleanWords[i]) : '';
+      bool isMatch = false;
+
+      for (final qw in queryWords) {
+        if (cleanW.contains(qw)) {
+          isMatch = true;
           break;
         }
       }
-      if (match) {
-        startWordIdx = i;
-        endWordIdx = i + queryWords.length - 1;
-        break;
+
+      final wordText = i < uthmaniWords.length - 1 ? '${uthmaniWords[i]} ' : uthmaniWords[i];
+
+      if (isMatch) {
+        spans.add(
+          TextSpan(
+            text: wordText,
+            style: TextStyle(
+              backgroundColor: AppColors.accentGold,
+              color: Colors.white,
+            ),
+          ),
+        );
+      } else {
+        spans.add(TextSpan(text: wordText));
       }
     }
 
-    if (startWordIdx == -1) {
-      return [TextSpan(text: textUthmani)];
-    }
-
-    final spans = <TextSpan>[];
-
-    if (startWordIdx > 0) {
-      spans.add(
-        TextSpan(text: '${uthmaniWords.sublist(0, startWordIdx).join(' ')} '),
-      );
-    }
-
-    spans.add(
-      TextSpan(
-        text: uthmaniWords
-            .sublist(
-              startWordIdx,
-              (endWordIdx + 1).clamp(0, uthmaniWords.length),
-            )
-            .join(' '),
-        style: TextStyle(
-          backgroundColor: AppColors.accentGold,
-          color: Colors.white,
-        ),
-      ),
-    );
-
-    if (endWordIdx < uthmaniWords.length - 1) {
-      spans.add(
-        TextSpan(text: ' ${uthmaniWords.sublist(endWordIdx + 1).join(' ')}'),
-      );
-    }
-
-    return spans;
+    return spans.isEmpty ? [TextSpan(text: textUthmani)] : spans;
   }
 
   @override
   Widget build(BuildContext context) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final content = Scaffold(
       backgroundColor: AppColors.surfaceCream,
       body: SafeArea(
@@ -265,15 +385,23 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
         ),
       ),
     );
-    return content;
+    return Directionality(
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: content,
+      ),
+    );
   }
 
   Widget _buildHeader(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
-        textDirection: TextDirection.rtl,
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
@@ -285,7 +413,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                 border: Border.all(color: AppColors.borderMedium, width: 1),
               ),
               child: Icon(
-                Icons.arrow_forward_rounded,
+                isAr ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded,
                 color: AppColors.textPrimary,
                 size: 24,
               ),
@@ -301,7 +429,6 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                 border: Border.all(color: AppColors.borderMedium, width: 1),
               ),
               child: Row(
-                textDirection: TextDirection.rtl,
                 children: [
                   const SizedBox(width: 12),
                   Icon(
@@ -318,9 +445,9 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                         color: AppColors.textPrimary,
                       ),
                       onChanged: _onSearchChanged,
-                      textDirection: TextDirection.rtl,
-                      textAlign: TextAlign.right,
-                      autofocus: true,
+                      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+                      textAlign: isAr ? TextAlign.right : TextAlign.left,
+                      autofocus: false,
                       decoration: InputDecoration(
                         hintText: l10n.searchHint,
                         hintStyle: TextStyle(
@@ -341,47 +468,340 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
     );
   }
 
-  Widget _buildBody() {
-    final l10n = AppLocalizations.of(context)!;
-    if (_searchController.text.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Spacer(),
-            Icon(
+  Widget _buildTopicsSection(AppLocalizations l10n) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 16),
+          Center(
+            child: Icon(
               Icons.search_rounded,
-              size: 64,
-              color: AppColors.accentGold.withValues(alpha: 0.4),
+              size: 72,
+              color: AppColors.accentGold.withValues(alpha: 0.5),
             ),
-            const SizedBox(height: 16),
-            Center(
-              child: Text(
-                l10n.searchBy,
-                style: TextStyle(
-                  fontSize: 20,
-                  color: AppColors.textPrimary.withValues(alpha: 0.6),
-                  fontWeight: FontWeight.w500,
-                ),
+          ),
+          const SizedBox(height: 14),
+          Center(
+            child: Text(
+              l10n.searchByHint,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.6,
+                color: AppColors.textPrimary.withValues(alpha: 0.6),
               ),
             ),
-            const SizedBox(height: 8),
-            Center(
-              child: Text(
-                l10n.searchByHint,
-                textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          Row(
+            children: [
+              Icon(
+                Icons.grid_view_rounded,
+                size: 20,
+                color: AppColors.accentGold,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                l10n.topicSectionsTitle,
                 style: TextStyle(
                   fontSize: 16,
-                  height: 1.6,
-                  color: AppColors.textPrimary.withValues(alpha: 0.45),
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              mainAxisExtent: 52,
             ),
-            const Spacer(flex: 2),
+            itemCount: QuranTopics.topics.length,
+            itemBuilder: (context, index) {
+              final topic = QuranTopics.topics[index];
+              final title = topic.getTitle(l10n);
+              return GestureDetector(
+                onTap: () => _selectTopic(topic),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardCream,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.accentGold.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        topic.icon,
+                        size: 20,
+                        color: AppColors.accentGold,
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopicHeader(AppLocalizations l10n) {
+    final topicTitle = _selectedTopic!.getTitle(l10n);
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+
+    return Container(
+      color: AppColors.cardCream.withValues(alpha: 0.5),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _selectedTopic!.icon,
+                    size: 22,
+                    color: AppColors.accentGold,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    topicTitle,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.accentGold,
+                    ),
+                  ),
+                ],
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.close_rounded,
+                  size: 24,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: _clearSelectedTopic,
+              ),
+            ],
+          ),
+          if (_selectedTopic!.subTopics != null &&
+              _selectedTopic!.subTopics!.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => _selectSubTopic(null),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      margin: const EdgeInsets.only(left: 6, right: 6),
+                      decoration: BoxDecoration(
+                        color: _selectedSubTopic == null
+                            ? AppColors.accentGold
+                            : AppColors.cardCream,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.accentGold.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        isAr ? 'الكل' : 'All',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: _selectedSubTopic == null
+                              ? Colors.white
+                              : AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  ..._selectedTopic!.subTopics!.map((sub) {
+                    final isSelected = _selectedSubTopic?.id == sub.id;
+                    return GestureDetector(
+                      onTap: () => _selectSubTopic(sub),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        margin: const EdgeInsets.only(left: 6, right: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.accentGold
+                              : AppColors.cardCream,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppColors.accentGold.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          sub.getName(isAr),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
           ],
-        ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    final l10n = AppLocalizations.of(context)!;
+
+    if (_selectedTopic != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildTopicHeader(l10n),
+          if (_isLoading)
+            Expanded(
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.accentGold),
+              ),
+            )
+          else if (_results.isEmpty)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search_off_rounded,
+                      size: 52,
+                      color: AppColors.textPrimary.withValues(alpha: 0.3),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.noResults,
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: AppColors.textPrimary.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: _results.length,
+                separatorBuilder: (_, _) =>
+                    Divider(color: AppColors.divider, height: 1),
+                itemBuilder: (context, index) {
+                  final verse = _results[index];
+                  return GestureDetector(
+                    onTap: () => _navigateToPage(verse.page, verseKey: verse.verseKey),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                l10n.pageListItem(verse.page.toArabicDigits),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textPrimary.withValues(alpha: 0.6),
+                                ),
+                              ),
+                              Text(
+                                l10n.surahAndAyah(
+                                  QuranMetadata.getSurahName(verse.surah),
+                                  verse.ayah.toArabicDigits,
+                                ),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.accentGold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          RichText(
+                            textAlign: TextAlign.right,
+                            textDirection: TextDirection.rtl,
+                            text: TextSpan(
+                              style: AppTextStyles.quranText.copyWith(
+                                fontSize: 22,
+                                height: 1.5,
+                                color: AppColors.textPrimary,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: ArabicTextUtils.removeExtendedUthmaniChars(
+                                    verse.textUthmani,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
       );
+    }
+
+    if (_searchController.text.trim().isEmpty) {
+      return _buildTopicsSection(l10n);
     }
 
     if (_isLoading) {
@@ -394,7 +814,9 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
       return _buildNumericResults();
     }
 
-    if (_results.isEmpty) {
+    final matchingSurahs = _getMatchingSurahs(_searchController.text);
+
+    if (_results.isEmpty && matchingSurahs.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -417,12 +839,28 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
       );
     }
 
+    final surahCards = matchingSurahs.map((surahNum) {
+      final surahName = QuranMetadata.getSurahName(surahNum);
+      final surahPage = _surahPageMap[surahNum] ?? 1;
+      return _buildActionCard(
+        title: l10n.goToSurahTitle(surahName, surahNum, surahPage),
+        icon: Icons.menu_book_rounded,
+        onTap: () => _navigateToPage(surahPage),
+      );
+    }).toList();
+
+    final totalCount = surahCards.length + _results.length;
+
     return ListView.separated(
       padding: const EdgeInsets.all(16),
-      itemCount: _results.length,
+      itemCount: totalCount,
       separatorBuilder: (_, _) => Divider(color: AppColors.divider, height: 1),
       itemBuilder: (context, index) {
-        final verse = _results[index];
+        if (index < surahCards.length) {
+          return surahCards[index];
+        }
+
+        final verse = _results[index - surahCards.length];
         return GestureDetector(
           onTap: () => _navigateToPage(verse.page, verseKey: verse.verseKey),
           child: Padding(

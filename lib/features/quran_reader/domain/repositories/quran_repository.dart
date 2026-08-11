@@ -3,6 +3,7 @@ import '../../../../core/error/either.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/constants/quran_constants.dart';
+import '../../../../core/constants/quran_topics.dart';
 import '../../../../core/network/tafsir_download_service.dart';
 import '../entities/download_state.dart';
 import '../../data/datasources/quran_local_data_source.dart';
@@ -35,6 +36,9 @@ abstract class QuranRepository {
   Future<Either<Failure, List<Map<String, dynamic>>>> getSurahsIndex();
   Future<Either<Failure, int>> getPageForVerse(String verseKey);
   Future<Either<Failure, List<SearchVerseModel>>> getVersesBySurah(int surahId);
+  Future<Either<Failure, List<SearchVerseModel>>> getVersesByRanges(
+    List<VerseRange> ranges,
+  );
   Future<Either<Failure, void>> downloadSingleVerseTafsir(
     int resourceId,
     String verseKey,
@@ -222,5 +226,12 @@ class QuranRepositoryImpl implements QuranRepository {
   @override
   Stream<DownloadState> downloadTafsir(int resourceId) {
     return tafsirDownloadService.downloadTafsir(resourceId);
+  }
+
+  @override
+  Future<Either<Failure, List<SearchVerseModel>>> getVersesByRanges(
+    List<VerseRange> ranges,
+  ) {
+    return _execute(() => localDataSource.getVersesByRanges(ranges));
   }
 }
