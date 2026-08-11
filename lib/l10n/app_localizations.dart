@@ -359,13 +359,13 @@ abstract class AppLocalizations {
   /// No description provided for @hifzEnableMode.
   ///
   /// In ar, this message translates to:
-  /// **'تفعيل وضع الحفظ'**
+  /// **'تفعيل اختبار الحفظ'**
   String get hifzEnableMode;
 
   /// No description provided for @hifzDisableMode.
   ///
   /// In ar, this message translates to:
-  /// **'إيقاف وضع الحفظ'**
+  /// **'إيقاف اختبار الحفظ'**
   String get hifzDisableMode;
 
   /// No description provided for @hifzMaskFull.

@@ -139,10 +139,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get themeScrollVertical => 'رأسي';
 
   @override
-  String get hifzEnableMode => 'تفعيل وضع الحفظ';
+  String get hifzEnableMode => 'تفعيل اختبار الحفظ';
 
   @override
-  String get hifzDisableMode => 'إيقاف وضع الحفظ';
+  String get hifzDisableMode => 'إيقاف اختبار الحفظ';
 
   @override
   String get hifzMaskFull => 'إخفاء الآيات';

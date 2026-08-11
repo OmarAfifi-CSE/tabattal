@@ -139,10 +139,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeScrollVertical => 'Vertical';
 
   @override
-  String get hifzEnableMode => 'Enable Hifz Mode';
+  String get hifzEnableMode => 'Enable Memorization Test';
 
   @override
-  String get hifzDisableMode => 'Disable Hifz Mode';
+  String get hifzDisableMode => 'Disable Memorization Test';
 
   @override
   String get hifzMaskFull => 'Hide Verses';
