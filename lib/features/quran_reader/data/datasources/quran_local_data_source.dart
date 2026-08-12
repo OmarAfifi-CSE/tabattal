@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/database/database_helper.dart';
 import '../models/verse_model.dart';
 import '../models/search_verse_model.dart';
+import '../models/tafsir_model.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/utils/arabic_text_utils.dart';
 import '../../../../core/constants/quran_constants.dart';
@@ -11,6 +12,7 @@ import '../../../../core/constants/quran_topics.dart';
 abstract class QuranLocalDataSource {
   Future<List<WordModel>> getWordsByPage(int pageNumber);
   Future<String> getTafsirForVerse(String verseKey, int resourceId);
+  Future<TafsirModel> getTafsirModelForVerse(String verseKey, int resourceId);
   Future<String> getTranslationForVerse(String verseKey, int resourceId);
   Future<List<SearchVerseModel>> searchQuran(String query);
   Future<List<Map<String, dynamic>>> getSurahsIndex();
@@ -91,13 +93,28 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
 
   @override
   Future<String> getTafsirForVerse(String verseKey, int resourceId) async {
+    final model = await getTafsirModelForVerse(verseKey, resourceId);
+    return model.text;
+  }
+
+  @override
+  Future<TafsirModel> getTafsirModelForVerse(
+    String verseKey,
+    int resourceId,
+  ) async {
     try {
       final db = await databaseHelper.database;
       final parts = verseKey.split(':');
-      if (parts.length != 2) return '';
+      if (parts.length != 2) {
+        return TafsirModel(id: 0, tafsirId: resourceId, text: '');
+      }
 
       final chapterId = int.tryParse(parts[0]) ?? 1;
-      int verseNumber = int.tryParse(parts[1]) ?? 1;
+      final requestedAyah = int.tryParse(parts[1]) ?? 1;
+      int verseNumber = requestedAyah;
+
+      int rootAyah = requestedAyah;
+      String tafsirText = '';
 
       // Look backwards to find grouped tafsir
       for (
@@ -115,13 +132,63 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
         if (maps.isNotEmpty && maps.first['text'] != null) {
           final textStr = maps.first['text'] as String;
           if (textStr.trim().isNotEmpty) {
-            return textStr;
+            tafsirText = textStr;
+            rootAyah = verseNumber;
+            break;
           }
         }
         verseNumber--;
       }
 
-      return '';
+      if (tafsirText.trim().isEmpty) {
+        return TafsirModel(id: 0, tafsirId: resourceId, text: '');
+      }
+
+      String? groupVerseRange;
+      bool isGroupContinuation = requestedAyah > rootAyah;
+
+      final List<Map<String, dynamic>> nextEntries = await db.query(
+        'tafsir',
+        where:
+            'CAST(substr(verse_key, 1, instr(verse_key, ":") - 1) AS INTEGER) = ? AND CAST(substr(verse_key, instr(verse_key, ":") + 1) AS INTEGER) > ? AND resource_id = ? AND TRIM(text) != ""',
+        whereArgs: [chapterId, rootAyah, resourceId],
+        orderBy:
+            'CAST(substr(verse_key, instr(verse_key, ":") + 1) AS INTEGER) ASC',
+        limit: 1,
+      );
+
+      int endAyah = rootAyah;
+      if (nextEntries.isNotEmpty) {
+        final nextKey = nextEntries.first['verse_key'] as String;
+        final nextAyah =
+            int.tryParse(nextKey.split(':')[1]) ?? (rootAyah + 1);
+        endAyah = nextAyah - 1;
+      } else {
+        final List<Map<String, dynamic>> maxAyahRes = await db.query(
+          'quran_search',
+          columns: ['MAX(ayah) as max_a'],
+          where: 'surah = ?',
+          whereArgs: [chapterId],
+        );
+        endAyah =
+            (maxAyahRes.isNotEmpty
+                ? maxAyahRes.first['max_a'] as int?
+                : null) ??
+            rootAyah;
+      }
+
+      if (endAyah > rootAyah) {
+        groupVerseRange = '$rootAyah - $endAyah';
+      }
+
+      return TafsirModel(
+        id: 0,
+        tafsirId: resourceId,
+        verseKey: verseKey,
+        text: tafsirText,
+        groupVerseRange: groupVerseRange,
+        isGroupContinuation: isGroupContinuation,
+      );
     } catch (e) {
       throw CacheException('Error fetching tafsir: ${e.toString()}');
     }

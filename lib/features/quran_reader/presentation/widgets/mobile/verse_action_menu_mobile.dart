@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/widgets/mixed_direction_text.dart';
+import '../../../../../core/utils/arabic_text_utils.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
@@ -890,16 +891,98 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                 Flexible(
                                   child: SingleChildScrollView(
                                     physics: const BouncingScrollPhysics(),
-                                    child: MixedDirectionText(
-                                      text: _stripHtml(
-                                        currentState.tafsir.text,
-                                      ),
-                                      style: AppTextStyles.menuItemText
-                                          .copyWith(
-                                            height: 1.8.h,
-                                            color: AppColors
-                                                .textPrimary, // Dark charcoal
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        if (currentState
+                                                .tafsir
+                                                .groupVerseRange !=
+                                            null) ...[
+                                          Align(
+                                            alignment:
+                                                Localizations.localeOf(
+                                                          context,
+                                                        ).languageCode ==
+                                                        'ar'
+                                                    ? Alignment.centerRight
+                                                    : Alignment.centerLeft,
+                                            child: Container(
+                                              margin: EdgeInsets.only(
+                                                bottom: 12.h,
+                                              ),
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 10.w,
+                                                vertical: 5.h,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.accentGold
+                                                    .withValues(alpha: 0.12),
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      20.r,
+                                                    ),
+                                                border: Border.all(
+                                                  color: AppColors.accentGold
+                                                      .withValues(alpha: 0.3),
+                                                  width: 1.w,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    currentState
+                                                            .tafsir
+                                                            .isGroupContinuation
+                                                        ? Icons.link_rounded
+                                                        : Icons
+                                                            .collections_bookmark_rounded,
+                                                    size: 14.r,
+                                                    color:
+                                                        AppColors.accentGold,
+                                                  ),
+                                                  SizedBox(width: 6.w),
+                                                  Text(
+                                                    currentState
+                                                            .tafsir
+                                                            .isGroupContinuation
+                                                        ? (Localizations.localeOf(
+                                                                  context,
+                                                                ).languageCode ==
+                                                                'ar'
+                                                            ? 'تابع تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(currentState.tafsir.groupVerseRange!)})'
+                                                            : 'Continuation of Tafsir for Verses (${currentState.tafsir.groupVerseRange})')
+                                                        : (Localizations.localeOf(
+                                                                  context,
+                                                                ).languageCode ==
+                                                                'ar'
+                                                            ? 'تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(currentState.tafsir.groupVerseRange!)})'
+                                                            : 'Tafsir of Verses (${currentState.tafsir.groupVerseRange})'),
+                                                    style: TextStyle(
+                                                      fontSize: 12.sp,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color:
+                                                          AppColors.accentGold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
                                           ),
+                                        ],
+                                        MixedDirectionText(
+                                          text: _stripHtml(
+                                            currentState.tafsir.text,
+                                          ),
+                                          style: AppTextStyles.menuItemText
+                                              .copyWith(
+                                                height: 1.8.h,
+                                                color: AppColors.textPrimary,
+                                              ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),

@@ -33,6 +33,8 @@ class VerseTafsirData {
   final int ayah;
   final int page;
   final int verseId;
+  final String? groupVerseRange;
+  final bool isGroupContinuation;
 
   VerseTafsirData({
     required this.verseKey,
@@ -41,6 +43,8 @@ class VerseTafsirData {
     required this.surah,
     required this.ayah,
     required this.page,
+    this.groupVerseRange,
+    this.isGroupContinuation = false,
   }) : verseId = surah * 1000 + ayah;
 }
 
@@ -258,21 +262,51 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
       );
       final Map<String, String> tafsirMap = {
         for (final row in tafsirRows)
-          row['verse_key'] as String: _cleanHtml(row['text'] as String),
+          if ((row['text'] as String?)?.trim().isNotEmpty == true)
+            row['verse_key'] as String: _cleanHtml(row['text'] as String),
       };
 
-      final newItems = verses
-          .map(
-            (verse) => VerseTafsirData(
-              verseKey: verse.verseKey,
-              textUthmani: verse.textUthmani,
-              tafsirText: tafsirMap[verse.verseKey] ?? _noTafsirText,
-              surah: verse.surah,
-              ayah: verse.ayah,
-              page: verse.page,
-            ),
-          )
-          .toList();
+      final directAyahs = verses
+          .where((v) => tafsirMap.containsKey(v.verseKey))
+          .map((v) => v.ayah)
+          .toList()
+        ..sort();
+
+      final List<VerseTafsirData> newItems = [];
+
+      for (final verse in verses) {
+        final rootAyah = directAyahs.lastWhere(
+          (a) => a <= verse.ayah,
+          orElse: () => verse.ayah,
+        );
+
+        final nextRootIndex = directAyahs.indexWhere((a) => a > rootAyah);
+        final endAyah = nextRootIndex != -1
+            ? directAyahs[nextRootIndex] - 1
+            : (verses.isNotEmpty ? verses.last.ayah : rootAyah);
+
+        String? groupRange;
+        bool isContinuation = false;
+        if (endAyah > rootAyah) {
+          groupRange = '$rootAyah - $endAyah';
+          isContinuation = verse.ayah > rootAyah;
+        }
+
+        String resolvedText = tafsirMap['$surahId:$rootAyah'] ?? _noTafsirText;
+
+        newItems.add(
+          VerseTafsirData(
+            verseKey: verse.verseKey,
+            textUthmani: verse.textUthmani,
+            tafsirText: resolvedText,
+            surah: verse.surah,
+            ayah: verse.ayah,
+            page: verse.page,
+            groupVerseRange: groupRange,
+            isGroupContinuation: isContinuation,
+          ),
+        );
+      }
 
       if (mounted) {
         setState(() {
@@ -397,6 +431,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return BlocListener<AudioBloc, AudioState>(
       listenWhen: (prev, curr) {
         if (curr is! AudioPlaying) return false;
@@ -815,6 +850,61 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                       const SizedBox(height: 12),
                                       Divider(color: AppColors.divider),
                                       const SizedBox(height: 10),
+                                      if (item.groupVerseRange != null) ...[
+                                        Align(
+                                          alignment: isAr
+                                              ? Alignment.centerRight
+                                              : Alignment.centerLeft,
+                                          child: Container(
+                                            margin: const EdgeInsets.only(
+                                              bottom: 10,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.accentGold
+                                                  .withValues(alpha: 0.12),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              border: Border.all(
+                                                color: AppColors.accentGold
+                                                    .withValues(alpha: 0.3),
+                                                width: 1,
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  item.isGroupContinuation
+                                                      ? Icons.link_rounded
+                                                      : Icons
+                                                          .collections_bookmark_rounded,
+                                                  size: 14,
+                                                  color: AppColors.accentGold,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  item.isGroupContinuation
+                                                      ? (isAr
+                                                          ? 'تابع تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(item.groupVerseRange!)})'
+                                                          : 'Continuation of Tafsir for Verses (${item.groupVerseRange})')
+                                                      : (isAr
+                                                          ? 'تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(item.groupVerseRange!)})'
+                                                          : 'Tafsir of Verses (${item.groupVerseRange})'),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppColors.accentGold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                       // Tafsir text
                                       MixedDirectionText(
                                         text: item.tafsirText,

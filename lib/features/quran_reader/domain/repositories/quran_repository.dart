@@ -97,12 +97,12 @@ class QuranRepositoryImpl implements QuranRepository {
     int resourceId = 16,
   }) {
     return _execute(() async {
-      final text = await localDataSource.getTafsirForVerse(
+      final model = await localDataSource.getTafsirModelForVerse(
         verseKey,
         resourceId,
       );
-      if (text.isEmpty) throw CacheException('Tafsir not found locally');
-      return TafsirModel(id: 1, tafsirId: resourceId, text: text);
+      if (model.text.isEmpty) throw CacheException('Tafsir not found locally');
+      return model;
     });
   }
 
