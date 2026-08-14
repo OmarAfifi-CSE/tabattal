@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -608,7 +609,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
     if (isAudioHighlighted) {
       textColor = mushafTheme.goldColor;
     } else if (isPermanentlyBookmarked && word.charTypeName == 'end') {
-      textColor = mushafTheme.goldColor;
+      textColor = mushafTheme.bookmarkedMarkerColor;
     }
 
     return GestureDetector(
@@ -702,7 +703,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
           if (isAudioHighlighted) {
             textColor = mushafTheme.goldColor;
           } else if (isBookmarked) {
-            textColor = mushafTheme.goldColor;
+            textColor = mushafTheme.bookmarkedMarkerColor;
           }
 
           Widget basmala = AnimatedContainer(
@@ -1078,7 +1079,10 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
               surahName: '',
               juzName: '',
               child: Center(
-                child: CircularProgressIndicator(color: mushafTheme.goldColor),
+                child: CupertinoActivityIndicator(
+                  color: mushafTheme.goldColor,
+                  radius: 14,
+                ),
               ),
             );
           }

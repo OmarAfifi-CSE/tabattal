@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../../l10n/app_localizations.dart';
@@ -316,7 +317,10 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
           ),
           body: _isLoadingInitial
               ? Center(
-                  child: CircularProgressIndicator(color: AppColors.accentGold),
+                  child: CupertinoActivityIndicator(
+                    color: AppColors.accentGold,
+                    radius: 14,
+                  ),
                 )
               : _list.isEmpty
               ? Center(
@@ -343,8 +347,9 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
                           ? Padding(
                               padding: const EdgeInsets.all(16),
                               child: Center(
-                                child: CircularProgressIndicator(
+                                child: CupertinoActivityIndicator(
                                   color: AppColors.accentGold,
+                                  radius: 12,
                                 ),
                               ),
                             )

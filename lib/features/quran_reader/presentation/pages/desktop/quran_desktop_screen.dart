@@ -22,6 +22,7 @@ import '../../../bloc/quran/quran_state.dart';
 import '../../../data/models/verse_model.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../settings/bloc/settings_bloc.dart';
+import '../../../../../core/utils/app_snack_bar.dart';
 
 class QuranDesktopScreen extends StatefulWidget {
   final int? initialPage;
@@ -228,7 +229,6 @@ class _QuranDesktopScreenState extends State<QuranDesktopScreen> {
 
   void _showErrorSnackBar(String messageKey) {
     String message = messageKey;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
     if (context.mounted) {
       final l10n = AppLocalizations.of(context);
       if (l10n != null) {
@@ -249,25 +249,7 @@ class _QuranDesktopScreenState extends State<QuranDesktopScreen> {
       }
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Directionality(
-          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
-          child: Text(
-            message,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
-        backgroundColor: AppColors.verseMarkerGold,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-      ),
-    );
+    AppSnackBar.showError(context, message);
   }
 
   void _navigateToPlayingVerse(BuildContext context, int verseId) {

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../../l10n/app_localizations.dart';
@@ -603,14 +604,9 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                   child: Row(
                     children: [
                       if (_isDownloading)
-                        SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            value: _downloadProgress,
-                            color: AppColors.accentGold,
-                          ),
+                        CupertinoActivityIndicator(
+                          radius: 8,
+                          color: AppColors.accentGold,
                         )
                       else
                         const Icon(
@@ -640,8 +636,9 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
               Expanded(
                 child: _isLoadingInitial
                     ? Center(
-                        child: CircularProgressIndicator(
+                        child: CupertinoActivityIndicator(
                           color: AppColors.accentGold,
+                          radius: 14,
                         ),
                       )
                     : _tafsirList.isEmpty
@@ -669,8 +666,9 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                                 ? Padding(
                                     padding: const EdgeInsets.all(16),
                                     child: Center(
-                                      child: CircularProgressIndicator(
+                                      child: CupertinoActivityIndicator(
                                         color: AppColors.accentGold,
+                                        radius: 12,
                                       ),
                                     ),
                                   )

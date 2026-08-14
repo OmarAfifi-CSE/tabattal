@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -868,9 +869,9 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
           _isLoadingText
               ? Padding(
                   padding: EdgeInsets.symmetric(vertical: 16.h),
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
+                  child: CupertinoActivityIndicator(
                     color: theme.accentColor,
+                    radius: 12.r,
                   ),
                 )
               : Directionality(
@@ -972,9 +973,9 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
             Container(
               height: 380.h,
               alignment: Alignment.center,
-              child: CircularProgressIndicator(
+              child: CupertinoActivityIndicator(
                 color: theme.accentColor,
-                strokeWidth: 2,
+                radius: 14.r,
               ),
             )
           else
@@ -1191,13 +1192,9 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                             elevation: 2,
                           ),
                           icon: _isSharing
-                              ? SizedBox(
-                                  width: 18.w,
-                                  height: 18.h,
-                                  child: const CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
+                              ? CupertinoActivityIndicator(
+                                  radius: isWeb ? 8 : 8.r,
+                                  color: Colors.white,
                                 )
                               : const Icon(Icons.share_rounded),
                           label: Text(
@@ -1228,13 +1225,9 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                             ),
                           ),
                           icon: _isSaving
-                              ? SizedBox(
-                                  width: 18.w,
-                                  height: 18.h,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.accentGold,
-                                  ),
+                              ? CupertinoActivityIndicator(
+                                  radius: isWeb ? 8 : 8.r,
+                                  color: AppColors.accentGold,
                                 )
                               : const Icon(Icons.download_rounded),
                           label: Text(
@@ -1416,9 +1409,9 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
             _isLoadingText
                 ? Padding(
                     padding: EdgeInsets.symmetric(vertical: kIsWeb ? 20 : 16.h),
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
+                    child: CupertinoActivityIndicator(
                       color: theme.accentColor,
+                      radius: 12.r,
                     ),
                   )
                 : Directionality(

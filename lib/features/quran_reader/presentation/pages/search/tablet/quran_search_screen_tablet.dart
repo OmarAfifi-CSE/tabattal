@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/theme/app_colors.dart';
@@ -688,7 +689,10 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
           if (_isLoading)
             Expanded(
               child: Center(
-                child: CircularProgressIndicator(color: AppColors.accentGold),
+                child: CupertinoActivityIndicator(
+                  color: AppColors.accentGold,
+                  radius: 14.r,
+                ),
               ),
             )
           else if (_results.isEmpty)
@@ -789,7 +793,10 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
 
     if (_isLoading) {
       return Center(
-        child: CircularProgressIndicator(color: AppColors.accentGold),
+        child: CupertinoActivityIndicator(
+          color: AppColors.accentGold,
+          radius: 14.r,
+        ),
       );
     }
 
@@ -806,14 +813,14 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
           children: [
             Icon(
               Icons.search_off_rounded,
-              size: 52,
+              size: 52.r,
               color: AppColors.textPrimary.withValues(alpha: 0.3),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
             Text(
               l10n.noResults,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 18.sp,
                 color: AppColors.textPrimary.withValues(alpha: 0.6),
               ),
             ),
@@ -945,10 +952,10 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
         cards.add(
           Center(
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: CircularProgressIndicator(
+              padding: EdgeInsets.all(8.0.r),
+              child: CupertinoActivityIndicator(
                 color: AppColors.accentGold,
-                strokeWidth: 2,
+                radius: 10.r,
               ),
             ),
           ),

@@ -79,8 +79,9 @@ class AudioDownloadManager {
     String reciterKey,
     int surah,
     int ayah,
-    Function(double)? onProgress,
-  ) async {
+    Function(double)? onProgress, {
+    CancelToken? cancelToken,
+  }) async {
     final reciterPath = getReciterPath(category, reciterKey);
     final surahStr = surah.toString().padLeft(3, '0');
     final ayahStr = ayah.toString().padLeft(3, '0');
@@ -99,6 +100,13 @@ class AudioDownloadManager {
       return savePath;
     }
 
+    if (cancelToken?.isCancelled == true) {
+      throw DioException(
+        requestOptions: RequestOptions(path: url),
+        type: DioExceptionType.cancel,
+      );
+    }
+
     // Check if we are already downloading this verse
     if (_activePrefetches.containsKey(verseId)) {
       return await _activePrefetches[verseId]!;
@@ -112,6 +120,7 @@ class AudioDownloadManager {
       await _dio.download(
         url,
         tempPath,
+        cancelToken: cancelToken,
         onReceiveProgress: (received, total) {
           if (total != -1 && onProgress != null) {
             onProgress(received / total);
@@ -136,6 +145,9 @@ class AudioDownloadManager {
       }
       _activePrefetches.remove(verseId);
       completer.completeError(e);
+      if (e is DioException && CancelToken.isCancel(e)) {
+        rethrow;
+      }
       throw Exception(
         'Failed to download audio for Surah $surah Ayah $ayah: $e',
       );
@@ -204,12 +216,14 @@ class AudioDownloadManager {
     int surah,
     int numAyahs, {
     Function(double)? onProgress,
+    CancelToken? cancelToken,
   }) async {
     int downloadedCount = 0;
 
     // Check what's already downloaded to initialize progress properly
     final dirPath = await getReciterDirectory(category, reciterKey);
     for (int ayah = 1; ayah <= numAyahs; ayah++) {
+      if (cancelToken?.isCancelled == true) return;
       final verseId = surah * 1000 + ayah;
       if (await File('$dirPath/$verseId.mp3').exists()) {
         downloadedCount++;
@@ -223,9 +237,19 @@ class AudioDownloadManager {
 
     // Download missing ayahs
     for (int ayah = 1; ayah <= numAyahs; ayah++) {
+      if (cancelToken?.isCancelled == true) return;
       final verseId = surah * 1000 + ayah;
       if (!await File('$dirPath/$verseId.mp3').exists()) {
-        await downloadVerse(category, reciterKey, surah, ayah, null);
+        if (cancelToken?.isCancelled == true) return;
+        await downloadVerse(
+          category,
+          reciterKey,
+          surah,
+          ayah,
+          null,
+          cancelToken: cancelToken,
+        );
+        if (cancelToken?.isCancelled == true) return;
         downloadedCount++;
         if (onProgress != null) {
           onProgress(downloadedCount / numAyahs);

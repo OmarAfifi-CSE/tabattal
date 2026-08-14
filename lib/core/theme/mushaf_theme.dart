@@ -28,6 +28,20 @@ class MushafTheme extends Equatable {
   /// Returns true if the theme background is dark (luminance < 0.45).
   bool get isDarkTheme => backgroundColor.computeLuminance() < 0.45;
 
+  /// Slightly darker/richer accent color for verse numbers that have bookmarks.
+  Color get bookmarkedMarkerColor {
+    final hsl = HSLColor.fromColor(goldColor);
+    if (isDarkTheme) {
+      return hsl
+          .withLightness((hsl.lightness * 0.88).clamp(0.0, 1.0))
+          .toColor();
+    } else {
+      return hsl
+          .withLightness((hsl.lightness * 0.78).clamp(0.0, 1.0))
+          .toColor();
+    }
+  }
+
   // The 4 color themes
   static const MushafTheme cream = MushafTheme(
     id: 'cream',

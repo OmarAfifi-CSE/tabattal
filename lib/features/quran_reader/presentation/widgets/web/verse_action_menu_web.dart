@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/widgets/mixed_direction_text.dart';
@@ -682,8 +683,9 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                           Center(
                             child: Padding(
                               padding: const EdgeInsets.all(32.0),
-                              child: CircularProgressIndicator(
+                              child: CupertinoActivityIndicator(
                                 color: AppColors.accentGold,
+                                radius: 14,
                               ),
                             ),
                           )
@@ -701,13 +703,9 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                 return Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        value: value == 0.0 ? null : value,
-                                        color: AppColors.bronzeIcon,
-                                      ),
+                                    CupertinoActivityIndicator(
+                                      radius: 10,
+                                      color: AppColors.bronzeIcon,
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
@@ -859,13 +857,9 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                         return Row(
                                           textDirection: TextDirection.rtl,
                                           children: [
-                                            SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: AppColors.accentGold,
-                                              ),
+                                            CupertinoActivityIndicator(
+                                              radius: 9,
+                                              color: AppColors.accentGold,
                                             ),
                                             const SizedBox(width: 8),
                                             Text(

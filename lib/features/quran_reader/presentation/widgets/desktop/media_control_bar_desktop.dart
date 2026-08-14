@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -9,6 +10,7 @@ import '../../../../../core/theme/app_text_styles.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'audio_settings_sheet_desktop.dart';
 import '../../../../../core/utils/reciter_localization.dart';
+import '../../../../../core/utils/app_snack_bar.dart';
 
 class MediaControlBarDesktop extends StatefulWidget {
   final bool isExpanded;
@@ -36,26 +38,11 @@ class _MediaControlBarDesktopState extends State<MediaControlBarDesktop> {
   }
 
   void _showTimerConfirmationSnackBar(String message) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: AppColors.cardCream,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Cairo',
-            fontSize: 13,
-          ),
-        ),
-        backgroundColor: AppColors.bronzeIcon,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-        duration: const Duration(seconds: 2),
-        elevation: 4,
-      ),
+    AppSnackBar.show(
+      context,
+      message: message,
+      icon: Icons.timer_outlined,
+      duration: const Duration(seconds: 2),
     );
   }
 
@@ -499,13 +486,9 @@ class _MediaControlBarDesktopState extends State<MediaControlBarDesktop> {
         ),
         child: Center(
           child: isLoading
-              ? SizedBox(
-                  width: iconSize * 0.75,
-                  height: iconSize * 0.75,
-                  child: const CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
+              ? CupertinoActivityIndicator(
+                  color: Colors.white,
+                  radius: (iconSize * 0.75) / 2,
                 )
               : Icon(
                   isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,

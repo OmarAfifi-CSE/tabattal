@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -182,7 +183,6 @@ class _BookmarkCardState extends State<_BookmarkCard>
     final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardCream,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.2)),
         boxShadow: [
@@ -193,77 +193,78 @@ class _BookmarkCardState extends State<_BookmarkCard>
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-        onTap: (_isLoadingPage || _hasError)
-            ? null
-            : () => widget.onNavigate(_surahStartPage),
-        leading: Container(
-          width: 48.r,
-          height: 48.r,
-          decoration: BoxDecoration(
-            color: AppColors.accentGold.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.bookmark_rounded,
-            color: AppColors.accentGold,
-            size: 24.sp,
-          ),
-        ),
-        title: Text(
-          l10n.surahBookmarkTitle(widget.surahName),
-          style: TextStyle(
-            fontSize: 17.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        subtitle: Padding(
-          padding: EdgeInsets.only(top: 2.h),
-          child: Text(
-            l10n.verseBookmarkSubtitle(
-              widget.ayahNum.toArabicDigits,
-              _hasError ? '—' : _surahStartPage.toArabicDigits,
+      child: Material(
+        color: AppColors.cardCream,
+        borderRadius: BorderRadius.circular(16.r),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+          onTap: (_isLoadingPage || _hasError)
+              ? null
+              : () => widget.onNavigate(_surahStartPage),
+          leading: Container(
+            width: 48.r,
+            height: 48.r,
+            decoration: BoxDecoration(
+              color: AppColors.accentGold.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
+            child: Icon(
+              Icons.bookmark_rounded,
+              color: AppColors.accentGold,
+              size: 24.sp,
+            ),
+          ),
+          title: Text(
+            l10n.surahBookmarkTitle(widget.surahName),
             style: TextStyle(
-              fontSize: 13.sp,
-              color: AppColors.textPrimary.withValues(alpha: 0.55),
+              fontSize: 17.sp,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
             ),
           ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_isLoadingPage)
-              SizedBox(
-                width: 20.r,
-                height: 20.r,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.accentGold,
-                ),
-              )
-            else
-              Icon(
-                _hasError ? Icons.error_outline : Icons.arrow_back_ios_rounded,
-                size: 16.sp,
-                color: _hasError
-                    ? Colors.red.withValues(alpha: 0.6)
-                    : AppColors.textPrimary.withValues(alpha: 0.3),
+          subtitle: Padding(
+            padding: EdgeInsets.only(top: 2.h),
+            child: Text(
+              l10n.verseBookmarkSubtitle(
+                widget.ayahNum.toArabicDigits,
+                _hasError ? '—' : _surahStartPage.toArabicDigits,
               ),
-            SizedBox(width: 4.w),
-            IconButton(
-              icon: Icon(
-                Icons.delete_outline_rounded,
-                color: Colors.red.withValues(alpha: 0.65),
-                size: 22.sp,
-              ),
-              onPressed: () => context.read<BookmarkBloc>().add(
-                ToggleBookmark(widget.verseKey),
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: AppColors.textPrimary.withValues(alpha: 0.55),
               ),
             ),
-          ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_isLoadingPage)
+                CupertinoActivityIndicator(
+                  radius: 9.r,
+                  color: AppColors.accentGold,
+                )
+              else
+                Icon(
+                  _hasError ? Icons.error_outline : Icons.arrow_back_ios_rounded,
+                  size: 16.sp,
+                  color: _hasError
+                      ? Colors.red.withValues(alpha: 0.6)
+                      : AppColors.textPrimary.withValues(alpha: 0.3),
+                ),
+              SizedBox(width: 4.w),
+              IconButton(
+                icon: Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.red.withValues(alpha: 0.65),
+                  size: 22.sp,
+                ),
+                onPressed: () => context.read<BookmarkBloc>().add(
+                  ToggleBookmark(widget.verseKey),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/theme/app_colors.dart';
@@ -688,7 +689,10 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
           if (_isLoading)
             Expanded(
               child: Center(
-                child: CircularProgressIndicator(color: AppColors.accentGold),
+                child: CupertinoActivityIndicator(
+                  color: AppColors.accentGold,
+                  radius: 14.r,
+                ),
               ),
             )
           else if (_results.isEmpty)
@@ -789,7 +793,10 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
 
     if (_isLoading) {
       return Center(
-        child: CircularProgressIndicator(color: AppColors.accentGold),
+        child: CupertinoActivityIndicator(
+          color: AppColors.accentGold,
+          radius: 14.r,
+        ),
       );
     }
 
@@ -947,9 +954,9 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
           Center(
             child: Padding(
               padding: EdgeInsets.all(8.0.r),
-              child: CircularProgressIndicator(
+              child: CupertinoActivityIndicator(
                 color: AppColors.accentGold,
-                strokeWidth: 2,
+                radius: 10.r,
               ),
             ),
           ),

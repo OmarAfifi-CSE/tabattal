@@ -1,10 +1,13 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/network/audio_download_manager.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/constants/quran_metadata.dart';
 import '../../../../../core/utils/reciter_localization.dart';
+import '../../../../../core/utils/app_snack_bar.dart';
 
 class QuranAudioManagerView extends StatefulWidget {
   const QuranAudioManagerView({super.key});
@@ -19,9 +22,13 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
   String _selectedCategory = AudioDownloadManager.reciterCategories.keys.first;
   late String _selectedReciter;
 
-  // Track download status: 1.0=done, 0.0-0.99=downloading, -1.0=not downloaded
+  // Track download status: 1.0=done, 0.0-0.99=partial/downloading, -1.0=not downloaded
   final Map<int, ValueNotifier<double>> _surahProgress = {};
+  final Set<int> _activeDownloads = {};
+  final Map<int, CancelToken> _activeCancelTokens = {};
+  CancelToken? _batchCancelToken;
   bool _isLoadingStatus = true;
+  bool _isDownloadingAll = false;
 
   @override
   void initState() {
@@ -34,6 +41,10 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
 
   @override
   void dispose() {
+    _batchCancelToken?.cancel('View disposed');
+    for (final token in _activeCancelTokens.values) {
+      token.cancel('View disposed');
+    }
     for (final n in _surahProgress.values) {
       n.dispose();
     }
@@ -79,44 +90,148 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
     _initializeProgressTrackers();
   }
 
-  Future<void> _downloadSurah(int surah) async {
+  Future<bool> _downloadSurah(
+    int surah, {
+    bool isBatch = false,
+    CancelToken? cancelToken,
+  }) async {
+    if (_activeDownloads.contains(surah)) return true;
+    final token = cancelToken ?? CancelToken();
+    _activeCancelTokens[surah] = token;
+
+    if (mounted) {
+      setState(() => _activeDownloads.add(surah));
+    } else {
+      _activeDownloads.add(surah);
+    }
+
     final notifier = _surahProgress[surah]!;
-    if (notifier.value >= 0 && notifier.value < 1.0) return;
-    notifier.value = 0.0;
+    if (notifier.value < 0) {
+      notifier.value = 0.0;
+    }
+
     final numAyahs = QuranMetadata.surahLengths[surah - 1];
+    bool isSuccess = false;
     try {
       await _downloadManager.downloadSurah(
         _selectedCategory,
         _selectedReciter,
         surah,
         numAyahs,
-        onProgress: (p) => notifier.value = p,
+        cancelToken: token,
+        onProgress: (p) {
+          if (mounted) {
+            notifier.value = p;
+          }
+        },
       );
+      isSuccess = true;
     } catch (e) {
-      notifier.value = -1.0;
-      if (mounted) {
-        final isEn = Localizations.localeOf(context).languageCode == 'en';
-        final surahName = isEn
-            ? QuranMetadata.getSurahNameEnglish(surah)
-            : QuranMetadata.getSurahName(surah);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.downloadFailed(surahName),
-            ),
-          ),
+      isSuccess = false;
+      final isCancelled =
+          token.isCancelled || (e is DioException && CancelToken.isCancel(e));
+      if (mounted && !isCancelled) {
+        final actualProgress = await _downloadManager.getSurahDownloadProgress(
+          _selectedCategory,
+          _selectedReciter,
+          surah,
+          numAyahs,
         );
+        if (!mounted) return false;
+        notifier.value = actualProgress > 0 ? actualProgress : -1.0;
+        if (!isBatch) {
+          final isEn = Localizations.localeOf(context).languageCode == 'en';
+          final surahName = isEn
+              ? QuranMetadata.getSurahNameEnglish(surah)
+              : QuranMetadata.getSurahName(surah);
+          AppSnackBar.showError(
+            context,
+            AppLocalizations.of(context)!.downloadFailed(surahName),
+          );
+        }
+      }
+    } finally {
+      _activeCancelTokens.remove(surah);
+      _activeDownloads.remove(surah);
+      if (mounted) {
+        final finalProgress = await _downloadManager.getSurahDownloadProgress(
+          _selectedCategory,
+          _selectedReciter,
+          surah,
+          numAyahs,
+        );
+        notifier.value = finalProgress >= 1.0
+            ? 1.0
+            : (finalProgress > 0 ? finalProgress : -1.0);
+        setState(() {});
+      }
+    }
+    return isSuccess;
+  }
+
+  Future<void> _downloadAll() async {
+    if (_isDownloadingAll) {
+      _isDownloadingAll = false;
+      _batchCancelToken?.cancel('User paused download');
+      _batchCancelToken = null;
+      for (final token in _activeCancelTokens.values) {
+        token.cancel('User paused download');
+      }
+      _activeCancelTokens.clear();
+      if (mounted) {
+        setState(() {});
+        final isEn = Localizations.localeOf(context).languageCode == 'en';
+        AppSnackBar.showInfo(
+          context,
+          isEn ? 'Download paused' : 'تم إيقاف التحميل مؤقتاً',
+        );
+      }
+      return;
+    }
+
+    _batchCancelToken = CancelToken();
+    setState(() => _isDownloadingAll = true);
+    bool hadError = false;
+    try {
+      for (int i = 1; i <= 114; i++) {
+        if (!mounted ||
+            !_isDownloadingAll ||
+            _batchCancelToken?.isCancelled == true) {
+          break;
+        }
+        final currentProgress = _surahProgress[i]?.value ?? -1.0;
+        if (currentProgress < 1.0) {
+          final success = await _downloadSurah(
+            i,
+            isBatch: true,
+            cancelToken: _batchCancelToken,
+          );
+          if (_batchCancelToken?.isCancelled == true || !_isDownloadingAll) {
+            break;
+          }
+          if (!success) {
+            hadError = true;
+            break;
+          }
+        }
+      }
+    } finally {
+      _batchCancelToken = null;
+      if (mounted) {
+        setState(() => _isDownloadingAll = false);
+        final isEn = Localizations.localeOf(context).languageCode == 'en';
+        if (hadError) {
+          AppSnackBar.showError(
+            context,
+            isEn
+                ? 'Download stopped. Please check your internet connection.'
+                : 'تم إيقاف التحميل. يرجى التحقق من اتصالك بالإنترنت.',
+          );
+        }
       }
     }
   }
 
-  Future<void> _downloadAll() async {
-    for (int i = 1; i <= 114; i++) {
-      if (_surahProgress[i]!.value == -1.0) {
-        await _downloadSurah(i);
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -212,12 +327,21 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                           ),
                           elevation: 0,
                         ),
-                        icon: const Icon(
-                          Icons.download_for_offline_rounded,
-                          color: Colors.white,
-                        ),
+                        icon: _isDownloadingAll
+                            ? const Icon(
+                                Icons.pause_circle_outline_rounded,
+                                color: Colors.white,
+                              )
+                            : const Icon(
+                                Icons.download_for_offline_rounded,
+                                color: Colors.white,
+                              ),
                         label: Text(
-                          AppLocalizations.of(context)!.audioDownloadAll,
+                          _isDownloadingAll
+                              ? (Localizations.localeOf(context).languageCode == 'en'
+                                  ? 'Pause Download'
+                                  : 'إيقاف التحميل')
+                              : AppLocalizations.of(context)!.audioDownloadAll,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -237,7 +361,10 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Center(
-                  child: CircularProgressIndicator(color: AppColors.accentGold),
+                  child: CupertinoActivityIndicator(
+                    color: AppColors.accentGold,
+                    radius: 14,
+                  ),
                 ),
               ),
             )
@@ -307,15 +434,99 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: AppColors.cardCream,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.borderLight),
       ),
-      child: ValueListenableBuilder<double>(
+      child: Material(
+        color: AppColors.cardCream,
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
+        child: ValueListenableBuilder<double>(
         valueListenable: notifier,
         builder: (context, progress, _) {
+          final isActivelyDownloading = _activeDownloads.contains(surah);
           final isDownloaded = progress >= 1.0;
-          final isDownloading = progress >= 0.0 && progress < 1.0;
+          final isPartiallyDownloaded =
+              progress > 0.0 && progress < 1.0 && !isActivelyDownloading;
+
+          Widget trailingWidget;
+          if (isDownloaded) {
+            trailingWidget = const Icon(
+              Icons.check_circle_rounded,
+              color: Colors.green,
+              size: 28,
+            );
+          } else if (isActivelyDownloading) {
+            trailingWidget = SizedBox(
+              width: 42,
+              height: 42,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    value: progress <= 0.0 ? null : progress,
+                    backgroundColor:
+                        AppColors.accentGold.withValues(alpha: 0.15),
+                    color: AppColors.accentGold,
+                    strokeWidth: 3,
+                  ),
+                  Text(
+                    '${(progress * 100).toInt()}%',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          } else if (isPartiallyDownloaded) {
+            // Resume download button with fixed-width percentage badge
+            trailingWidget = InkWell(
+              onTap: () => _downloadSurah(surah),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                width: 64,
+                height: 32,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.accentGold.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.accentGold.withValues(alpha: 0.4),
+                    width: 1.0,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.download_rounded,
+                      size: 16,
+                      color: AppColors.accentGold,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${(progress * 100).toInt()}%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.accentGold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          } else {
+            trailingWidget = IconButton(
+              icon: const Icon(Icons.download_rounded),
+              color: AppColors.accentGold,
+              onPressed: () => _downloadSurah(surah),
+            );
+          }
 
           return ListTile(
             contentPadding: const EdgeInsets.symmetric(
@@ -347,42 +558,10 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                 color: AppColors.textPrimary,
               ),
             ),
-            trailing: isDownloaded
-                ? const Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.green,
-                    size: 28,
-                  )
-                : isDownloading
-                ? SizedBox(
-                    width: 42,
-                    height: 42,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        CircularProgressIndicator(
-                          value: progress,
-                          backgroundColor: Colors.grey.shade200,
-                          color: AppColors.accentGold,
-                          strokeWidth: 3,
-                        ),
-                        Text(
-                          '${(progress * 100).toInt()}%',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : IconButton(
-                    icon: const Icon(Icons.download_rounded),
-                    color: AppColors.accentGold,
-                    onPressed: () => _downloadSurah(surah),
-                  ),
+            trailing: trailingWidget,
           );
         },
+      ),
       ),
     );
   }
