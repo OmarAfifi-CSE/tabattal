@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,6 +10,7 @@ import '../../../../../core/utils/arabic_text_utils.dart';
 import '../../../data/models/verse_model.dart';
 import '../../../bloc/quran/quran_bloc.dart';
 import '../../../bloc/quran/quran_event.dart';
+import '../../../bloc/quran/quran_page_cache.dart';
 import '../../../bloc/quran/quran_state.dart';
 import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_state.dart';
@@ -40,15 +42,20 @@ class QuranPageWidgetMobile extends StatefulWidget {
   final int pageNumber;
   final void Function(int page, {String? verseKey})? onNavigateToPage;
   final String? highlightVerseKey;
-  final bool isCurrentPage;
 
   const QuranPageWidgetMobile({
     super.key,
     required this.pageNumber,
     this.onNavigateToPage,
     this.highlightVerseKey,
-    this.isCurrentPage = false,
   });
+
+  static VoidCallback? _activeMenuDismissCallback;
+
+  /// Instantly dismisses any active verse popup menu on drag start without triggering page rebuilds.
+  static void dismissActiveMenu() {
+    _activeMenuDismissCallback?.call();
+  }
 
   @override
   State<QuranPageWidgetMobile> createState() => _QuranPageWidgetMobileState();
@@ -64,6 +71,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   late final AnimationController _bookmarkPulseController;
   late final Animation<double> _bookmarkPulseAnimation;
   int? _bookmarkHighlightVerseId;
+  final GlobalKey _pageRepaintKey = GlobalKey();
 
   // Pre-computed canvas width: measured synchronously via TextPainter once per page.
   // Replaces the old two-pass postFrameCallback approach that caused the
@@ -78,18 +86,40 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   final Map<String, int> _verseKeyToIntIdMap = {};
   final Map<String, ({int surah, int ayah})> _parsedVerseKeys = {};
 
+  // Word tap detection via Listener (no GestureRecognizer — zero arena overhead).
+  // Only fires a tap if the pointer barely moved (< kTouchSlop) from down to up.
+  Offset? _wordTapStart;
+
+  bool _isWordTap(Offset upPosition) =>
+      _wordTapStart != null &&
+      (upPosition - _wordTapStart!).distance < kTouchSlop;
+
+  // Prevents the page-level GestureDetector.onTap from dismissing a menu that
+  // was just opened by a word Listener in the same pointer-up event cycle.
+  bool _tapHandledByWord = false;
+
   // ---------------------------------------------------------------------------
   // Lifecycle
   // ---------------------------------------------------------------------------
 
+  late final QuranBloc _quranBloc;
+
   @override
   void initState() {
     super.initState();
-    _loadPageFont();
+    _quranBloc = QuranBloc(repository: context.read<QuranRepository>())
+      ..add(LoadPage(widget.pageNumber));
+    // Synchronously initialize font state — eliminates first-frame flash for cached fonts.
+    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+    _isFontLoaded = FontService.isLoaded('QCF_P$pageStr');
+    if (!_isFontLoaded) _loadPageFont();
     _bookmarkPulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
+    );
+    // NOTE: Do NOT call .repeat() here — the animation only runs when a verse
+    // is actively highlighted. Running it always wastes 60fps raster cycles
+    // on every page and keeps the GPU from idling between frames.
     _bookmarkPulseAnimation = Tween<double>(begin: 0.15, end: 0.55).animate(
       CurvedAnimation(
         parent: _bookmarkPulseController,
@@ -105,24 +135,26 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   void didUpdateWidget(QuranPageWidgetMobile oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.pageNumber != oldWidget.pageNumber) {
-      _loadPageFont();
-      _precomputedCanvasWidth = null; // Reset so new page gets its own measurement
-    }
-    // Dismiss the verse menu when the user swipes to a different page.
-    if (!widget.isCurrentPage && oldWidget.isCurrentPage) {
-      _removeVerseMenu();
+      _quranBloc.add(LoadPage(widget.pageNumber));
+      // Synchronously update font state for the new page.
+      final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+      final loaded = FontService.isLoaded('QCF_P$pageStr');
+      if (loaded != _isFontLoaded) setState(() => _isFontLoaded = loaded);
+      if (!loaded) _loadPageFont();
     }
     if (widget.highlightVerseKey != oldWidget.highlightVerseKey) {
       if (widget.highlightVerseKey != null) {
         _activateBookmarkHighlight(widget.highlightVerseKey!);
       } else {
         setState(() => _bookmarkHighlightVerseId = null);
+        _bookmarkPulseController.stop();
       }
     }
   }
 
   @override
   void dispose() {
+    _quranBloc.close();
     _bookmarkPulseController.dispose();
     _activeOverlayEntry?.remove();
     _activeOverlayEntry?.dispose();
@@ -135,11 +167,14 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   // ---------------------------------------------------------------------------
 
   Future<void> _loadPageFont() async {
-    setState(() => _isFontLoaded = false);
-    _cachedMaxLineWidth = null;
-    // Delay slightly so it doesn't drop frames during the PageView swipe animation.
-    await Future.delayed(const Duration(milliseconds: 150));
-    if (!mounted) return;
+    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+    final fontName = 'QCF_P$pageStr';
+    if (FontService.isLoaded(fontName)) {
+      if (!_isFontLoaded && mounted) {
+        setState(() => _isFontLoaded = true);
+      }
+      return;
+    }
     await FontService.loadFontForPage(widget.pageNumber);
     if (mounted) setState(() => _isFontLoaded = true);
   }
@@ -150,9 +185,16 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     setState(
       () => _bookmarkHighlightVerseId = parsed.surah * 1000 + parsed.ayah,
     );
+    // Start the animation only now that a verse is highlighted.
+    if (!_bookmarkPulseController.isAnimating) {
+      _bookmarkPulseController.repeat(reverse: true);
+    }
     // Auto-clear after 5 s so it doesn't stay permanently highlighted
     Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) setState(() => _bookmarkHighlightVerseId = null);
+      if (mounted) {
+        setState(() => _bookmarkHighlightVerseId = null);
+        _bookmarkPulseController.stop();
+      }
     });
   }
 
@@ -165,28 +207,38 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   double _computeCanvasWidth(double availW, double availH) {
     final fontSize = 32.sp;
     if (_cachedMaxLineWidth == null) {
-      final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-      final fontFamily = 'QCF_P$pageStr';
-      var maxLW = 0.0;
+      // Check the static app-level cache first — zero TextPainter work on revisit.
+      _cachedMaxLineWidth = QuranPageCache.getCachedLineWidth(widget.pageNumber);
 
-      for (final lineData in _lineMap.values) {
-        if (lineData.words.isEmpty) continue;
-        var lineWidth = 0.0;
-        for (final word in lineData.words) {
-          final text = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
-          if (text.isEmpty) continue;
-          final tp = TextPainter(
-            text: TextSpan(
-              text: text,
-              style: TextStyle(fontFamily: fontFamily, fontSize: fontSize),
-            ),
-            textDirection: TextDirection.rtl,
-          )..layout();
-          lineWidth += tp.width;
+      if (_cachedMaxLineWidth == null) {
+        // Per-word measurement (accurate: mirrors the actual Row widget widths).
+        // Single TP + TextStyle objects are reused across all words to minimise
+        // object allocation and GC pressure.
+        final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+        final fontFamily = 'QCF_P$pageStr';
+        final style = TextStyle(fontFamily: fontFamily, fontSize: fontSize);
+        final tp = TextPainter(textDirection: TextDirection.rtl);
+        var maxLW = 0.0;
+
+        for (final lineData in _lineMap.values) {
+          if (lineData.words.isEmpty) continue;
+          final lineText = lineData.words
+              .map((w) => w.codeV1.isNotEmpty ? w.codeV1 : w.textUthmani)
+              .where((t) => t.isNotEmpty)
+              .join();
+          if (lineText.isEmpty) continue;
+          tp.text = TextSpan(text: lineText, style: style);
+          tp.layout();
+          if (tp.width > maxLW) maxLW = tp.width;
         }
-        if (lineWidth > maxLW) maxLW = lineWidth;
+        tp.dispose();
+        // Add 2px tolerance so canvasW absorbs sub-pixel font advance differences between
+        // joined string layout and individual word widgets in Row — zero RenderFlex overflow.
+        maxLW = maxLW + 2.0;
+        _cachedMaxLineWidth = maxLW;
+        // Persist across widget recreations for this page.
+        QuranPageCache.cacheLineWidth(widget.pageNumber, maxLW);
       }
-      _cachedMaxLineWidth = maxLW;
     }
     final maxLineWidth = _cachedMaxLineWidth!;
 
@@ -309,14 +361,16 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     );
   }
 
-  void _showVerseMenu(
-    BuildContext context,
-    Offset tapPosition,
-    int verseId,
-  ) {
+  void _showVerseMenu(BuildContext context, Offset tapPosition, int verseId) {
+    // Signal to the page-level GestureDetector that this tap was handled by a
+    // word — prevents onTap from immediately dismissing the menu we're opening.
+    _tapHandledByWord = true;
+
     if (_activeOverlayEntry != null) _removeVerseMenu();
 
     setState(() => _activeVerseId = verseId);
+
+    QuranPageWidgetMobile._activeMenuDismissCallback = () => _removeVerseMenu();
 
     final verseKey = ArabicTextUtils.verseIdToVerseKey(verseId);
     final verseRect = _calculateVerseScreenRect(verseKey, tapPosition);
@@ -349,6 +403,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
           position: tapPosition,
           verseRect: verseRect,
           verse: partialVerseForMenu,
+          pageRepaintKey: _pageRepaintKey,
           onDismiss: ({bool keepHighlight = false}) =>
               _removeVerseMenu(keepHighlight: keepHighlight),
           onClearHighlight: () {
@@ -362,6 +417,9 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   }
 
   void _removeVerseMenu({bool keepHighlight = false}) {
+    if (QuranPageWidgetMobile._activeMenuDismissCallback != null) {
+      QuranPageWidgetMobile._activeMenuDismissCallback = null;
+    }
     _activeOverlayEntry?.remove();
     _activeOverlayEntry?.dispose();
     _activeOverlayEntry = null;
@@ -536,7 +594,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       }
     }
 
-    void handleTap(TapUpDetails details) {
+    void handleTap(Offset globalPosition) {
       if (hifzState.isHifzModeActive && isWordMasked) {
         if (hifzState.maskingType == HifzMaskingType.wordByWord) {
           context.read<HifzBloc>().add(ToggleWordReveal(wordKey));
@@ -549,7 +607,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       if (_activeVerseId == verseId) {
         _removeVerseMenu();
       } else {
-        _showVerseMenu(context, details.globalPosition, verseId);
+        _showVerseMenu(context, globalPosition, verseId);
       }
     }
 
@@ -560,10 +618,14 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     );
 
     if (isWordMasked) {
-      return GestureDetector(
-        onTapUp: handleTap,
-        onTap: () {},
-        onLongPress: () {},
+      return Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (e) => _wordTapStart = e.position,
+        onPointerUp: (e) {
+          if (_isWordTap(e.position)) handleTap(e.position);
+          _wordTapStart = null;
+        },
+        onPointerCancel: (_) => _wordTapStart = null,
         child: Container(
           margin: EdgeInsets.zero,
           padding: EdgeInsets.zero,
@@ -584,10 +646,14 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     if (isBookmarkHighlighted) {
       return AnimatedBuilder(
         animation: _bookmarkPulseAnimation,
-        builder: (context, _) => GestureDetector(
-          onTapUp: handleTap,
-          onTap: () {},
-          onLongPress: () {},
+        builder: (context, _) => Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (e) => _wordTapStart = e.position,
+          onPointerUp: (e) {
+            if (_isWordTap(e.position)) handleTap(e.position);
+            _wordTapStart = null;
+          },
+          onPointerCancel: (_) => _wordTapStart = null,
           child: Container(
             color: mushafTheme.goldColor.withValues(
               alpha: _bookmarkPulseAnimation.value,
@@ -615,19 +681,19 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       textColor = mushafTheme.goldColor;
     }
 
-    return GestureDetector(
-      onTapUp: handleTap,
-      onTap: () {},
-      onLongPress: () {},
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (e) => _wordTapStart = e.position,
+      onPointerUp: (e) {
+        if (_isWordTap(e.position)) handleTap(e.position);
+        _wordTapStart = null;
+      },
+      onPointerCancel: (_) => _wordTapStart = null,
+      child: ColoredBox(
         color: backgroundColor,
-        child: AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
+        child: Text(
+          displayText,
           style: wordTextStyle.copyWith(color: textColor),
-          child: Text(displayText),
         ),
       ),
     );
@@ -660,12 +726,16 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
           if (isBasmalaMasked) {
             wordWidgets.add(
-              GestureDetector(
-                onTapUp: (_) {
-                  context.read<HifzBloc>().add(const ToggleVerseReveal('1:1'));
+              Listener(
+                behavior: HitTestBehavior.translucent,
+                onPointerDown: (e) => _wordTapStart = e.position,
+                onPointerUp: (e) {
+                  if (_isWordTap(e.position)) {
+                    context.read<HifzBloc>().add(const ToggleVerseReveal('1:1'));
+                  }
+                  _wordTapStart = null;
                 },
-                onTap: () {},
-                onLongPress: () {},
+                onPointerCancel: (_) => _wordTapStart = null,
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 4.0.w),
                   child: Container(
@@ -748,20 +818,20 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
           }
 
           wordWidgets.add(
-            GestureDetector(
-              onTapUp: (details) {
-                if (_activeVerseId == verseId) {
-                  _removeVerseMenu();
-                } else {
-                  _showVerseMenu(
-                    context,
-                    details.globalPosition,
-                    verseId,
-                  );
+            Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (e) => _wordTapStart = e.position,
+              onPointerUp: (e) {
+                if (_isWordTap(e.position)) {
+                  if (_activeVerseId == verseId) {
+                    _removeVerseMenu();
+                  } else {
+                    _showVerseMenu(context, e.position, verseId);
+                  }
                 }
+                _wordTapStart = null;
               },
-              onTap: () {},
-              onLongPress: () {},
+              onPointerCancel: (_) => _wordTapStart = null,
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4.0.w),
                 child: basmala,
@@ -799,14 +869,18 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
           );
 
           wordWidgets.add(
-            GestureDetector(
-              onTapUp: (_) {
-                context
-                    .read<HifzBloc>()
-                    .add(ToggleVerseReveal(currentVerseKey));
+            Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (e) => _wordTapStart = e.position,
+              onPointerUp: (e) {
+                if (_isWordTap(e.position)) {
+                  context
+                      .read<HifzBloc>()
+                      .add(ToggleVerseReveal(currentVerseKey));
+                }
+                _wordTapStart = null;
               },
-              onTap: () {},
-              onLongPress: () {},
+              onPointerCancel: (_) => _wordTapStart = null,
               child: Container(
                 margin: EdgeInsets.zero,
                 padding: EdgeInsets.zero,
@@ -858,12 +932,15 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 2.0.h),
-      child: Row(
-        textDirection: TextDirection.rtl,
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: wordWidgets,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          textDirection: TextDirection.rtl,
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: wordWidgets,
+        ),
       ),
     );
   }
@@ -914,114 +991,139 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         ? AppLocalizations.of(context)!.juzListItem(juzNum.toString())
         : QuranMetadata.getJuzNameWithTashkeel(juzNum);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        if (_activeOverlayEntry != null) {
-          _removeVerseMenu();
-        }
-      },
-      child: QuranPageFrameMobile(
-        pageNumber: widget.pageNumber,
-        onNavigateToPage: widget.onNavigateToPage,
-        surahName: surahName,
-        juzName: juzName,
-        onHeaderTap: () {
+    return RepaintBoundary(
+      key: _pageRepaintKey,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          // If a word Listener already handled this tap (e.g. opened the menu),
+          // skip the dismiss-on-tap logic to avoid immediately closing it.
+          if (_tapHandledByWord) {
+            _tapHandledByWord = false;
+            return;
+          }
           if (_activeOverlayEntry != null) {
             _removeVerseMenu();
           }
         },
-        child: BlocBuilder<BookmarkBloc, BookmarkState>(
-          builder: (context, bookmarkState) {
-            return BlocBuilder<HifzBloc, HifzState>(
-              builder: (context, hifzState) {
-                return BlocBuilder<AudioBloc, AudioState>(
-                  builder: (context, audioState) {
-                    final mushafTheme = context
-                        .watch<SettingsBloc>()
-                        .state
-                        .effectiveMushafTheme;
-                    int? playingVerseId;
-                    if (audioState is AudioPlaying) {
-                      playingVerseId = audioState.currentVerseId;
-                    }
-                    if (audioState is AudioPaused) {
-                      playingVerseId = audioState.currentVerseId;
-                    }
-
-                    return MediaQuery(
-                      data: MediaQuery.of(
-                        context,
-                      ).copyWith(textScaler: TextScaler.noScaling),
-                      child: Directionality(
-                        textDirection: TextDirection.rtl,
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final availW = constraints.maxWidth;
-                            final availH = constraints.maxHeight;
-
-                            // Compute (or recompute) canvas width when:
-                            // – first build with data (_precomputedCanvasWidth == null)
-                            // – availH changed by more than 1px (audio bar appear/disappear)
-                            if (_lineMap.isNotEmpty &&
-                                (_precomputedCanvasWidth == null ||
-                                    (availH - _lastComputedAvailH).abs() > 1.0)) {
-                              _lastComputedAvailH = availH;
-                              _precomputedCanvasWidth =
-                                  _computeCanvasWidth(availW, availH);
-                            }
-
-                            final canvasW = _precomputedCanvasWidth ?? 490.w;
-                            final canvasH = availH * canvasW / availW;
-                            return FittedBox(
-                              fit: BoxFit.contain,
-                              alignment: Alignment.center,
-                              child: SizedBox(
-                                width: canvasW,
-                                height: canvasH,
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                    top: canvasH * 0.027,
-                                    bottom: canvasH * 0.032,
-                                  ),
-                                  child: Column(
-                                    key: _pageColumnKey,
-                                    mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: List.generate(15, (index) {
-                                      final lineNumber = index + 1;
-                                      final lineData = _lineMap[lineNumber];
-
-                                      if (lineData == null || lineData.words.isEmpty) {
-                                        return _buildEmptyLineWidget(
-                                          lineNumber,
-                                          mushafTheme,
-                                        );
-                                      }
-
-                                      return _buildWordRow(
-                                        lineWords: lineData.words,
-                                        playingVerseId: playingVerseId,
-                                        audioState: audioState,
-                                        bookmarkState: bookmarkState,
-                                        mushafTheme: mushafTheme,
-                                        hifzState: hifzState,
-                                      );
-                                    }).toList(),
-                                  ), // Column
-                                ), // Padding
-                              ), // SizedBox
-                            ); // FittedBox
-                          },
-                        ), // LayoutBuilder
-                      ), // Directionality
-                    ); // MediaQuery
-                  },
-                );
-              },
-            );
+        child: QuranPageFrameMobile(
+          pageNumber: widget.pageNumber,
+          onNavigateToPage: widget.onNavigateToPage,
+          surahName: surahName,
+          juzName: juzName,
+          onHeaderTap: () {
+            if (_activeOverlayEntry != null) {
+              _removeVerseMenu();
+            }
           },
+          child: BlocBuilder<BookmarkBloc, BookmarkState>(
+            buildWhen: (prev, curr) => prev != curr,
+            builder: (context, bookmarkState) {
+              return BlocBuilder<HifzBloc, HifzState>(
+                buildWhen: (prev, curr) => prev != curr,
+                builder: (context, hifzState) {
+                  return BlocBuilder<AudioBloc, AudioState>(
+                    buildWhen: (prev, curr) {
+                      final prevId = prev is AudioPlaying
+                          ? prev.currentVerseId
+                          : (prev is AudioPaused ? prev.currentVerseId : null);
+                      final currId = curr is AudioPlaying
+                          ? curr.currentVerseId
+                          : (curr is AudioPaused ? curr.currentVerseId : null);
+                      final prevOnPage =
+                          prevId != null && _verseKeyToIntIdMap.containsValue(prevId);
+                      final currOnPage =
+                          currId != null && _verseKeyToIntIdMap.containsValue(currId);
+                      return prevOnPage || currOnPage;
+                    },
+                    builder: (context, audioState) {
+                      final mushafTheme = context
+                          .watch<SettingsBloc>()
+                          .state
+                          .effectiveMushafTheme;
+                      int? playingVerseId;
+                      final activeAudioVerseId = audioState is AudioPlaying
+                          ? audioState.currentVerseId
+                          : (audioState is AudioPaused ? audioState.currentVerseId : null);
+                      if (activeAudioVerseId != null &&
+                          _verseKeyToIntIdMap.containsValue(activeAudioVerseId)) {
+                        playingVerseId = activeAudioVerseId;
+                      }
+
+                      return MediaQuery(
+                        data: MediaQuery.of(
+                          context,
+                        ).copyWith(textScaler: TextScaler.noScaling),
+                        child: Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final availW = constraints.maxWidth;
+                              final availH = constraints.maxHeight;
+
+                              // Compute (or recompute) canvas width when:
+                              // – first build with data (_precomputedCanvasWidth == null)
+                              // – availH changed by more than 1px (audio bar appear/disappear)
+                              if (_lineMap.isNotEmpty &&
+                                  (_precomputedCanvasWidth == null ||
+                                      (availH - _lastComputedAvailH).abs() > 1.0)) {
+                                _lastComputedAvailH = availH;
+                                _precomputedCanvasWidth =
+                                    _computeCanvasWidth(availW, availH);
+                              }
+
+                              final canvasW = _precomputedCanvasWidth ?? 490.w;
+                              final canvasH = availH * canvasW / availW;
+                              return FittedBox(
+                                fit: BoxFit.contain,
+                                alignment: Alignment.center,
+                                child: SizedBox(
+                                  width: canvasW,
+                                  height: canvasH,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                      top: canvasH * 0.027,
+                                      bottom: canvasH * 0.032,
+                                    ),
+                                    child: Column(
+                                      key: _pageColumnKey,
+                                      mainAxisSize: MainAxisSize.max,
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: List.generate(15, (index) {
+                                        final lineNumber = index + 1;
+                                        final lineData = _lineMap[lineNumber];
+
+                                        if (lineData == null || lineData.words.isEmpty) {
+                                          return _buildEmptyLineWidget(
+                                            lineNumber,
+                                            mushafTheme,
+                                          );
+                                        }
+
+                                        return _buildWordRow(
+                                          lineWords: lineData.words,
+                                          playingVerseId: playingVerseId,
+                                          audioState: audioState,
+                                          bookmarkState: bookmarkState,
+                                          mushafTheme: mushafTheme,
+                                          hifzState: hifzState,
+                                        );
+                                      }).toList(),
+                                    ), // Column
+                                  ), // Padding
+                                ), // SizedBox
+                              ); // FittedBox
+                            },
+                          ), // LayoutBuilder
+                        ), // Directionality
+                      ); // MediaQuery
+                    },
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -1041,10 +1143,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          QuranBloc(repository: context.read<QuranRepository>())
-            ..add(LoadPage(widget.pageNumber)),
+    return BlocProvider.value(
+      value: _quranBloc,
       child: BlocBuilder<QuranBloc, QuranState>(
         buildWhen: (_, current) =>
             current is QuranLoading ||
@@ -1056,7 +1156,14 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
               .watch<SettingsBloc>()
               .state
               .effectiveMushafTheme;
-          if (state is QuranLoading || !_isFontLoaded) {
+
+          // Optimistically serve cached data on QuranInitial to avoid any
+          // single-frame spinner while the event loop processes LoadPage.
+          final QuranState displayState = state is QuranInitial
+              ? (QuranPageCache.get(widget.pageNumber) ?? state)
+              : state;
+
+          if (displayState is QuranLoading || !_isFontLoaded) {
             return QuranPageFrameMobile(
               pageNumber: widget.pageNumber,
               onNavigateToPage: widget.onNavigateToPage,
@@ -1067,7 +1174,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
               ),
             );
           }
-          if (state is QuranError) {
+          if (displayState is QuranError) {
             return QuranPageFrameMobile(
               pageNumber: widget.pageNumber,
               onNavigateToPage: widget.onNavigateToPage,
@@ -1075,13 +1182,13 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
               juzName: '',
               child: Center(
                 child: Text(
-                  state.message,
+                  displayState.message,
                   style: TextStyle(color: Colors.red, fontSize: 14.sp),
                 ),
               ),
             );
           }
-          if (state is QuranLoaded) return _buildLoadedPage(state);
+          if (displayState is QuranLoaded) return _buildLoadedPage(displayState);
           return _buildEmptyFrame();
         },
       ),

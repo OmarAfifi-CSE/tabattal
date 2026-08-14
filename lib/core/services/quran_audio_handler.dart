@@ -13,7 +13,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
   QuranAudioHandler() {
     _player.playbackEventStream.map(_transformEvent).listen((state) {
-      if (!playbackState.isClosed && _player.processingState != ProcessingState.idle) {
+      if (!playbackState.isClosed) {
         playbackState.add(state);
       }
     });
@@ -78,19 +78,24 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> stop() async {
     if (_isStopping) return;
     _isStopping = true;
-    _actionSubject.add(QuranAudioAction.stop);
-    await _player.stop();
-    mediaItem.add(null);
-    playbackState.add(
-      PlaybackState(
-        controls: [],
-        systemActions: const {},
-        processingState: AudioProcessingState.idle,
-        playing: false,
-      ),
-    );
-    await super.stop();
-    _isStopping = false;
+    try {
+      _actionSubject.add(QuranAudioAction.stop);
+      mediaItem.add(null);
+      playbackState.add(
+        PlaybackState(
+          controls: const [],
+          systemActions: const {},
+          processingState: AudioProcessingState.idle,
+          playing: false,
+        ),
+      );
+      try {
+        await _player.stop();
+      } catch (_) {}
+      await super.stop();
+    } finally {
+      _isStopping = false;
+    }
   }
 
   /// Displays an offline/stopped notification informing the user where playback stopped.

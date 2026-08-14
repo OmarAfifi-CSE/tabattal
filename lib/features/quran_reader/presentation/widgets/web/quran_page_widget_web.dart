@@ -7,6 +7,7 @@ import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
 import '../../../data/models/verse_model.dart';
 import '../../../bloc/quran/quran_bloc.dart';
+import '../../../bloc/quran/quran_page_cache.dart';
 import '../../../bloc/quran/quran_event.dart';
 import '../../../bloc/quran/quran_state.dart';
 import '../../../bloc/audio/audio_bloc.dart';
@@ -39,15 +40,19 @@ class QuranPageWidgetWeb extends StatefulWidget {
   final int pageNumber;
   final void Function(int page, {String? verseKey})? onNavigateToPage;
   final String? highlightVerseKey;
-  final bool isCurrentPage;
 
   const QuranPageWidgetWeb({
     super.key,
     required this.pageNumber,
     this.onNavigateToPage,
     this.highlightVerseKey,
-    this.isCurrentPage = false,
   });
+
+  static VoidCallback? _activeMenuDismissCallback;
+
+  static void dismissActiveMenu() {
+    _activeMenuDismissCallback?.call();
+  }
 
   @override
   State<QuranPageWidgetWeb> createState() => _QuranPageWidgetWebState();
@@ -63,6 +68,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
   late final AnimationController _bookmarkPulseController;
   late final Animation<double> _bookmarkPulseAnimation;
   int? _bookmarkHighlightVerseId;
+  final GlobalKey _pageRepaintKey = GlobalKey();
 
   double? _precomputedCanvasWidth;
   double? _cachedMaxLineWidth;
@@ -78,9 +84,13 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
   // Lifecycle
   // ---------------------------------------------------------------------------
 
+  late final QuranBloc _quranBloc;
+
   @override
   void initState() {
     super.initState();
+    _quranBloc = QuranBloc(repository: context.read<QuranRepository>())
+      ..add(LoadPage(widget.pageNumber));
     _loadPageFont();
     _bookmarkPulseController = AnimationController(
       vsync: this,
@@ -101,12 +111,9 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
   void didUpdateWidget(QuranPageWidgetWeb oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.pageNumber != oldWidget.pageNumber) {
+      _quranBloc.add(LoadPage(widget.pageNumber));
       _loadPageFont();
       _precomputedCanvasWidth = null;
-      _cachedMaxLineWidth = null;
-    }
-    if (!widget.isCurrentPage && oldWidget.isCurrentPage) {
-      _removeVerseMenu();
     }
     if (widget.highlightVerseKey != oldWidget.highlightVerseKey) {
       if (widget.highlightVerseKey != null) {
@@ -119,6 +126,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
 
   @override
   void dispose() {
+    _quranBloc.close();
     _bookmarkPulseController.dispose();
     _activeOverlayEntry?.remove();
     _activeOverlayEntry?.dispose();
@@ -131,10 +139,14 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
   // ---------------------------------------------------------------------------
 
   Future<void> _loadPageFont() async {
-    setState(() => _isFontLoaded = false);
-    // Delay slightly so it doesn't drop frames during the PageView swipe animation.
-    await Future.delayed(const Duration(milliseconds: 150));
-    if (!mounted) return;
+    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+    final fontName = 'QCF_P$pageStr';
+    if (FontService.isLoaded(fontName)) {
+      if (!_isFontLoaded && mounted) {
+        setState(() => _isFontLoaded = true);
+      }
+      return;
+    }
     await FontService.loadFontForPage(widget.pageNumber);
     if (mounted) setState(() => _isFontLoaded = true);
   }
@@ -155,29 +167,31 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
   // font size — matching the value used in the non-web platform widgets.
   double _computeCanvasWidth(double availW, double availH) {
     if (_cachedMaxLineWidth == null) {
-      final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-      final fontFamily = 'QCF_P$pageStr';
-      const fontSize = 42.0;
-      var maxLW = 0.0;
+      _cachedMaxLineWidth = QuranPageCache.getCachedLineWidth(widget.pageNumber);
+      if (_cachedMaxLineWidth == null) {
+        final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+        final fontFamily = 'QCF_P$pageStr';
+        const fontSize = 42.0;
+        final style = TextStyle(fontFamily: fontFamily, fontSize: fontSize);
+        final tp = TextPainter(textDirection: TextDirection.rtl);
+        var maxLW = 0.0;
 
-      for (final lineData in _lineMap.values) {
-        if (lineData.words.isEmpty) continue;
-        var lineWidth = 0.0;
-        for (final word in lineData.words) {
-          final text = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
-          if (text.isEmpty) continue;
-          final tp = TextPainter(
-            text: TextSpan(
-              text: text,
-              style: TextStyle(fontFamily: fontFamily, fontSize: fontSize),
-            ),
-            textDirection: TextDirection.rtl,
-          )..layout();
-          lineWidth += tp.width;
+        for (final lineData in _lineMap.values) {
+          if (lineData.words.isEmpty) continue;
+          final lineText = lineData.words
+              .map((w) => w.codeV1.isNotEmpty ? w.codeV1 : w.textUthmani)
+              .where((t) => t.isNotEmpty)
+              .join();
+          if (lineText.isEmpty) continue;
+          tp.text = TextSpan(text: lineText, style: style);
+          tp.layout();
+          if (tp.width > maxLW) maxLW = tp.width;
         }
-        if (lineWidth > maxLW) maxLW = lineWidth;
+        tp.dispose();
+        maxLW = maxLW + 2.0;
+        _cachedMaxLineWidth = maxLW;
+        QuranPageCache.cacheLineWidth(widget.pageNumber, maxLW);
       }
-      _cachedMaxLineWidth = maxLW;
     }
     final maxLineWidth = _cachedMaxLineWidth!;
 
@@ -325,6 +339,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
           position: tapPosition,
           verseRect: verseRect,
           verse: partialVerseForMenu,
+          pageRepaintKey: _pageRepaintKey,
           onDismiss: ({bool keepHighlight = false}) =>
               _removeVerseMenu(keepHighlight: keepHighlight),
           onClearHighlight: () {
@@ -836,12 +851,15 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
-      child: Row(
-        textDirection: TextDirection.rtl,
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: wordWidgets,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          textDirection: TextDirection.rtl,
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: wordWidgets,
+        ),
       ),
     );
   }
@@ -892,13 +910,15 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
         ? AppLocalizations.of(context)!.juzListItem(juzNum.toString())
         : QuranMetadata.getJuzNameWithTashkeel(juzNum);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        if (_activeOverlayEntry != null) {
-          _removeVerseMenu();
-        }
-      },
+    return RepaintBoundary(
+      key: _pageRepaintKey,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          if (_activeOverlayEntry != null) {
+            _removeVerseMenu();
+          }
+        },
       child: Center(
         child: QuranPageFrameWeb(
           pageNumber: widget.pageNumber,
@@ -911,19 +931,34 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
             }
           },
           child: BlocBuilder<BookmarkBloc, BookmarkState>(
+            buildWhen: (prev, curr) => prev != curr,
             builder: (context, bookmarkState) {
               return BlocBuilder<AudioBloc, AudioState>(
+                buildWhen: (prev, curr) {
+                  final prevId = prev is AudioPlaying
+                      ? prev.currentVerseId
+                      : (prev is AudioPaused ? prev.currentVerseId : null);
+                  final currId = curr is AudioPlaying
+                      ? curr.currentVerseId
+                      : (curr is AudioPaused ? curr.currentVerseId : null);
+                  final prevOnPage =
+                      prevId != null && _verseKeyToIntIdMap.containsValue(prevId);
+                  final currOnPage =
+                      currId != null && _verseKeyToIntIdMap.containsValue(currId);
+                  return prevOnPage || currOnPage;
+                },
                 builder: (context, audioState) {
                   final mushafTheme = context
                       .watch<SettingsBloc>()
                       .state
                       .effectiveMushafTheme;
                   int? playingVerseId;
-                  if (audioState is AudioPlaying) {
-                    playingVerseId = audioState.currentVerseId;
-                  }
-                  if (audioState is AudioPaused) {
-                    playingVerseId = audioState.currentVerseId;
+                  final activeAudioVerseId = audioState is AudioPlaying
+                      ? audioState.currentVerseId
+                      : (audioState is AudioPaused ? audioState.currentVerseId : null);
+                  if (activeAudioVerseId != null &&
+                      _verseKeyToIntIdMap.containsValue(activeAudioVerseId)) {
+                    playingVerseId = activeAudioVerseId;
                   }
 
                   return MediaQuery(
@@ -1001,8 +1036,9 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
           ),
         ),
       ),
-    );
-  }
+    ),
+  ); // RepaintBoundary
+}
 
   // ---------------------------------------------------------------------------
   // Build
@@ -1018,10 +1054,8 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          QuranBloc(repository: context.read<QuranRepository>())
-            ..add(LoadPage(widget.pageNumber)),
+    return BlocProvider.value(
+      value: _quranBloc,
       child: BlocBuilder<QuranBloc, QuranState>(
         buildWhen: (_, current) =>
             current is QuranLoading ||

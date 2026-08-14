@@ -168,8 +168,10 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
       behavior: HitTestBehavior.opaque,
       onTap: () {
         if (_isAnimating) return;
+        if (closeMenu) {
+          widget.onDismiss();
+        }
         onTap();
-        if (closeMenu) _close();
       },
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),

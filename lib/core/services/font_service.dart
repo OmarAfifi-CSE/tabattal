@@ -29,6 +29,8 @@ class FontService {
     return _initFuture;
   }
 
+  static bool isLoaded(String fontName) => _loadedFonts.contains(fontName);
+
   static Future<void> loadFontForPage(int pageNumber) async {
     final pageStr = pageNumber.toString().padLeft(3, '0');
     final fontName = 'QCF_P$pageStr';
@@ -49,10 +51,10 @@ class FontService {
 
         final fontFile = _fontArchive?.findFile('quran/$fontName.ttf');
         if (fontFile != null) {
-          final fontData = fontFile.content as List<int>;
+          final fontBytes = fontFile.content;
           final fontLoader = FontLoader(fontName);
           fontLoader.addFont(
-            Future.value(ByteData.view(Uint8List.fromList(fontData).buffer)),
+            Future.value(ByteData.view(fontBytes.buffer, fontBytes.offsetInBytes, fontBytes.lengthInBytes)),
           );
           await fontLoader.load();
           _loadedFonts.add(fontName);

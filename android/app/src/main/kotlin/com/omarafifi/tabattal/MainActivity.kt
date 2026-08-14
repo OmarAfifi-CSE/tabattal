@@ -1,12 +1,32 @@
 package com.omarafifi.tabattal
 
 import android.media.MediaScannerConnection
+import android.os.Build
+import android.view.Display
+import android.view.WindowManager
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import com.ryanheise.audioservice.AudioServiceActivity
 
 class MainActivity : AudioServiceActivity() {
     private val CHANNEL = "com.omarafifi.tabattal/media_scanner"
+
+    @Suppress("DEPRECATION")
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val displayObj: Display? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                this.display
+            } else {
+                windowManager.defaultDisplay
+            }
+            displayObj?.supportedModes?.maxByOrNull { it.refreshRate }?.let { maxMode ->
+                val params = window.attributes
+                params.preferredDisplayModeId = maxMode.modeId
+                window.attributes = params
+            }
+        }
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

@@ -78,6 +78,7 @@ class VerseActionMenuTablet extends StatefulWidget {
   final Offset position;
   final Rect? verseRect;
   final VerseModel verse;
+  final GlobalKey? pageRepaintKey;
 
   const VerseActionMenuTablet({
     super.key,
@@ -86,6 +87,7 @@ class VerseActionMenuTablet extends StatefulWidget {
     required this.position,
     this.verseRect,
     required this.verse,
+    this.pageRepaintKey,
   });
 
   @override
@@ -166,8 +168,10 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
       behavior: HitTestBehavior.opaque,
       onTap: () {
         if (_isAnimating) return;
+        if (closeMenu) {
+          widget.onDismiss();
+        }
         onTap();
-        if (closeMenu) _close();
       },
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
@@ -1250,6 +1254,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                             verse: widget.verse,
                             tafsirText: tafsirText,
                             translationText: translationText,
+                            pageRepaintKey: widget.pageRepaintKey,
                           );
                         },
                       ),

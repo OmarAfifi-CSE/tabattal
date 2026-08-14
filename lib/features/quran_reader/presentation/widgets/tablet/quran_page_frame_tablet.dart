@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter/services.dart';
 import 'quran_border_painter_tablet.dart';
 import '../../../../../core/constants/hizb_data.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
@@ -112,22 +111,9 @@ class QuranPageFrameTablet extends StatelessWidget {
       fontWeight: FontWeight.bold,
     );
 
-    final isDark = mushafTheme.isDarkTheme;
-
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarDividerColor: Colors.transparent,
-        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
-        systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-        systemNavigationBarContrastEnforced: false,
-        systemStatusBarContrastEnforced: false,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: LayoutBuilder(
+    return Material(
+      color: Colors.transparent,
+      child: LayoutBuilder(
           builder: (context, constraints) {
             final double pageWidth = constraints.maxWidth;
             final double pageHeight = constraints.maxHeight;
@@ -138,6 +124,8 @@ class QuranPageFrameTablet extends StatelessWidget {
                 // ── LAYER 1: Procedural border painter ─────────────────────
                 RepaintBoundary(
                   child: CustomPaint(
+                    isComplex: true,
+                    willChange: false,
                     painter: QuranBorderPainterTablet(
                       pageNumber: pageNumber,
                       hizbCutCenters: hizbMarkers != null
@@ -164,7 +152,7 @@ class QuranPageFrameTablet extends StatelessWidget {
                   bottom: 0,
                   left: pageWidth * 0.09,
                   right: pageWidth * 0.09,
-                  child: RepaintBoundary(child: child),
+                  child: child,
                 ),
 
                 // ── LAYER 3: Header frame cuts ──────────────────────────────
@@ -339,7 +327,7 @@ class QuranPageFrameTablet extends StatelessWidget {
                                   fontFamily: 'QCF_BSML',
                                   fontSize: 65.sp,
                                   color: mushafTheme.goldColor,
-                                  height: 1.0,
+                                  height: 1.0.h,
                                 ),
                               ),
                             ),
@@ -356,7 +344,7 @@ class QuranPageFrameTablet extends StatelessWidget {
                                         fontFamily:
                                             'KFGQPC HAFS Uthmanic Script Regular',
                                         fontSize: 6.sp,
-                                        height: 1.2,
+                                        height: 1.2.h,
                                         color: mushafTheme.textColor,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -375,7 +363,6 @@ class QuranPageFrameTablet extends StatelessWidget {
             );
           },
         ),
-      ),
-    );
+      );
   }
 }

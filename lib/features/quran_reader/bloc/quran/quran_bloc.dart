@@ -5,6 +5,7 @@ import '../../domain/repositories/quran_repository.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/download_state.dart';
 import 'quran_event.dart';
+import 'quran_page_cache.dart';
 import 'quran_state.dart';
 
 class QuranBloc extends Bloc<QuranEvent, QuranState> {
@@ -48,6 +49,14 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
   }
 
   Future<void> _onLoadPage(LoadPage event, Emitter<QuranState> emit) async {
+    // Serve from cache immediately — no loading state, no spinner.
+    final cached = QuranPageCache.get(event.pageNumber);
+    if (cached != null) {
+      _lastLoadedState = cached;
+      emit(cached);
+      return;
+    }
+
     emit(QuranLoading());
     final result = await repository.getLinesByPage(event.pageNumber);
     result.fold((f) => emit(QuranError(_failureMessage(f))), (lines) {
@@ -55,6 +64,7 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
         lines: lines,
         currentPage: event.pageNumber,
       );
+      QuranPageCache.put(event.pageNumber, _lastLoadedState!);
       emit(_lastLoadedState!);
     });
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter/services.dart';
 import 'quran_border_painter_mobile.dart';
+import 'quran_page_widget_mobile.dart';
 import '../../../../../core/constants/hizb_data.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
 import '../drawer/mobile/quran_index_view_mobile.dart';
@@ -114,22 +114,9 @@ class QuranPageFrameMobile extends StatelessWidget {
       fontWeight: FontWeight.bold,
     );
 
-    final isDark = mushafTheme.isDarkTheme;
-
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarDividerColor: Colors.transparent,
-        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
-        systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-        systemNavigationBarContrastEnforced: false,
-        systemStatusBarContrastEnforced: false,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: LayoutBuilder(
+    return Material(
+      color: Colors.transparent,
+      child: LayoutBuilder(
           builder: (context, constraints) {
             final double pageWidth = constraints.maxWidth;
             final double pageHeight = constraints.maxHeight;
@@ -140,6 +127,8 @@ class QuranPageFrameMobile extends StatelessWidget {
                 // ── LAYER 1: Procedural border painter ─────────────────────
                 RepaintBoundary(
                   child: CustomPaint(
+                    isComplex: true,
+                    willChange: false,
                     painter: QuranBorderPainterMobile(
                       pageNumber: pageNumber,
                       hizbCutCenters: hizbMarkers != null
@@ -166,7 +155,7 @@ class QuranPageFrameMobile extends StatelessWidget {
                   bottom: 0,
                   left: pageWidth * 0.09,
                   right: pageWidth * 0.09,
-                  child: RepaintBoundary(child: child),
+                  child: child,
                 ),
 
                 // ── LAYER 3: Header frame cuts ──────────────────────────────
@@ -181,6 +170,7 @@ class QuranPageFrameMobile extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () async {
                         onHeaderTap?.call();
+                        QuranPageWidgetMobile.dismissActiveMenu();
                         final result = await Navigator.push<dynamic>(
                           context,
                           MaterialPageRoute(
@@ -223,6 +213,7 @@ class QuranPageFrameMobile extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () async {
                         onHeaderTap?.call();
+                        QuranPageWidgetMobile.dismissActiveMenu();
                         final result = await Navigator.push<dynamic>(
                           context,
                           MaterialPageRoute(
@@ -267,6 +258,7 @@ class QuranPageFrameMobile extends StatelessWidget {
                       child: GestureDetector(
                         onTap: () {
                           onHeaderTap?.call();
+                          QuranPageWidgetMobile.dismissActiveMenu();
                           Scaffold.of(context).openDrawer();
                         },
                         child: _buildFrameInfoBox(
@@ -377,7 +369,6 @@ class QuranPageFrameMobile extends StatelessWidget {
             );
           },
         ),
-      ),
-    );
+      );
   }
 }
