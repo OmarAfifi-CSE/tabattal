@@ -142,7 +142,7 @@ class _AudioSettingsSheetContentState
 
     return Padding(
       padding: EdgeInsets.only(
-        bottom: math.max(MediaQuery.of(context).viewInsets.bottom, MediaQuery.paddingOf(context).bottom),
+        bottom: math.max(MediaQuery.viewInsetsOf(context).bottom, MediaQuery.paddingOf(context).bottom),
       ),
       child: Container(
         padding: EdgeInsets.fromLTRB(20.wW, 10.wH, 20.wW, 28.wH),

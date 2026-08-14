@@ -71,28 +71,10 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
   void initState() {
     super.initState();
     _repository = context.read<QuranRepository>();
-    _loadSurahPageMap();
-  }
-
-  Future<void> _loadSurahPageMap() async {
-    final indexResult = await _repository.getSurahsIndex();
-    indexResult.fold(
-      (f) {
-        if (mounted) setState(() => _surahMapLoaded = true);
-      },
-      (index) {
-        final map = <int, int>{};
-        for (final row in index) {
-          map[row['surah'] as int] = row['start_page'] as int;
-        }
-        if (mounted) {
-          setState(() {
-            _surahPageMap = map;
-            _surahMapLoaded = true;
-          });
-        }
-      },
-    );
+    _surahPageMap = {
+      for (int i = 1; i <= 114; i++) i: QuranMetadata.getStartPageForSurah(i),
+    };
+    _surahMapLoaded = true;
   }
 
   @override

@@ -94,7 +94,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
   }
 
   Future<void> _checkDownloadedTafsirs() async {
-    final toCheck = [
+    const toCheck = [
       14,
       91,
       15,
@@ -105,15 +105,19 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
       168,
       817,
     ]; // Include newly-downloadable tafsir 14 & 91 and english ones
-    for (int id in toCheck) {
-      final progressResult = await _repository.getTafsirDownloadProgress(id);
-      progressResult.fold((f) => null, (progress) {
-        if (progress == 1.0 && mounted) {
-          setState(() {
-            _downloadedTafsirs.add(id);
-          });
-        }
-      });
+    final results = await Future.wait(
+      toCheck.map((id) async {
+        final progressResult = await _repository.getTafsirDownloadProgress(id);
+        return progressResult.fold((f) => null, (progress) => progress == 1.0 ? id : null);
+      }),
+    );
+    if (mounted) {
+      final downloaded = results.whereType<int>();
+      if (downloaded.isNotEmpty) {
+        setState(() {
+          _downloadedTafsirs.addAll(downloaded);
+        });
+      }
     }
   }
 

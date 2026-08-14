@@ -298,7 +298,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
               return Container(
                 constraints: BoxConstraints(
                   maxHeight:
-                      MediaQuery.of(context).size.height *
+                      MediaQuery.sizeOf(context).height *
                       0.7, // Max 70% of screen
                 ),
                 padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, math.max(20.h, MediaQuery.paddingOf(context).bottom)),
@@ -1083,19 +1083,12 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
             verseRect: widget.verseRect,
             menuSize: menuSize,
           ),
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return Opacity(
-                opacity: _fadeAnimation.value,
-                child: Transform.scale(
-                  scale: _scaleAnimation.value,
-                  alignment: Alignment.topRight,
-                  child: child,
-                ),
-              );
-            },
-            child: Material(
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: ScaleTransition(
+              scale: _scaleAnimation,
+              alignment: Alignment.topRight,
+              child: Material(
               borderRadius: BorderRadius.circular(16.r),
               color: Colors.transparent,
               child: Container(
@@ -1290,8 +1283,9 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
             ),
           ),
         ),
-      ],
-    );
+      ),
+    ],
+  );
   }
 }
 

@@ -853,7 +853,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
         : (isEn ? 'Surah $surahName • Ayahs $_startAyah - $_endAyah' : 'سورة $surahName • الآيات ($_startAyah - $_endAyah)');
 
     return Container(
-      width: double.infinity,
+      width: MediaQuery.sizeOf(context).width,
       padding: EdgeInsets.all(kIsWeb ? 16 : 14.r),
       decoration: BoxDecoration(
         color: theme.cardBackground,
@@ -898,7 +898,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
           if (_includeTafsir && explanationText != null && explanationText.trim().isNotEmpty) ...[
             SizedBox(height: 12.h),
             Container(
-              width: double.infinity,
+              width: MediaQuery.sizeOf(context).width,
               padding: EdgeInsets.all(10.r),
               decoration: BoxDecoration(
                 color: theme.backgroundColor.withValues(alpha: 0.5),
@@ -951,7 +951,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
 
     return Container(
       key: const ValueKey('full_page_card_preview'),
-      width: double.infinity,
+      width: MediaQuery.sizeOf(context).width,
       decoration: BoxDecoration(
         color: theme.backgroundColor,
         borderRadius: BorderRadius.zero,
@@ -981,7 +981,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
             Image.memory(
               _pageSnapshot!,
               fit: BoxFit.fitWidth,
-              width: double.infinity,
+              width: MediaQuery.sizeOf(context).width,
             ),
 
           SizedBox(height: 12.h),
@@ -1017,7 +1017,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     const isWeb = kIsWeb;
-    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.85;
 
@@ -1250,7 +1250,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                   )
                 : SizedBox(
                     key: const ValueKey('text_action_buttons'),
-                    width: double.infinity,
+                    width: MediaQuery.sizeOf(context).width,
                     child: ElevatedButton.icon(
                       onPressed: () => _copyTextToClipboard(context),
                       style: ElevatedButton.styleFrom(
@@ -1616,7 +1616,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
               ),
               SizedBox(height: 8.h),
               Container(
-                width: double.infinity,
+                width: MediaQuery.sizeOf(context).width,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceCream,
                   borderRadius: BorderRadius.circular(12.r),

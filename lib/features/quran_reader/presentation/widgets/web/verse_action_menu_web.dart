@@ -297,7 +297,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
               return Container(
                 constraints: BoxConstraints(
                   maxHeight:
-                      MediaQuery.of(context).size.height *
+                      MediaQuery.sizeOf(context).height *
                       0.7, // Max 70% of screen
                 ),
                 padding: EdgeInsets.fromLTRB(20.0, 12.0, 20.0, math.max(20.0, MediaQuery.paddingOf(context).bottom)),
@@ -1083,19 +1083,12 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
             verseRect: widget.verseRect,
             menuSize: menuSize,
           ),
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return Opacity(
-                opacity: _fadeAnimation.value,
-                child: Transform.scale(
-                  scale: _scaleAnimation.value,
-                  alignment: Alignment.topRight,
-                  child: child,
-                ),
-              );
-            },
-            child: Material(
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: ScaleTransition(
+              scale: _scaleAnimation,
+              alignment: Alignment.topRight,
+              child: Material(
               borderRadius: BorderRadius.circular(16),
               color: Colors.transparent,
               child: Container(
@@ -1290,8 +1283,9 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
             ),
           ),
         ),
-      ],
-    );
+      ),
+    ],
+  );
   }
 }
 

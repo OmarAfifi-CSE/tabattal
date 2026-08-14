@@ -136,15 +136,26 @@ class _BookmarkCard extends StatefulWidget {
   State<_BookmarkCard> createState() => _BookmarkCardState();
 }
 
-class _BookmarkCardState extends State<_BookmarkCard> {
+class _BookmarkCardState extends State<_BookmarkCard>
+    with AutomaticKeepAliveClientMixin {
+  static final Map<String, int> _versePageCache = {};
+
   bool _isLoadingPage = true;
   bool _hasError = false;
   int _surahStartPage = 1;
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   void initState() {
     super.initState();
-    _loadVersePage();
+    if (_versePageCache.containsKey(widget.verseKey)) {
+      _surahStartPage = _versePageCache[widget.verseKey]!;
+      _isLoadingPage = false;
+    } else {
+      _loadVersePage();
+    }
   }
 
   Future<void> _loadVersePage() async {
@@ -161,6 +172,7 @@ class _BookmarkCardState extends State<_BookmarkCard> {
         }
       },
       (page) {
+        _versePageCache[widget.verseKey] = page;
         if (mounted) {
           setState(() {
             _isLoadingPage = false;
@@ -173,6 +185,7 @@ class _BookmarkCardState extends State<_BookmarkCard> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(

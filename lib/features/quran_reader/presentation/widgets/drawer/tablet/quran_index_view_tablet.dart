@@ -3,8 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../../core/utils/arabic_text_utils.dart';
-import '../../../../../quran_reader/domain/repositories/quran_repository.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
 
 class QuranIndexViewTablet extends StatefulWidget {
@@ -18,57 +16,22 @@ class QuranIndexViewTablet extends StatefulWidget {
 
 class _QuranIndexViewTabletState extends State<QuranIndexViewTablet>
     with SingleTickerProviderStateMixin {
-  late final QuranRepository _repository;
-  late TabController _tabController;
+  late final TabController _tabController;
 
-  bool _isLoading = true;
-  bool _hasError = false;
-  List<Map<String, dynamic>> _surahIndex = [];
-
-  // Approximate start pages for Juz (Madani Mushaf standard)
   static const List<int> _juzStartPages = [
-    1,
-    22,
-    42,
-    62,
-    82,
-    102,
-    122,
-    142,
-    162,
-    182,
-    202,
-    222,
-    242,
-    262,
-    282,
-    302,
-    322,
-    342,
-    362,
-    382,
-    402,
-    422,
-    442,
-    462,
-    482,
-    502,
-    522,
-    542,
-    562,
-    582,
+    1, 22, 42, 62, 82, 102, 122, 142, 162, 182,
+    202, 222, 242, 262, 282, 302, 322, 342, 362, 382,
+    402, 422, 442, 462, 482, 502, 522, 542, 562, 582,
   ];
 
   @override
   void initState() {
     super.initState();
-    _repository = context.read<QuranRepository>();
     _tabController = TabController(
       length: 2,
       vsync: this,
       initialIndex: widget.initialIndex,
     );
-    _loadSurahIndex();
   }
 
   @override
@@ -77,38 +40,16 @@ class _QuranIndexViewTabletState extends State<QuranIndexViewTablet>
     super.dispose();
   }
 
-  Future<void> _loadSurahIndex() async {
-    final result = await _repository.getSurahsIndex();
-    result.fold(
-      (failure) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _hasError = true;
-          });
-        }
-      },
-      (index) {
-        if (mounted) {
-          setState(() {
-            _surahIndex = index;
-            _isLoading = false;
-          });
-        }
-      },
-    );
-  }
-
   void _navigateToPage(int pageNumber) => Navigator.pop(context, pageNumber);
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final content = Scaffold(
+    return Scaffold(
       backgroundColor: AppColors.surfaceCream,
       appBar: AppBar(
         backgroundColor: AppColors.surfaceCream,
-        elevation: 0,
+        elevation: 0.r,
         centerTitle: true,
         title: Text(
           l10n.indexTitle,
@@ -138,56 +79,53 @@ class _QuranIndexViewTabletState extends State<QuranIndexViewTablet>
           ],
         ),
       ),
-      body: _buildBody(l10n),
-    );
-    return content;
-  }
-
-  Widget _buildBody(AppLocalizations l10n) {
-    if (_isLoading) {
-      return Center(
-        child: CircularProgressIndicator(color: AppColors.accentGold),
-      );
-    }
-    if (_hasError) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline, color: Colors.red, size: 48.sp),
-            SizedBox(height: 12.h),
-            Text(
-              l10n.indexLoadError,
-              style: TextStyle(color: Colors.red, fontSize: 16.sp),
-            ),
-            SizedBox(height: 12.h),
-            ElevatedButton(onPressed: _loadSurahIndex, child: Text(l10n.retry)),
-          ],
-        ),
-      );
-    }
-    return TabBarView(
-      controller: _tabController,
-      children: [_buildSurahList(l10n), _buildJuzList(l10n)],
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _SurahListTab(onSelectPage: _navigateToPage),
+          _JuzListTab(
+            juzStartPages: _juzStartPages,
+            onSelectPage: _navigateToPage,
+          ),
+        ],
+      ),
     );
   }
+}
 
-  Widget _buildSurahList(AppLocalizations l10n) {
+class _SurahListTab extends StatefulWidget {
+  final ValueChanged<int> onSelectPage;
+
+  const _SurahListTab({required this.onSelectPage});
+
+  @override
+  State<_SurahListTab> createState() => _SurahListTabState();
+}
+
+class _SurahListTabState extends State<_SurahListTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final l10n = AppLocalizations.of(context)!;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
+
     return Directionality(
       textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
       child: ListView.separated(
         padding: EdgeInsets.all(16.r),
-        itemCount: _surahIndex.length,
+        itemCount: 114,
         separatorBuilder: (context, index) =>
-            Divider(color: AppColors.divider, height: 1),
+            Divider(color: AppColors.divider, height: 1.h),
         itemBuilder: (context, index) {
-          final surahData = _surahIndex[index];
-          final surahNum = surahData['surah'] as int;
-          final startPage = surahData['start_page'] as int;
+          final surahNum = index + 1;
+          final startPage = QuranMetadata.getStartPageForSurah(surahNum);
 
           return ListTile(
-            onTap: () => _navigateToPage(startPage),
+            onTap: () => widget.onSelectPage(startPage),
             contentPadding: EdgeInsets.symmetric(
               horizontal: 12.w,
               vertical: 4.h,
@@ -220,21 +158,70 @@ class _QuranIndexViewTabletState extends State<QuranIndexViewTablet>
     );
   }
 
-  Widget _buildJuzList(AppLocalizations l10n) {
+  Widget _buildCircleNumberBadge(String label, {bool filled = true}) {
+    return Container(
+      width: 40.r,
+      height: 40.r,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.accentGold.withValues(alpha: filled ? 0.12 : 0.1),
+        shape: BoxShape.circle,
+        border: filled
+            ? Border.all(
+                color: AppColors.accentGold.withValues(alpha: 0.4),
+                width: 1.w,
+              )
+            : null,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 14.sp,
+          fontWeight: FontWeight.bold,
+          color: AppColors.accentGold,
+        ),
+      ),
+    );
+  }
+}
+
+class _JuzListTab extends StatefulWidget {
+  final List<int> juzStartPages;
+  final ValueChanged<int> onSelectPage;
+
+  const _JuzListTab({
+    required this.juzStartPages,
+    required this.onSelectPage,
+  });
+
+  @override
+  State<_JuzListTab> createState() => _JuzListTabState();
+}
+
+class _JuzListTabState extends State<_JuzListTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final l10n = AppLocalizations.of(context)!;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
+
     return Directionality(
       textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
       child: ListView.separated(
         padding: EdgeInsets.all(16.r),
         itemCount: 30,
         separatorBuilder: (context, index) =>
-            Divider(color: AppColors.divider, height: 1),
+            Divider(color: AppColors.divider, height: 1.h),
         itemBuilder: (context, index) {
           final juzNum = index + 1;
-          final startPage = _juzStartPages[index];
+          final startPage = widget.juzStartPages[index];
 
           return ListTile(
-            onTap: () => _navigateToPage(startPage),
+            onTap: () => widget.onSelectPage(startPage),
             leading: _buildCircleNumberBadge('$juzNum', filled: false),
             title: Text(
               l10n.juzListItem(
@@ -261,7 +248,6 @@ class _QuranIndexViewTabletState extends State<QuranIndexViewTablet>
     );
   }
 
-  /// Shared circular badge used for both surah and juz numbers.
   Widget _buildCircleNumberBadge(String label, {bool filled = true}) {
     return Container(
       width: 40.r,
@@ -273,7 +259,7 @@ class _QuranIndexViewTabletState extends State<QuranIndexViewTablet>
         border: filled
             ? Border.all(
                 color: AppColors.accentGold.withValues(alpha: 0.4),
-                width: 1,
+                width: 1.w,
               )
             : null,
       ),

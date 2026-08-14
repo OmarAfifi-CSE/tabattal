@@ -24,6 +24,19 @@ class QuranBorderPainterMobile extends CustomPainter {
     required this.backgroundColor,
   });
 
+  static final Paint _bgPaint = Paint();
+  static final Paint _outerBoundPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 12.0
+    ..strokeJoin = StrokeJoin.miter
+    ..strokeCap = StrokeCap.round;
+  static final Paint _innerFillPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 10.0
+    ..strokeJoin = StrokeJoin.miter
+    ..strokeCap = StrokeCap.round;
+  static final Paint _diamondFillPaint = Paint()..style = PaintingStyle.fill;
+
   @override
   void paint(Canvas canvas, Size size) {
     final W = size.width;
@@ -118,34 +131,19 @@ class QuranBorderPainterMobile extends CustomPainter {
       _borderCacheMobile[cacheKey] = data;
     }
 
-    final Paint outerBound = Paint()
-      ..color = goldColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 12.0
-      ..strokeJoin = StrokeJoin.miter
-      ..strokeCap = StrokeCap.round;
+    _outerBoundPaint.color = goldColor;
+    canvas.drawPath(data.framePath, _outerBoundPaint);
 
-    canvas.drawPath(data.framePath, outerBound);
+    _innerFillPaint.color = innerColor;
+    canvas.drawPath(data.framePath, _innerFillPaint);
 
-    final Paint innerFill = Paint()
-      ..color = innerColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 10.0
-      ..strokeJoin = StrokeJoin.miter
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawPath(data.framePath, innerFill);
-
-    final Paint diamondFill = Paint()
-      ..color = goldColor
-      ..style = PaintingStyle.fill;
-
-    canvas.drawPath(data.diamondsPath, diamondFill);
+    _diamondFillPaint.color = goldColor;
+    canvas.drawPath(data.diamondsPath, _diamondFillPaint);
   }
 
   void _drawBackground(Canvas canvas, Size size) {
-    final Paint bgPaint = Paint()..color = backgroundColor;
-    canvas.drawRect(Offset.zero & size, bgPaint);
+    _bgPaint.color = backgroundColor;
+    canvas.drawRect(Offset.zero & size, _bgPaint);
   }
 
   @override
