@@ -14,6 +14,7 @@ import '../../../bloc/audio/audio_event.dart';
 import '../../../bloc/audio/audio_state.dart';
 import '../../../../../core/constants/quran_metadata.dart';
 import '../audio_settings_sheet.dart';
+import '../tafsir_selector_menu.dart';
 import '../../../domain/entities/download_state.dart';
 import '../../../../../core/error/failures.dart';
 import '../../../../../core/widgets/mixed_direction_text.dart';
@@ -510,82 +511,19 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
               },
             ),
             actions: [
-              PopupMenuButton<int>(
-                splashRadius: 0.1,
-                position: PopupMenuPosition.under,
-                color: AppColors.cardCream,
-                elevation: 3,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              TafsirSelectorMenu(
+                selectedId: _tafsirResourceId,
+                options: TafsirOption.getLocalizedOptions(
+                  context,
+                  downloadedIds: _downloadedTafsirs,
+                  activeDownloadingId:
+                      _isDownloading ? _tafsirResourceId : null,
+                  activeDownloadProgress: _downloadProgress,
                 ),
-                icon: Icon(Icons.tune_rounded, color: AppColors.accentGold),
                 onSelected: _changeTafsir,
-                itemBuilder: (context) {
-                  final options =
-                      Localizations.localeOf(context).languageCode == 'en'
-                      ? [
-                          (
-                            169,
-                            AppLocalizations.of(context)!.tafsirEnIbnKathir,
-                          ),
-                          (168, AppLocalizations.of(context)!.tafsirEnMaarif),
-                          (817, AppLocalizations.of(context)!.tafsirEnTazkirul),
-                        ]
-                      : [
-                          (16, AppLocalizations.of(context)!.tafsirAlMuyassar),
-                          (14, AppLocalizations.of(context)!.tafsirIbnKathir),
-                          (91, AppLocalizations.of(context)!.tafsirAlSaadi),
-                          (15, AppLocalizations.of(context)!.tafsirAlTabari),
-                          (90, AppLocalizations.of(context)!.tafsirAlQurtubi),
-                          (93, AppLocalizations.of(context)!.tafsirAlWaseet),
-                          (94, AppLocalizations.of(context)!.tafsirAlBaghawi),
-                        ];
-                  return options.map((option) {
-                    final isSelected = option.$1 == _tafsirResourceId;
-                    final isDownloaded = _downloadedTafsirs.contains(option.$1);
-                    return PopupMenuItem<int>(
-                      value: option.$1,
-                      height: 36,
-                      padding: EdgeInsets.zero,
-                      child: Container(
-                        width: MediaQuery.sizeOf(context).width,
-                        height: 36,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        alignment: Alignment.centerRight,
-                        color: isSelected
-                            ? AppColors.accentGold.withValues(alpha: 0.1)
-                            : Colors.transparent,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            if (!isDownloaded)
-                              Icon(
-                                Icons.download_rounded,
-                                size: 16,
-                                color: AppColors.accentGold.withValues(
-                                  alpha: 0.7,
-                                ),
-                              )
-                            else
-                              const SizedBox.shrink(),
-                            Text(
-                              option.$2,
-                              style: AppTextStyles.menuItemText.copyWith(
-                                fontSize: 14,
-                                color: isSelected
-                                    ? AppColors.accentGold
-                                    : AppColors.textPrimary,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList();
-                },
+                menuWidth: 190,
+                itemHeight: 38,
+                itemFontSize: 14,
               ),
             ],
           ),

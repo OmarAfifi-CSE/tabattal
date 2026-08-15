@@ -23,6 +23,7 @@ import '../../../bloc/hifz/hifz_bloc.dart';
 import '../../../bloc/hifz/hifz_event.dart';
 import '../../../bloc/hifz/hifz_state.dart';
 import '../verse_card_generator_sheet.dart';
+import '../tafsir_selector_menu.dart';
 
 class OverlayPositionDelegate extends SingleChildLayoutDelegate {
   final Offset tapPosition;
@@ -396,24 +397,20 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                       displayResourceId =
                                           currentState.resourceId;
                                     }
-                                    return PopupMenuButton<int>(
-                                      splashRadius: 0.1,
-                                      initialValue: displayResourceId,
-                                      position: PopupMenuPosition.under,
-                                      color: AppColors.cardCream,
-                                      elevation: 3.r,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          12.r,
-                                        ),
-                                        side: BorderSide(
-                                          color: AppColors.accentGold
-                                              .withValues(alpha: 0.1),
-                                        ),
-                                      ),
-                                      constraints: BoxConstraints(
-                                        minWidth: 150.w,
-                                        maxWidth: 200.w,
+                                    return TafsirSelectorMenu(
+                                      selectedId: displayResourceId,
+                                      options: TafsirOption.getLocalizedOptions(
+                                        context,
+                                        downloadedIds: const {},
+                                        progressMap: _tafsirProgress,
+                                        activeDownloadingId:
+                                            currentState is TafsirDownloading
+                                                ? currentState.resourceId
+                                                : null,
+                                        activeDownloadProgress:
+                                            currentState is TafsirDownloading
+                                                ? currentState.progress
+                                                : null,
                                       ),
                                       onSelected: (int newValue) {
                                         quranBloc.add(
@@ -427,197 +424,10 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                           ),
                                         );
                                       },
-                                      itemBuilder: (context) {
-                                        final options = langCode == 'en'
-                                            ? [
-                                                (
-                                                  169,
-                                                  AppLocalizations.of(
-                                                    context,
-                                                  )!.tafsirEnIbnKathir,
-                                                ),
-                                                (
-                                                  168,
-                                                  AppLocalizations.of(
-                                                    context,
-                                                  )!.tafsirEnMaarif,
-                                                ),
-                                                (
-                                                  817,
-                                                  AppLocalizations.of(
-                                                    context,
-                                                  )!.tafsirEnTazkirul,
-                                                ),
-                                              ]
-                                            : [
-                                                (
-                                                  16,
-                                                  AppLocalizations.of(
-                                                    context,
-                                                  )!.tafsirAlMuyassar,
-                                                ),
-                                                (
-                                                  14,
-                                                  AppLocalizations.of(
-                                                    context,
-                                                  )!.tafsirIbnKathir,
-                                                ),
-                                                (
-                                                  91,
-                                                  AppLocalizations.of(
-                                                    context,
-                                                  )!.tafsirAlSaadi,
-                                                ),
-                                                (
-                                                  15,
-                                                  AppLocalizations.of(
-                                                    context,
-                                                  )!.tafsirAlTabari,
-                                                ),
-                                                (
-                                                  90,
-                                                  AppLocalizations.of(
-                                                    context,
-                                                  )!.tafsirAlQurtubi,
-                                                ),
-                                                (
-                                                  93,
-                                                  AppLocalizations.of(
-                                                    context,
-                                                  )!.tafsirAlWaseet,
-                                                ),
-                                                (
-                                                  94,
-                                                  AppLocalizations.of(
-                                                    context,
-                                                  )!.tafsirAlBaghawi,
-                                                ),
-                                              ];
-                                        return options.map((option) {
-                                          final isSelected =
-                                              option.$1 == displayResourceId;
-                                          final isDownloaded =
-                                              _tafsirProgress[option.$1] == 1.0;
-
-                                          final isDownloading =
-                                              !isDownloaded &&
-                                              ((currentState
-                                                          is TafsirDownloading &&
-                                                      currentState.resourceId ==
-                                                          option.$1) ||
-                                                  (_tafsirProgress.containsKey(
-                                                        option.$1,
-                                                      ) &&
-                                                      _tafsirProgress[option
-                                                              .$1]! >
-                                                          0.0 &&
-                                                      _tafsirProgress[option
-                                                              .$1]! <
-                                                          1.0));
-
-                                          final progressValue =
-                                              (currentState
-                                                      is TafsirDownloading &&
-                                                  currentState.resourceId ==
-                                                      option.$1)
-                                              ? currentState.progress
-                                              : (_tafsirProgress[option.$1] ??
-                                                    0.0);
-
-                                          return PopupMenuItem<int>(
-                                            value: option.$1,
-                                            height: 36.h,
-                                            padding: EdgeInsets.zero,
-                                            child: StatefulBuilder(
-                                              builder: (context, setPopupState) {
-                                                return Directionality(
-                                                  textDirection:
-                                                      TextDirection.rtl,
-                                                  child: Container(
-                                                    width: MediaQuery.sizeOf(context).width,
-                                                    height: 36.h,
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                          horizontal: 12.w,
-                                                        ),
-                                                    alignment:
-                                                        Alignment.centerRight,
-                                                    color: isSelected
-                                                        ? AppColors.accentGold
-                                                              .withValues(
-                                                                alpha: 0.1,
-                                                              )
-                                                        : Colors.transparent,
-                                                    child: Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
-                                                      children: [
-                                                        Expanded(
-                                                          child: Text(
-                                                            option.$2,
-                                                            style: AppTextStyles
-                                                                .menuItemText
-                                                                .copyWith(
-                                                                  fontSize:
-                                                                      14.sp,
-                                                                  color:
-                                                                      isSelected
-                                                                      ? AppColors
-                                                                            .accentGold
-                                                                      : AppColors
-                                                                            .textPrimary,
-                                                                  fontWeight:
-                                                                      isSelected
-                                                                      ? FontWeight
-                                                                            .w600
-                                                                      : FontWeight
-                                                                            .w500,
-                                                                ),
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                          ),
-                                                        ),
-                                                        if (isDownloading)
-                                                          Text(
-                                                            '${(progressValue * 100).toInt()}%',
-                                                            style: AppTextStyles
-                                                                .menuItemText
-                                                                .copyWith(
-                                                                  fontSize:
-                                                                      12.sp,
-                                                                  color: AppColors
-                                                                      .accentGold,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                ),
-                                                          )
-                                                        else if (!isDownloaded)
-                                                          Icon(
-                                                            Icons
-                                                                .download_rounded,
-                                                            size: 16.sp,
-                                                            color: AppColors
-                                                                .accentGold
-                                                                .withValues(
-                                                                  alpha: 0.7,
-                                                                ),
-                                                          )
-                                                        else
-                                                          const SizedBox.shrink(),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          );
-                                        }).toList();
-                                      },
-                                      child: Container(
+                                      menuWidth: 180.w,
+                                      itemHeight: 38.h,
+                                      itemFontSize: 14.sp,
+                                      trigger: Container(
                                         height: 40.h,
                                         width:
                                             Localizations.localeOf(
