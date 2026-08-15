@@ -98,23 +98,35 @@ $buildAab = ($formatChoice -eq '2' -or $formatChoice -eq '3')
 # --- Phase: Build APK ---
 if ($buildApk) {
     Write-Host "`nPHASE 4: Building Android APK (Release)..." -ForegroundColor Cyan
+
+    # Clear previous symbols to avoid mixing
+    if (Test-Path "build\app\outputs\symbols") {
+        Remove-Item -Recurse -Force "build\app\outputs\symbols" -ErrorAction SilentlyContinue
+    }
+
     flutter build apk --release --target-platform android-arm64 --obfuscate --split-debug-info=build\app\outputs\symbols
     Check-CommandSuccess "Flutter Build APK"
+
+    # Create dedicated APK folder
+    $apkTargetFolder = Join-Path $outputFolder "$appName-v$version-APK"
+    if (!(Test-Path $apkTargetFolder)) {
+        New-Item -ItemType Directory -Path $apkTargetFolder | Out-Null
+    }
 
     # Export APK
     $sourceApk = "build\app\outputs\flutter-apk\app-release.apk"
     if (Test-Path $sourceApk) {
         $newApkName = "$appName-v$version.apk"
-        $destApkPath = Join-Path $outputFolder $newApkName
-        Write-Host "Exporting APK: $newApkName" -ForegroundColor White
+        $destApkPath = Join-Path $apkTargetFolder $newApkName
+        Write-Host "Exporting APK: $newApkName -> $apkTargetFolder" -ForegroundColor White
         Copy-Item $sourceApk -Destination $destApkPath -Force
     }
     
     # Export APK Symbols
     $sourceSymbols = "build\app\outputs\symbols"
     if (Test-Path $sourceSymbols) {
-        $destSymbolsPath = Join-Path $outputFolder "symbols_apk_v$version"
-        Write-Host "Exporting Symbols folder: symbols_apk_v$version" -ForegroundColor White
+        $destSymbolsPath = Join-Path $apkTargetFolder "symbols"
+        Write-Host "Exporting Symbols folder: symbols -> $apkTargetFolder" -ForegroundColor White
         Copy-Item -Path $sourceSymbols -Destination $destSymbolsPath -Recurse -Force
     }
 }
@@ -122,23 +134,35 @@ if ($buildApk) {
 # --- Phase: Build AAB ---
 if ($buildAab) {
     Write-Host "`nPHASE 5: Building Android AppBundle (Release)..." -ForegroundColor Cyan
+
+    # Clear previous symbols to avoid mixing
+    if (Test-Path "build\app\outputs\symbols") {
+        Remove-Item -Recurse -Force "build\app\outputs\symbols" -ErrorAction SilentlyContinue
+    }
+
     flutter build appbundle --release --obfuscate --split-debug-info=build\app\outputs\symbols
     Check-CommandSuccess "Flutter Build AppBundle"
+
+    # Create dedicated AAB folder
+    $aabTargetFolder = Join-Path $outputFolder "$appName-v$version-AAB"
+    if (!(Test-Path $aabTargetFolder)) {
+        New-Item -ItemType Directory -Path $aabTargetFolder | Out-Null
+    }
 
     # Export AAB
     $sourceAab = "build\app\outputs\bundle\release\app-release.aab"
     if (Test-Path $sourceAab) {
         $newAabName = "$appName-v$version.aab"
-        $destAabPath = Join-Path $outputFolder $newAabName
-        Write-Host "Exporting AAB: $newAabName" -ForegroundColor White
+        $destAabPath = Join-Path $aabTargetFolder $newAabName
+        Write-Host "Exporting AAB: $newAabName -> $aabTargetFolder" -ForegroundColor White
         Copy-Item $sourceAab -Destination $destAabPath -Force
     }
 
     # Export AAB Symbols
     $sourceSymbols = "build\app\outputs\symbols"
     if (Test-Path $sourceSymbols) {
-        $destSymbolsPath = Join-Path $outputFolder "symbols_aab_v$version"
-        Write-Host "Exporting Symbols folder: symbols_aab_v$version" -ForegroundColor White
+        $destSymbolsPath = Join-Path $aabTargetFolder "symbols"
+        Write-Host "Exporting Symbols folder: symbols -> $aabTargetFolder" -ForegroundColor White
         Copy-Item -Path $sourceSymbols -Destination $destSymbolsPath -Recurse -Force
     }
 }
