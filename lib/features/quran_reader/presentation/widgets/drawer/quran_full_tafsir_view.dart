@@ -83,7 +83,6 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
     _repository = context.read<QuranRepository>();
     _localDS = context.read<QuranLocalDataSource>();
     _loadPreferences();
-    _checkDownloadedTafsirs();
 
     // Infinite scroll: load next surah when near end
     _itemPositionsListener.itemPositions.addListener(_onScroll);
@@ -125,12 +124,45 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
 
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final savedId = prefs.getInt('tafsir_id');
+    int effectiveId;
+
+    if (isEn) {
+      if (savedId == null || ![169, 168, 817].contains(savedId)) {
+        effectiveId = 169;
+        await prefs.setInt('tafsir_id', 169);
+      } else {
+        effectiveId = savedId;
+      }
+    } else {
+      if (savedId == null || [169, 168, 817].contains(savedId)) {
+        effectiveId = 16;
+        await prefs.setInt('tafsir_id', 16);
+      } else {
+        effectiveId = savedId;
+      }
+    }
+
     if (mounted) {
       setState(() {
-        _tafsirResourceId =
-            prefs.getInt('tafsir_id') ??
-            (Localizations.localeOf(context).languageCode == 'en' ? 169 : 16);
+        _tafsirResourceId = effectiveId;
       });
+    }
+
+    await _checkDownloadedTafsirs();
+    if (!mounted) return;
+
+    if (!_downloadedTafsirs.contains(effectiveId)) {
+      if (mounted) {
+        setState(() {
+          _isLoadingInitial = false;
+        });
+      }
+      _startDownload(effectiveId);
+    } else {
       _initData();
     }
   }
@@ -305,7 +337,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
 
   /// Change tafsir source and reload data at the CURRENT visible position (not the beginning)
   void _changeTafsir(int resourceId) async {
-    if (_tafsirResourceId == resourceId) return;
+    if (_tafsirResourceId == resourceId && _tafsirList.isNotEmpty) return;
 
     if (!_downloadedTafsirs.contains(resourceId)) {
       _startDownload(resourceId);
@@ -377,7 +409,11 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
               _isDownloading = false;
               _downloadedTafsirs.add(resourceId);
             });
-            _changeTafsir(resourceId);
+            if (_tafsirList.isEmpty) {
+              _initData();
+            } else {
+              _changeTafsir(resourceId);
+            }
             return;
           case Failed(:final failure):
             setState(() {
@@ -497,7 +533,8 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
           ),
           body: Column(
             children: [
-              if (_isDownloading || _downloadError != null)
+              if ((_isDownloading || _downloadError != null) &&
+                  _tafsirList.isNotEmpty)
                 Container(
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(12),
@@ -549,13 +586,68 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                       )
                     : _tafsirList.isEmpty
                     ? Center(
-                        child: Text(
-                          l10n.noLocalData,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
+                        child: _isDownloading
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CupertinoActivityIndicator(
+                                    color: AppColors.accentGold,
+                                    radius: 16,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    l10n.downloadingTafsir(
+                                      (_downloadProgress * 100).toInt(),
+                                    ),
+                                    style: AppTextStyles.menuItemText.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : (_downloadError != null
+                                ? Padding(
+                                    padding: const EdgeInsets.all(24),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.error_outline,
+                                          size: 36,
+                                          color: Colors.red,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          _downloadError!,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              _startDownload(_tafsirResourceId),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                AppColors.accentGold,
+                                            foregroundColor: Colors.white,
+                                          ),
+                                          child: Text(l10n.retry),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : Text(
+                                    l10n.noLocalData,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  )),
                       )
                     : ScrollablePositionedList.separated(
                         itemScrollController: _itemScrollController,

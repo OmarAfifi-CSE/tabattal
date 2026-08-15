@@ -84,6 +84,7 @@ void showVerseCardGeneratorModal(
 /// Represents a color theme for the Verse Card.
 class VerseCardTheme {
   final String name;
+  final String nameEn;
   final Color backgroundColor;
   final Color cardBackground;
   final Color primaryTextColor;
@@ -93,6 +94,7 @@ class VerseCardTheme {
 
   const VerseCardTheme({
     required this.name,
+    required this.nameEn,
     required this.backgroundColor,
     required this.cardBackground,
     required this.primaryTextColor,
@@ -101,9 +103,14 @@ class VerseCardTheme {
     required this.borderColor,
   });
 
+  String getLocalizedName(BuildContext context) {
+    return Localizations.localeOf(context).languageCode == 'en' ? nameEn : name;
+  }
+
   static const List<VerseCardTheme> themes = [
     VerseCardTheme(
       name: 'كريمي',
+      nameEn: 'Cream',
       backgroundColor: Color(0xFFFBF7F0),
       cardBackground: Color(0xFFF7F2E7),
       primaryTextColor: Color(0xFF2C2520),
@@ -113,6 +120,7 @@ class VerseCardTheme {
     ),
     VerseCardTheme(
       name: 'أبيض',
+      nameEn: 'White',
       backgroundColor: Color(0xFFFFFFFF),
       cardBackground: Color(0xFFF7F7F7),
       primaryTextColor: Color(0xFF1E1E1E),
@@ -122,6 +130,7 @@ class VerseCardTheme {
     ),
     VerseCardTheme(
       name: 'عتيق',
+      nameEn: 'Vintage',
       backgroundColor: Color(0xFFF5EBE0),
       cardBackground: Color(0xFFEFE3D3),
       primaryTextColor: Color(0xFF3A2D21),
@@ -131,6 +140,7 @@ class VerseCardTheme {
     ),
     VerseCardTheme(
       name: 'روز جولد',
+      nameEn: 'Rose Gold',
       backgroundColor: Color(0xFFFDF8F5),
       cardBackground: Color(0xFFF7ECE7),
       primaryTextColor: Color(0xFF38282A),
@@ -140,6 +150,7 @@ class VerseCardTheme {
     ),
     VerseCardTheme(
       name: 'نعناعي',
+      nameEn: 'Mint',
       backgroundColor: Color(0xFFF0F7F4),
       cardBackground: Color(0xFFE1EFEA),
       primaryTextColor: Color(0xFF1B3B2B),
@@ -149,6 +160,7 @@ class VerseCardTheme {
     ),
     VerseCardTheme(
       name: 'زيتوني',
+      nameEn: 'Olive',
       backgroundColor: Color(0xFFF7F8F2),
       cardBackground: Color(0xFFECEFE5),
       primaryTextColor: Color(0xFF252B1E),
@@ -158,6 +170,7 @@ class VerseCardTheme {
     ),
     VerseCardTheme(
       name: 'ثلجي',
+      nameEn: 'Ice',
       backgroundColor: Color(0xFFF4F8FA),
       cardBackground: Color(0xFFE5F0F5),
       primaryTextColor: Color(0xFF1D2830),
@@ -167,6 +180,7 @@ class VerseCardTheme {
     ),
     VerseCardTheme(
       name: 'رخامي',
+      nameEn: 'Marble',
       backgroundColor: Color(0xFFF4F5F7),
       cardBackground: Color(0xFFE8ECF0),
       primaryTextColor: Color(0xFF1E252B),
@@ -176,6 +190,7 @@ class VerseCardTheme {
     ),
     VerseCardTheme(
       name: 'زمردي',
+      nameEn: 'Emerald',
       backgroundColor: Color(0xFF0A1F18),
       cardBackground: Color(0xFF132D24),
       primaryTextColor: Color(0xFFFAF6F0),
@@ -185,6 +200,7 @@ class VerseCardTheme {
     ),
     VerseCardTheme(
       name: 'عنابي',
+      nameEn: 'Burgundy',
       backgroundColor: Color(0xFF1A0C14),
       cardBackground: Color(0xFF27131F),
       primaryTextColor: Color(0xFFF8EEF2),
@@ -194,6 +210,7 @@ class VerseCardTheme {
     ),
     VerseCardTheme(
       name: 'ليلي',
+      nameEn: 'Midnight',
       backgroundColor: Color(0xFF0D1117),
       cardBackground: Color(0xFF161B22),
       primaryTextColor: Color(0xFFF0F6FC),
@@ -858,7 +875,10 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
         return;
       }
 
-      final surahName = QuranMetadata.getSurahName(_surahNumber);
+      final isEn = mounted && Localizations.localeOf(context).languageCode == 'en';
+      final surahName = isEn
+          ? QuranMetadata.getSurahNameEnglish(_surahNumber)
+          : QuranMetadata.getSurahName(_surahNumber);
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = _startAyah == _endAyah
           ? 'Verse_${_surahNumber}_${_startAyah}_$timestamp.png'
@@ -896,7 +916,11 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
           ]);
         } on MissingPluginException {
           // Fallback if app hasn't been recompiled after adding native package
-          await Share.share('﴿ $_verseTextUthmani ﴾ — سورة $surahName');
+          await Share.share(
+            isEn
+                ? '( $_verseTextUthmani ) — Surah $surahName'
+                : '﴿ $_verseTextUthmani ﴾ — سورة $surahName',
+          );
         }
       }
     } on MissingPluginException {
@@ -988,7 +1012,9 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
 
   String _getFormattedShareText(BuildContext context) {
     final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final surahName = QuranMetadata.getSurahName(_surahNumber);
+    final surahName = isEn
+        ? QuranMetadata.getSurahNameEnglish(_surahNumber)
+        : QuranMetadata.getSurahName(_surahNumber);
     final l10n = AppLocalizations.of(context)!;
 
     final rangeText = _startAyah == _endAyah
@@ -1032,7 +1058,9 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   Widget _buildTextPreviewWidget(BuildContext context) {
     final theme = _activeTheme;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final surahName = QuranMetadata.getSurahName(_surahNumber);
+    final surahName = isEn
+        ? QuranMetadata.getSurahNameEnglish(_surahNumber)
+        : QuranMetadata.getSurahName(_surahNumber);
     final l10n = AppLocalizations.of(context)!;
 
     final rangeText = _startAyah == _endAyah
@@ -1103,27 +1131,32 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                       ),
                     )
                   : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.auto_stories_outlined,
-                              size: 13.r,
-                              color: theme.accentColor,
-                            ),
-                            SizedBox(width: 5.w),
-                            Text(
-                              l10n.verseCardTafsirBadge,
-                              style: TextStyle(
-                                fontFamily: 'Amiri',
-                                fontSize: kIsWeb ? 12 : 11.sp,
-                                fontWeight: FontWeight.bold,
+                        Align(
+                          alignment: isEn
+                              ? Alignment.centerLeft
+                              : Alignment.centerRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.auto_stories_outlined,
+                                size: kIsWeb ? 13 : 12.r,
                                 color: theme.accentColor,
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 5.w),
+                              Text(
+                                l10n.verseCardTafsirBadge,
+                                style: TextStyle(
+                                  fontFamily: isEn ? null : 'Amiri',
+                                  fontSize: kIsWeb ? 12 : 11.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.accentColor,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         SizedBox(height: 6.h),
                         MixedDirectionText(
@@ -1161,27 +1194,32 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                       ),
                     )
                   : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.translate_rounded,
-                              size: 13.r,
-                              color: theme.accentColor,
-                            ),
-                            SizedBox(width: 5.w),
-                            Text(
-                              l10n.verseCardTranslationBadge,
-                              style: TextStyle(
-                                fontFamily: 'Amiri',
-                                fontSize: kIsWeb ? 12 : 11.sp,
-                                fontWeight: FontWeight.bold,
+                        Align(
+                          alignment: isEn
+                              ? Alignment.centerLeft
+                              : Alignment.centerRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.translate_rounded,
+                                size: kIsWeb ? 13 : 12.r,
                                 color: theme.accentColor,
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 5.w),
+                              Text(
+                                l10n.verseCardTranslationBadge,
+                                style: TextStyle(
+                                  fontFamily: isEn ? null : 'Amiri',
+                                  fontSize: kIsWeb ? 12 : 11.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.accentColor,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         SizedBox(height: 6.h),
                         MixedDirectionText(
@@ -1295,14 +1333,17 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
     const isWeb = kIsWeb;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.85;
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: maxSheetHeight),
-      child: Container(
+    return Directionality(
+      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxSheetHeight),
+        child: Container(
         decoration: BoxDecoration(
           color: AppColors.cardCream,
           borderRadius: isWeb || MediaQuery.sizeOf(context).width > 600
@@ -1547,6 +1588,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
         ],
       ),
     ),
+    ),
   );
   }
 
@@ -1604,7 +1646,9 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   Widget _buildVerseCardContent(BuildContext context) {
     final theme = _activeTheme;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final surahCleanName = QuranMetadata.getSurahName(_surahNumber);
+    final surahCleanName = isEn
+        ? QuranMetadata.getSurahNameEnglish(_surahNumber)
+        : QuranMetadata.getSurahName(_surahNumber);
     final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.sizeOf(context).width;
 
@@ -1763,27 +1807,32 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                         ),
                       )
                     : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.auto_stories_outlined,
-                                size: kIsWeb ? 13 : 12.r,
-                                color: theme.accentColor,
-                              ),
-                              SizedBox(width: 5.w),
-                              Text(
-                                l10n.verseCardTafsirBadge,
-                                style: TextStyle(
-                                  fontFamily: 'Amiri',
-                                  fontSize: kIsWeb ? 12 : 11.sp,
-                                  fontWeight: FontWeight.bold,
+                          Align(
+                            alignment: isEn
+                                ? Alignment.centerLeft
+                                : Alignment.centerRight,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.auto_stories_outlined,
+                                  size: kIsWeb ? 13 : 12.r,
                                   color: theme.accentColor,
                                 ),
-                              ),
-                            ],
+                                SizedBox(width: 5.w),
+                                Text(
+                                  l10n.verseCardTafsirBadge,
+                                  style: TextStyle(
+                                    fontFamily: isEn ? null : 'Amiri',
+                                    fontSize: kIsWeb ? 12 : 11.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.accentColor,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           SizedBox(height: 6.h),
                           MixedDirectionText(
@@ -1821,27 +1870,32 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                         ),
                       )
                     : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.translate_rounded,
-                                size: kIsWeb ? 13 : 12.r,
-                                color: theme.accentColor,
-                              ),
-                              SizedBox(width: 5.w),
-                              Text(
-                                l10n.verseCardTranslationBadge,
-                                style: TextStyle(
-                                  fontFamily: 'Amiri',
-                                  fontSize: kIsWeb ? 12 : 11.sp,
-                                  fontWeight: FontWeight.bold,
+                          Align(
+                            alignment: isEn
+                                ? Alignment.centerLeft
+                                : Alignment.centerRight,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.translate_rounded,
+                                  size: kIsWeb ? 13 : 12.r,
                                   color: theme.accentColor,
                                 ),
-                              ),
-                            ],
+                                SizedBox(width: 5.w),
+                                Text(
+                                  l10n.verseCardTranslationBadge,
+                                  style: TextStyle(
+                                    fontFamily: isEn ? null : 'Amiri',
+                                    fontSize: kIsWeb ? 12 : 11.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.accentColor,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           SizedBox(height: 6.h),
                           MixedDirectionText(
@@ -2110,9 +2164,9 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                             ),
                             SizedBox(width: 6.w),
                             Text(
-                              t.name,
+                              t.getLocalizedName(context),
                               style: TextStyle(
-                                fontSize: 12.sp,
+                                fontSize: isWeb ? 13 : 12.sp,
                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                 color: t.primaryTextColor,
                               ),

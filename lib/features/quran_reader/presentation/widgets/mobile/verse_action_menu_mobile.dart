@@ -261,13 +261,16 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
           child: StatefulBuilder(
             builder: (context, setState) {
               final l10n = AppLocalizations.of(context)!;
-              return Container(
-                constraints: BoxConstraints(
-                  maxHeight:
-                      MediaQuery.sizeOf(context).height *
-                      0.7, // Max 70% of screen
-                ),
-                padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, math.max(20.h, MediaQuery.paddingOf(context).bottom)),
+              final isEn = Localizations.localeOf(context).languageCode == 'en';
+              return Directionality(
+                textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxHeight:
+                        MediaQuery.sizeOf(context).height *
+                        0.7, // Max 70% of screen
+                  ),
+                  padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, math.max(20.h, MediaQuery.paddingOf(context).bottom)),
                 child: BlocConsumer<QuranBloc, QuranState>(
                   listener: (context, state) {
                     if (state is TafsirDownloaded) {
@@ -628,7 +631,9 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                       curve: Curves.easeOut,
                                       builder: (context, value, child) {
                                         return Row(
-                                          textDirection: TextDirection.rtl,
+                                          textDirection: isEn
+                                              ? TextDirection.ltr
+                                              : TextDirection.rtl,
                                           children: [
                                             SizedBox(
                                               width: 20.sp,
@@ -822,8 +827,9 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                     );
                   },
                 ),
-              );
-            },
+              ),
+            );
+          },
           ),
         );
       },
