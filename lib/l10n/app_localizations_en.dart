@@ -459,7 +459,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verseCardSavedSuccess => 'Image saved successfully';
 
   @override
-  String get verseCardIncludeTafsir => 'Include Tafsir / Translation';
+  String get verseCardIncludeTafsir => 'Show Tafsir (Al-Muyassar)';
+
+  @override
+  String get verseCardIncludeTranslation => 'Show English Translation';
+
+  @override
+  String get verseCardTafsirBadge => 'Al-Muyassar Tafsir';
+
+  @override
+  String get verseCardTranslationBadge => 'English Translation';
 
   @override
   String get verseCardIncludeBranding => 'App Logo';

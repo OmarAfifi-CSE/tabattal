@@ -935,8 +935,26 @@ abstract class AppLocalizations {
   /// No description provided for @verseCardIncludeTafsir.
   ///
   /// In ar, this message translates to:
-  /// **'إدراج التفسير / الترجمة'**
+  /// **'إظهار التفسير الميسر'**
   String get verseCardIncludeTafsir;
+
+  /// No description provided for @verseCardIncludeTranslation.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار الترجمة الإنجليزية'**
+  String get verseCardIncludeTranslation;
+
+  /// No description provided for @verseCardTafsirBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'التفسير الميسر'**
+  String get verseCardTafsirBadge;
+
+  /// No description provided for @verseCardTranslationBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'الترجمة الإنجليزية'**
+  String get verseCardTranslationBadge;
 
   /// No description provided for @verseCardIncludeBranding.
   ///

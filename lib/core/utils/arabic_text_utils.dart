@@ -117,8 +117,60 @@ class ArabicTextUtils {
     return normalizeArabicDigits(text);
   }
 
+  /// Thoroughly sanitizes Tafsir, Translation, or rich Quranic explanation text
+  /// by stripping HTML tags, superscript footnotes, digitized page numbers, HTML entities,
+  /// and invisible formatting characters.
+  static String cleanTafsirOrHtml(String htmlString) {
+    if (htmlString.isEmpty) return '';
+
+    // 1. Remove superscript footnotes completely: <sup foot_note=123>1</sup>
+    String text = htmlString.replaceAll(
+      RegExp(r'<sup[^>]*>.*?<\/sup>', multiLine: true, caseSensitive: false),
+      '',
+    );
+
+    // 2. Replace block tags with newlines to prevent words from squishing
+    text = text.replaceAll(
+      RegExp(r'</p>|</li>|<br\s*/?>', caseSensitive: false),
+      '\n\n',
+    );
+
+    // 3. Remove all other HTML tags
+    text = text.replaceAll(
+      RegExp(r'<[^>]*>', multiLine: true, caseSensitive: false),
+      '',
+    );
+
+    // 4. Remove printed page number annotations from digitized texts e.g. < 1-599 > or &lt; 1-599 &gt;
+    text = text.replaceAll(
+      RegExp(r'(<|&lt;)\s*\d+-\d+\s*(>|&gt;)', caseSensitive: false),
+      '',
+    );
+
+    // 5. Replace HTML entities and preserve poetry spaces
+    text = text
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'")
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>');
+    text = text.replaceAll('\\"', '"').replaceAll("\\'", "'");
+
+    // 6. Remove invisible unicode characters and fix non-breaking spaces
+    text = text
+        .replaceAll('\u200d', '')
+        .replaceAll('\u200c', '')
+        .replaceAll('\u200f', '')
+        .replaceAll('\u200e', '')
+        .replaceAll('\xa0', ' ');
+
+    // 7. Normalize excessive spaces while preserving clean line breaks
+    return text.replaceAll(RegExp(r'[ \t]{2,}'), ' ').trim();
+  }
+
   static String stripHtml(String text) {
-    return text.replaceAll(RegExp(r'<[^>]*>'), '');
+    return cleanTafsirOrHtml(text);
   }
 
   static ({int surah, int ayah})? parseVerseKey(String key) {

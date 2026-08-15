@@ -11,9 +11,11 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:sqflite/sqflite.dart';
 import '../../../../core/constants/quran_metadata.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/arabic_text_utils.dart';
 import '../../../../core/widgets/mixed_direction_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../settings/bloc/settings_bloc.dart';
@@ -229,12 +231,17 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   late int _totalAyahsInSurah;
 
   int _selectedThemeIndex = 0;
-  bool _includeTafsir = true;
+  bool _includeTafsir = false;
+  bool _includeTranslation = false;
   ShareFormat _selectedFormat = ShareFormat.image;
   bool _isSharing = false;
   bool _isSaving = false;
   String _verseTextUthmani = '';
   bool _isLoadingText = true;
+  String _tafsirText = '';
+  String _translationText = '';
+  bool _isLoadingTafsir = true;
+  bool _isLoadingTranslation = true;
 
   // Full page snapshot (captured from live QuranPageWidgetMobile)
   Uint8List? _pageSnapshot;
@@ -254,7 +261,15 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
     _startAyah = widget.verse.verseNumber;
     _endAyah = widget.verse.verseNumber;
     _totalAyahsInSurah = QuranMetadata.getVerseCountForSurah(_surahNumber);
-    _loadVerseTextAndFont();
+    if (widget.tafsirText != null && widget.tafsirText!.trim().isNotEmpty) {
+      _tafsirText = ArabicTextUtils.cleanTafsirOrHtml(widget.tafsirText!.trim());
+      _includeTafsir = true;
+    }
+    if (widget.translationText != null && widget.translationText!.trim().isNotEmpty) {
+      _translationText = ArabicTextUtils.cleanTafsirOrHtml(widget.translationText!.trim());
+      _includeTranslation = true;
+    }
+    _loadAllVerseData();
     _loadFullPageData();
   }
 
@@ -478,9 +493,33 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
         .trim();
   }
 
-  Future<void> _loadVerseTextAndFont() async {
+  Future<void> _loadAllVerseData() async {
+    setState(() {
+      _isLoadingText = true;
+      _isLoadingTafsir = true;
+      _isLoadingTranslation = true;
+    });
+
     try {
       final db = await DatabaseHelper().database;
+      await Future.wait([
+        _loadVerseTextAndFont(db),
+        _loadTafsirForRange(db),
+        _loadTranslationForRange(db),
+      ]);
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoadingText = false;
+          _isLoadingTafsir = false;
+          _isLoadingTranslation = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadVerseTextAndFont(Database db) async {
+    try {
       final verseKeys = List.generate(
         _endAyah - _startAyah + 1,
         (i) => '$_surahNumber:${_startAyah + i}',
@@ -583,6 +622,146 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
           _qcfSpans = [];
           _verseTextUthmani = '${_cleanTextForSharing(widget.verse.textUthmani)} ﴿${_toArabicDigits(widget.verse.verseNumber)}﴾';
           _isLoadingText = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadTafsirForRange(Database db) async {
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        'tafsir',
+        where: 'verse_key LIKE ? AND resource_id = ?',
+        whereArgs: ['$_surahNumber:%', 16],
+        orderBy: 'CAST(substr(verse_key, instr(verse_key, ":") + 1) AS INTEGER) ASC',
+      );
+
+      if (maps.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _tafsirText = ArabicTextUtils.cleanTafsirOrHtml(widget.tafsirText ?? '');
+            _isLoadingTafsir = false;
+          });
+        }
+        return;
+      }
+
+      final Map<int, String> tafsirMap = {};
+      for (final row in maps) {
+        final vk = row['verse_key'] as String;
+        final parts = vk.split(':');
+        if (parts.length == 2) {
+          final ayahNum = int.tryParse(parts[1]);
+          final rawText = (row['text'] as String?)?.trim() ?? '';
+          final cleanText = ArabicTextUtils.cleanTafsirOrHtml(rawText);
+          if (ayahNum != null && cleanText.isNotEmpty) {
+            tafsirMap[ayahNum] = cleanText;
+          }
+        }
+      }
+
+      final List<String> resultSegments = [];
+      String lastGroupText = '';
+
+      for (int ayah = _startAyah; ayah <= _endAyah; ayah++) {
+        String verseTafsir = '';
+        if (tafsirMap.containsKey(ayah)) {
+          verseTafsir = tafsirMap[ayah]!;
+        } else {
+          for (int back = ayah - 1; back >= 1 && back >= ayah - 20; back--) {
+            if (tafsirMap.containsKey(back)) {
+              verseTafsir = tafsirMap[back]!;
+              break;
+            }
+          }
+        }
+
+        if (verseTafsir.isNotEmpty && verseTafsir != lastGroupText) {
+          resultSegments.add(verseTafsir);
+          lastGroupText = verseTafsir;
+        }
+      }
+
+      final combinedTafsir = resultSegments.isNotEmpty
+          ? resultSegments.join('\n\n')
+          : ArabicTextUtils.cleanTafsirOrHtml(widget.tafsirText ?? '');
+
+      if (mounted) {
+        setState(() {
+          _tafsirText = combinedTafsir;
+          _isLoadingTafsir = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _tafsirText = ArabicTextUtils.cleanTafsirOrHtml(widget.tafsirText ?? '');
+          _isLoadingTafsir = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadTranslationForRange(Database db) async {
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        'translation',
+        where: 'verse_key LIKE ? AND resource_id = ?',
+        whereArgs: ['$_surahNumber:%', 20],
+        orderBy: 'CAST(substr(verse_key, instr(verse_key, ":") + 1) AS INTEGER) ASC',
+      );
+
+      if (maps.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _translationText = ArabicTextUtils.cleanTafsirOrHtml(widget.translationText ?? '');
+            _isLoadingTranslation = false;
+          });
+        }
+        return;
+      }
+
+      final Map<int, String> translationMap = {};
+      for (final row in maps) {
+        final vk = row['verse_key'] as String;
+        final parts = vk.split(':');
+        if (parts.length == 2) {
+          final ayahNum = int.tryParse(parts[1]);
+          final rawText = (row['text'] as String?)?.trim() ?? '';
+          final cleanText = ArabicTextUtils.cleanTafsirOrHtml(rawText);
+          if (ayahNum != null && cleanText.isNotEmpty) {
+            translationMap[ayahNum] = cleanText;
+          }
+        }
+      }
+
+      final List<String> resultSegments = [];
+      for (int ayah = _startAyah; ayah <= _endAyah; ayah++) {
+        final text = translationMap[ayah];
+        if (text != null && text.isNotEmpty) {
+          if (_startAyah == _endAyah) {
+            resultSegments.add(text);
+          } else {
+            resultSegments.add('($ayah) $text');
+          }
+        }
+      }
+
+      final combinedTranslation = resultSegments.isNotEmpty
+          ? resultSegments.join(' ')
+          : ArabicTextUtils.cleanTafsirOrHtml(widget.translationText ?? '');
+
+      if (mounted) {
+        setState(() {
+          _translationText = combinedTranslation;
+          _isLoadingTranslation = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _translationText = ArabicTextUtils.cleanTafsirOrHtml(widget.translationText ?? '');
+          _isLoadingTranslation = false;
         });
       }
     }
@@ -810,7 +989,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   String _getFormattedShareText(BuildContext context) {
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     final surahName = QuranMetadata.getSurahName(_surahNumber);
-    final explanationText = widget.tafsirText ?? widget.translationText;
+    final l10n = AppLocalizations.of(context)!;
 
     final rangeText = _startAyah == _endAyah
         ? (isEn ? 'Surah $surahName • Ayah $_startAyah' : 'سورة $surahName • آية $_startAyah')
@@ -820,8 +999,15 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
     buffer.writeln('( $_verseTextUthmani )');
     buffer.writeln();
 
-    if (_includeTafsir && explanationText != null && explanationText.trim().isNotEmpty) {
-      buffer.writeln(explanationText.trim());
+    if (_includeTafsir && _tafsirText.trim().isNotEmpty) {
+      buffer.writeln('【 ${l10n.verseCardTafsirBadge} 】');
+      buffer.writeln(_tafsirText.trim());
+      buffer.writeln();
+    }
+
+    if (_includeTranslation && _translationText.trim().isNotEmpty) {
+      buffer.writeln('【 ${l10n.verseCardTranslationBadge} 】');
+      buffer.writeln(_translationText.trim());
       buffer.writeln();
     }
 
@@ -847,7 +1033,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
     final theme = _activeTheme;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     final surahName = QuranMetadata.getSurahName(_surahNumber);
-    final explanationText = widget.tafsirText ?? widget.translationText;
+    final l10n = AppLocalizations.of(context)!;
 
     final rangeText = _startAyah == _endAyah
         ? (isEn ? 'Surah $surahName • Ayah $_startAyah' : 'سورة $surahName • آية $_startAyah')
@@ -896,7 +1082,8 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                   ),
                 ),
 
-          if (_includeTafsir && explanationText != null && explanationText.trim().isNotEmpty) ...[
+          // Tafsir section in text preview
+          if (_includeTafsir) ...[
             SizedBox(height: 12.h),
             Container(
               width: MediaQuery.sizeOf(context).width,
@@ -908,15 +1095,106 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                   color: theme.accentColor.withValues(alpha: 0.25),
                 ),
               ),
-              child: MixedDirectionText(
-                text: explanationText.trim(),
-                style: TextStyle(
-                  fontFamily: 'Amiri',
-                  fontSize: kIsWeb ? 13 : 12.sp,
-                  height: 1.6,
-                  color: theme.secondaryTextColor,
+              child: _isLoadingTafsir
+                  ? Center(
+                      child: CupertinoActivityIndicator(
+                        color: theme.accentColor,
+                        radius: 8.r,
+                      ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.auto_stories_outlined,
+                              size: 13.r,
+                              color: theme.accentColor,
+                            ),
+                            SizedBox(width: 5.w),
+                            Text(
+                              l10n.verseCardTafsirBadge,
+                              style: TextStyle(
+                                fontFamily: 'Amiri',
+                                fontSize: kIsWeb ? 12 : 11.sp,
+                                fontWeight: FontWeight.bold,
+                                color: theme.accentColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 6.h),
+                        MixedDirectionText(
+                          text: _tafsirText.trim(),
+                          style: TextStyle(
+                            fontFamily: 'Amiri',
+                            fontSize: kIsWeb ? 13 : 12.sp,
+                            height: 1.6,
+                            color: theme.secondaryTextColor,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ],
+
+          // Translation section in text preview
+          if (_includeTranslation) ...[
+            SizedBox(height: 12.h),
+            Container(
+              width: MediaQuery.sizeOf(context).width,
+              padding: EdgeInsets.all(10.r),
+              decoration: BoxDecoration(
+                color: theme.backgroundColor.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(10.r),
+                border: Border.all(
+                  color: theme.accentColor.withValues(alpha: 0.25),
                 ),
               ),
+              child: _isLoadingTranslation
+                  ? Center(
+                      child: CupertinoActivityIndicator(
+                        color: theme.accentColor,
+                        radius: 8.r,
+                      ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.translate_rounded,
+                              size: 13.r,
+                              color: theme.accentColor,
+                            ),
+                            SizedBox(width: 5.w),
+                            Text(
+                              l10n.verseCardTranslationBadge,
+                              style: TextStyle(
+                                fontFamily: 'Amiri',
+                                fontSize: kIsWeb ? 12 : 11.sp,
+                                fontWeight: FontWeight.bold,
+                                color: theme.accentColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 6.h),
+                        MixedDirectionText(
+                          text: _translationText.trim(),
+                          style: TextStyle(
+                            fontSize: kIsWeb ? 13 : 12.sp,
+                            height: 1.5,
+                            fontStyle: FontStyle.italic,
+                            color: theme.secondaryTextColor,
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ],
 
@@ -1327,7 +1605,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
     final theme = _activeTheme;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     final surahCleanName = QuranMetadata.getSurahName(_surahNumber);
-    final explanationText = widget.tafsirText ?? widget.translationText;
+    final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.sizeOf(context).width;
 
     final bool showBismillah = _startAyah == 1 && _surahNumber != 9 && _surahNumber != 1;
@@ -1464,8 +1742,8 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
               ),
             ),
 
-            // Optional Tafsir / Translation Box
-            if (_includeTafsir && explanationText != null && explanationText.isNotEmpty) ...[
+            // Optional Tafsir Box
+            if (_includeTafsir) ...[
               SizedBox(height: kIsWeb ? 14 : 12.h),
               Container(
                 width: screenWidth,
@@ -1477,14 +1755,106 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                     color: theme.borderColor.withValues(alpha: 0.6),
                   ),
                 ),
-                child: MixedDirectionText(
-                  text: explanationText,
-                  style: TextStyle(
-                    fontSize: kIsWeb ? 13 : 12.sp,
-                    height: 1.6,
-                    color: theme.secondaryTextColor,
+                child: _isLoadingTafsir
+                    ? Center(
+                        child: CupertinoActivityIndicator(
+                          color: theme.accentColor,
+                          radius: 8.r,
+                        ),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.auto_stories_outlined,
+                                size: kIsWeb ? 13 : 12.r,
+                                color: theme.accentColor,
+                              ),
+                              SizedBox(width: 5.w),
+                              Text(
+                                l10n.verseCardTafsirBadge,
+                                style: TextStyle(
+                                  fontFamily: 'Amiri',
+                                  fontSize: kIsWeb ? 12 : 11.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.accentColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 6.h),
+                          MixedDirectionText(
+                            text: _tafsirText.trim(),
+                            style: TextStyle(
+                              fontFamily: 'Amiri',
+                              fontSize: kIsWeb ? 13 : 12.sp,
+                              height: 1.6,
+                              color: theme.secondaryTextColor,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ],
+
+            // Optional Translation Box
+            if (_includeTranslation) ...[
+              SizedBox(height: kIsWeb ? 14 : 12.h),
+              Container(
+                width: screenWidth,
+                padding: EdgeInsets.all(kIsWeb ? 14 : 12.r),
+                decoration: BoxDecoration(
+                  color: theme.cardBackground,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(
+                    color: theme.borderColor.withValues(alpha: 0.6),
                   ),
                 ),
+                child: _isLoadingTranslation
+                    ? Center(
+                        child: CupertinoActivityIndicator(
+                          color: theme.accentColor,
+                          radius: 8.r,
+                        ),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.translate_rounded,
+                                size: kIsWeb ? 13 : 12.r,
+                                color: theme.accentColor,
+                              ),
+                              SizedBox(width: 5.w),
+                              Text(
+                                l10n.verseCardTranslationBadge,
+                                style: TextStyle(
+                                  fontFamily: 'Amiri',
+                                  fontSize: kIsWeb ? 12 : 11.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.accentColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 6.h),
+                          MixedDirectionText(
+                            text: _translationText.trim(),
+                            style: TextStyle(
+                              fontSize: kIsWeb ? 13 : 12.sp,
+                              height: 1.5,
+                              fontStyle: FontStyle.italic,
+                              color: theme.secondaryTextColor,
+                            ),
+                          ),
+                        ],
+                      ),
               ),
             ],
 
@@ -1793,9 +2163,8 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                           } else if (_endAyah > maxEndForNewStart) {
                             _endAyah = maxEndForNewStart;
                           }
-                          _isLoadingText = true;
                         });
-                        _loadVerseTextAndFont();
+                        _loadAllVerseData();
                       },
                     ),
                     child: Container(
@@ -1863,9 +2232,8 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                         if (newEnd == _endAyah) return;
                         setState(() {
                           _endAyah = newEnd;
-                          _isLoadingText = true;
                         });
-                        _loadVerseTextAndFont();
+                        _loadAllVerseData();
                       },
                     ),
                     child: Container(
@@ -1912,30 +2280,71 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
           ),
         ),
 
-        // Custom Toggles
-        if (widget.tafsirText != null || widget.translationText != null) ...[
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 4.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  l10n.verseCardIncludeTafsir,
-                  style: TextStyle(
-                    fontSize: isWeb ? 14 : 13.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+        // Always-Available Separate Tafsir Toggle Switch
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 4.h),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.auto_stories_outlined,
+                    size: 18.r,
+                    color: AppColors.accentGold,
                   ),
-                ),
-                Switch(
-                  activeTrackColor: AppColors.accentGold,
-                  value: _includeTafsir,
-                  onChanged: (val) => setState(() => _includeTafsir = val),
-                ),
-              ],
-            ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    l10n.verseCardIncludeTafsir,
+                    style: TextStyle(
+                      fontSize: isWeb ? 14 : 13.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              Switch(
+                activeTrackColor: AppColors.accentGold,
+                value: _includeTafsir,
+                onChanged: (val) => setState(() => _includeTafsir = val),
+              ),
+            ],
           ),
-        ],
+        ),
+
+        // Always-Available Separate Translation Toggle Switch
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 4.h),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.translate_rounded,
+                    size: 18.r,
+                    color: AppColors.accentGold,
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    l10n.verseCardIncludeTranslation,
+                    style: TextStyle(
+                      fontSize: isWeb ? 14 : 13.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              Switch(
+                activeTrackColor: AppColors.accentGold,
+                value: _includeTranslation,
+                onChanged: (val) => setState(() => _includeTranslation = val),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }

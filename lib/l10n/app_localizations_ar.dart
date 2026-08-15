@@ -458,7 +458,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get verseCardSavedSuccess => 'تم حفظ الصورة بنجاح';
 
   @override
-  String get verseCardIncludeTafsir => 'إدراج التفسير / الترجمة';
+  String get verseCardIncludeTafsir => 'إظهار التفسير الميسر';
+
+  @override
+  String get verseCardIncludeTranslation => 'إظهار الترجمة الإنجليزية';
+
+  @override
+  String get verseCardTafsirBadge => 'التفسير الميسر';
+
+  @override
+  String get verseCardTranslationBadge => 'الترجمة الإنجليزية';
 
   @override
   String get verseCardIncludeBranding => 'شعار التطبيق';

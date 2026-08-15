@@ -3,7 +3,7 @@
   "update_type": "flexible",
   "maintenance_mode": false,
   "maintenance_message": {
-    "ar": "التطبيق يخضع لبعض التحديثات الهامة، يرجى المحاولة لاحقاً.",
+    "ar": "التطبيق يخضع لبعض التحديثات الهامة، يرجى المحاولة لاحقًا.",
     "en": "The app is undergoing important updates. Please try again later."
   },
   "show_announcement": false,

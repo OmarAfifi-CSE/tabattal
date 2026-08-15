@@ -184,7 +184,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
         final isEn = Localizations.localeOf(context).languageCode == 'en';
         AppSnackBar.showInfo(
           context,
-          isEn ? 'Download paused' : 'تم إيقاف التحميل مؤقتاً',
+          isEn ? 'Download paused' : 'تم إيقاف التحميل مؤقتًا',
         );
       }
       return;

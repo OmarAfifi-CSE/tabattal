@@ -206,43 +206,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
   }
 
   String _stripHtml(String htmlString) {
-    // Remove superscript footnotes completely: <sup foot_note=123>1</sup>
-    String text = htmlString.replaceAll(
-      RegExp(r'<sup[^>]*>.*?<\/sup>', multiLine: true, caseSensitive: false),
-      '',
-    );
-    // Replace block tags with newlines to prevent words from squishing
-    text = text.replaceAll(
-      RegExp(r'</p>|</li>|<br\s*/?>', caseSensitive: false),
-      '\n\n',
-    );
-    // Remove all other HTML tags
-    text = text.replaceAll(
-      RegExp(r'<[^>]*>', multiLine: true, caseSensitive: false),
-      '',
-    );
-    // Remove printed page number annotations from digitized texts e.g. < 1-599 > or &lt; 1-599 &gt;
-    text = text.replaceAll(
-      RegExp(r'(<|&lt;)\s*\d+-\d+\s*(>|&gt;)', caseSensitive: false),
-      '',
-    );
-    // Replace HTML entities and preserve poetry spaces
-    text = text
-        .replaceAll('&nbsp;', ' ')
-        .replaceAll('&quot;', '"')
-        .replaceAll('&#39;', "'")
-        .replaceAll('&amp;', '&')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>');
-    text = text.replaceAll('\\"', '"').replaceAll("\\'", "'");
-    // Remove invisible unicode characters and fix non-breaking spaces
-    text = text
-        .replaceAll('\u200d', '')
-        .replaceAll('\u200c', '')
-        .replaceAll('\u200f', '')
-        .replaceAll('\u200e', '')
-        .replaceAll('\xa0', ' ');
-    return text.replaceAll(RegExp(r' {3,}'), '  •  ').trim();
+    return ArabicTextUtils.cleanTafsirOrHtml(htmlString);
   }
 
   String _getTafsirName(BuildContext context, int id) {
