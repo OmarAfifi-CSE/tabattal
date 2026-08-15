@@ -44,7 +44,9 @@ flutter:
     - assets/images/
     - assets/data/
     - assets/data/quran.db
-    - assets/fonts/quran_fonts.zip
+    - assets/fonts/quran_fonts/quran_fonts_part1.zip
+    - assets/fonts/quran_fonts/quran_fonts_part2.zip
+    - assets/fonts/quran_fonts/quran_fonts_part3.zip
 
   fonts:
     - family: Amiri
