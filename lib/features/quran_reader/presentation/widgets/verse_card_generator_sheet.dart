@@ -545,7 +545,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
       final placeholders = List.filled(verseKeys.length, '?').join(',');
       final maps = await db.query(
         'quran_words',
-        columns: ['code_v1', 'page', 'text_uthmani', 'char_type_name', 'verse_key'],
+        columns: ['code_v2', 'page', 'text_uthmani', 'char_type_name', 'verse_key'],
         where: 'verse_key IN ($placeholders)',
         whereArgs: verseKeys,
         orderBy: 'id ASC',
@@ -576,14 +576,16 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
             final pageNum = wordsForVerse.first['page'] as int;
             final pageStr = pageNum.toString().padLeft(3, '0');
             final fontFamily = 'QCF_P$pageStr';
-            final codeV1Text = wordsForVerse.map((m) => m['code_v1'] as String).join(' ');
+            final codeText = wordsForVerse
+                .map((m) => (m['code_v2'] as String?) ?? (m['text_uthmani'] as String))
+                .join(' ');
 
             if (newSpans.isNotEmpty) {
               newSpans.add(const TextSpan(text: ' '));
             }
             newSpans.add(
               TextSpan(
-                text: codeV1Text,
+                text: codeText,
                 style: TextStyle(fontFamily: fontFamily),
               ),
             );

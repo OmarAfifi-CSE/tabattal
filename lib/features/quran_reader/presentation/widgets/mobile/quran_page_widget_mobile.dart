@@ -227,7 +227,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         for (final lineData in _lineMap.values) {
           if (lineData.words.isEmpty) continue;
           final lineText = lineData.words
-              .map((w) => w.codeV1.isNotEmpty ? w.codeV1 : w.textUthmani)
+              .map((w) => w.code)
               .where((t) => t.isNotEmpty)
               .join();
           if (lineText.isEmpty) continue;
@@ -578,7 +578,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   }) {
     final pageStr = widget.pageNumber.toString().padLeft(3, '0');
     final customFontFamily = 'QCF_P$pageStr';
-    final displayText = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
+    final displayText = word.code;
     final wordKey = '${word.verseKey}:${word.id}';
 
     bool isWordMasked = false;
@@ -783,20 +783,16 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
             textColor = mushafTheme.bookmarkedMarkerColor;
           }
 
-          Widget basmala = AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeInOut,
+          Widget basmala = ColoredBox(
             color: backgroundColor,
-            child: AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeInOut,
+            child: Text(
+              '1 2 3',
               style: TextStyle(
                 fontFamily: 'QCF_BSML',
                 fontSize: 26.sp,
                 color: textColor,
                 height: 1.0.h,
               ),
-              child: const Text('1 2 3'),
             ),
           );
 
@@ -896,8 +892,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
                   mainAxisSize: MainAxisSize.min,
                   textDirection: TextDirection.rtl,
                   children: maskedRun.map((w) {
-                    final displayText =
-                        w.codeV1.isNotEmpty ? w.codeV1 : w.textUthmani;
+                    final displayText = w.code;
                     return Text(
                       displayText,
                       style: wordTextStyle.copyWith(

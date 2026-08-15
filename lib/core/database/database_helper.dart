@@ -46,7 +46,7 @@ class DatabaseHelper {
 
     // Increment this whenever we update quran.db in assets
     const currentDbVersion =
-        15; // bumped to 15: removed tafsir 14 & 91 from bundle (now downloadable), VACUUM applied — DB shrank from 38 MB to 9 MB
+        16; // bumped to 16: added QCF V2 glyph codes (code_v2) to all 83,665 words across all 604 pages
 
     if (!exists || dbVersion < currentDbVersion) {
       if (!kIsWeb) {

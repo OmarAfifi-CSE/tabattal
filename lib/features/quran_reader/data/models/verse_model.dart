@@ -1,7 +1,7 @@
 class WordModel {
   final int id;
   final String textUthmani;
-  final String codeV1;
+  final String codeV2;
   final int lineNumber;
   final String charTypeName; // 'word' or 'end'
   final String verseKey;
@@ -9,17 +9,20 @@ class WordModel {
   WordModel({
     required this.id,
     required this.textUthmani,
-    required this.codeV1,
+    required this.codeV2,
     required this.lineNumber,
     required this.charTypeName,
     required this.verseKey,
   });
 
+  /// Primary glyph code to display from QCF V2
+  String get code => codeV2.isNotEmpty ? codeV2 : textUthmani;
+
   factory WordModel.fromJson(Map<String, dynamic> json) {
     return WordModel(
       id: json['id'] as int? ?? 0,
       textUthmani: json['text_uthmani'] as String? ?? '',
-      codeV1: json['code_v1'] as String? ?? '',
+      codeV2: (json['code_v2'] as String?) ?? '',
       lineNumber: json['line_number'] as int? ?? 1,
       charTypeName: json['char_type_name'] as String? ?? 'word',
       verseKey: json['verse_key'] as String? ?? '',

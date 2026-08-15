@@ -59,7 +59,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
             (map) => WordModel(
               id: map['id'] as int,
               textUthmani: map['text_uthmani'] as String,
-              codeV1: map['code_v1'] as String? ?? '',
+              codeV2: map['code_v2'] as String? ?? '',
               lineNumber: map['line_number'] as int,
               charTypeName: map['char_type_name'] as String,
               verseKey: map['verse_key'] as String,

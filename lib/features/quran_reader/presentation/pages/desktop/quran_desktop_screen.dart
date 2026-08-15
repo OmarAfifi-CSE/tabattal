@@ -205,7 +205,7 @@ class _QuranDesktopScreenState extends State<QuranDesktopScreen> {
     for (final lineData in lines) {
       if (lineData.words.isEmpty) continue;
       final lineText = lineData.words
-          .map((w) => w.codeV1.isNotEmpty ? w.codeV1 : w.textUthmani)
+          .map((w) => w.code)
           .where((t) => t.isNotEmpty)
           .join();
       if (lineText.isEmpty) continue;

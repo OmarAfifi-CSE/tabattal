@@ -191,7 +191,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
         for (final lineData in _lineMap.values) {
           if (lineData.words.isEmpty) continue;
           final lineText = lineData.words
-              .map((w) => w.codeV1.isNotEmpty ? w.codeV1 : w.textUthmani)
+              .map((w) => w.code)
               .where((t) => t.isNotEmpty)
               .join();
           if (lineText.isEmpty) continue;
@@ -518,7 +518,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
   }) {
     final pageStr = widget.pageNumber.toString().padLeft(3, '0');
     final customFontFamily = 'QCF_P$pageStr';
-    final displayText = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
+    final displayText = word.code;
     final wordKey = '${word.verseKey}:${word.id}';
 
     bool isWordMasked = false;
@@ -630,15 +630,11 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
         _wordTapStart = null;
       },
       onPointerCancel: (_) => _wordTapStart = null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
+      child: ColoredBox(
         color: backgroundColor,
-        child: AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
+        child: Text(
+          displayText,
           style: wordTextStyle.copyWith(color: textColor),
-          child: Text(displayText),
         ),
       ),
     );
@@ -720,20 +716,16 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
             textColor = mushafTheme.bookmarkedMarkerColor;
           }
 
-          Widget basmala = AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeInOut,
+          Widget basmala = ColoredBox(
             color: backgroundColor,
-            child: AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeInOut,
+            child: Text(
+              '1 2 3',
               style: TextStyle(
                 fontFamily: 'QCF_BSML',
                 fontSize: 26,
                 color: textColor,
                 height: 1.0,
               ),
-              child: const Text('1 2 3'),
             ),
           );
 
@@ -829,8 +821,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
                   mainAxisSize: MainAxisSize.min,
                   textDirection: TextDirection.rtl,
                   children: maskedRun.map((w) {
-                    final displayText =
-                        w.codeV1.isNotEmpty ? w.codeV1 : w.textUthmani;
+                    final displayText = w.code;
                     return Text(
                       displayText,
                       style: wordTextStyle.copyWith(

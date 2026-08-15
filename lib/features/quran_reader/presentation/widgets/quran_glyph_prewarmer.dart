@@ -31,7 +31,7 @@ class QuranGlyphPrewarmer extends StatelessWidget {
       final buffer = StringBuffer();
       for (final line in cachedState.lines) {
         for (final word in line.words) {
-          final t = word.codeV1.isNotEmpty ? word.codeV1 : word.textUthmani;
+          final t = word.code;
           if (t.isNotEmpty) buffer.write('$t ');
         }
       }
