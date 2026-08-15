@@ -1,20 +1,19 @@
 import 'dart:math' as math;
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/material.dart';
-import '../../../../../l10n/app_localizations.dart';
-import '../../../../../core/utils/web_safe_size.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../../core/theme/app_colors.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/network/audio_download_manager.dart';
-import '../../../../../core/utils/reciter_localization.dart';
 import '../../../../../core/services/audio_preferences_service.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/utils/reciter_localization.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_event.dart';
+import '../audio_selector_button.dart';
 
 // ─── Public API ─────────────────────────────────────────────────────────────
 
-/// Shows the unified audio settings bottom sheet.
+/// Shows the unified audio settings bottom sheet for mobile.
 ///
 /// [verseId] – if provided, tapping "ابدأ الاستماع" will play that verse.
 ///              Pass null to only show reciter/repeat settings without triggering play.
@@ -27,10 +26,10 @@ void showAudioSettingsSheetMobile(BuildContext context, {int? verseId}) {
     context: context,
     backgroundColor: AppColors.cardCream,
     constraints: MediaQuery.sizeOf(context).width > 600
-        ? const BoxConstraints(maxWidth: 450)
+        ? BoxConstraints(maxWidth: 450.w)
         : null,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24.wR)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
     ),
     isScrollControlled: true,
     builder: (_) => Directionality(
@@ -46,7 +45,7 @@ void showAudioSettingsSheetMobile(BuildContext context, {int? verseId}) {
   );
 }
 
-// ─── Internal Widget ────────────────────────────────────────────────────────
+// ─── Sheet Content ──────────────────────────────────────────────────────────
 
 class _AudioSettingsSheetContent extends StatefulWidget {
   final int? verseId;
@@ -70,6 +69,7 @@ class _AudioSettingsSheetContentState
   late bool _playOnce;
 
   static const List<int> _repeatOptions = [0, 2, 3, -1];
+
   String _getRepeatLabel(BuildContext context, int count) {
     final l10n = AppLocalizations.of(context)!;
     switch (count) {
@@ -93,8 +93,7 @@ class _AudioSettingsSheetContentState
     _selectedRepeatCount = bloc.currentRepeatCount;
     _playOnce = bloc.playOnce;
     if (!_repeatOptions.contains(_selectedRepeatCount)) {
-      _selectedRepeatCount =
-          0; // Fallback to default if saved value was removed
+      _selectedRepeatCount = 0;
     }
 
     _selectedCategory = bloc.currentCategory;
@@ -107,8 +106,8 @@ class _AudioSettingsSheetContentState
   void _onCategoryChanged(String newCat) {
     setState(() {
       _selectedCategory = newCat;
-      final reciters = AudioDownloadManager.reciterCategories[newCat]!.keys
-          .toList();
+      final reciters =
+          AudioDownloadManager.reciterCategories[newCat]!.keys.toList();
       _selectedReciter = reciters.first;
     });
     widget.audioPrefs.saveCategory(newCat);
@@ -130,7 +129,9 @@ class _AudioSettingsSheetContentState
   }
 
   void _applyAndPlay() {
-    context.read<AudioBloc>().add(ChangeReciter(_selectedCategory, _selectedReciter));
+    context.read<AudioBloc>().add(
+      ChangeReciter(_selectedCategory, _selectedReciter),
+    );
     if (widget.verseId != null) {
       context.read<AudioBloc>().add(PlayVerse('', widget.verseId!));
     }
@@ -145,10 +146,13 @@ class _AudioSettingsSheetContentState
 
     return Padding(
       padding: EdgeInsets.only(
-        bottom: math.max(MediaQuery.viewInsetsOf(context).bottom, MediaQuery.paddingOf(context).bottom),
+        bottom: math.max(
+          MediaQuery.viewInsetsOf(context).bottom,
+          MediaQuery.paddingOf(context).bottom,
+        ),
       ),
       child: Container(
-        padding: EdgeInsets.fromLTRB(20.wW, 10.wH, 20.wW, 28.wH),
+        padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 20.h),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -156,12 +160,12 @@ class _AudioSettingsSheetContentState
             // ── Drag handle
             Center(
               child: Container(
-                width: 48.wW,
-                height: 4.wH,
-                margin: EdgeInsets.only(bottom: 14.wH),
+                width: 48.w,
+                height: 4.h,
+                margin: EdgeInsets.only(bottom: 12.h),
                 decoration: BoxDecoration(
                   color: AppColors.accentGold,
-                  borderRadius: BorderRadius.circular(2.wR),
+                  borderRadius: BorderRadius.circular(2.r),
                 ),
               ),
             ),
@@ -170,51 +174,71 @@ class _AudioSettingsSheetContentState
               child: Text(
                 AppLocalizations.of(context)!.audioSettingsTitle,
                 style: TextStyle(
-                  fontSize: 20.wSp,
+                  fontSize: 19.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
             ),
-            SizedBox(height: 18.wH),
+            SizedBox(height: 14.h),
 
             // ── Category Selector
-            _SelectorButton<String>(
+            AudioSelectorButton<String>(
               icon: Icons.category_rounded,
               label: AppLocalizations.of(context)!.audioTypeLabel,
               value: _selectedCategory,
               items: categories,
+              height: 48.h,
+              itemHeight: 42.h,
+              labelFontSize: 10.sp,
+              valueFontSize: 14.sp,
+              itemFontSize: 14.5.sp,
+              iconSize: 18.sp,
               onChanged: (val) => _onCategoryChanged(val),
               labelBuilder: (item) => ReciterLocalization.localizeByLang(isEn, item),
             ),
-            SizedBox(height: 12.wH),
+            SizedBox(height: 10.h),
 
             // ── Reciter Selector
-            _SelectorButton<String>(
+            AudioSelectorButton<String>(
               icon: Icons.mic_rounded,
               label: AppLocalizations.of(context)!.audioReciterLabel,
               value: _selectedReciter,
               items: reciters,
+              height: 48.h,
+              itemHeight: 42.h,
+              maxHeight: 210.h,
+              labelFontSize: 10.sp,
+              valueFontSize: 14.sp,
+              itemFontSize: 14.5.sp,
+              iconSize: 18.sp,
               onChanged: (val) => _onReciterChanged(val),
               labelBuilder: (item) => ReciterLocalization.localizeByLang(isEn, item),
             ),
-            SizedBox(height: 20.wH),
+            SizedBox(height: 10.h),
 
             // ── Repeat Selector
-            _SelectorButton<int>(
+            AudioSelectorButton<int>(
               icon: Icons.repeat_rounded,
               label: AppLocalizations.of(context)!.audioRepeatLabel,
               value: _selectedRepeatCount,
               items: _repeatOptions,
+              height: 48.h,
+              itemHeight: 34.h,
+              maxHeight: 136.h,
+              labelFontSize: 10.sp,
+              valueFontSize: 14.sp,
+              itemFontSize: 14.5.sp,
+              iconSize: 18.sp,
               onChanged: _onRepeatChanged,
               labelBuilder: (item) => _getRepeatLabel(context, item),
             ),
-            SizedBox(height: 16.wH),
+            SizedBox(height: 12.h),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.wW, vertical: 2.wH),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 2.h),
               decoration: BoxDecoration(
                 color: AppColors.surfaceCream,
-                borderRadius: BorderRadius.circular(10.wR),
+                borderRadius: BorderRadius.circular(10.r),
                 border: Border.all(
                   color: AppColors.accentGold.withValues(alpha: 0.4),
                 ),
@@ -225,12 +249,16 @@ class _AudioSettingsSheetContentState
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.looks_one_rounded, color: AppColors.accentGold, size: 20.wSp),
-                      SizedBox(width: 8.wW),
+                      Icon(
+                        Icons.play_circle_outline_rounded,
+                        color: AppColors.accentGold,
+                        size: 20.sp,
+                      ),
+                      SizedBox(width: 8.w),
                       Text(
                         AppLocalizations.of(context)!.menuListenOnce,
                         style: TextStyle(
-                          fontSize: 14.wSp,
+                          fontSize: 14.sp,
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
@@ -246,30 +274,30 @@ class _AudioSettingsSheetContentState
                 ],
               ),
             ),
-            SizedBox(height: 24.wH),
+            SizedBox(height: 18.h),
 
             // ── Play / Apply button
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accentGold,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 14.wH),
+                padding: EdgeInsets.symmetric(vertical: 13.h),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.wR),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
-                elevation: 0.r,
+                elevation: 0,
               ),
               icon: Icon(
                 widget.verseId != null
                     ? Icons.play_arrow_rounded
                     : Icons.check_rounded,
-                size: 24.wSp,
+                size: 22.sp,
               ),
               label: Text(
                 widget.verseId != null
                     ? AppLocalizations.of(context)!.audioStartListening
                     : AppLocalizations.of(context)!.audioSaveSettings,
-                style: TextStyle(fontSize: 17.wSp, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
               ),
               onPressed: _applyAndPlay,
             ),
@@ -279,221 +307,3 @@ class _AudioSettingsSheetContentState
     );
   }
 }
-
-// ─── Helper Widgets ──────────────────────────────────────────────────────────
-
-
-
-/// A full-width dropdown button that displays a popup menu below it.
-class _SelectorButton<T> extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final T value;
-  final List<T> items;
-  final ValueChanged<T> onChanged;
-  final String Function(T) labelBuilder;
-
-  const _SelectorButton({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-    required this.labelBuilder,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, layoutConstraints) {
-        return PopupMenuButton<T>(
-          splashRadius: 0.1,
-          position: PopupMenuPosition.under,
-          color: AppColors.cardCream,
-          elevation: 4.r,
-          constraints: BoxConstraints(
-            minWidth: layoutConstraints.maxWidth,
-            maxWidth: layoutConstraints.maxWidth,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.15)),
-          ),
-          clipBehavior: Clip.hardEdge,
-          onSelected: onChanged,
-          itemBuilder: (context) => [
-            PopupMenuItem<T>(
-              enabled: false,
-              padding: EdgeInsets.zero,
-              child: Directionality(
-                textDirection: Directionality.of(context),
-                child: _PopupMenuScrollableContent<T>(
-                  items: items,
-                  value: value,
-                  labelBuilder: labelBuilder,
-                  maxHeight: 250.h,
-                  itemHeight: 40.h,
-                ),
-              ),
-            ),
-          ],
-          child: Container(
-            height: 52.wH,
-            width: MediaQuery.sizeOf(context).width,
-            padding: EdgeInsets.symmetric(horizontal: 12.wW),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceCream,
-              borderRadius: BorderRadius.circular(10.wR),
-              border: Border.all(
-                color: AppColors.accentGold.withValues(alpha: 0.4),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, color: AppColors.accentGold, size: 18.wSp),
-                SizedBox(width: 8.wW),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 10.wSp,
-                          color: AppColors.accentGold,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        labelBuilder(value),
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14.wSp,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.accentGold,
-                  size: 20.wSp,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _PopupMenuScrollableContent<T> extends StatefulWidget {
-  final List<T> items;
-  final T value;
-  final String Function(T) labelBuilder;
-  final double maxHeight;
-  final double itemHeight;
-
-  const _PopupMenuScrollableContent({
-    required this.items,
-    required this.value,
-    required this.labelBuilder,
-    required this.maxHeight,
-    required this.itemHeight,
-  });
-
-  @override
-  State<_PopupMenuScrollableContent<T>> createState() => _PopupMenuScrollableContentState<T>();
-}
-
-class _PopupMenuScrollableContentState<T> extends State<_PopupMenuScrollableContent<T>> {
-  late final ScrollController _scrollController;
-
-  @override
-  void initState() {
-    super.initState();
-    final index = widget.items.indexOf(widget.value);
-    double offset = 0;
-    if (index != -1) {
-      offset = (index * widget.itemHeight) - (widget.maxHeight / 2) + (widget.itemHeight / 2);
-      if (offset < 0) offset = 0;
-      double maxScroll = (widget.items.length * widget.itemHeight) - widget.maxHeight;
-      if (maxScroll < 0) maxScroll = 0;
-      if (offset > maxScroll) offset = maxScroll;
-    }
-    _scrollController = ScrollController(initialScrollOffset: offset);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: widget.maxHeight),
-      child: RawScrollbar(
-        controller: _scrollController,
-        thumbVisibility: true,
-        thickness: 4.w,
-        radius: Radius.circular(8.wR),
-        thumbColor: AppColors.accentGold.withValues(alpha: 0.5),
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: widget.items.map((item) {
-              final isSelected = item == widget.value;
-              return InkWell(
-                onTap: () => Navigator.pop(context, item),
-                child: Container(
-                  width: MediaQuery.sizeOf(context).width,
-                  height: widget.itemHeight,
-                  padding: EdgeInsets.symmetric(horizontal: 14.w),
-                  alignment: AlignmentDirectional.centerStart,
-                  color: isSelected
-                      ? AppColors.accentGold.withValues(alpha: 0.1)
-                      : Colors.transparent,
-                  child: Row(
-                    children: [
-                      if (isSelected)
-                        Padding(
-                          padding: EdgeInsetsDirectional.only(end: 8.w),
-                          child: Icon(
-                            Icons.check_rounded,
-                            color: AppColors.accentGold,
-                            size: 16.r,
-                          ),
-                        ),
-                      Expanded(
-                        child: Text(
-                          widget.labelBuilder(item),
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: AppColors.textPrimary,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
