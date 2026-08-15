@@ -2186,220 +2186,245 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
           secondChild: const SizedBox.shrink(),
         ),
 
-        // Verse Range Picker (تحديد نطاق الآيات)
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: 4.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        // Verse Range Picker (تحديد نطاق الآيات) - Only for Image Card & Text modes
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 200),
+          sizeCurve: Curves.fastOutSlowIn,
+          firstCurve: Curves.easeOut,
+          secondCurve: Curves.easeIn,
+          crossFadeState: _selectedFormat != ShareFormat.fullPage
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
+          firstChild: Padding(
+            padding: EdgeInsets.symmetric(vertical: 4.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.verseCardVerseRange,
+                  style: TextStyle(
+                    fontSize: isWeb ? 14 : 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Row(
+                  children: [
+                    // From Ayah Tile
+                    GestureDetector(
+                      onTap: () => _showAyahPickerSheet(
+                        context: context,
+                        title: l10n.verseCardStartAyah,
+                        currentValue: _startAyah,
+                        options: List.generate(_totalAyahsInSurah, (i) => i + 1),
+                        onSelected: (newStart) {
+                          if (newStart == _startAyah) return;
+                          final maxEndForNewStart = _getMaxEndAyah(newStart);
+                          setState(() {
+                            _startAyah = newStart;
+                            if (_endAyah < _startAyah) {
+                              _endAyah = _startAyah;
+                            } else if (_endAyah > maxEndForNewStart) {
+                              _endAyah = maxEndForNewStart;
+                            }
+                          });
+                          _loadAllVerseData();
+                        },
+                      ),
+                      child: Container(
+                        height: 34.h,
+                        padding: EdgeInsets.symmetric(horizontal: 10.w),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardCream,
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(
+                            color: AppColors.accentGold.withValues(alpha: 0.6),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.accentGold.withValues(alpha: 0.1),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isEn ? 'Ayah $_startAyah' : 'آية $_startAyah',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: AppColors.accentGold,
+                              size: 18.r,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6.w),
+                      child: Text(
+                        isEn ? 'to' : 'إلى',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+
+                    // To Ayah Tile
+                    GestureDetector(
+                      onTap: () => _showAyahPickerSheet(
+                        context: context,
+                        title: l10n.verseCardEndAyah,
+                        currentValue: _endAyah,
+                        options: List.generate(
+                          _getMaxEndAyah(_startAyah) - _startAyah + 1,
+                          (i) => _startAyah + i,
+                        ),
+                        onSelected: (newEnd) {
+                          if (newEnd == _endAyah) return;
+                          setState(() {
+                            _endAyah = newEnd;
+                          });
+                          _loadAllVerseData();
+                        },
+                      ),
+                      child: Container(
+                        height: 34.h,
+                        padding: EdgeInsets.symmetric(horizontal: 10.w),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardCream,
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(
+                            color: AppColors.accentGold.withValues(alpha: 0.6),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.accentGold.withValues(alpha: 0.1),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isEn ? 'Ayah $_endAyah' : 'آية $_endAyah',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: AppColors.accentGold,
+                              size: 18.r,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          secondChild: const SizedBox.shrink(),
+        ),
+
+        // Tafsir & Translation Toggle Switches (Animated smoothly and hidden on Full Page)
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 200),
+          sizeCurve: Curves.fastOutSlowIn,
+          firstCurve: Curves.easeOut,
+          secondCurve: Curves.easeIn,
+          crossFadeState: _selectedFormat != ShareFormat.fullPage
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
+          firstChild: Column(
             children: [
-              Text(
-                l10n.verseCardVerseRange,
-                style: TextStyle(
-                  fontSize: isWeb ? 14 : 13.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+              // Separate Tafsir Toggle Switch
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 4.h),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.auto_stories_outlined,
+                          size: 18.r,
+                          color: AppColors.accentGold,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          l10n.verseCardIncludeTafsir,
+                          style: TextStyle(
+                            fontSize: isWeb ? 14 : 13.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Switch(
+                      activeTrackColor: AppColors.accentGold,
+                      value: _includeTafsir,
+                      onChanged: (val) => setState(() => _includeTafsir = val),
+                    ),
+                  ],
                 ),
               ),
-              Row(
-                children: [
-                  // From Ayah Tile
-                  GestureDetector(
-                    onTap: () => _showAyahPickerSheet(
-                      context: context,
-                      title: l10n.verseCardStartAyah,
-                      currentValue: _startAyah,
-                      options: List.generate(_totalAyahsInSurah, (i) => i + 1),
-                      onSelected: (newStart) {
-                        if (newStart == _startAyah) return;
-                        final maxEndForNewStart = _getMaxEndAyah(newStart);
-                        setState(() {
-                          _startAyah = newStart;
-                          if (_endAyah < _startAyah) {
-                            _endAyah = _startAyah;
-                          } else if (_endAyah > maxEndForNewStart) {
-                            _endAyah = maxEndForNewStart;
-                          }
-                        });
-                        _loadAllVerseData();
-                      },
-                    ),
-                    child: Container(
-                      height: 34.h,
-                      padding: EdgeInsets.symmetric(horizontal: 10.w),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardCream,
-                        borderRadius: BorderRadius.circular(10.r),
-                        border: Border.all(
-                          color: AppColors.accentGold.withValues(alpha: 0.6),
-                          width: 1.5,
+
+              // Separate Translation Toggle Switch
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 4.h),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.translate_rounded,
+                          size: 18.r,
+                          color: AppColors.accentGold,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.accentGold.withValues(alpha: 0.1),
-                            blurRadius: 4,
+                        SizedBox(width: 8.w),
+                        Text(
+                          l10n.verseCardIncludeTranslation,
+                          style: TextStyle(
+                            fontSize: isWeb ? 14 : 13.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
                           ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            isEn ? 'Ayah $_startAyah' : 'آية $_startAyah',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: AppColors.accentGold,
-                            size: 18.r,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6.w),
-                    child: Text(
-                      isEn ? 'to' : 'إلى',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-
-                  // To Ayah Tile
-                  GestureDetector(
-                    onTap: () => _showAyahPickerSheet(
-                      context: context,
-                      title: l10n.verseCardEndAyah,
-                      currentValue: _endAyah,
-                      options: List.generate(
-                        _getMaxEndAyah(_startAyah) - _startAyah + 1,
-                        (i) => _startAyah + i,
-                      ),
-                      onSelected: (newEnd) {
-                        if (newEnd == _endAyah) return;
-                        setState(() {
-                          _endAyah = newEnd;
-                        });
-                        _loadAllVerseData();
-                      },
-                    ),
-                    child: Container(
-                      height: 34.h,
-                      padding: EdgeInsets.symmetric(horizontal: 10.w),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardCream,
-                        borderRadius: BorderRadius.circular(10.r),
-                        border: Border.all(
-                          color: AppColors.accentGold.withValues(alpha: 0.6),
-                          width: 1.5,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.accentGold.withValues(alpha: 0.1),
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            isEn ? 'Ayah $_endAyah' : 'آية $_endAyah',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: AppColors.accentGold,
-                            size: 18.r,
-                          ),
-                        ],
-                      ),
+                      ],
                     ),
-                  ),
-                ],
+                    Switch(
+                      activeTrackColor: AppColors.accentGold,
+                      value: _includeTranslation,
+                      onChanged: (val) => setState(() => _includeTranslation = val),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-        ),
-
-        // Always-Available Separate Tafsir Toggle Switch
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: 4.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.auto_stories_outlined,
-                    size: 18.r,
-                    color: AppColors.accentGold,
-                  ),
-                  SizedBox(width: 8.w),
-                  Text(
-                    l10n.verseCardIncludeTafsir,
-                    style: TextStyle(
-                      fontSize: isWeb ? 14 : 13.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              Switch(
-                activeTrackColor: AppColors.accentGold,
-                value: _includeTafsir,
-                onChanged: (val) => setState(() => _includeTafsir = val),
-              ),
-            ],
-          ),
-        ),
-
-        // Always-Available Separate Translation Toggle Switch
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: 4.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.translate_rounded,
-                    size: 18.r,
-                    color: AppColors.accentGold,
-                  ),
-                  SizedBox(width: 8.w),
-                  Text(
-                    l10n.verseCardIncludeTranslation,
-                    style: TextStyle(
-                      fontSize: isWeb ? 14 : 13.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              Switch(
-                activeTrackColor: AppColors.accentGold,
-                value: _includeTranslation,
-                onChanged: (val) => setState(() => _includeTranslation = val),
-              ),
-            ],
-          ),
+          secondChild: const SizedBox.shrink(),
         ),
       ],
     );

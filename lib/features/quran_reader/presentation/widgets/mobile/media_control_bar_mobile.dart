@@ -143,35 +143,47 @@ class _MediaControlBarMobileState extends State<MediaControlBarMobile> {
           builder: (context, state) {
             final isPlaying = state is AudioPlaying;
             final isLoading = state is AudioLoading;
+            final isEn = Localizations.localeOf(context).languageCode == 'en';
+            final audioBloc = context.read<AudioBloc>();
+            final reciterName = ReciterLocalization.localize(
+              context,
+              audioBloc.currentReciter,
+            );
+            final categoryName = ReciterLocalization.localize(
+              context,
+              audioBloc.currentCategory,
+            );
+
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.multitrack_audio_rounded,
-                      color: AppColors.bronzeIcon,
-                      size: 24.sp,
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      ReciterLocalization.localize(
-                        context,
-                        context.read<AudioBloc>().currentReciter,
+                Expanded(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.multitrack_audio_rounded,
+                        color: AppColors.bronzeIcon,
+                        size: 24.sp,
                       ),
-                      textDirection:
-                          Localizations.localeOf(context).languageCode == 'en'
-                          ? TextDirection.ltr
-                          : TextDirection.rtl,
-                      style: AppTextStyles.menuItemText.copyWith(
-                        color: AppColors.inkBrown,
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.bold,
+                      SizedBox(width: 8.w),
+                      Flexible(
+                        child: Text(
+                          '$reciterName ($categoryName)',
+                          overflow: TextOverflow.ellipsis,
+                          textDirection:
+                              isEn ? TextDirection.ltr : TextDirection.rtl,
+                          style: AppTextStyles.menuItemText.copyWith(
+                            color: AppColors.inkBrown,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                SizedBox(width: 8.w),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -244,11 +256,13 @@ class _MediaControlBarMobileState extends State<MediaControlBarMobile> {
                 builder: (context, state) {
                   final isEn =
                       Localizations.localeOf(context).languageCode == 'en';
+                  final audioBloc = context.read<AudioBloc>();
+                  final reciterName = ReciterLocalization.localize(
+                    context,
+                    audioBloc.currentReciter,
+                  );
                   return Text(
-                    ReciterLocalization.localize(
-                      context,
-                      context.read<AudioBloc>().currentReciter,
-                    ),
+                    reciterName,
                     textAlign: isEn ? TextAlign.left : TextAlign.right,
                     style: AppTextStyles.menuItemText.copyWith(
                       color: AppColors.inkBrown,

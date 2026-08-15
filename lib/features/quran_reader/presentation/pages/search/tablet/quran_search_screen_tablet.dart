@@ -383,71 +383,81 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
     final l10n = AppLocalizations.of(context)!;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
+    final backButton = GestureDetector(
+      onTap: () => Navigator.pop(context),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: AppColors.borderLight,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.borderMedium, width: 1),
+        ),
+        child: Icon(
+          Icons.arrow_forward_rounded,
+          color: AppColors.textPrimary,
+          size: 24,
+        ),
+      ),
+    );
+
+    final searchField = Expanded(
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(
+          color: AppColors.cardCream,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.borderMedium, width: 1),
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 12),
+            Icon(
+              Icons.search_rounded,
+              color: AppColors.textPrimary,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
+                ),
+                onChanged: _onSearchChanged,
+                textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+                textAlign: isAr ? TextAlign.right : TextAlign.left,
+                autofocus: false,
+                decoration: InputDecoration(
+                  hintText: l10n.searchHint,
+                  hintStyle: TextStyle(
+                    color: AppColors.textPrimary.withValues(alpha: 0.38),
+                    fontSize: 16,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.only(bottom: 8),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.borderLight,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderMedium, width: 1),
-              ),
-              child: Icon(
-                isAr ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded,
-                color: AppColors.textPrimary,
-                size: 24,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Container(
-              height: 50,
-              decoration: BoxDecoration(
-                color: AppColors.cardCream,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderMedium, width: 1),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 12),
-                  Icon(
-                    Icons.search_rounded,
-                    color: AppColors.textPrimary,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: AppColors.textPrimary,
-                      ),
-                      onChanged: _onSearchChanged,
-                      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
-                      textAlign: isAr ? TextAlign.right : TextAlign.left,
-                      autofocus: false,
-                      decoration: InputDecoration(
-                        hintText: l10n.searchHint,
-                        hintStyle: TextStyle(
-                          color: AppColors.textPrimary.withValues(alpha: 0.38),
-                          fontSize: 16,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.only(bottom: 8),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        children: isAr
+            ? [
+                backButton,
+                const SizedBox(width: 12),
+                searchField,
+              ]
+            : [
+                searchField,
+                const SizedBox(width: 12),
+                backButton,
+              ],
       ),
     );
   }

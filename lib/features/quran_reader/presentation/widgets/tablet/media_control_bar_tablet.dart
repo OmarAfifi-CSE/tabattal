@@ -142,35 +142,47 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
           builder: (context, state) {
             final isPlaying = state is AudioPlaying;
             final isLoading = state is AudioLoading;
+            final isEn = Localizations.localeOf(context).languageCode == 'en';
+            final audioBloc = context.read<AudioBloc>();
+            final reciterName = ReciterLocalization.localize(
+              context,
+              audioBloc.currentReciter,
+            );
+            final categoryName = ReciterLocalization.localize(
+              context,
+              audioBloc.currentCategory,
+            );
+
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.multitrack_audio_rounded,
-                      color: AppColors.bronzeIcon,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      ReciterLocalization.localize(
-                        context,
-                        context.read<AudioBloc>().currentReciter,
+                Expanded(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.multitrack_audio_rounded,
+                        color: AppColors.bronzeIcon,
+                        size: 24,
                       ),
-                      textDirection:
-                          Localizations.localeOf(context).languageCode == 'en'
-                          ? TextDirection.ltr
-                          : TextDirection.rtl,
-                      style: AppTextStyles.menuItemText.copyWith(
-                        color: AppColors.inkBrown,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          '$reciterName ($categoryName)',
+                          overflow: TextOverflow.ellipsis,
+                          textDirection:
+                              isEn ? TextDirection.ltr : TextDirection.rtl,
+                          style: AppTextStyles.menuItemText.copyWith(
+                            color: AppColors.inkBrown,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -243,11 +255,13 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
                 builder: (context, state) {
                   final isEn =
                       Localizations.localeOf(context).languageCode == 'en';
+                  final audioBloc = context.read<AudioBloc>();
+                  final reciterName = ReciterLocalization.localize(
+                    context,
+                    audioBloc.currentReciter,
+                  );
                   return Text(
-                    ReciterLocalization.localize(
-                      context,
-                      context.read<AudioBloc>().currentReciter,
-                    ),
+                    reciterName,
                     textAlign: isEn ? TextAlign.left : TextAlign.right,
                     style: AppTextStyles.menuItemText.copyWith(
                       color: AppColors.inkBrown,

@@ -242,146 +242,174 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
         .keys
         .toList();
 
-    return Scaffold(
-      backgroundColor: AppColors.surfaceCream,
-      appBar: AppBar(
+    return Directionality(
+      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+      child: Scaffold(
         backgroundColor: AppColors.surfaceCream,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          AppLocalizations.of(context)!.audioManagerTitle,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-          ),
-        ),
-        // RTL: leading icon is on the right side naturally
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-            sliver: SliverToBoxAdapter(
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                decoration: BoxDecoration(
-                  color: AppColors.cardCream,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.borderLight),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.textPrimary.withValues(alpha: 0.04),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Category Selector
-                    AudioSelectorButton<String>(
-                      icon: Icons.category_rounded,
-                      label: AppLocalizations.of(context)!.audioTypeLabel,
-                      value: _selectedCategory,
-                      items: categories,
-                      itemHeight: 42,
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedCategory = val;
-                          _selectedReciter = AudioDownloadManager
-                              .reciterCategories[val]!
-                              .keys
-                              .first;
-                        });
-                        _initializeProgressTrackers();
-                      },
-                      labelBuilder: (item) =>
-                          ReciterLocalization.localizeByLang(isEn, item),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Reciter Selector
-                    AudioSelectorButton<String>(
-                      icon: Icons.mic_rounded,
-                      label: AppLocalizations.of(context)!.audioReciterLabel,
-                      value: _selectedReciter,
-                      items: reciters,
-                      itemHeight: 42,
-                      maxHeight: 210,
-                      onChanged: (val) => _onReciterChanged(val),
-                      labelBuilder: (item) =>
-                          ReciterLocalization.localizeByLang(isEn, item),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Download All button
-                    SizedBox(
-                      width: MediaQuery.sizeOf(context).width,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accentGold,
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          elevation: 0,
-                        ),
-                        icon: _isDownloadingAll
-                            ? const Icon(
-                                Icons.pause_circle_outline_rounded,
-                                color: Colors.white,
-                              )
-                            : const Icon(
-                                Icons.download_for_offline_rounded,
-                                color: Colors.white,
-                              ),
-                        label: Text(
-                          _isDownloadingAll
-                              ? (isEn ? 'Pause Download' : 'إيقاف التحميل')
-                              : AppLocalizations.of(context)!.audioDownloadAll,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        onPressed: _isLoadingStatus ? null : _downloadAll,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+        appBar: AppBar(
+          backgroundColor: AppColors.surfaceCream,
+          elevation: 0,
+          centerTitle: true,
+          title: Text(
+            AppLocalizations.of(context)!.audioManagerTitle,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
             ),
           ),
-          if (_isLoadingStatus)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Center(
-                  child: CupertinoActivityIndicator(
-                    color: AppColors.accentGold,
-                    radius: 14,
+          automaticallyImplyLeading: false,
+          leading: isEn
+              ? null
+              : IconButton(
+                  icon: Icon(
+                    Icons.arrow_back_rounded,
+                    color: AppColors.textPrimary,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
+          actions: isEn
+              ? [
+                  IconButton(
+                    icon: Icon(
+                      Icons.arrow_forward_rounded,
+                      color: AppColors.textPrimary,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ]
+              : null,
+        ),
+        body: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+              sliver: SliverToBoxAdapter(
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardCream,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.borderLight),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.textPrimary.withValues(alpha: 0.04),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Category Selector
+                      AudioSelectorButton<String>(
+                        icon: Icons.category_rounded,
+                        label: AppLocalizations.of(context)!.audioTypeLabel,
+                        value: _selectedCategory,
+                        items: categories,
+                        itemHeight: 42,
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedCategory = val;
+                            _selectedReciter = AudioDownloadManager
+                                .reciterCategories[val]!
+                                .keys
+                                .first;
+                          });
+                          _initializeProgressTrackers();
+                        },
+                        labelBuilder: (item) =>
+                            ReciterLocalization.localizeByLang(isEn, item),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Reciter Selector
+                      AudioSelectorButton<String>(
+                        icon: Icons.mic_rounded,
+                        label: AppLocalizations.of(context)!.audioReciterLabel,
+                        value: _selectedReciter,
+                        items: reciters,
+                        itemHeight: 42,
+                        maxHeight: 210,
+                        onChanged: (val) => _onReciterChanged(val),
+                        labelBuilder: (item) =>
+                            ReciterLocalization.localizeByLang(isEn, item),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Download All button
+                      SizedBox(
+                        width: MediaQuery.sizeOf(context).width,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.accentGold,
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 0,
+                          ),
+                          icon: _isDownloadingAll
+                              ? const Icon(
+                                  Icons.pause_circle_outline_rounded,
+                                  color: Colors.white,
+                                )
+                              : const Icon(
+                                  Icons.download_for_offline_rounded,
+                                  color: Colors.white,
+                                ),
+                          label: Text(
+                            _isDownloadingAll
+                                ? (isEn ? 'Pause Download' : 'إيقاف التحميل')
+                                : AppLocalizations.of(context)!.audioDownloadAll,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          onPressed: _isLoadingStatus ? null : _downloadAll,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              sliver: SliverList.builder(
-                itemCount: 114,
-                itemBuilder: (context, index) => _buildSurahItem(index + 1),
-              ),
             ),
-        ],
+            if (_isLoadingStatus)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Center(
+                    child: CupertinoActivityIndicator(
+                      color: AppColors.accentGold,
+                      radius: 14,
+                    ),
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                sliver: SliverList.builder(
+                  itemCount: 114,
+                  itemBuilder: (context, index) => _buildSurahItem(index + 1),
+                ),
+              ),
+          ],
+        ),
       ),
     );
+  }
+
+  void _cancelSurahDownload(int surah) {
+    if (_activeCancelTokens.containsKey(surah)) {
+      _activeCancelTokens[surah]?.cancel('User cancelled download');
+      _activeCancelTokens.remove(surah);
+      _activeDownloads.remove(surah);
+      if (mounted) setState(() {});
+    }
   }
 
   Widget _buildSurahItem(int surah) {
@@ -397,80 +425,167 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
         color: AppColors.cardCream,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.borderLight),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textPrimary.withValues(alpha: 0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
-      child: ValueListenableBuilder<double>(
-        valueListenable: notifier,
-        builder: (context, progress, _) {
-          final isDownloaded = progress >= 1.0;
-          final isDownloading = progress >= 0.0 && progress < 1.0;
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
+        child: ValueListenableBuilder<double>(
+          valueListenable: notifier,
+          builder: (context, progress, _) {
+            final isActivelyDownloading = _activeDownloads.contains(surah);
+            final isDownloaded = progress >= 1.0;
+            final isPartiallyDownloaded =
+                progress > 0.0 && progress < 1.0 && !isActivelyDownloading;
 
-          return ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 4,
-            ),
-            leading: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.accentGold.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+            Widget trailingWidget;
+            if (isDownloaded) {
+              trailingWidget = const SizedBox(
+                width: 68,
+                height: 34,
+                child: Center(
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.green,
+                    size: 26,
+                  ),
+                ),
+              );
+            } else if (isActivelyDownloading) {
+              trailingWidget = SizedBox(
+                width: 68,
+                height: 34,
+                child: Center(
+                  child: InkWell(
+                    onTap: () => _cancelSurahDownload(surah),
+                    borderRadius: BorderRadius.circular(17),
+                    child: SizedBox(
+                      width: 34,
+                      height: 34,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            value: progress <= 0.0 ? null : progress,
+                            backgroundColor:
+                                AppColors.accentGold.withValues(alpha: 0.15),
+                            color: AppColors.accentGold,
+                            strokeWidth: 3,
+                          ),
+                          Icon(
+                            Icons.pause_rounded,
+                            size: 15,
+                            color: AppColors.accentGold,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            } else if (isPartiallyDownloaded) {
+              trailingWidget = SizedBox(
+                width: 58,
+                height: 34,
+                child: InkWell(
+                  onTap: () => _downloadSurah(surah),
+                  borderRadius: BorderRadius.circular(17),
+                  child: Container(
+                    width: 68,
+                    height: 34,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.accentGold.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(17),
+                      border: Border.all(
+                        color: AppColors.accentGold.withValues(alpha: 0.4),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${(progress * 100).toInt()}%',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.accentGold,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        Icon(
+                          Icons.download_rounded,
+                          size: 14,
+                          color: AppColors.accentGold,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            } else {
+              trailingWidget = SizedBox(
+                width: 68,
+                height: 34,
+                child: Center(
+                  child: IconButton(
+                    icon: const Icon(Icons.download_rounded),
+                    color: AppColors.accentGold,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => _downloadSurah(surah),
+                  ),
+                ),
+              );
+            }
+
+            return ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 2,
               ),
-              child: Center(
+              minLeadingWidth: 40,
+              leading: Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.accentGold.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 child: Text(
                   '$surah',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: surah >= 100 ? 12 : 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.accentGold,
                   ),
                 ),
               ),
-            ),
-            title: Text(
-              AppLocalizations.of(context)!.surahListItem(surahName),
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+              title: Text(
+                AppLocalizations.of(context)!.surahListItem(surahName),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            trailing: isDownloaded
-                ? const Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.green,
-                    size: 28,
-                  )
-                : isDownloading
-                ? SizedBox(
-                    width: 42,
-                    height: 42,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        CircularProgressIndicator(
-                          value: progress,
-                          backgroundColor: Colors.grey.shade200,
-                          color: AppColors.accentGold,
-                          strokeWidth: 3,
-                        ),
-                        Text(
-                          '${(progress * 100).toInt()}%',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : IconButton(
-                    icon: const Icon(Icons.download_rounded),
-                    color: AppColors.accentGold,
-                    onPressed: () => _downloadSurah(surah),
-                  ),
-          );
-        },
+              trailing: trailingWidget,
+            );
+          },
+        ),
       ),
     );
   }
