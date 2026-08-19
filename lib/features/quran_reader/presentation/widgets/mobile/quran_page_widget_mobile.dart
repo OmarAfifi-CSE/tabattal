@@ -10,7 +10,6 @@ import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
 import '../../../data/models/verse_model.dart';
 import '../../../bloc/quran/quran_bloc.dart';
-import '../../../bloc/quran/quran_event.dart';
 import '../../../bloc/quran/quran_page_cache.dart';
 import '../../../bloc/quran/quran_state.dart';
 import '../../../bloc/audio/audio_bloc.dart';
@@ -114,22 +113,35 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   // Lifecycle
   // ---------------------------------------------------------------------------
 
-  late final QuranBloc _quranBloc;
-
   @override
   void initState() {
     super.initState();
-    _quranBloc = QuranBloc(repository: context.read<QuranRepository>())
-      ..add(LoadPage(widget.pageNumber));
+    final cached = QuranPageCache.get(widget.pageNumber);
+    if (cached == null) {
+      _loadPageDataFallback();
+    }
     // Synchronously initialize font state — eliminates first-frame flash for cached fonts.
     final pageStr = widget.pageNumber.toString().padLeft(3, '0');
     final fontName = 'QCF_P$pageStr';
     _isFontLoaded = FontService.isLoaded(fontName);
-    FontService.loadedFontsNotifier.addListener(_onFontsLoaded);
-    if (!_isFontLoaded) _loadPageFont();
+    if (!_isFontLoaded) {
+      FontService.loadedFontsNotifier.addListener(_onFontsLoaded);
+      _loadPageFont();
+    }
     if (widget.highlightVerseKey != null) {
       _activateBookmarkHighlight(widget.highlightVerseKey!);
     }
+  }
+
+  Future<void> _loadPageDataFallback() async {
+    try {
+      final result = await context.read<QuranRepository>().getLinesByPage(widget.pageNumber);
+      result.fold((_) {}, (lines) {
+        final loaded = QuranLoaded(lines: lines, currentPage: widget.pageNumber);
+        QuranPageCache.put(widget.pageNumber, loaded);
+        if (mounted) setState(() {});
+      });
+    } catch (_) {}
   }
 
   void _onFontsLoaded() {
@@ -137,6 +149,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     final pageStr = widget.pageNumber.toString().padLeft(3, '0');
     final fontName = 'QCF_P$pageStr';
     if (FontService.isLoaded(fontName)) {
+      FontService.loadedFontsNotifier.removeListener(_onFontsLoaded);
       setState(() => _isFontLoaded = true);
     }
   }
@@ -145,7 +158,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   void didUpdateWidget(QuranPageWidgetMobile oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.pageNumber != oldWidget.pageNumber) {
-      _quranBloc.add(LoadPage(widget.pageNumber));
+      final cached = QuranPageCache.get(widget.pageNumber);
+      if (cached == null) _loadPageDataFallback();
       // Synchronously update font state for the new page.
       final pageStr = widget.pageNumber.toString().padLeft(3, '0');
       final loaded = FontService.isLoaded('QCF_P$pageStr');
@@ -168,7 +182,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       recognizer.dispose();
     }
     _wordGestureRecognizers.clear();
-    _quranBloc.close();
     _activeOverlayEntry?.remove();
     _activeOverlayEntry?.dispose();
     _activeOverlayEntry = null;
@@ -350,12 +363,9 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       juzNumber: 1,
     );
 
-    final blocContext = _pageColumnKey.currentContext;
-    if (blocContext == null) return;
-
-    final quranBloc = blocContext.read<QuranBloc>();
-    final audioBloc = blocContext.read<AudioBloc>();
-    final bookmarkBloc = blocContext.read<BookmarkBloc>();
+    final quranBloc = context.read<QuranBloc>();
+    final audioBloc = context.read<AudioBloc>();
+    final bookmarkBloc = context.read<BookmarkBloc>();
 
     _activeOverlayEntry = OverlayEntry(
       builder: (overlayContext) => MultiBlocProvider(
@@ -735,34 +745,18 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     final lines = state.lines;
     if (lines.isEmpty) return const SizedBox();
 
-    if (_cachedLines != lines) {
-      _cachedLines = lines;
-      _lineMap = {for (final line in lines) line.lineNumber: line};
+    _cachedLines = lines;
+    _lineMap = state.lineMap;
+    _verseKeyToIntIdMap.clear();
+    _verseKeyToIntIdMap.addAll(state.verseKeyToIntIdMap);
+    _parsedVerseKeys.clear();
+    _parsedVerseKeys.addAll(state.parsedVerseKeys);
 
-      _verseKeyToIntIdMap.clear();
-      _parsedVerseKeys.clear();
-
-      for (final line in lines) {
-        for (final word in line.words) {
-          final vk = word.verseKey;
-          if (_parsedVerseKeys.containsKey(vk)) continue;
-          final parsed = ArabicTextUtils.parseVerseKey(vk);
-          if (parsed != null) {
-            _parsedVerseKeys[vk] = parsed;
-            _verseKeyToIntIdMap[vk] = parsed.surah * 1000 + parsed.ayah;
-          }
-        }
-      }
+    if (_textLineCount == 0 && _surahHeaderCount == 0 && _spacerCount == 0) {
       _calculateLineTypeCounts();
     }
 
-    String firstVerseKey = '1:1';
-    for (final line in lines) {
-      if (line.words.isNotEmpty) {
-        firstVerseKey = line.words.first.verseKey;
-        break;
-      }
-    }
+    final firstVerseKey = state.firstVerseKey;
 
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     final surahNumber = _parsedVerseKeys[firstVerseKey]?.surah ?? 1;
@@ -932,72 +926,33 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   // Build
   // ---------------------------------------------------------------------------
 
-  Widget _buildEmptyFrame() => QuranPageFrameMobile(
-    pageNumber: widget.pageNumber,
-    onNavigateToPage: widget.onNavigateToPage,
-    surahName: '',
-    juzName: '',
-    child: const SizedBox(),
-  );
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return BlocProvider.value(
-      value: _quranBloc,
-      child: BlocBuilder<QuranBloc, QuranState>(
-        buildWhen: (_, current) =>
-            current is QuranLoading ||
-            current is QuranLoaded ||
-            current is QuranError ||
-            current is QuranInitial,
-        builder: (context, state) {
-          final mushafTheme = context
-              .watch<SettingsBloc>()
-              .state
-              .effectiveMushafTheme;
+    final mushafTheme = context
+        .watch<SettingsBloc>()
+        .state
+        .effectiveMushafTheme;
 
-          // Optimistically serve cached data on QuranInitial to avoid any
-          // single-frame spinner while the event loop processes LoadPage.
-          final QuranState displayState = state is QuranInitial
-              ? (QuranPageCache.get(widget.pageNumber) ?? state)
-              : state;
+    final displayState = QuranPageCache.get(widget.pageNumber);
+    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+    final isFontReady = _isFontLoaded || FontService.isLoaded('QCF_P$pageStr');
 
-          final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-          final isFontReady = _isFontLoaded || FontService.isLoaded('QCF_P$pageStr');
+    if (displayState == null || !isFontReady) {
+      return QuranPageFrameMobile(
+        pageNumber: widget.pageNumber,
+        onNavigateToPage: widget.onNavigateToPage,
+        surahName: '',
+        juzName: '',
+        child: Center(
+          child: CupertinoActivityIndicator(
+            color: mushafTheme.goldColor,
+            radius: 14.r,
+          ),
+        ),
+      );
+    }
 
-          if (displayState is QuranLoading || !isFontReady) {
-            return QuranPageFrameMobile(
-              pageNumber: widget.pageNumber,
-              onNavigateToPage: widget.onNavigateToPage,
-              surahName: '',
-              juzName: '',
-              child: Center(
-                child: CupertinoActivityIndicator(
-                  color: mushafTheme.goldColor,
-                  radius: 14.r,
-                ),
-              ),
-            );
-          }
-          if (displayState is QuranError) {
-            return QuranPageFrameMobile(
-              pageNumber: widget.pageNumber,
-              onNavigateToPage: widget.onNavigateToPage,
-              surahName: '',
-              juzName: '',
-              child: Center(
-                child: Text(
-                  displayState.message,
-                  style: TextStyle(color: Colors.red, fontSize: 14.sp),
-                ),
-              ),
-            );
-          }
-          if (displayState is QuranLoaded) return _buildLoadedPage(displayState, mushafTheme);
-          return _buildEmptyFrame();
-        },
-      ),
-    );
+    return _buildLoadedPage(displayState, mushafTheme);
   }
 }
