@@ -81,6 +81,7 @@ class VerseActionMenuWeb extends StatefulWidget {
   final Rect? verseRect;
   final VerseModel verse;
   final GlobalKey? pageRepaintKey;
+  final int? pageNumber;
 
   const VerseActionMenuWeb({
     super.key,
@@ -90,6 +91,7 @@ class VerseActionMenuWeb extends StatefulWidget {
     this.verseRect,
     required this.verse,
     this.pageRepaintKey,
+    this.pageNumber,
   });
 
   @override
@@ -1043,6 +1045,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                             tafsirText: tafsirText,
                             translationText: translationText,
                             pageRepaintKey: widget.pageRepaintKey,
+                            pageNumber: widget.pageNumber,
                           );
                         },
                       ),

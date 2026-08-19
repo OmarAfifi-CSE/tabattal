@@ -82,6 +82,7 @@ class VerseActionMenuDesktop extends StatefulWidget {
   final Rect? verseRect;
   final VerseModel verse;
   final GlobalKey? pageRepaintKey;
+  final int? pageNumber;
 
   const VerseActionMenuDesktop({
     super.key,
@@ -91,6 +92,7 @@ class VerseActionMenuDesktop extends StatefulWidget {
     this.verseRect,
     required this.verse,
     this.pageRepaintKey,
+    this.pageNumber,
   });
 
   @override
@@ -1035,6 +1037,7 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                             tafsirText: tafsirText,
                             translationText: translationText,
                             pageRepaintKey: widget.pageRepaintKey,
+                            pageNumber: widget.pageNumber,
                           );
                         },
                       ),

@@ -343,6 +343,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
           verseRect: verseRect,
           verse: partialVerseForMenu,
           pageRepaintKey: _pageRepaintKey,
+          pageNumber: widget.pageNumber,
           onDismiss: ({bool keepHighlight = false}) =>
               _removeVerseMenu(keepHighlight: keepHighlight),
           onClearHighlight: () {
@@ -508,11 +509,13 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
     required AudioState audioState,
     required MushafTheme mushafTheme,
     required HifzState hifzState,
+    required TextStyle wordTextStyle,
+    required TextStyle transparentWordStyle,
+    required BoxDecoration maskDecoration,
+    required EdgeInsets maskMargin,
   }) {
-    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-    final customFontFamily = 'QCF_P$pageStr';
     final displayText = word.code;
-    final wordKey = '${word.verseKey}:${word.id}';
+    final wordKey = word.wordKey;
 
     bool isWordMasked = false;
     if (hifzState.isHifzModeActive && word.charTypeName != 'end') {
@@ -545,12 +548,6 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
       }
     }
 
-    final wordTextStyle = AppTextStyles.quranText.copyWith(
-      fontFamily: customFontFamily,
-      fontSize: 42,
-      height: 1.2,
-    );
-
     if (isWordMasked) {
       return Listener(
         behavior: HitTestBehavior.translucent,
@@ -560,19 +557,20 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
           _wordTapStart = null;
         },
         onPointerCancel: (_) => _wordTapStart = null,
-        child: Container(
-          margin: EdgeInsets.zero,
-          padding: EdgeInsets.zero,
-          decoration: BoxDecoration(
-            color: mushafTheme.textColor.withValues(alpha: 0.18),
-            borderRadius: BorderRadius.circular(4.r),
-          ),
-          child: Text(
-            displayText,
-            style: wordTextStyle.copyWith(
-              color: Colors.transparent,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned.fill(
+              child: Container(
+                margin: maskMargin,
+                decoration: maskDecoration,
+              ),
             ),
-          ),
+            Text(
+              displayText,
+              style: transparentWordStyle,
+            ),
+          ],
         ),
       );
     }
@@ -647,6 +645,22 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
     final isFullVerseMode = hifzState.isHifzModeActive &&
         hifzState.maskingType == HifzMaskingType.fullVerse;
 
+    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+    final customFontFamily = 'QCF_P$pageStr';
+    final wordTextStyle = AppTextStyles.quranText.copyWith(
+      fontFamily: customFontFamily,
+      fontSize: 42,
+      height: 1.2,
+    );
+    final transparentWordStyle = wordTextStyle.copyWith(
+      color: Colors.transparent,
+    );
+    final maskDecoration = BoxDecoration(
+      color: mushafTheme.textColor.withValues(alpha: 0.18),
+      borderRadius: BorderRadius.circular(4),
+    );
+    const maskMargin = EdgeInsets.symmetric(horizontal: 2.0);
+
     int i = 0;
     while (i < lineWords.length) {
       final word = lineWords[i];
@@ -667,21 +681,18 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
                 onTap: () {},
                 onLongPress: () {},
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.0.w),
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: Container(
                     margin: EdgeInsets.zero,
                     padding: EdgeInsets.zero,
-                    decoration: BoxDecoration(
-                      color: mushafTheme.textColor.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    child: Text(
+                    decoration: maskDecoration,
+                    child: const Text(
                       '1 2 3',
                       style: TextStyle(
                         fontFamily: 'QCF_BSML',
-                        fontSize: 26.sp,
+                        fontSize: 26,
                         color: Colors.transparent,
-                        height: 1.0.h,
+                        height: 1.0,
                       ),
                     ),
                   ),
@@ -786,14 +797,6 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
             i++;
           }
 
-          final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-          final customFontFamily = 'QCF_P$pageStr';
-          final wordTextStyle = AppTextStyles.quranText.copyWith(
-            fontFamily: customFontFamily,
-            fontSize: 42,
-            height: 1.2,
-          );
-
           wordWidgets.add(
             GestureDetector(
               onTapUp: (_) {
@@ -806,10 +809,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
               child: Container(
                 margin: EdgeInsets.zero,
                 padding: EdgeInsets.zero,
-                decoration: BoxDecoration(
-                  color: mushafTheme.textColor.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
+                decoration: maskDecoration,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   textDirection: TextDirection.rtl,
@@ -817,9 +817,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
                     final displayText = w.code;
                     return Text(
                       displayText,
-                      style: wordTextStyle.copyWith(
-                        color: Colors.transparent,
-                      ),
+                      style: transparentWordStyle,
                     );
                   }).toList(),
                 ),
@@ -846,6 +844,10 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
           audioState: audioState,
           mushafTheme: mushafTheme,
           hifzState: hifzState,
+          wordTextStyle: wordTextStyle,
+          transparentWordStyle: transparentWordStyle,
+          maskDecoration: maskDecoration,
+          maskMargin: maskMargin,
         ),
       );
       i++;
@@ -935,7 +937,32 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
             buildWhen: (prev, curr) => prev != curr,
             builder: (context, bookmarkState) {
               return BlocBuilder<HifzBloc, HifzState>(
-                buildWhen: (prev, curr) => prev != curr,
+                buildWhen: (prev, curr) {
+                  if (prev.isHifzModeActive != curr.isHifzModeActive) return true;
+                  if (!curr.isHifzModeActive && !prev.isHifzModeActive) return false;
+                  if (prev.maskingType != curr.maskingType) return true;
+                  if (prev.revealedVerseKeys != curr.revealedVerseKeys) {
+                    final diff = prev.revealedVerseKeys
+                        .difference(curr.revealedVerseKeys)
+                        .union(curr.revealedVerseKeys.difference(prev.revealedVerseKeys));
+                    if (diff.any((k) => _parsedVerseKeys.containsKey(k))) return true;
+                  }
+                  if (prev.revealedWordKeys != curr.revealedWordKeys) {
+                    final diff = prev.revealedWordKeys
+                        .difference(curr.revealedWordKeys)
+                        .union(curr.revealedWordKeys.difference(prev.revealedWordKeys));
+                    if (diff.any((k) {
+                      final colonIdx = k.indexOf(':');
+                      final vKey = colonIdx != -1 && k.indexOf(':', colonIdx + 1) != -1
+                          ? k.substring(0, k.lastIndexOf(':'))
+                          : k;
+                      return _parsedVerseKeys.containsKey(vKey);
+                    })) {
+                      return true;
+                    }
+                  }
+                  return false;
+                },
                 builder: (context, hifzState) {
                   return BlocBuilder<AudioBloc, AudioState>(
                     buildWhen: (prev, curr) {

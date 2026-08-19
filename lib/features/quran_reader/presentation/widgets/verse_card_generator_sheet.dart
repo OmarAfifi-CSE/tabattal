@@ -39,6 +39,7 @@ void showVerseCardGeneratorModal(
   String? tafsirText,
   String? translationText,
   GlobalKey? pageRepaintKey,
+  int? pageNumber,
 }) {
   const isWeb = kIsWeb;
   final isWide = MediaQuery.sizeOf(context).width > 600;
@@ -55,6 +56,7 @@ void showVerseCardGeneratorModal(
             tafsirText: tafsirText,
             translationText: translationText,
             pageRepaintKey: pageRepaintKey,
+            pageNumber: pageNumber,
           ),
         ),
       ),
@@ -75,6 +77,7 @@ void showVerseCardGeneratorModal(
           tafsirText: tafsirText,
           translationText: translationText,
           pageRepaintKey: pageRepaintKey,
+          pageNumber: pageNumber,
         ),
       ),
     );
@@ -226,6 +229,7 @@ class VerseCardGeneratorSheet extends StatefulWidget {
   final String? tafsirText;
   final String? translationText;
   final GlobalKey? pageRepaintKey;
+  final int? pageNumber;
 
   const VerseCardGeneratorSheet({
     super.key,
@@ -233,6 +237,7 @@ class VerseCardGeneratorSheet extends StatefulWidget {
     this.tafsirText,
     this.translationText,
     this.pageRepaintKey,
+    this.pageNumber,
   });
 
   @override
@@ -254,11 +259,11 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   bool _isSharing = false;
   bool _isSaving = false;
   String _verseTextUthmani = '';
-  bool _isLoadingText = true;
+  bool _isLoadingText = false;
   String _tafsirText = '';
   String _translationText = '';
-  bool _isLoadingTafsir = true;
-  bool _isLoadingTranslation = true;
+  bool _isLoadingTafsir = false;
+  bool _isLoadingTranslation = false;
 
   // Full page snapshot (captured from live QuranPageWidgetMobile)
   Uint8List? _pageSnapshot;
@@ -278,6 +283,34 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
     _startAyah = widget.verse.verseNumber;
     _endAyah = widget.verse.verseNumber;
     _totalAyahsInSurah = QuranMetadata.getVerseCountForSurah(_surahNumber);
+
+    // 1. Synchronously pre-populate verse text and Arabic numerals from in-memory verse
+    final cleanVerseText = _cleanTextForSharing(widget.verse.textUthmani);
+    final arabicAyahNum = _toArabicDigits(widget.verse.verseNumber);
+    _verseTextUthmani = '$cleanVerseText ﴿$arabicAyahNum﴾';
+
+    // 2. Synchronously pre-populate QCF Page Font spans if page number & words are available
+    final pageNum = widget.pageNumber;
+    if (pageNum != null && widget.verse.words.isNotEmpty) {
+      final pageStr = pageNum.toString().padLeft(3, '0');
+      final fontFamily = 'QCF_P$pageStr';
+      final codeText = widget.verse.words
+          .map((w) => w.code.isNotEmpty ? w.code : w.textUthmani)
+          .join(' ');
+      _qcfSpans = [
+        TextSpan(
+          text: codeText,
+          style: TextStyle(fontFamily: fontFamily),
+        ),
+      ];
+      _isLoadingText = false;
+    } else {
+      _isLoadingText = false;
+      // Load fonts from database in the background without blocking the UI
+      _loadVerseTextAndFont(null);
+    }
+
+    // 3. Synchronously pre-populate Tafsir & Translation if already present in state
     if (widget.tafsirText != null && widget.tafsirText!.trim().isNotEmpty) {
       _tafsirText = ArabicTextUtils.cleanTafsirOrHtml(widget.tafsirText!.trim());
       _includeTafsir = true;
@@ -286,8 +319,6 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
       _translationText = ArabicTextUtils.cleanTafsirOrHtml(widget.translationText!.trim());
       _includeTranslation = true;
     }
-    _loadAllVerseData();
-    _loadFullPageData();
   }
 
   int _getInitialThemeIndex() {
@@ -513,17 +544,22 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   Future<void> _loadAllVerseData() async {
     setState(() {
       _isLoadingText = true;
-      _isLoadingTafsir = true;
-      _isLoadingTranslation = true;
+      if (_includeTafsir) _isLoadingTafsir = true;
+      if (_includeTranslation) _isLoadingTranslation = true;
     });
 
     try {
       final db = await DatabaseHelper().database;
-      await Future.wait([
+      final futures = <Future>[
         _loadVerseTextAndFont(db),
-        _loadTafsirForRange(db),
-        _loadTranslationForRange(db),
-      ]);
+      ];
+      if (_includeTafsir) {
+        futures.add(_loadTafsirForRange(db));
+      }
+      if (_includeTranslation) {
+        futures.add(_loadTranslationForRange(db));
+      }
+      await Future.wait(futures);
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -535,8 +571,9 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
     }
   }
 
-  Future<void> _loadVerseTextAndFont(Database db) async {
+  Future<void> _loadVerseTextAndFont(Database? database) async {
     try {
+      final db = database ?? await DatabaseHelper().database;
       final verseKeys = List.generate(
         _endAyah - _startAyah + 1,
         (i) => '$_surahNumber:${_startAyah + i}',
@@ -638,8 +675,6 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _qcfSpans = [];
-          _verseTextUthmani = '${_cleanTextForSharing(widget.verse.textUthmani)} ﴿${_toArabicDigits(widget.verse.verseNumber)}﴾';
           _isLoadingText = false;
         });
       }
@@ -648,11 +683,17 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
 
   Future<void> _loadTafsirForRange(Database db) async {
     try {
+      final verseKeys = List.generate(
+        _endAyah - _startAyah + 1,
+        (i) => '$_surahNumber:${_startAyah + i}',
+      );
+      final placeholders = List.filled(verseKeys.length, '?').join(',');
+
       final List<Map<String, dynamic>> maps = await db.query(
         'tafsir',
-        where: 'verse_key LIKE ? AND resource_id = ?',
-        whereArgs: ['$_surahNumber:%', 16],
-        orderBy: 'CAST(substr(verse_key, instr(verse_key, ":") + 1) AS INTEGER) ASC',
+        columns: ['verse_key', 'text'],
+        where: 'verse_key IN ($placeholders) AND resource_id = ?',
+        whereArgs: [...verseKeys, 16],
       );
 
       if (maps.isEmpty) {
@@ -686,13 +727,6 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
         String verseTafsir = '';
         if (tafsirMap.containsKey(ayah)) {
           verseTafsir = tafsirMap[ayah]!;
-        } else {
-          for (int back = ayah - 1; back >= 1 && back >= ayah - 20; back--) {
-            if (tafsirMap.containsKey(back)) {
-              verseTafsir = tafsirMap[back]!;
-              break;
-            }
-          }
         }
 
         if (verseTafsir.isNotEmpty && verseTafsir != lastGroupText) {
@@ -723,11 +757,17 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
 
   Future<void> _loadTranslationForRange(Database db) async {
     try {
+      final verseKeys = List.generate(
+        _endAyah - _startAyah + 1,
+        (i) => '$_surahNumber:${_startAyah + i}',
+      );
+      final placeholders = List.filled(verseKeys.length, '?').join(',');
+
       final List<Map<String, dynamic>> maps = await db.query(
         'translation',
-        where: 'verse_key LIKE ? AND resource_id = ?',
-        whereArgs: ['$_surahNumber:%', 20],
-        orderBy: 'CAST(substr(verse_key, instr(verse_key, ":") + 1) AS INTEGER) ASC',
+        columns: ['verse_key', 'text'],
+        where: 'verse_key IN ($placeholders) AND resource_id = ?',
+        whereArgs: [...verseKeys, 20],
       );
 
       if (maps.isEmpty) {
@@ -789,24 +829,39 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   Future<void> _loadFullPageData() async {
     if (_isCapturingSnapshot) return;
     setState(() => _isCapturingSnapshot = true);
+
     try {
-      // Give the bottom sheet a frame to settle before capturing
-      await Future.delayed(const Duration(milliseconds: 80));
       final key = widget.pageRepaintKey ?? QuranPageRepaintRegistry.currentPageKey;
       if (key == null) {
-        setState(() => _isCapturingSnapshot = false);
+        if (mounted) setState(() => _isCapturingSnapshot = false);
         return;
       }
-      final boundary = key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-      if (boundary == null) {
-        setState(() => _isCapturingSnapshot = false);
-        return;
+
+      Uint8List? capturedBytes;
+      for (int attempt = 0; attempt < 3; attempt++) {
+        await Future.delayed(Duration(milliseconds: 60 + (attempt * 60)));
+        final boundary = key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+        if (boundary == null) continue;
+
+        if (boundary.debugNeedsPaint) {
+          await WidgetsBinding.instance.endOfFrame;
+        }
+
+        try {
+          final image = await boundary.toImage(pixelRatio: 3.0);
+          final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+          if (byteData != null) {
+            capturedBytes = byteData.buffer.asUint8List();
+            break;
+          }
+        } catch (_) {
+          // Retry on next frame
+        }
       }
-      final image = await boundary.toImage(pixelRatio: 3.0);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+
       if (mounted) {
         setState(() {
-          _pageSnapshot = byteData?.buffer.asUint8List();
+          _pageSnapshot = capturedBytes;
           _isCapturingSnapshot = false;
         });
       }
@@ -1082,35 +1137,39 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Quran Text rendered using QCF Page Fonts inside app
-          _isLoadingText
-              ? Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16.h),
-                  child: CupertinoActivityIndicator(
-                    color: theme.accentColor,
-                    radius: 12.r,
-                  ),
-                )
-              : Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: Text.rich(
-                    TextSpan(
-                      style: _getDynamicVerseTextStyle(
-                        hasQcfFont: _qcfSpans.isNotEmpty,
-                        verseText: _verseTextUthmani,
-                        theme: theme,
-                      ),
-                      children: _qcfSpans.isNotEmpty
-                          ? _qcfSpans
-                          : [
-                              TextSpan(
-                                text: '( $_verseTextUthmani )',
-                                style: const TextStyle(fontFamily: 'Amiri'),
-                              ),
-                            ],
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            child: _isLoadingText && _verseTextUthmani.isEmpty
+                ? Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    child: CupertinoActivityIndicator(
+                      color: theme.accentColor,
+                      radius: 12.r,
                     ),
-                    textAlign: TextAlign.center,
+                  )
+                : Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Text.rich(
+                      TextSpan(
+                        style: _getDynamicVerseTextStyle(
+                          hasQcfFont: _qcfSpans.isNotEmpty,
+                          verseText: _verseTextUthmani,
+                          theme: theme,
+                        ),
+                        children: _qcfSpans.isNotEmpty
+                            ? _qcfSpans
+                            : [
+                                TextSpan(
+                                  text: '( $_verseTextUthmani )',
+                                  style: const TextStyle(fontFamily: 'Amiri'),
+                                ),
+                              ],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
+          ),
 
           // Tafsir section in text preview
           if (_includeTafsir) ...[
@@ -1287,7 +1346,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // ── The exact Quran Page Screenshot with safe margins
-          if (_isCapturingSnapshot || _pageSnapshot == null)
+          if (_isCapturingSnapshot)
             Container(
               height: 380.h,
               alignment: Alignment.center,
@@ -1296,11 +1355,41 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                 radius: 14.r,
               ),
             )
-          else
+          else if (_pageSnapshot != null)
             Image.memory(
               _pageSnapshot!,
               fit: BoxFit.fitWidth,
               width: MediaQuery.sizeOf(context).width,
+            )
+          else
+            Container(
+              height: 200.h,
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.broken_image_rounded,
+                    color: theme.accentColor.withValues(alpha: 0.6),
+                    size: 36.r,
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'تعذر التقاط صورة الصفحة',
+                    style: TextStyle(
+                      fontFamily: 'Amiri',
+                      fontSize: 13.sp,
+                      color: theme.primaryTextColor,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  TextButton.icon(
+                    onPressed: _loadFullPageData,
+                    icon: const Icon(Icons.refresh_rounded, size: 16),
+                    label: const Text('إعادة المحاولة'),
+                  ),
+                ],
+              ),
             ),
 
           SizedBox(height: 12.h),
@@ -1730,35 +1819,39 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
             SizedBox(height: kIsWeb ? 18 : 14.h),
 
             // Quran Verse Text rendered using dynamic typography scaling & QCF font
-            _isLoadingText
-                ? Padding(
-                    padding: EdgeInsets.symmetric(vertical: kIsWeb ? 20 : 16.h),
-                    child: CupertinoActivityIndicator(
-                      color: theme.accentColor,
-                      radius: 12.r,
-                    ),
-                  )
-                : Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: Text.rich(
-                      TextSpan(
-                        style: _getDynamicVerseTextStyle(
-                          hasQcfFont: _qcfSpans.isNotEmpty,
-                          verseText: _verseTextUthmani,
-                          theme: theme,
-                        ),
-                        children: _qcfSpans.isNotEmpty
-                            ? _qcfSpans
-                            : [
-                                TextSpan(
-                                  text: '﴿ $_verseTextUthmani ﴾',
-                                  style: const TextStyle(fontFamily: 'Amiri'),
-                                ),
-                              ],
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              child: _isLoadingText && _verseTextUthmani.isEmpty
+                  ? Padding(
+                      padding: EdgeInsets.symmetric(vertical: kIsWeb ? 20 : 16.h),
+                      child: CupertinoActivityIndicator(
+                        color: theme.accentColor,
+                        radius: 12.r,
                       ),
-                      textAlign: TextAlign.center,
+                    )
+                  : Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: Text.rich(
+                        TextSpan(
+                          style: _getDynamicVerseTextStyle(
+                            hasQcfFont: _qcfSpans.isNotEmpty,
+                            verseText: _verseTextUthmani,
+                            theme: theme,
+                          ),
+                          children: _qcfSpans.isNotEmpty
+                              ? _qcfSpans
+                              : [
+                                  TextSpan(
+                                    text: '﴿ $_verseTextUthmani ﴾',
+                                    style: const TextStyle(fontFamily: 'Amiri'),
+                                  ),
+                                ],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
+            ),
 
             SizedBox(height: kIsWeb ? 16 : 14.h),
 
@@ -2384,7 +2477,12 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                     Switch(
                       activeTrackColor: AppColors.accentGold,
                       value: _includeTafsir,
-                      onChanged: (val) => setState(() => _includeTafsir = val),
+                      onChanged: (val) {
+                        setState(() => _includeTafsir = val);
+                        if (val && _tafsirText.isEmpty) {
+                          DatabaseHelper().database.then((db) => _loadTafsirForRange(db));
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -2417,7 +2515,12 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                     Switch(
                       activeTrackColor: AppColors.accentGold,
                       value: _includeTranslation,
-                      onChanged: (val) => setState(() => _includeTranslation = val),
+                      onChanged: (val) {
+                        setState(() => _includeTranslation = val);
+                        if (val && _translationText.isEmpty) {
+                          DatabaseHelper().database.then((db) => _loadTranslationForRange(db));
+                        }
+                      },
                     ),
                   ],
                 ),

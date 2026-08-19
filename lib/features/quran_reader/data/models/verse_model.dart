@@ -18,6 +18,9 @@ class WordModel {
   /// Primary glyph code to display from QCF V2
   String get code => codeV2.isNotEmpty ? codeV2 : textUthmani;
 
+  /// Cached unique key for the word in format "surah:ayah:wordIndex"
+  String get wordKey => '$verseKey:$id';
+
   factory WordModel.fromJson(Map<String, dynamic> json) {
     return WordModel(
       id: json['id'] as int? ?? 0,

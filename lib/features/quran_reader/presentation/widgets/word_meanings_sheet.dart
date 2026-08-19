@@ -172,9 +172,11 @@ class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
                       ),
                     ),
                     child: Text(
-                      '$surahName : ${ayahNumber.toString().toArabicDigits}',
+                      isArabic
+                          ? 'سورة $surahName : ${ayahNumber.toString().toArabicDigits}'
+                          : 'Surah $surahName : $ayahNumber',
                       style: TextStyle(
-                        fontFamily: 'Amiri',
+                        fontFamily: isArabic ? 'Amiri' : null,
                         fontSize: 14.sp,
                         fontWeight: FontWeight.bold,
                         color: AppColors.verseMarkerGold,
