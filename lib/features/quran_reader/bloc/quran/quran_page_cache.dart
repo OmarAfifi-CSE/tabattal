@@ -6,10 +6,12 @@ import 'quran_state.dart';
 class QuranPageCache {
   QuranPageCache._();
 
-  static const int _maxSize = 30;
+  static const int _maxSize = 604;
 
   static final Map<int, QuranLoaded> _cache = {};
   static final List<int> _lruOrder = [];
+
+  static bool get isFullyLoaded => _cache.length >= 604;
 
   static QuranLoaded? get(int pageNumber) {
     final state = _cache[pageNumber];

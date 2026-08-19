@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
@@ -42,10 +43,13 @@ void main() async {
     ]);
   }
 
-  // Preload and decompress Quran font zip archives in background isolate immediately
-  FontService.preloadArchivesInBackground();
+  // Preload and register ALL 604 Quran fonts in Flutter engine immediately
+  unawaited(FontService.preloadAllFonts());
 
   final container = await configureDependencies();
+
+  // Asynchronously preload all 604 Quran pages from SQLite into RAM
+  unawaited(container.localDataSource.preloadAllPages());
 
   runApp(TabattalApp(container: container));
 }

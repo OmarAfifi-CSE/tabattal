@@ -14,6 +14,7 @@ import '../../data/models/translation_model.dart';
 import '../../data/models/search_verse_model.dart';
 
 abstract class QuranRepository {
+  Future<void> preloadAllPages();
   Future<Either<Failure, List<LineData>>> getLinesByPage(int pageNumber);
   Future<Either<Failure, TafsirModel>> getTafsir(
     String verseKey, {
@@ -57,6 +58,9 @@ class QuranRepositoryImpl implements QuranRepository {
     required this.remoteDataSource,
     required this.tafsirDownloadService,
   });
+
+  @override
+  Future<void> preloadAllPages() => localDataSource.preloadAllPages();
 
   Future<Either<Failure, T>> _execute<T>(Future<T> Function() action) async {
     try {

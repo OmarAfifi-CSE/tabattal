@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:isolate';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -10,13 +11,47 @@ class FontService {
   static final Map<int, Map<String, Uint8List>> _extractedPartFonts = {};
   static final Map<int, Future<void>> _initFutures = {};
 
+  /// Preloads, decompresses, and registers ALL 604 Quran fonts into the Flutter engine.
+  /// Runs immediately at startup in background worker isolates so every page is 100% in RAM.
+  static Future<void> preloadAllFonts() async {
+    for (int part = 1; part <= 3; part++) {
+      if (!_extractedPartFonts.containsKey(part)) {
+        await _initArchive(part);
+      }
+
+      final fontMap = _extractedPartFonts[part];
+      if (fontMap == null) continue;
+
+      for (final entry in fontMap.entries) {
+        final fontName = entry.key;
+        if (_loadedFonts.contains(fontName)) continue;
+        final fontBytes = entry.value;
+
+        try {
+          final fontLoader = FontLoader(fontName);
+          fontLoader.addFont(
+            Future.value(
+              ByteData.view(
+                fontBytes.buffer,
+                fontBytes.offsetInBytes,
+                fontBytes.lengthInBytes,
+              ),
+            ),
+          );
+          await fontLoader.load();
+          _loadedFonts.add(fontName);
+        } catch (e) {
+          debugPrint("Failed to register font $fontName: $e");
+        }
+      }
+      loadedFontsNotifier.value = Set<String>.unmodifiable(_loadedFonts);
+    }
+  }
+
   /// Preloads and extracts all font archives in background worker isolates.
   /// Runs asynchronously at startup so rootBundle disk loading never blocks active scrolling.
   static void preloadArchivesInBackground() {
-    _initArchive(1);
-    // Stagger subsequent parts slightly to avoid background memory contention
-    Future.delayed(const Duration(milliseconds: 500), () => _initArchive(2));
-    Future.delayed(const Duration(seconds: 1), () => _initArchive(3));
+    unawaited(preloadAllFonts());
   }
 
   /// Reactive notifier that updates whenever a new QCF font is loaded into the Flutter engine.
@@ -121,5 +156,16 @@ class FontService {
     _loadingTasks[fontName] = loadTask;
     await loadTask;
     _loadingTasks.remove(fontName);
+  }
+
+  /// Concurrently preloads and registers fonts for pages within [window] of [currentPage].
+  static Future<void> preloadSurroundingFonts(
+    int currentPage, {
+    int window = 5,
+  }) async {
+    final start = (currentPage - window).clamp(1, 604);
+    final end = (currentPage + window).clamp(1, 604);
+    final pages = [for (int p = start; p <= end; p++) p];
+    await Future.wait(pages.map((p) => loadFontForPage(p)));
   }
 }

@@ -17,9 +17,9 @@ performance:
   track_layouts: true
   track_paints: true
 
-  # Include both project-level and Flutter engine/framework traces
+  # Focus exclusively on project-created widgets to filter out framework noise
   include_user_created_widgets: true
-  include_framework_widgets: true
+  include_framework_widgets: false
   include_engine_traces: true
 
 inspector:

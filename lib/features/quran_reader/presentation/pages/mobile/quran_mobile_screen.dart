@@ -6,7 +6,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../widgets/mobile/quran_page_widget_mobile.dart';
-import '../../widgets/quran_glyph_prewarmer.dart';
 import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_state.dart';
 import '../../widgets/mobile/media_control_bar_mobile.dart';
@@ -48,11 +47,6 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
     _pageController = PageController(initialPage: _currentPage - 1);
     _prefetchAdjacentPages(_currentPage);
 
-    // Only fire setState once the page animation is fully settled at an
-    // integer position (finger lifted + snap complete). This keeps the
-    // swipe animation completely rebuild-free — zero jank.
-    _pageController.addListener(_onPageScroll);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         UpdateService.checkForUpdates(context);
@@ -60,25 +54,10 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
     });
   }
 
-  void _onPageScroll() {
-    final pos = _pageController.page;
-    if (pos == null) return;
-    // Fire only when fully settled at an exact integer position.
-    if (pos == pos.roundToDouble()) {
-      final settled = pos.round() + 1;
-      if (settled != _currentPage && mounted) {
-        setState(() => _currentPage = settled);
-        context.read<AudioPreferencesService>().saveLastReadPage(_currentPage);
-        _prefetchAdjacentPages(_currentPage);
-      }
-    }
-  }
-
   Timer? _prefetchTimer;
 
   @override
   void dispose() {
-    _pageController.removeListener(_onPageScroll);
     _prefetchTimer?.cancel();
     _pageController.dispose();
     super.dispose();
@@ -118,6 +97,10 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
   Future<void> _prefetchNeighbors(int page) async {
     if (!mounted) return;
     final repository = context.read<QuranRepository>();
+
+    // Preload surrounding font window in parallel (6 pages forward & backward)
+    unawaited(FontService.preloadSurroundingFonts(page, window: 6));
+
     final neighbors = [
       page + 1,
       page - 1,
@@ -125,25 +108,22 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
       page - 2,
     ];
 
-    for (final neighbor in neighbors) {
-      if (!mounted) return;
-      if (neighbor >= 1 && neighbor <= QuranConstants.totalPages) {
-        final fontName = 'QCF_P${neighbor.toString().padLeft(3, '0')}';
-        if (!FontService.isLoaded(fontName)) {
-          await FontService.loadFontForPage(neighbor);
-        }
+    await Future.wait(
+      neighbors.map((neighbor) async {
         if (!mounted) return;
-        if (QuranPageCache.get(neighbor) == null) {
-          final result = await repository.getLinesByPage(neighbor);
-          result.fold((_) {}, (lines) {
-            QuranPageCache.put(
-              neighbor,
-              QuranLoaded(lines: lines, currentPage: neighbor),
-            );
-          });
+        if (neighbor >= 1 && neighbor <= QuranConstants.totalPages) {
+          if (QuranPageCache.get(neighbor) == null) {
+            final result = await repository.getLinesByPage(neighbor);
+            result.fold((_) {}, (lines) {
+              QuranPageCache.put(
+                neighbor,
+                QuranLoaded(lines: lines, currentPage: neighbor),
+              );
+            });
+          }
         }
-      }
-    }
+      }),
+    );
   }
 
   void _handleAudioStateChange(BuildContext context, AudioState state) {
@@ -237,18 +217,6 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
             listener: _handleAudioStateChange,
             child: Stack(
               children: [
-                if (_currentPage < QuranConstants.totalPages)
-                  Positioned(
-                    left: -50,
-                    top: -50,
-                    child: QuranGlyphPrewarmer(pageNumber: _currentPage + 1),
-                  ),
-                if (_currentPage > 1)
-                  Positioned(
-                    left: -50,
-                    top: -50,
-                    child: QuranGlyphPrewarmer(pageNumber: _currentPage - 1),
-                  ),
                 BlocBuilder<AudioBloc, AudioState>(
                   buildWhen: (previous, current) {
                     final prevVisible =
@@ -285,6 +253,14 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                           itemCount: QuranConstants.totalPages,
                           scrollDirection: settingsState.scrollDirection,
                           reverse: false,
+                          onPageChanged: (index) {
+                            final page = index + 1;
+                            if (_currentPage != page) {
+                              _currentPage = page;
+                              context.read<AudioPreferencesService>().saveLastReadPage(_currentPage);
+                              _prefetchAdjacentPages(_currentPage);
+                            }
+                          },
                           itemBuilder: (context, index) {
                             final pageNumber = index + 1;
                             return QuranPageWidgetMobile(

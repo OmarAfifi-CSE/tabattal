@@ -91,6 +91,25 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   final Map<String, int> _verseKeyToIntIdMap = {};
   final Map<String, ({int surah, int ayah})> _parsedVerseKeys = {};
 
+  // Object pool for TapGestureRecognizers to eliminate ~225 allocations per frame
+  // and completely eliminate Dart VM Generational GC pauses during scrolling.
+  final Map<String, TapGestureRecognizer> _wordGestureRecognizers = {};
+
+  TapGestureRecognizer _getWordRecognizer({
+    required String key,
+    VoidCallback? onTap,
+    void Function(TapDownDetails)? onTapDown,
+  }) {
+    var recognizer = _wordGestureRecognizers[key];
+    if (recognizer == null) {
+      recognizer = TapGestureRecognizer();
+      _wordGestureRecognizers[key] = recognizer;
+    }
+    recognizer.onTap = onTap;
+    recognizer.onTapDown = onTapDown;
+    return recognizer;
+  }
+
   // ---------------------------------------------------------------------------
   // Lifecycle
   // ---------------------------------------------------------------------------
@@ -104,10 +123,21 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       ..add(LoadPage(widget.pageNumber));
     // Synchronously initialize font state — eliminates first-frame flash for cached fonts.
     final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-    _isFontLoaded = FontService.isLoaded('QCF_P$pageStr');
+    final fontName = 'QCF_P$pageStr';
+    _isFontLoaded = FontService.isLoaded(fontName);
+    FontService.loadedFontsNotifier.addListener(_onFontsLoaded);
     if (!_isFontLoaded) _loadPageFont();
     if (widget.highlightVerseKey != null) {
       _activateBookmarkHighlight(widget.highlightVerseKey!);
+    }
+  }
+
+  void _onFontsLoaded() {
+    if (!mounted || _isFontLoaded) return;
+    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+    final fontName = 'QCF_P$pageStr';
+    if (FontService.isLoaded(fontName)) {
+      setState(() => _isFontLoaded = true);
     }
   }
 
@@ -133,6 +163,11 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
   @override
   void dispose() {
+    FontService.loadedFontsNotifier.removeListener(_onFontsLoaded);
+    for (final recognizer in _wordGestureRecognizers.values) {
+      recognizer.dispose();
+    }
+    _wordGestureRecognizers.clear();
     _quranBloc.close();
     _activeOverlayEntry?.remove();
     _activeOverlayEntry?.dispose();
@@ -171,39 +206,43 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     });
   }
 
-  /// Pre-computes the canvas width using fast O(1) arithmetic.
-  /// Eliminates TextPainter.layout from the frame layout pass.
-  double _computeCanvasWidth(double availW, double availH) {
-    final fontSize = 32.sp;
-    final maxLineWidth = QuranPageCache.getCachedLineWidth(widget.pageNumber) ?? 480.0.w;
+  int _textLineCount = 0;
+  int _surahHeaderCount = 0;
+  int _spacerCount = 0;
 
-    // Count slot types across the 15 Column children.
-    int textLineCount = 0;
-    int surahHeaderCount = 0; // header = 85.h
-    int spacerCount = 0; // empty spacers = 45.h each
-
+  void _calculateLineTypeCounts() {
+    _textLineCount = 0;
+    _surahHeaderCount = 0;
+    _spacerCount = 0;
     for (int lineNumber = 1; lineNumber <= 15; lineNumber++) {
       final lineData = _lineMap[lineNumber];
       if (lineData != null && lineData.words.isNotEmpty) {
-        textLineCount++;
+        _textLineCount++;
       } else {
         final nextSurah = _findNextSurahStartOnPage(lineNumber);
         if (nextSurah != null && lineNumber == nextSurah.ayah1Line - 1) {
-          surahHeaderCount++;
+          _surahHeaderCount++;
         } else {
-          spacerCount++;
+          _spacerCount++;
         }
       }
     }
+  }
+
+  /// Pre-computes the canvas width using fast O(1) arithmetic.
+  /// Eliminates TextPainter.layout and loops from the frame layout pass.
+  double _computeCanvasWidth(double availW, double availH) {
+    final fontSize = 32.sp;
+    final maxLineWidth = QuranPageCache.getCachedLineWidth(widget.pageNumber) ?? 480.0.w;
 
     final textLineH = fontSize * 1.5 + 4.0.h;
     final surahHeaderH = 85.0.h;
     final spacerH =
         (widget.pageNumber == 1 || widget.pageNumber == 2) ? 0.0 : 45.0.h;
     final totalChildrenH =
-        textLineCount * textLineH +
-        surahHeaderCount * surahHeaderH +
-        spacerCount * spacerH;
+        _textLineCount * textLineH +
+        _surahHeaderCount * surahHeaderH +
+        _spacerCount * spacerH;
 
     const paddingFactor = 1.0 / (1.0 - 0.027 - 0.032); // ≈ 1.063
     final minCanvasWForHeight =
@@ -513,10 +552,12 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
             spans.add(
               TextSpan(
                 text: '1 2 3',
-                recognizer: TapGestureRecognizer()
-                  ..onTap = () {
+                recognizer: _getWordRecognizer(
+                  key: 'fatiha_basmala_masked',
+                  onTap: () {
                     context.read<HifzBloc>().add(const ToggleVerseReveal('1:1'));
                   },
+                ),
                 style: TextStyle(
                   fontFamily: 'QCF_BSML',
                   fontSize: 26.sp,
@@ -545,14 +586,16 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
             spans.add(
               TextSpan(
                 text: '1 2 3',
-                recognizer: TapGestureRecognizer()
-                  ..onTapDown = (details) {
+                recognizer: _getWordRecognizer(
+                  key: 'fatiha_basmala_revealed',
+                  onTapDown: (details) {
                     if (_activeVerseId == verseId) {
                       _removeVerseMenu();
                     } else {
                       _showVerseMenu(context, details.globalPosition, verseId);
                     }
                   },
+                ),
                 style: TextStyle(
                   fontFamily: 'QCF_BSML',
                   fontSize: 26.sp,
@@ -605,6 +648,11 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         }
       }
 
+      final wordRecognizer = _getWordRecognizer(
+        key: wordKey,
+        onTapDown: (details) => handleTap(details.globalPosition),
+      );
+
       final bool isWordByWord = hifzState.isHifzModeActive &&
           hifzState.maskingType == HifzMaskingType.wordByWord;
 
@@ -612,8 +660,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         spans.add(
           TextSpan(
             text: word.code,
-            recognizer: TapGestureRecognizer()
-              ..onTapDown = (details) => handleTap(details.globalPosition),
+            recognizer: wordRecognizer,
             style: baseWordTextStyle.copyWith(
               color: Colors.transparent,
               backgroundColor: mushafTheme.textColor.withValues(alpha: 0.18),
@@ -641,8 +688,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         spans.add(
           TextSpan(
             text: word.code,
-            recognizer: TapGestureRecognizer()
-              ..onTapDown = (details) => handleTap(details.globalPosition),
+            recognizer: wordRecognizer,
             style: baseWordTextStyle.copyWith(
               color: textColor,
               backgroundColor: backgroundColor,
@@ -677,6 +723,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
           TextSpan(children: spans),
           textDirection: TextDirection.rtl,
           textAlign: TextAlign.center,
+          maxLines: 1,
         ),
       ),
     );
@@ -684,7 +731,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
 
   /// Builds the full loaded page content with all 15 line slots.
-  Widget _buildLoadedPage(QuranLoaded state) {
+  Widget _buildLoadedPage(QuranLoaded state, MushafTheme mushafTheme) {
     final lines = state.lines;
     if (lines.isEmpty) return const SizedBox();
 
@@ -706,6 +753,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
           }
         }
       }
+      _calculateLineTypeCounts();
     }
 
     String firstVerseKey = '1:1';
@@ -727,148 +775,156 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         ? AppLocalizations.of(context)!.juzListItem(juzNum.toString())
         : QuranMetadata.getJuzNameWithTashkeel(juzNum);
 
-    return RepaintBoundary(
-      key: _pageRepaintKey,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          // If a word Listener already handled this tap (e.g. opened the menu),
-          // skip the dismiss-on-tap logic to avoid immediately closing it.
-          if (_tapHandledByWord) {
-            _tapHandledByWord = false;
-            return;
-          }
-          if (_activeOverlayEntry != null) {
-            _removeVerseMenu();
-          }
-        },
-        child: QuranPageFrameMobile(
-          pageNumber: widget.pageNumber,
-          onNavigateToPage: widget.onNavigateToPage,
-          surahName: surahName,
-          juzName: juzName,
-          onHeaderTap: () {
+    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+    final customFontFamily = 'QCF_P$pageStr';
+    final baseWordTextStyle = AppTextStyles.quranText.copyWith(
+      fontFamily: customFontFamily,
+      fontSize: 32.sp,
+      height: 1.5.h,
+      color: mushafTheme.textColor,
+    );
+
+    return Stack(
+      children: [
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            if (_tapHandledByWord) {
+              _tapHandledByWord = false;
+              return;
+            }
             if (_activeOverlayEntry != null) {
               _removeVerseMenu();
             }
           },
-          child: BlocBuilder<BookmarkBloc, BookmarkState>(
-            buildWhen: (prev, curr) => prev != curr,
-            builder: (context, bookmarkState) {
-              return BlocBuilder<HifzBloc, HifzState>(
-                buildWhen: (prev, curr) => prev != curr,
-                builder: (context, hifzState) {
-                  return BlocBuilder<AudioBloc, AudioState>(
-                    buildWhen: (prev, curr) {
-                      final prevId = prev is AudioPlaying
-                          ? prev.currentVerseId
-                          : (prev is AudioPaused ? prev.currentVerseId : null);
-                      final currId = curr is AudioPlaying
-                          ? curr.currentVerseId
-                          : (curr is AudioPaused ? curr.currentVerseId : null);
-                      final prevOnPage =
-                          prevId != null && _verseKeyToIntIdMap.containsValue(prevId);
-                      final currOnPage =
-                          currId != null && _verseKeyToIntIdMap.containsValue(currId);
-                      return prevOnPage || currOnPage;
-                    },
-                    builder: (context, audioState) {
-                      final mushafTheme = context
-                          .watch<SettingsBloc>()
-                          .state
-                          .effectiveMushafTheme;
-                      int? playingVerseId;
-                      final activeAudioVerseId = audioState is AudioPlaying
-                          ? audioState.currentVerseId
-                          : (audioState is AudioPaused ? audioState.currentVerseId : null);
-                      if (activeAudioVerseId != null &&
-                          _verseKeyToIntIdMap.containsValue(activeAudioVerseId)) {
-                        playingVerseId = activeAudioVerseId;
-                      }
+          child: QuranPageFrameMobile(
+            pageNumber: widget.pageNumber,
+            onNavigateToPage: widget.onNavigateToPage,
+            surahName: surahName,
+            juzName: juzName,
+            onHeaderTap: () {
+              if (_activeOverlayEntry != null) {
+                _removeVerseMenu();
+              }
+            },
+            child: BlocBuilder<BookmarkBloc, BookmarkState>(
+              buildWhen: (prev, curr) {
+                final hasPrev = _parsedVerseKeys.keys.any((k) => prev.isBookmarked(k));
+                final hasCurr = _parsedVerseKeys.keys.any((k) => curr.isBookmarked(k));
+                if (hasPrev != hasCurr) return true;
+                for (final k in _parsedVerseKeys.keys) {
+                  if (prev.isBookmarked(k) != curr.isBookmarked(k)) return true;
+                }
+                return false;
+              },
+              builder: (context, bookmarkState) {
+                return BlocBuilder<HifzBloc, HifzState>(
+                  buildWhen: (prev, curr) {
+                    if (prev.isHifzModeActive != curr.isHifzModeActive) return true;
+                    if (!curr.isHifzModeActive && !prev.isHifzModeActive) return false;
+                    if (prev.maskingType != curr.maskingType) return true;
+                    return prev != curr;
+                  },
+                  builder: (context, hifzState) {
+                    return BlocBuilder<AudioBloc, AudioState>(
+                      buildWhen: (prev, curr) {
+                        final prevId = prev is AudioPlaying
+                            ? prev.currentVerseId
+                            : (prev is AudioPaused ? prev.currentVerseId : null);
+                        final currId = curr is AudioPlaying
+                            ? curr.currentVerseId
+                            : (curr is AudioPaused ? curr.currentVerseId : null);
+                        final prevOnPage =
+                            prevId != null && _verseKeyToIntIdMap.containsValue(prevId);
+                        final currOnPage =
+                            currId != null && _verseKeyToIntIdMap.containsValue(currId);
+                        return prevOnPage || currOnPage;
+                      },
+                      builder: (context, audioState) {
+                        int? playingVerseId;
+                        final activeAudioVerseId = audioState is AudioPlaying
+                            ? audioState.currentVerseId
+                            : (audioState is AudioPaused ? audioState.currentVerseId : null);
+                        if (activeAudioVerseId != null &&
+                            _verseKeyToIntIdMap.containsValue(activeAudioVerseId)) {
+                          playingVerseId = activeAudioVerseId;
+                        }
 
-                      final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-                      final customFontFamily = 'QCF_P$pageStr';
-                      final baseWordTextStyle = AppTextStyles.quranText.copyWith(
-                        fontFamily: customFontFamily,
-                        fontSize: 32.sp,
-                        height: 1.5.h,
-                        color: mushafTheme.textColor,
-                      );
+                        return MediaQuery.withNoTextScaling(
+                          child: Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final availW = constraints.maxWidth;
+                                final availH = constraints.maxHeight;
 
-                      return MediaQuery.withNoTextScaling(
-                        child: Directionality(
-                          textDirection: TextDirection.rtl,
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final availW = constraints.maxWidth;
-                              final availH = constraints.maxHeight;
+                                if (_lineMap.isNotEmpty &&
+                                    (_precomputedCanvasWidth == null ||
+                                        (availH - _lastComputedAvailH).abs() > 1.0)) {
+                                  _lastComputedAvailH = availH;
+                                  _precomputedCanvasWidth =
+                                      _computeCanvasWidth(availW, availH);
+                                }
 
-                              if (_lineMap.isNotEmpty &&
-                                  (_precomputedCanvasWidth == null ||
-                                      (availH - _lastComputedAvailH).abs() > 1.0)) {
-                                _lastComputedAvailH = availH;
-                                _precomputedCanvasWidth =
-                                    _computeCanvasWidth(availW, availH);
-                              }
+                                final canvasW = _precomputedCanvasWidth ?? 490.w;
+                                final canvasH = availH * canvasW / availW;
+                                return FittedBox(
+                                  fit: BoxFit.contain,
+                                  alignment: Alignment.center,
+                                  child: SizedBox(
+                                    width: canvasW,
+                                    height: canvasH,
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        top: canvasH * 0.027,
+                                        bottom: canvasH * 0.032,
+                                      ),
+                                      child: Column(
+                                        key: _pageColumnKey,
+                                        mainAxisSize: MainAxisSize.max,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: List.generate(15, (index) {
+                                          final lineNumber = index + 1;
+                                          final lineData = _lineMap[lineNumber];
 
-                              final canvasW = _precomputedCanvasWidth ?? 490.w;
-                              final canvasH = availH * canvasW / availW;
-                              return FittedBox(
-                                fit: BoxFit.contain,
-                                alignment: Alignment.center,
-                                child: SizedBox(
-                                  width: canvasW,
-                                  height: canvasH,
-                                  child: Padding(
-                                    padding: EdgeInsets.only(
-                                      top: canvasH * 0.027,
-                                      bottom: canvasH * 0.032,
-                                    ),
-                                    child: Column(
-                                      key: _pageColumnKey,
-                                      mainAxisSize: MainAxisSize.max,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: List.generate(15, (index) {
-                                        final lineNumber = index + 1;
-                                        final lineData = _lineMap[lineNumber];
+                                          if (lineData == null ||
+                                              lineData.words.isEmpty) {
+                                            return _buildEmptyLineWidget(
+                                              lineNumber,
+                                              mushafTheme,
+                                            );
+                                          }
 
-                                        if (lineData == null ||
-                                            lineData.words.isEmpty) {
-                                          return _buildEmptyLineWidget(
-                                            lineNumber,
-                                            mushafTheme,
+                                          return _buildWordRow(
+                                            lineWords: lineData.words,
+                                            playingVerseId: playingVerseId,
+                                            audioState: audioState,
+                                            bookmarkState: bookmarkState,
+                                            mushafTheme: mushafTheme,
+                                            hifzState: hifzState,
+                                            baseWordTextStyle: baseWordTextStyle,
                                           );
-                                        }
-
-                                        return _buildWordRow(
-                                          lineWords: lineData.words,
-                                          playingVerseId: playingVerseId,
-                                          audioState: audioState,
-                                          bookmarkState: bookmarkState,
-                                          mushafTheme: mushafTheme,
-                                          hifzState: hifzState,
-                                          baseWordTextStyle: baseWordTextStyle,
-                                        );
-                                      }).toList(),
+                                        }).toList(),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
-                            },
-                          ), // LayoutBuilder
-                        ), // Directionality
-                      ); // MediaQuery
-                    },
-                  );
-                },
-              );
-            },
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -907,7 +963,10 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
               ? (QuranPageCache.get(widget.pageNumber) ?? state)
               : state;
 
-          if (displayState is QuranLoading || !_isFontLoaded) {
+          final pageStr = widget.pageNumber.toString().padLeft(3, '0');
+          final isFontReady = _isFontLoaded || FontService.isLoaded('QCF_P$pageStr');
+
+          if (displayState is QuranLoading || !isFontReady) {
             return QuranPageFrameMobile(
               pageNumber: widget.pageNumber,
               onNavigateToPage: widget.onNavigateToPage,
@@ -935,7 +994,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
               ),
             );
           }
-          if (displayState is QuranLoaded) return _buildLoadedPage(displayState);
+          if (displayState is QuranLoaded) return _buildLoadedPage(displayState, mushafTheme);
           return _buildEmptyFrame();
         },
       ),

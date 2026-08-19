@@ -9,7 +9,11 @@ import '../../../../core/utils/arabic_text_utils.dart';
 import '../../../../core/constants/quran_constants.dart';
 import '../../../../core/constants/quran_topics.dart';
 
+import '../../bloc/quran/quran_page_cache.dart';
+import '../../bloc/quran/quran_state.dart';
+
 abstract class QuranLocalDataSource {
+  Future<void> preloadAllPages();
   Future<List<WordModel>> getWordsByPage(int pageNumber);
   Future<String> getTafsirForVerse(String verseKey, int resourceId);
   Future<TafsirModel> getTafsirModelForVerse(String verseKey, int resourceId);
@@ -38,6 +42,48 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   final DatabaseHelper databaseHelper;
 
   QuranLocalDataSourceImpl({required this.databaseHelper});
+
+  @override
+  Future<void> preloadAllPages() async {
+    if (QuranPageCache.isFullyLoaded) return;
+    try {
+      final db = await databaseHelper.database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        'quran_words',
+        orderBy: 'page ASC, id ASC',
+      );
+
+      final Map<int, Map<int, List<WordModel>>> pageMap = {};
+      for (final map in maps) {
+        final page = map['page'] as int;
+        final line = map['line_number'] as int;
+        final word = WordModel(
+          id: map['id'] as int,
+          textUthmani: map['text_uthmani'] as String,
+          codeV2: map['code_v2'] as String? ?? '',
+          lineNumber: line,
+          charTypeName: map['char_type_name'] as String,
+          verseKey: map['verse_key'] as String,
+        );
+
+        pageMap.putIfAbsent(page, () => {})
+            .putIfAbsent(line, () => [])
+            .add(word);
+      }
+
+      for (final entry in pageMap.entries) {
+        final page = entry.key;
+        final linesByNum = entry.value;
+        final List<LineData> lines = [];
+        for (int i = 1; i <= QuranConstants.linesPerPage; i++) {
+          if (linesByNum.containsKey(i)) {
+            lines.add(LineData(lineNumber: i, words: linesByNum[i]!));
+          }
+        }
+        QuranPageCache.put(page, QuranLoaded(lines: lines, currentPage: page));
+      }
+    } catch (_) {}
+  }
 
   @override
   Future<List<WordModel>> getWordsByPage(int pageNumber) async {
