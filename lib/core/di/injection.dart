@@ -75,7 +75,7 @@ Future<DependencyContainer> configureDependencies() async {
       ).notificationChannelRecitations,
       androidNotificationIcon: 'mipmap/ic_launcher',
       androidNotificationOngoing: true,
-      androidStopForegroundOnPause: false,
+      androidStopForegroundOnPause: true,
     ),
   );
 

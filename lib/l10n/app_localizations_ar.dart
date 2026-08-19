@@ -63,6 +63,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get menuTranslation => 'الترجمة';
 
   @override
+  String get menuWordMeanings => 'معاني الكلمات';
+
+  @override
+  String get wordMeaningsTitle => 'معاني الكلمات';
+
+  @override
+  String get wordMeaningsPronunciation => 'النطق الصوتي';
+
+  @override
+  String get wordMeaningsTranslation => 'المعنى';
+
+  @override
   String get menuListen => 'الاستماع للآيات';
 
   @override

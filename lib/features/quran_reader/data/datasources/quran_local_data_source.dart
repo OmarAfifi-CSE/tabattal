@@ -15,6 +15,8 @@ import '../../bloc/quran/quran_state.dart';
 abstract class QuranLocalDataSource {
   Future<void> preloadAllPages();
   Future<List<WordModel>> getWordsByPage(int pageNumber);
+  Future<List<WordModel>> getWordsByVerse(String verseKey);
+  Future<String?> getGhareebByVerse(String verseKey);
   Future<String> getTafsirForVerse(String verseKey, int resourceId);
   Future<TafsirModel> getTafsirModelForVerse(String verseKey, int resourceId);
   Future<String> getTranslationForVerse(String verseKey, int resourceId);
@@ -48,27 +50,47 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
     if (QuranPageCache.isFullyLoaded) return;
     try {
       final db = await databaseHelper.database;
-      final List<Map<String, dynamic>> maps = await db.query(
-        'quran_words',
-        orderBy: 'page ASC, id ASC',
-      );
-
+      const chunkSize = 100;
       final Map<int, Map<int, List<WordModel>>> pageMap = {};
-      for (final map in maps) {
-        final page = map['page'] as int;
-        final line = map['line_number'] as int;
-        final word = WordModel(
-          id: map['id'] as int,
-          textUthmani: map['text_uthmani'] as String,
-          codeV2: map['code_v2'] as String? ?? '',
-          lineNumber: line,
-          charTypeName: map['char_type_name'] as String,
-          verseKey: map['verse_key'] as String,
+
+      for (int startPage = 1;
+          startPage <= QuranConstants.totalPages;
+          startPage += chunkSize) {
+        final endPage = (startPage + chunkSize - 1)
+            .clamp(1, QuranConstants.totalPages);
+        final List<Map<String, dynamic>> maps = await db.query(
+          'quran_words',
+          columns: [
+            'id',
+            'page',
+            'line_number',
+            'verse_key',
+            'text_uthmani',
+            'char_type_name',
+            'code_v2'
+          ],
+          where: 'page >= ? AND page <= ?',
+          whereArgs: [startPage, endPage],
+          orderBy: 'page ASC, id ASC',
         );
 
-        pageMap.putIfAbsent(page, () => {})
-            .putIfAbsent(line, () => [])
-            .add(word);
+        for (final map in maps) {
+          final page = map['page'] as int;
+          final line = map['line_number'] as int;
+          final word = WordModel(
+            id: map['id'] as int,
+            textUthmani: map['text_uthmani'] as String,
+            codeV2: map['code_v2'] as String? ?? '',
+            lineNumber: line,
+            charTypeName: map['char_type_name'] as String,
+            verseKey: map['verse_key'] as String,
+          );
+
+          pageMap
+              .putIfAbsent(page, () => {})
+              .putIfAbsent(line, () => [])
+              .add(word);
+        }
       }
 
       for (final entry in pageMap.entries) {
@@ -91,6 +113,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       final db = await databaseHelper.database;
       final List<Map<String, dynamic>> maps = await db.query(
         'quran_words',
+        columns: ['id', 'page', 'line_number', 'verse_key', 'text_uthmani', 'char_type_name', 'code_v2'],
         where: 'page = ?',
         whereArgs: [pageNumber],
         orderBy: 'id ASC',
@@ -114,6 +137,55 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
           .toList();
     } catch (e) {
       throw CacheException('Database error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<WordModel>> getWordsByVerse(String verseKey) async {
+    try {
+      final db = await databaseHelper.database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        'quran_words',
+        columns: ['id', 'page', 'line_number', 'verse_key', 'text_uthmani', 'char_type_name', 'code_v2'],
+        where: 'verse_key = ?',
+        whereArgs: [verseKey],
+        orderBy: 'id ASC',
+      );
+
+      return maps
+          .map(
+            (map) => WordModel(
+              id: map['id'] as int,
+              textUthmani: map['text_uthmani'] as String,
+              codeV2: map['code_v2'] as String? ?? '',
+              lineNumber: map['line_number'] as int,
+              charTypeName: map['char_type_name'] as String,
+              verseKey: map['verse_key'] as String,
+            ),
+          )
+          .toList();
+    } catch (e) {
+      throw CacheException('Database error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<String?> getGhareebByVerse(String verseKey) async {
+    try {
+      final db = await databaseHelper.database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        'ghareeb',
+        columns: ['text'],
+        where: 'verse_key = ?',
+        whereArgs: [verseKey],
+        limit: 1,
+      );
+      if (maps.isNotEmpty && maps.first['text'] != null) {
+        return maps.first['text'] as String;
+      }
+      return null;
+    } catch (_) {
+      return null;
     }
   }
 

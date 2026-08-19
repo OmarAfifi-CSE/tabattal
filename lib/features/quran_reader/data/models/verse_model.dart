@@ -6,7 +6,7 @@ class WordModel {
   final String charTypeName; // 'word' or 'end'
   final String verseKey;
 
-  WordModel({
+  const WordModel({
     required this.id,
     required this.textUthmani,
     required this.codeV2,

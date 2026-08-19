@@ -33,7 +33,7 @@ Infinite sharpness at any resolution, responsive page transitions, lightweight s
 
 ### 🖌️ Pixel-Perfect QCF V2 Vector Pagination
 * **100% Authentic Madani Mushaf Layout:** Exactly 15 lines per page, matching the physical printed copy with genuine Quranic glyphs and stop signs.
-* **Smart Font & Page Caching:** Fast, responsive page transitions powered by background font archive streaming, LRU page caches, and glyph pre-warming.
+* **Instant Native Typography & LRU Page Caching:** Zero-latency page transitions powered by native Flutter Engine font rendering and smart LRU memory caches.
 
 ### 🎨 Verse Card Generator & Full-Page Export
 * **Custom Verse Sharing Cards:** Create stunning, high-resolution aesthetic cards for individual verses or selected verse ranges (up to 25 ayahs).
@@ -80,8 +80,8 @@ Tabattal is crafted according to strict architectural guidelines, modern perform
 * **State Management:** [BLoC / Cubit](https://bloclibrary.dev) (Predictable, testable, and reactive state streams).
 * **Architecture Pattern:** Clean Architecture (Strictly decoupled Domain, Data, and Presentation layers).
 * **Audio Pipeline:** `just_audio` & `audio_service` with Android MediaSession background capabilities.
-* **Database & Caching:** SQLite via `sqflite` with indexed word-level spatial lookup tables.
-* **Typography:** Modular 3-part split QCF V2 archive with runtime font registration via `FontService`.
+* **Database & Caching:** SQLite via `sqflite` with indexed word-level spatial lookup tables and LRU page cache.
+* **Typography:** 604 King Fahd Complex QCF V2 vector font families declared natively and managed directly by the Flutter Engine.
 * **Static Analysis:** Strict zero-lint policy with optimized frame rendering and clean architectural hygiene.
 
 ---

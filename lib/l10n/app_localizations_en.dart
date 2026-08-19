@@ -63,6 +63,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuTranslation => 'Translation';
 
   @override
+  String get menuWordMeanings => 'Word Meanings';
+
+  @override
+  String get wordMeaningsTitle => 'Word Meanings';
+
+  @override
+  String get wordMeaningsPronunciation => 'Pronunciation';
+
+  @override
+  String get wordMeaningsTranslation => 'Meaning';
+
+  @override
   String get menuListen => 'Listen to Verses';
 
   @override

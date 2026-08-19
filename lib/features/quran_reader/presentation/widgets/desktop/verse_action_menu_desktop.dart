@@ -24,6 +24,7 @@ import '../../../bloc/hifz/hifz_event.dart';
 import '../../../bloc/hifz/hifz_state.dart';
 import '../verse_card_generator_sheet.dart';
 import '../tafsir_selector_menu.dart';
+import '../word_meanings_sheet.dart';
 
 class OverlayPositionDelegate extends SingleChildLayoutDelegate {
   final Offset tapPosition;
@@ -922,26 +923,42 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                         thickness: 1,
                         color: AppColors.divider,
                       ),
-                      _buildMenuItem(
-                        Icons.g_translate_outlined,
-                        l10n.menuTranslation,
-                        () {
-                          final qBloc = context.read<QuranBloc>();
-                          _showOverlayContent(
-                            context,
-                            l10n.menuTranslation,
-                            qBloc.state,
-                            () {
-                              qBloc.add(
-                                FetchTranslation(widget.verse.verseKey),
-                              );
-                            },
-                          );
-                          qBloc.add(FetchTranslation(widget.verse.verseKey));
-                          _close(keepHighlight: true);
-                        },
-                        closeMenu: false,
-                      ),
+                      if (Localizations.localeOf(context).languageCode == 'ar')
+                        _buildMenuItem(
+                          Icons.translate_rounded,
+                          l10n.menuWordMeanings,
+                          () {
+                            _close(keepHighlight: true);
+                            WordMeaningsSheet.show(
+                              context,
+                              verse: widget.verse,
+                            ).then((_) {
+                              widget.onClearHighlight?.call();
+                            });
+                          },
+                          closeMenu: false,
+                        )
+                      else
+                        _buildMenuItem(
+                          Icons.g_translate_outlined,
+                          l10n.menuTranslation,
+                          () {
+                            final qBloc = context.read<QuranBloc>();
+                            _showOverlayContent(
+                              context,
+                              l10n.menuTranslation,
+                              qBloc.state,
+                              () {
+                                qBloc.add(
+                                  FetchTranslation(widget.verse.verseKey),
+                                );
+                              },
+                            );
+                            qBloc.add(FetchTranslation(widget.verse.verseKey));
+                            _close(keepHighlight: true);
+                          },
+                          closeMenu: false,
+                        ),
                       Divider(
                         height: 1.h,
                         thickness: 1,

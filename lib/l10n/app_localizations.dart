@@ -206,6 +206,30 @@ abstract class AppLocalizations {
   /// **'الترجمة'**
   String get menuTranslation;
 
+  /// No description provided for @menuWordMeanings.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاني الكلمات'**
+  String get menuWordMeanings;
+
+  /// No description provided for @wordMeaningsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاني الكلمات'**
+  String get wordMeaningsTitle;
+
+  /// No description provided for @wordMeaningsPronunciation.
+  ///
+  /// In ar, this message translates to:
+  /// **'النطق الصوتي'**
+  String get wordMeaningsPronunciation;
+
+  /// No description provided for @wordMeaningsTranslation.
+  ///
+  /// In ar, this message translates to:
+  /// **'المعنى'**
+  String get wordMeaningsTranslation;
+
   /// No description provided for @menuListen.
   ///
   /// In ar, this message translates to:

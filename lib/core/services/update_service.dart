@@ -75,7 +75,11 @@ class UpdateService {
         }
       }
     } catch (e) {
-      debugPrint('InAppUpdate Error: $e');
+      // Ignore ERROR_APP_NOT_OWNED in dev/debug mode when running from IDE/USB
+      if (!e.toString().contains('ERROR_APP_NOT_OWNED') &&
+          !e.toString().contains('-10')) {
+        debugPrint('InAppUpdate Error: $e');
+      }
     }
   }
 

@@ -1819,7 +1819,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  Icons.auto_stories_outlined,
+                                  Icons.menu_book_outlined,
                                   size: kIsWeb ? 13 : 12.r,
                                   color: theme.accentColor,
                                 ),
@@ -1882,7 +1882,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  Icons.translate_rounded,
+                                  Icons.g_translate_outlined,
                                   size: kIsWeb ? 13 : 12.r,
                                   color: theme.accentColor,
                                 ),
@@ -2366,7 +2366,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                     Row(
                       children: [
                         Icon(
-                          Icons.auto_stories_outlined,
+                          Icons.menu_book_outlined,
                           size: 18.r,
                           color: AppColors.accentGold,
                         ),
@@ -2399,7 +2399,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                     Row(
                       children: [
                         Icon(
-                          Icons.translate_rounded,
+                          Icons.g_translate_outlined,
                           size: 18.r,
                           color: AppColors.accentGold,
                         ),

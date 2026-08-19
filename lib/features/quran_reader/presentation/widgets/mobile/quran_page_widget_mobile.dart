@@ -314,13 +314,23 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     final verseKey = ArabicTextUtils.verseIdToVerseKey(verseId);
     final verseRect = _calculateVerseScreenRect(verseKey, tapPosition);
 
-    // A partial model carrying only the fields the menu needs (id + verseKey).
+    final pageLines = QuranPageCache.get(widget.pageNumber)?.lines ?? const [];
+    final verseWords = pageLines
+        .expand((line) => line.words)
+        .where((word) => word.verseKey == verseKey)
+        .toList();
+    final verseText = verseWords
+        .where((w) => w.charTypeName == 'word')
+        .map((w) => w.textUthmani)
+        .join(' ');
+
+    // A model carrying the verse details, text, and words for the menu.
     final partialVerseForMenu = VerseModel(
       id: verseId,
       verseNumber: verseId % 1000,
       verseKey: verseKey,
-      textUthmani: '',
-      words: [],
+      textUthmani: verseText,
+      words: verseWords,
       juzNumber: 1,
     );
 

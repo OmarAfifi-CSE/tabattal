@@ -16,6 +16,8 @@ import '../../data/models/search_verse_model.dart';
 abstract class QuranRepository {
   Future<void> preloadAllPages();
   Future<Either<Failure, List<LineData>>> getLinesByPage(int pageNumber);
+  Future<Either<Failure, List<WordModel>>> getWordsByVerse(String verseKey);
+  Future<Either<Failure, String?>> getGhareebByVerse(String verseKey);
   Future<Either<Failure, TafsirModel>> getTafsir(
     String verseKey, {
     int resourceId = 16,
@@ -93,6 +95,16 @@ class QuranRepositoryImpl implements QuranRepository {
 
       return lines;
     });
+  }
+
+  @override
+  Future<Either<Failure, List<WordModel>>> getWordsByVerse(String verseKey) {
+    return _execute(() => localDataSource.getWordsByVerse(verseKey));
+  }
+
+  @override
+  Future<Either<Failure, String?>> getGhareebByVerse(String verseKey) {
+    return _execute(() => localDataSource.getGhareebByVerse(verseKey));
   }
 
   @override

@@ -46,7 +46,7 @@ class DatabaseHelper {
 
     // Increment this whenever we update quran.db in assets
     const currentDbVersion =
-        17; // bumped to 17: restored all 56 missing cross-page boundary verses (e.g. 6:131) and rebuilt complete 83,665-word dataset across all 604 pages
+        21; // bumped to 21: optimized, vacuumed, cleaned unused columns and fully indexed ghareeb table
 
     if (!exists || dbVersion < currentDbVersion) {
       if (!kIsWeb) {
