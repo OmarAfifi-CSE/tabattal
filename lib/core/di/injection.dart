@@ -73,8 +73,9 @@ Future<DependencyContainer> configureDependencies() async {
       androidNotificationChannelName: lookupAppLocalizations(
         PlatformDispatcher.instance.locale,
       ).notificationChannelRecitations,
-      androidNotificationOngoing: false,
-      androidStopForegroundOnPause: true,
+      androidNotificationIcon: 'mipmap/ic_launcher',
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: false,
     ),
   );
 

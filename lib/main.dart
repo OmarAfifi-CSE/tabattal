@@ -22,6 +22,7 @@ import 'core/theme/app_colors.dart';
 import 'core/network/audio_download_manager.dart';
 import 'core/services/audio_preferences_service.dart';
 import 'core/bloc/locale/locale_cubit.dart';
+import 'core/services/font_service.dart';
 import 'features/settings/bloc/settings_bloc.dart';
 import 'features/settings/bloc/settings_state.dart';
 import 'features/quran_reader/bloc/hifz/hifz_bloc.dart';
@@ -40,6 +41,9 @@ void main() async {
       DeviceOrientation.portraitDown,
     ]);
   }
+
+  // Preload and decompress Quran font zip archives in background isolate immediately
+  FontService.preloadArchivesInBackground();
 
   final container = await configureDependencies();
 

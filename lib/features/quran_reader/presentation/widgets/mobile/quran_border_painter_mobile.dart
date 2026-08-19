@@ -48,7 +48,7 @@ class QuranBorderPainterMobile extends CustomPainter {
     _drawBackground(canvas, size);
 
     final String cacheKey =
-        '${W.toStringAsFixed(1)}_${H.toStringAsFixed(1)}_${isLeftPage}_${hizbCutCenters.join(',')}';
+        '${W.toStringAsFixed(1)}_${H.toStringAsFixed(1)}_${isLeftPage}_${hizbCutCenters.map((c) => c.toStringAsFixed(1)).join(',')}';
     _BorderPathData? data = _borderCacheMobile[cacheKey];
 
     if (data == null) {

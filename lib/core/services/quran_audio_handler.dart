@@ -27,26 +27,21 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   PlaybackState _transformEvent(PlaybackEvent event) {
-    final isIdle = _player.processingState == ProcessingState.idle;
     return PlaybackState(
-      controls: isIdle
-          ? []
-          : [
-              MediaControl.rewind, // Previous Surah
-              MediaControl.skipToPrevious, // Previous Ayah
-              if (_player.playing) MediaControl.pause else MediaControl.play,
-              MediaControl.skipToNext, // Next Ayah
-              MediaControl.fastForward, // Next Surah
-              MediaControl.stop,
-            ],
-      systemActions: isIdle
-          ? const {}
-          : const {
-              MediaAction.seek,
-              MediaAction.seekForward,
-              MediaAction.seekBackward,
-            },
-      androidCompactActionIndices: isIdle ? const [] : const [1, 2, 3],
+      controls: [
+        MediaControl.rewind, // Previous Surah
+        MediaControl.skipToPrevious, // Previous Ayah
+        if (_player.playing) MediaControl.pause else MediaControl.play,
+        MediaControl.skipToNext, // Next Ayah
+        MediaControl.fastForward, // Next Surah
+        MediaControl.stop,
+      ],
+      systemActions: const {
+        MediaAction.seek,
+        MediaAction.seekForward,
+        MediaAction.seekBackward,
+      },
+      androidCompactActionIndices: const [1, 2, 3],
       processingState: const {
         ProcessingState.idle: AudioProcessingState.idle,
         ProcessingState.loading: AudioProcessingState.loading,

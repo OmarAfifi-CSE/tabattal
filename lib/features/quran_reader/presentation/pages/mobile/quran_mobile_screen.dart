@@ -16,7 +16,6 @@ import '../../../bloc/quran/quran_page_cache.dart';
 import '../../../bloc/quran/quran_state.dart';
 import '../../../domain/repositories/quran_repository.dart';
 import '../../../data/models/search_verse_model.dart';
-import '../../../data/models/verse_model.dart';
 import '../../../../../core/utils/verse_ref.dart';
 import '../../../../../core/constants/quran_constants.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -105,25 +104,28 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
   }
 
 
-  bool _isSwiping = false;
-
-  /// Immediate pre-warming for immediate neighbors [page-1, page+1] in post-frame callback
-  /// so when the user touches the screen to drag, both adjacent page fonts, SQLite lines,
-  /// and line widths are ALREADY 100% in memory — delivering 0ms initial touch lag.
+  /// Immediate pre-warming for neighbors in post-frame callback
+  /// so when the user touches the screen to drag, adjacent page fonts and SQLite lines
+  /// are ALREADY 100% in memory — delivering 0ms initial touch lag.
   void _prefetchAdjacentPages(int page) {
     _prefetchTimer?.cancel();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _isSwiping) return;
-      _prefetchImmediateNeighbors(page);
+      if (!mounted) return;
+      _prefetchNeighbors(page);
     });
   }
 
-  Future<void> _prefetchImmediateNeighbors(int page) async {
-    if (_isSwiping) return;
+  Future<void> _prefetchNeighbors(int page) async {
+    if (!mounted) return;
     final repository = context.read<QuranRepository>();
-    final immediate = [page + 1, page - 1];
+    final neighbors = [
+      page + 1,
+      page - 1,
+      page + 2,
+      page - 2,
+    ];
 
-    for (final neighbor in immediate) {
+    for (final neighbor in neighbors) {
       if (!mounted) return;
       if (neighbor >= 1 && neighbor <= QuranConstants.totalPages) {
         final fontName = 'QCF_P${neighbor.toString().padLeft(3, '0')}';
@@ -138,64 +140,10 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
               neighbor,
               QuranLoaded(lines: lines, currentPage: neighbor),
             );
-            if (QuranPageCache.getCachedLineWidth(neighbor) == null) {
-              _precalculateLineWidth(neighbor, lines);
-            }
           });
         }
       }
     }
-
-    _prefetchTimer = Timer(const Duration(milliseconds: 200), () async {
-      if (!mounted) return;
-      final secondary = [page + 2, page - 2];
-      for (final neighbor in secondary) {
-        if (!mounted) return;
-        if (neighbor >= 1 && neighbor <= QuranConstants.totalPages) {
-          final fontName = 'QCF_P${neighbor.toString().padLeft(3, '0')}';
-          if (!FontService.isLoaded(fontName)) {
-            await FontService.loadFontForPage(neighbor);
-            await Future<void>.delayed(const Duration(milliseconds: 30));
-          }
-          if (!mounted) return;
-          if (QuranPageCache.get(neighbor) == null) {
-            final result = await repository.getLinesByPage(neighbor);
-            result.fold((_) {}, (lines) {
-              QuranPageCache.put(
-                neighbor,
-                QuranLoaded(lines: lines, currentPage: neighbor),
-              );
-              if (QuranPageCache.getCachedLineWidth(neighbor) == null) {
-                _precalculateLineWidth(neighbor, lines);
-              }
-            });
-            await Future<void>.delayed(const Duration(milliseconds: 30));
-          }
-        }
-      }
-    });
-  }
-
-  void _precalculateLineWidth(int pageNumber, List<LineData> lines) {
-    final pageStr = pageNumber.toString().padLeft(3, '0');
-    final fontFamily = 'QCF_P$pageStr';
-    final style = TextStyle(fontFamily: fontFamily, fontSize: 32.sp);
-    final tp = TextPainter(textDirection: TextDirection.rtl);
-    var maxLW = 0.0;
-
-    for (final lineData in lines) {
-      if (lineData.words.isEmpty) continue;
-      final lineText = lineData.words
-          .map((w) => w.code)
-          .where((t) => t.isNotEmpty)
-          .join();
-      if (lineText.isEmpty) continue;
-      tp.text = TextSpan(text: lineText, style: style);
-      tp.layout();
-      if (tp.width > maxLW) maxLW = tp.width;
-    }
-    tp.dispose();
-    QuranPageCache.cacheLineWidth(pageNumber, maxLW + 2.0);
   }
 
   void _handleAudioStateChange(BuildContext context, AudioState state) {
@@ -323,11 +271,8 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                         onNotification: (notification) {
                           if (notification.depth == 0) {
                             if (notification is ScrollStartNotification) {
-                              _isSwiping = true;
                               _prefetchTimer?.cancel();
                               QuranPageWidgetMobile.dismissActiveMenu();
-                            } else if (notification is ScrollEndNotification) {
-                              _isSwiping = false;
                             }
                           }
                           return false;

@@ -1,0 +1,30 @@
+description: This file stores settings for Dart & Flutter DevTools.
+documentation: https://docs.flutter.dev/tools/devtools
+
+# ------------------------------------------------------------------------------
+# 🚀 PERFORMANCE & JANK DIAGNOSTICS CONFIGURATION
+# ------------------------------------------------------------------------------
+# These settings configure Flutter DevTools to capture deep frame timelines,
+# highlight frame drops (jank), track widget rebuilds, and isolate UI-thread hitches.
+# ------------------------------------------------------------------------------
+
+performance:
+  # Highlight frames exceeding VSYNC frame budgets (<8.3ms for 120 FPS, <16.6ms for 60 FPS)
+  highlight_jank: true
+
+  # Trace every lifecycle phase in the frame timeline to isolate the exact cause of jank
+  track_widget_builds: true
+  track_layouts: true
+  track_paints: true
+
+  # Include both project-level and Flutter engine/framework traces
+  include_user_created_widgets: true
+  include_framework_widgets: true
+  include_engine_traces: true
+
+inspector:
+  # Track widget rebuild counts to identify redundant build cycles
+  track_rebuild_widgets: true
+  show_guidelines: false
+
+extensions:
