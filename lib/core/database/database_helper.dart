@@ -46,7 +46,7 @@ class DatabaseHelper {
 
     // Increment this whenever we update quran.db in assets
     const currentDbVersion =
-        16; // bumped to 16: added QCF V2 glyph codes (code_v2) to all 83,665 words across all 604 pages
+        17; // bumped to 17: restored all 56 missing cross-page boundary verses (e.g. 6:131) and rebuilt complete 83,665-word dataset across all 604 pages
 
     if (!exists || dbVersion < currentDbVersion) {
       if (!kIsWeb) {

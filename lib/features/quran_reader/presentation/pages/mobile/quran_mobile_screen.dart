@@ -10,7 +10,6 @@ import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_state.dart';
 import '../../widgets/mobile/media_control_bar_mobile.dart';
 import '../../../../../core/services/audio_preferences_service.dart';
-import '../../../../../core/services/font_service.dart';
 import '../../../bloc/quran/quran_page_cache.dart';
 import '../../../bloc/quran/quran_state.dart';
 import '../../../domain/repositories/quran_repository.dart';
@@ -97,9 +96,6 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
   Future<void> _prefetchNeighbors(int page) async {
     if (!mounted) return;
     final repository = context.read<QuranRepository>();
-
-    // Preload surrounding font window in parallel (6 pages forward & backward)
-    unawaited(FontService.preloadSurroundingFonts(page, window: 6));
 
     final neighbors = [
       page + 1,

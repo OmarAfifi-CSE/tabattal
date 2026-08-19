@@ -23,14 +23,11 @@ import 'core/theme/app_colors.dart';
 import 'core/network/audio_download_manager.dart';
 import 'core/services/audio_preferences_service.dart';
 import 'core/bloc/locale/locale_cubit.dart';
-import 'core/services/font_service.dart';
 import 'features/settings/bloc/settings_bloc.dart';
 import 'features/settings/bloc/settings_state.dart';
 import 'features/quran_reader/bloc/hifz/hifz_bloc.dart';
 
 import 'features/quran_reader/bloc/quran/quran_bloc.dart';
-import 'features/quran_reader/bloc/quran/quran_page_cache.dart';
-import 'features/quran_reader/bloc/quran/quran_state.dart';
 
 // ---------------------------------------------------------------------------
 // Main entrypoint
@@ -51,22 +48,7 @@ void main() async {
     ]);
   }
 
-  // Preload and register ALL 604 Quran fonts in Flutter engine immediately
-  unawaited(FontService.preloadAllFonts());
-
   final container = await configureDependencies();
-
-  // Preload the initial page into RAM (takes ~2ms) so Frame 1 is 100% synchronous and never blank
-  try {
-    final initialPage = container.audioPrefs.lastReadPage;
-    final initialResult = await container.quranRepository.getLinesByPage(initialPage);
-    initialResult.fold((_) {}, (lines) {
-      QuranPageCache.put(
-        initialPage,
-        QuranLoaded(lines: lines, currentPage: initialPage),
-      );
-    });
-  } catch (_) {}
 
   // Asynchronously preload all remaining 604 Quran pages from SQLite into RAM
   unawaited(container.localDataSource.preloadAllPages());

@@ -21,7 +21,6 @@ import 'quran_page_frame_mobile.dart';
 import '../verse_action_menu.dart';
 import '../../../../../core/constants/quran_metadata.dart';
 import 'surah_header_widget_mobile.dart';
-import '../../../../../core/services/font_service.dart';
 import '../../../../settings/bloc/settings_bloc.dart';
 import '../../../../../core/theme/mushaf_theme.dart';
 import '../../../bloc/hifz/hifz_bloc.dart';
@@ -69,7 +68,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   int? _activeVerseId;
   OverlayEntry? _activeOverlayEntry;
   final GlobalKey _pageColumnKey = GlobalKey();
-  bool _isFontLoaded = false;
 
   int? _bookmarkHighlightVerseId;
   final GlobalKey _pageRepaintKey = GlobalKey();
@@ -120,14 +118,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     if (cached == null) {
       _loadPageDataFallback();
     }
-    // Synchronously initialize font state — eliminates first-frame flash for cached fonts.
-    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-    final fontName = 'QCF_P$pageStr';
-    _isFontLoaded = FontService.isLoaded(fontName);
-    if (!_isFontLoaded) {
-      FontService.loadedFontsNotifier.addListener(_onFontsLoaded);
-      _loadPageFont();
-    }
     if (widget.highlightVerseKey != null) {
       _activateBookmarkHighlight(widget.highlightVerseKey!);
     }
@@ -144,27 +134,12 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     } catch (_) {}
   }
 
-  void _onFontsLoaded() {
-    if (!mounted || _isFontLoaded) return;
-    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-    final fontName = 'QCF_P$pageStr';
-    if (FontService.isLoaded(fontName)) {
-      FontService.loadedFontsNotifier.removeListener(_onFontsLoaded);
-      setState(() => _isFontLoaded = true);
-    }
-  }
-
   @override
   void didUpdateWidget(QuranPageWidgetMobile oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.pageNumber != oldWidget.pageNumber) {
       final cached = QuranPageCache.get(widget.pageNumber);
       if (cached == null) _loadPageDataFallback();
-      // Synchronously update font state for the new page.
-      final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-      final loaded = FontService.isLoaded('QCF_P$pageStr');
-      if (loaded != _isFontLoaded) setState(() => _isFontLoaded = loaded);
-      if (!loaded) _loadPageFont();
     }
     if (widget.highlightVerseKey != oldWidget.highlightVerseKey) {
       if (widget.highlightVerseKey != null) {
@@ -177,7 +152,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
   @override
   void dispose() {
-    FontService.loadedFontsNotifier.removeListener(_onFontsLoaded);
     for (final recognizer in _wordGestureRecognizers.values) {
       recognizer.dispose();
     }
@@ -191,19 +165,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
-
-  Future<void> _loadPageFont() async {
-    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-    final fontName = 'QCF_P$pageStr';
-    if (FontService.isLoaded(fontName)) {
-      if (!_isFontLoaded && mounted) {
-        setState(() => _isFontLoaded = true);
-      }
-      return;
-    }
-    await FontService.loadFontForPage(widget.pageNumber);
-    if (mounted) setState(() => _isFontLoaded = true);
-  }
 
   void _activateBookmarkHighlight(String verseKey) {
     final parsed = ArabicTextUtils.parseVerseKey(verseKey);
@@ -933,10 +894,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         .effectiveMushafTheme;
 
     final displayState = QuranPageCache.get(widget.pageNumber);
-    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-    final isFontReady = _isFontLoaded || FontService.isLoaded('QCF_P$pageStr');
 
-    if (displayState == null || !isFontReady) {
+    if (displayState == null) {
       return QuranPageFrameMobile(
         pageNumber: widget.pageNumber,
         onNavigateToPage: widget.onNavigateToPage,

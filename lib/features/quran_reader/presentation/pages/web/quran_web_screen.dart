@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../widgets/web/quran_page_widget_web.dart';
-import '../../widgets/quran_glyph_prewarmer.dart';
 import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_state.dart';
 import '../../widgets/web/media_control_bar_web.dart';
@@ -16,7 +15,6 @@ import '../../../../../core/constants/quran_constants.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
 import 'dart:async';
-import '../../../../../core/services/font_service.dart';
 import '../../../bloc/quran/quran_page_cache.dart';
 import '../../../bloc/quran/quran_state.dart';
 import '../../../data/models/verse_model.dart';
@@ -144,10 +142,6 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
     for (final neighbor in immediate) {
       if (!mounted) return;
       if (neighbor >= 1 && neighbor <= QuranConstants.totalPages) {
-        final fontName = 'QCF_P${neighbor.toString().padLeft(3, '0')}';
-        if (!FontService.isLoaded(fontName)) {
-          await FontService.loadFontForPage(neighbor);
-        }
         if (!mounted) return;
         if (QuranPageCache.get(neighbor) == null) {
           final result = await repository.getLinesByPage(neighbor);
@@ -170,11 +164,6 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
       for (final neighbor in secondary) {
         if (!mounted) return;
         if (neighbor >= 1 && neighbor <= QuranConstants.totalPages) {
-          final fontName = 'QCF_P${neighbor.toString().padLeft(3, '0')}';
-          if (!FontService.isLoaded(fontName)) {
-            await FontService.loadFontForPage(neighbor);
-            await Future<void>.delayed(const Duration(milliseconds: 30));
-          }
           if (!mounted) return;
           if (QuranPageCache.get(neighbor) == null) {
             final result = await repository.getLinesByPage(neighbor);
@@ -315,26 +304,6 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                   width: contentWidth,
                   child: Stack(
                     children: [
-                      if (_currentPage < QuranConstants.totalPages)
-                        Positioned(
-                          left: -50,
-                          top: -50,
-                          child: QuranGlyphPrewarmer(
-                            pageNumber: isTwoPageMode
-                                ? (_currentPage + 2).clamp(1, QuranConstants.totalPages)
-                                : _currentPage + 1,
-                          ),
-                        ),
-                      if (_currentPage > 1)
-                        Positioned(
-                          left: -50,
-                          top: -50,
-                          child: QuranGlyphPrewarmer(
-                            pageNumber: isTwoPageMode
-                                ? (_currentPage - 2).clamp(1, QuranConstants.totalPages)
-                                : _currentPage - 1,
-                          ),
-                        ),
                       BlocBuilder<AudioBloc, AudioState>(
                         buildWhen: (previous, current) {
                           final prevVisible =

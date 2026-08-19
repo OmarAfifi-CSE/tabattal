@@ -25,7 +25,6 @@ import 'quran_page_frame_desktop.dart';
 import 'verse_action_menu_desktop.dart';
 import '../../../../../core/constants/quran_metadata.dart';
 import 'surah_header_widget_desktop.dart';
-import '../../../../../core/services/font_service.dart';
 import '../../../../settings/bloc/settings_bloc.dart';
 import '../../../../../core/theme/mushaf_theme.dart';
 
@@ -70,7 +69,6 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
   int? _activeVerseId;
   OverlayEntry? _activeOverlayEntry;
   final GlobalKey _pageColumnKey = GlobalKey();
-  bool _isFontLoaded = false;
 
   late final AnimationController _bookmarkPulseController;
   late final Animation<double> _bookmarkPulseAnimation;
@@ -105,7 +103,6 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
     super.initState();
     _quranBloc = QuranBloc(repository: context.read<QuranRepository>())
       ..add(LoadPage(widget.pageNumber));
-    _loadPageFont();
     _bookmarkPulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
@@ -126,7 +123,6 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
     super.didUpdateWidget(oldWidget);
     if (widget.pageNumber != oldWidget.pageNumber) {
       _quranBloc.add(LoadPage(widget.pageNumber));
-      _loadPageFont();
       _precomputedCanvasWidth = null;
     }
     if (widget.highlightVerseKey != oldWidget.highlightVerseKey) {
@@ -151,19 +147,6 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
-
-  Future<void> _loadPageFont() async {
-    final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-    final fontName = 'QCF_P$pageStr';
-    if (FontService.isLoaded(fontName)) {
-      if (!_isFontLoaded && mounted) {
-        setState(() => _isFontLoaded = true);
-      }
-      return;
-    }
-    await FontService.loadFontForPage(widget.pageNumber);
-    if (mounted) setState(() => _isFontLoaded = true);
-  }
 
   void _activateBookmarkHighlight(String verseKey) {
     final parsed = ArabicTextUtils.parseVerseKey(verseKey);
@@ -1078,7 +1061,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
               .watch<SettingsBloc>()
               .state
               .effectiveMushafTheme;
-          if (state is QuranLoading || !_isFontLoaded) {
+          if (state is QuranLoading) {
             return QuranPageFrameDesktop(
               pageNumber: widget.pageNumber,
               onNavigateToPage: widget.onNavigateToPage,
