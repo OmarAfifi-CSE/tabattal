@@ -86,9 +86,9 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
   // Cached data for O(1) lookups and avoiding re-parsing per frame
   List<LineData>? _cachedLines;
-  Map<int, LineData> _lineMap = {};
-  final Map<String, int> _verseKeyToIntIdMap = {};
-  final Map<String, ({int surah, int ayah})> _parsedVerseKeys = {};
+  Map<int, LineData> _lineMap = const {};
+  Map<String, int> _verseKeyToIntIdMap = const {};
+  Map<String, ({int surah, int ayah})> _parsedVerseKeys = const {};
 
   // Object pool for TapGestureRecognizers to eliminate ~225 allocations per frame
   // and completely eliminate Dart VM Generational GC pauses during scrolling.
@@ -747,10 +747,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
     _cachedLines = lines;
     _lineMap = state.lineMap;
-    _verseKeyToIntIdMap.clear();
-    _verseKeyToIntIdMap.addAll(state.verseKeyToIntIdMap);
-    _parsedVerseKeys.clear();
-    _parsedVerseKeys.addAll(state.parsedVerseKeys);
+    _verseKeyToIntIdMap = state.verseKeyToIntIdMap;
+    _parsedVerseKeys = state.parsedVerseKeys;
 
     if (_textLineCount == 0 && _surahHeaderCount == 0 && _spacerCount == 0) {
       _calculateLineTypeCounts();
