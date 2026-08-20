@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:audio_service/audio_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import '../database/database_helper.dart';
 import '../network/api_client.dart';
@@ -66,14 +65,14 @@ Future<DependencyContainer> configureDependencies() async {
 
   final audioPrefs = await AudioPreferencesService.create();
 
+  final isEnLocale = PlatformDispatcher.instance.locale.languageCode == 'en';
   final audioHandler = await AudioService.init<QuranAudioHandler>(
     builder: () => QuranAudioHandler(),
     config: AudioServiceConfig(
       androidNotificationChannelId: 'com.tabattal.channel.audio',
-      androidNotificationChannelName: lookupAppLocalizations(
-        PlatformDispatcher.instance.locale,
-      ).notificationChannelRecitations,
-      androidNotificationIcon: 'mipmap/ic_launcher',
+      androidNotificationChannelName: isEnLocale
+          ? 'Quran Recitations'
+          : 'تلاوات القرآن',
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
     ),
