@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../../../../l10n/app_localizations.dart';
-import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../../core/utils/arabic_text_utils.dart';
+import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
+import '../../../../../../core/theme/app_colors.dart';
 
 class QuranIndexViewWeb extends StatefulWidget {
   final int initialIndex;
@@ -125,35 +125,17 @@ class _SurahListTabState extends State<_SurahListTab>
             itemBuilder: (context, index) {
               final surahNum = index + 1;
               final startPage = QuranMetadata.getStartPageForSurah(surahNum);
+              final surahName = isEn
+                  ? QuranMetadata.getSurahNameEnglish(surahNum)
+                  : QuranMetadata.getSurahName(surahNum);
 
-              return ListTile(
+              return _IndexSurahTile(
+                surahNum: surahNum,
+                startPage: startPage,
+                surahName: surahName,
+                isEn: isEn,
+                l10n: l10n,
                 onTap: () => widget.onSelectPage(startPage),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                leading: _buildCircleNumberBadge('$surahNum'),
-                title: Text(
-                  l10n.surahListItem(
-                    isEn
-                        ? QuranMetadata.getSurahNameEnglish(surahNum)
-                        : QuranMetadata.getSurahName(surahNum),
-                  ),
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                trailing: Text(
-                  l10n.pageListItem(
-                    isEn ? startPage.toString() : startPage.toArabicDigits,
-                  ),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textPrimary.withValues(alpha: 0.6),
-                  ),
-                ),
               );
             },
           ),
@@ -161,28 +143,49 @@ class _SurahListTabState extends State<_SurahListTab>
       ),
     );
   }
+}
 
-  Widget _buildCircleNumberBadge(String label, {bool filled = true}) {
-    return Container(
-      width: 40,
-      height: 40,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AppColors.accentGold.withValues(alpha: filled ? 0.12 : 0.1),
-        shape: BoxShape.circle,
-        border: filled
-            ? Border.all(
-                color: AppColors.accentGold.withValues(alpha: 0.4),
-                width: 1,
-              )
-            : null,
+class _IndexSurahTile extends StatelessWidget {
+  final int surahNum;
+  final int startPage;
+  final String surahName;
+  final bool isEn;
+  final AppLocalizations l10n;
+  final VoidCallback onTap;
+
+  const _IndexSurahTile({
+    required this.surahNum,
+    required this.startPage,
+    required this.surahName,
+    required this.isEn,
+    required this.l10n,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 4,
       ),
-      child: Text(
-        label,
+      leading: _IndexNumberBadge(label: '$surahNum', filled: true),
+      title: Text(
+        l10n.surahListItem(surahName),
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
+        ),
+      ),
+      trailing: Text(
+        l10n.pageListItem(
+          isEn ? startPage.toString() : startPage.toArabicDigits,
+        ),
         style: TextStyle(
           fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: AppColors.accentGold,
+          color: AppColors.textPrimary.withValues(alpha: 0.6),
         ),
       ),
     );
@@ -227,28 +230,12 @@ class _JuzListTabState extends State<_JuzListTab>
               final juzNum = index + 1;
               final startPage = widget.juzStartPages[index];
 
-              return ListTile(
+              return _IndexJuzTile(
+                juzNum: juzNum,
+                startPage: startPage,
+                isEn: isEn,
+                l10n: l10n,
                 onTap: () => widget.onSelectPage(startPage),
-                leading: _buildCircleNumberBadge('$juzNum', filled: false),
-                title: Text(
-                  l10n.juzListItem(
-                    isEn ? juzNum.toString() : QuranMetadata.getJuzName(juzNum),
-                  ),
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                trailing: Text(
-                  l10n.pageListItem(
-                    isEn ? startPage.toString() : startPage.toArabicDigits,
-                  ),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textPrimary.withValues(alpha: 0.6),
-                  ),
-                ),
               );
             },
           ),
@@ -256,8 +243,59 @@ class _JuzListTabState extends State<_JuzListTab>
       ),
     );
   }
+}
 
-  Widget _buildCircleNumberBadge(String label, {bool filled = true}) {
+class _IndexJuzTile extends StatelessWidget {
+  final int juzNum;
+  final int startPage;
+  final bool isEn;
+  final AppLocalizations l10n;
+  final VoidCallback onTap;
+
+  const _IndexJuzTile({
+    required this.juzNum,
+    required this.startPage,
+    required this.isEn,
+    required this.l10n,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      leading: _IndexNumberBadge(label: '$juzNum', filled: false),
+      title: Text(
+        l10n.juzListItem(
+          isEn ? juzNum.toString() : QuranMetadata.getJuzName(juzNum),
+        ),
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
+        ),
+      ),
+      trailing: Text(
+        l10n.pageListItem(
+          isEn ? startPage.toString() : startPage.toArabicDigits,
+        ),
+        style: TextStyle(
+          fontSize: 14,
+          color: AppColors.textPrimary.withValues(alpha: 0.6),
+        ),
+      ),
+    );
+  }
+}
+
+class _IndexNumberBadge extends StatelessWidget {
+  final String label;
+  final bool filled;
+
+  const _IndexNumberBadge({required this.label, this.filled = true});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: 40,
       height: 40,

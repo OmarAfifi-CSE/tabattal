@@ -1,13 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/network/audio_download_manager.dart';
-import '../../../../../../l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../core/constants/quran_metadata.dart';
-import '../../../../../core/utils/reciter_localization.dart';
+import '../../../../../core/network/audio_download_manager.dart';
+import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/app_snack_bar.dart';
+import '../../../../../core/utils/reciter_localization.dart';
 import '../audio_selector_button.dart';
 
 class QuranAudioManagerView extends StatefulWidget {
@@ -138,95 +138,84 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
           surah,
           numAyahs,
         );
-        if (!mounted) return false;
         notifier.value = actualProgress > 0 ? actualProgress : -1.0;
-        if (!isBatch) {
-          final isEn = Localizations.localeOf(context).languageCode == 'en';
-          final surahName = isEn
-              ? QuranMetadata.getSurahNameEnglish(surah)
-              : QuranMetadata.getSurahName(surah);
-          AppSnackBar.showError(
-            context,
-            AppLocalizations.of(context)!.downloadFailed(surahName),
-          );
-        }
       }
     } finally {
       _activeCancelTokens.remove(surah);
-      _activeDownloads.remove(surah);
       if (mounted) {
-        final finalProgress = await _downloadManager.getSurahDownloadProgress(
-          _selectedCategory,
-          _selectedReciter,
-          surah,
-          numAyahs,
-        );
-        notifier.value = finalProgress >= 1.0
-            ? 1.0
-            : (finalProgress > 0 ? finalProgress : -1.0);
-        setState(() {});
+        setState(() => _activeDownloads.remove(surah));
+      } else {
+        _activeDownloads.remove(surah);
       }
     }
     return isSuccess;
   }
 
+  void _cancelSurahDownload(int surah) {
+    if (_activeCancelTokens.containsKey(surah)) {
+      _activeCancelTokens[surah]?.cancel('User cancelled download');
+      _activeCancelTokens.remove(surah);
+      _activeDownloads.remove(surah);
+      if (mounted) setState(() {});
+    }
+  }
+
   Future<void> _downloadAll() async {
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     if (_isDownloadingAll) {
-      _isDownloadingAll = false;
-      _batchCancelToken?.cancel('User paused download');
+      _batchCancelToken?.cancel('Batch download cancelled');
       _batchCancelToken = null;
-      for (final token in _activeCancelTokens.values) {
-        token.cancel('User paused download');
-      }
-      _activeCancelTokens.clear();
-      if (mounted) {
-        setState(() {});
-        final isEn = Localizations.localeOf(context).languageCode == 'en';
-        AppSnackBar.showInfo(
-          context,
-          isEn ? 'Download paused' : 'تم إيقاف التحميل مؤقتًا',
-        );
-      }
+      setState(() => _isDownloadingAll = false);
+      AppSnackBar.show(
+        context,
+        message: isArabic ? 'تم إيقاف التحميل مؤقتًا' : 'Download paused',
+        icon: Icons.pause_circle_outline_rounded,
+      );
       return;
     }
 
-    _batchCancelToken = CancelToken();
     setState(() => _isDownloadingAll = true);
-    bool hadError = false;
-    try {
-      for (int i = 1; i <= 114; i++) {
-        if (!mounted ||
-            !_isDownloadingAll ||
-            _batchCancelToken?.isCancelled == true) {
-          break;
-        }
-        final currentProgress = _surahProgress[i]?.value ?? -1.0;
-        if (currentProgress < 1.0) {
-          final success = await _downloadSurah(
-            i,
-            isBatch: true,
-            cancelToken: _batchCancelToken,
-          );
-          if (_batchCancelToken?.isCancelled == true || !_isDownloadingAll) {
-            break;
-          }
-          if (!success) {
-            hadError = true;
-            break;
-          }
-        }
+    _batchCancelToken = CancelToken();
+    AppSnackBar.show(
+      context,
+      message: isArabic
+          ? 'جاري بدء تحميل جميع السور...'
+          : 'Starting download for all surahs...',
+      icon: Icons.downloading_rounded,
+    );
+
+    int failedCount = 0;
+    for (int surah = 1; surah <= 114; surah++) {
+      if (!mounted || !_isDownloadingAll) break;
+      if (_surahProgress[surah]?.value == 1.0) continue;
+
+      final success = await _downloadSurah(
+        surah,
+        isBatch: true,
+        cancelToken: _batchCancelToken,
+      );
+      if (!success) {
+        if (_batchCancelToken?.isCancelled ?? false) break;
+        failedCount++;
       }
-    } finally {
-      _batchCancelToken = null;
-      if (mounted) {
-        setState(() => _isDownloadingAll = false);
-        final isEn = Localizations.localeOf(context).languageCode == 'en';
-        if (hadError) {
+    }
+
+    if (mounted) {
+      setState(() => _isDownloadingAll = false);
+      if (!(_batchCancelToken?.isCancelled ?? false)) {
+        if (failedCount == 0) {
+          AppSnackBar.showSuccess(
+            context,
+            isArabic
+                ? 'تم تحميل جميع السور بنجاح'
+                : 'All surahs downloaded successfully',
+          );
+        } else {
           AppSnackBar.showError(
             context,
-            isEn
-                ? 'Download stopped. Please check your internet connection.'
-                : 'تم إيقاف التحميل. يرجى التحقق من اتصالك بالإنترنت.',
+            isArabic
+                ? 'فشل تحميل $failedCount سور'
+                : 'Failed to download $failedCount surahs',
           );
         }
       }
@@ -235,66 +224,51 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     final categories = AudioDownloadManager.reciterCategories.keys.toList();
-    final reciters = AudioDownloadManager
-        .reciterCategories[_selectedCategory]!
-        .keys
-        .toList();
+    final reciters = AudioDownloadManager.reciterCategories[_selectedCategory]!;
 
-    return Directionality(
-      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: AppColors.surfaceCream,
+      appBar: AppBar(
         backgroundColor: AppColors.surfaceCream,
-        appBar: AppBar(
-          backgroundColor: AppColors.surfaceCream,
-          elevation: 0,
-          centerTitle: true,
-          title: Text(
-            AppLocalizations.of(context)!.audioManagerTitle,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-            ),
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          l10n.audioManagerTitle,
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
-          automaticallyImplyLeading: false,
-          leading: isEn
-              ? null
-              : IconButton(
-                  icon: Icon(
-                    Icons.arrow_back_rounded,
-                    color: AppColors.textPrimary,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                ),
-          actions: isEn
-              ? [
-                  IconButton(
-                    icon: Icon(
-                      Icons.arrow_forward_rounded,
-                      color: AppColors.textPrimary,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ]
-              : null,
         ),
-        body: CustomScrollView(
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textPrimary,
+            size: 24,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Directionality(
+        textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+        child: CustomScrollView(
           slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-              sliver: SliverToBoxAdapter(
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 child: Container(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: AppColors.cardCream,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: AppColors.borderLight),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.textPrimary.withValues(alpha: 0.04),
-                        blurRadius: 6,
+                        color: AppColors.textPrimary.withValues(alpha: 0.03),
+                        blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
@@ -302,51 +276,63 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Category Selector
+                      Text(
+                        l10n.audioTypeLabel,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
                       AudioSelectorButton<String>(
                         icon: Icons.category_rounded,
-                        label: AppLocalizations.of(context)!.audioTypeLabel,
+                        label: l10n.audioTypeLabel,
                         value: _selectedCategory,
                         items: categories,
-                        itemHeight: 42,
-                        onChanged: (val) {
+                        labelBuilder: (c) =>
+                            ReciterLocalization.localize(context, c),
+                        onChanged: (cat) {
                           setState(() {
-                            _selectedCategory = val;
+                            _selectedCategory = cat;
                             _selectedReciter = AudioDownloadManager
-                                .reciterCategories[val]!
+                                .reciterCategories[cat]!
                                 .keys
                                 .first;
                           });
                           _initializeProgressTrackers();
                         },
-                        labelBuilder: (item) =>
-                            ReciterLocalization.localizeByLang(isEn, item),
                       ),
-                      const SizedBox(height: 10),
-
-                      // Reciter Selector
+                      const SizedBox(height: 12),
+                      Text(
+                        l10n.audioReciterLabel,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
                       AudioSelectorButton<String>(
-                        icon: Icons.mic_rounded,
-                        label: AppLocalizations.of(context)!.audioReciterLabel,
+                        icon: Icons.person_rounded,
+                        label: l10n.audioReciterLabel,
                         value: _selectedReciter,
-                        items: reciters,
-                        itemHeight: 42,
-                        maxHeight: 210,
-                        onChanged: (val) => _onReciterChanged(val),
-                        labelBuilder: (item) =>
-                            ReciterLocalization.localizeByLang(isEn, item),
+                        items: reciters.keys.toList(),
+                        labelBuilder: (r) =>
+                            ReciterLocalization.localize(context, r),
+                        onChanged: _onReciterChanged,
                       ),
-                      const SizedBox(height: 14),
-
-                      // Download All button
+                      const SizedBox(height: 16),
                       SizedBox(
-                        width: MediaQuery.sizeOf(context).width,
+                        height: 46,
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.accentGold,
-                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            backgroundColor: _isDownloadingAll
+                                ? Colors.orangeAccent.shade700
+                                : AppColors.accentGold,
+                            foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             elevation: 0,
                           ),
@@ -362,7 +348,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                           label: Text(
                             _isDownloadingAll
                                 ? (isEn ? 'Pause Download' : 'إيقاف التحميل')
-                                : AppLocalizations.of(context)!.audioDownloadAll,
+                                : l10n.audioDownloadAll,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -394,7 +380,16 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 sliver: SliverList.builder(
                   itemCount: 114,
-                  itemBuilder: (context, index) => _buildSurahItem(index + 1),
+                  itemBuilder: (context, index) {
+                    final surah = index + 1;
+                    return _AudioManagerSurahItem(
+                      surah: surah,
+                      progressNotifier: _surahProgress[surah]!,
+                      isActivelyDownloading: _activeDownloads.contains(surah),
+                      onDownload: () => _downloadSurah(surah),
+                      onCancel: () => _cancelSurahDownload(surah),
+                    );
+                  },
                 ),
               ),
           ],
@@ -402,22 +397,29 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
       ),
     );
   }
+}
 
-  void _cancelSurahDownload(int surah) {
-    if (_activeCancelTokens.containsKey(surah)) {
-      _activeCancelTokens[surah]?.cancel('User cancelled download');
-      _activeCancelTokens.remove(surah);
-      _activeDownloads.remove(surah);
-      if (mounted) setState(() {});
-    }
-  }
+class _AudioManagerSurahItem extends StatelessWidget {
+  final int surah;
+  final ValueNotifier<double> progressNotifier;
+  final bool isActivelyDownloading;
+  final VoidCallback onDownload;
+  final VoidCallback onCancel;
 
-  Widget _buildSurahItem(int surah) {
+  const _AudioManagerSurahItem({
+    required this.surah,
+    required this.progressNotifier,
+    required this.isActivelyDownloading,
+    required this.onDownload,
+    required this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     final surahName = isEn
         ? QuranMetadata.getSurahNameEnglish(surah)
         : QuranMetadata.getSurahName(surah);
-    final notifier = _surahProgress[surah]!;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -438,9 +440,8 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
         borderRadius: BorderRadius.circular(12),
         clipBehavior: Clip.antiAlias,
         child: ValueListenableBuilder<double>(
-          valueListenable: notifier,
+          valueListenable: progressNotifier,
           builder: (context, progress, _) {
-            final isActivelyDownloading = _activeDownloads.contains(surah);
             final isDownloaded = progress >= 1.0;
             final isPartiallyDownloaded =
                 progress > 0.0 && progress < 1.0 && !isActivelyDownloading;
@@ -464,7 +465,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                 height: 34,
                 child: Center(
                   child: InkWell(
-                    onTap: () => _cancelSurahDownload(surah),
+                    onTap: onCancel,
                     borderRadius: BorderRadius.circular(17),
                     child: SizedBox(
                       width: 34,
@@ -495,7 +496,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                 width: 58,
                 height: 34,
                 child: InkWell(
-                  onTap: () => _downloadSurah(surah),
+                  onTap: onDownload,
                   borderRadius: BorderRadius.circular(17),
                   child: Container(
                     width: 68,
@@ -542,7 +543,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                     color: AppColors.accentGold,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    onPressed: () => _downloadSurah(surah),
+                    onPressed: onDownload,
                   ),
                 ),
               );

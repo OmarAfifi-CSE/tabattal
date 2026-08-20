@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../bloc/hifz/hifz_bloc.dart';
@@ -35,7 +34,7 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
 
         final screenSize = MediaQuery.sizeOf(context);
         final double bubbleSize = isWeb ? 46.0 : 42.r;
-        final double toolbarHeight = isWeb ? 46.0 : 42.r; // Exact same height as bubble size!
+        final double toolbarHeight = isWeb ? 46.0 : 42.r;
         final double minMargin = isWeb ? 10.0 : 8.w;
         final double maxTop = (screenSize.height - toolbarHeight - (isWeb ? 70.0 : 110.h)).clamp(4.0, screenSize.height);
 
@@ -125,7 +124,7 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
                           elevation: 6,
                           borderRadius: BorderRadius.circular(toolbarHeight / 2),
                           child: Container(
-                            height: toolbarHeight, // Exact same height as bubble size!
+                            height: toolbarHeight,
                             padding: EdgeInsets.symmetric(
                               horizontal: isWeb ? 12 : 10.w,
                               vertical: isWeb ? 4 : 3.h,
@@ -155,39 +154,42 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
                                   size: isWeb ? 22 : 20.sp,
                                 ),
                                 SizedBox(width: isWeb ? 8 : 6.w),
-                                _buildTypeChip(
-                                  context,
+                                _HifzTypeChip(
                                   type: HifzMaskingType.fullVerse,
                                   label: l10n.hifzMaskFull,
                                   isSelected: state.maskingType == HifzMaskingType.fullVerse,
+                                  isWeb: isWeb,
                                 ),
                                 SizedBox(width: isWeb ? 6 : 5.w),
-                                _buildTypeChip(
-                                  context,
+                                _HifzTypeChip(
                                   type: HifzMaskingType.wordByWord,
                                   label: l10n.hifzMaskWord,
                                   isSelected: state.maskingType == HifzMaskingType.wordByWord,
+                                  isWeb: isWeb,
                                 ),
                                 SizedBox(width: isWeb ? 12 : 10.w),
-                                _buildActionIcon(
+                                _HifzActionIcon(
                                   icon: Icons.refresh_rounded,
                                   color: AppColors.accentGold,
+                                  isWeb: isWeb,
                                   onTap: () {
                                     context.read<HifzBloc>().add(const ClearRevealedItems());
                                   },
                                 ),
                                 SizedBox(width: isWeb ? 4 : 3.w),
-                                _buildActionIcon(
+                                _HifzActionIcon(
                                   icon: Icons.unfold_less_rounded,
                                   color: AppColors.textSecondary,
+                                  isWeb: isWeb,
                                   onTap: () {
                                     setState(() => _isMinimized = true);
                                   },
                                 ),
                                 SizedBox(width: isWeb ? 4 : 3.w),
-                                _buildActionIcon(
+                                _HifzActionIcon(
                                   icon: Icons.close_rounded,
                                   color: Colors.redAccent,
+                                  isWeb: isWeb,
                                   onTap: () {
                                     context
                                         .read<HifzBloc>()
@@ -206,13 +208,23 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
       },
     );
   }
+}
 
-  Widget _buildActionIcon({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final isWeb = widget.isWeb;
+class _HifzActionIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  final bool isWeb;
+
+  const _HifzActionIcon({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+    required this.isWeb,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16.r),
@@ -229,14 +241,23 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
       ),
     );
   }
+}
 
-  Widget _buildTypeChip(
-    BuildContext context, {
-    required HifzMaskingType type,
-    required String label,
-    required bool isSelected,
-  }) {
-    final isWeb = widget.isWeb;
+class _HifzTypeChip extends StatelessWidget {
+  final HifzMaskingType type;
+  final String label;
+  final bool isSelected;
+  final bool isWeb;
+
+  const _HifzTypeChip({
+    required this.type,
+    required this.label,
+    required this.isSelected,
+    required this.isWeb,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
         context.read<HifzBloc>().add(SetHifzMaskingType(type));
@@ -265,4 +286,3 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
     );
   }
 }
-

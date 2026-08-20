@@ -3,21 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../../l10n/app_localizations.dart';
-import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/bloc/locale/locale_cubit.dart';
-import '../../../../bloc/bookmark/bookmark_bloc.dart';
-import '../../../../bloc/bookmark/bookmark_state.dart';
-import '../../../pages/search/tablet/quran_search_screen_tablet.dart';
-import 'quran_index_view_tablet.dart';
-import '../quran_full_tafsir_view.dart';
-import '../quran_translation_view.dart';
-import '../quran_audio_manager_view.dart';
-import 'quran_bookmarks_view_tablet.dart';
-
+import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../core/theme/mushaf_theme.dart';
 import '../../../../../settings/bloc/settings_bloc.dart';
 import '../../../../../settings/bloc/settings_event.dart';
 import '../../../../../settings/bloc/settings_state.dart';
-import '../../../../../../core/theme/mushaf_theme.dart';
+import '../../../../bloc/bookmark/bookmark_bloc.dart';
+import '../../../../bloc/bookmark/bookmark_state.dart';
+import '../../../pages/search/tablet/quran_search_screen_tablet.dart';
+import '../quran_audio_manager_view.dart';
+import '../quran_full_tafsir_view.dart';
+import '../quran_translation_view.dart';
+import 'quran_bookmarks_view_tablet.dart';
+import 'quran_index_view_tablet.dart';
 
 class QuranDrawerTablet extends StatelessWidget {
   final int currentPage;
@@ -29,8 +28,37 @@ class QuranDrawerTablet extends StatelessWidget {
     required this.onNavigateToPage,
   });
 
+  void _showThemePicker(BuildContext context) {
+    final bloc = context.read<SettingsBloc>();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      elevation: 0.r,
+      builder: (ctx) =>
+          BlocProvider.value(value: bloc, child: const _ThemePickerSheet()),
+    );
+  }
+
+  void _showLanguagePicker(BuildContext context, AppLocalizations l10n) {
+    final cubit = context.read<LocaleCubit>();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cardCream,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (ctx) => BlocProvider.value(
+        value: cubit,
+        child: _LanguagePickerSheet(l10n: l10n),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+
     final drawer = Drawer(
       width: 300.w,
       backgroundColor: AppColors.surfaceCream,
@@ -40,189 +68,163 @@ class QuranDrawerTablet extends StatelessWidget {
           bottomLeft: Radius.circular(24.r),
         ),
       ),
-      child: _buildMenuItems(context),
-    );
-    // On mobile, float the drawer with vertical padding for the visual effect.
-    // On web, fill the full height to avoid overflow on smaller viewports.
-    return Padding(
-      padding: EdgeInsets.only(top: 50.h, bottom: 50.h),
-      child: drawer,
-    );
-  }
-
-  Widget _buildMenuItems(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    return Directionality(
-      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-      child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                _buildHeader(context),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
-                  child: BlocBuilder<SettingsBloc, SettingsState>(
-                    builder: (context, state) {
-                      final l10n = AppLocalizations.of(context)!;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Text(
-                              l10n.themeScrollDirection,
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+      child: Directionality(
+        textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  const _TabletDrawerHeader(),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
+                    child: BlocBuilder<SettingsBloc, SettingsState>(
+                      builder: (context, state) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Directionality(
+                              textDirection: TextDirection.rtl,
+                              child: Text(
+                                l10n.themeScrollDirection,
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                             ),
-                          ),
-                          SizedBox(height: 12.h),
-                          ScrollDirectionToggle(
-                            scrollDirection: state.scrollDirection,
-                            onChanged: (val) => context
-                                .read<SettingsBloc>()
-                                .add(ChangeScrollDirection(val)),
-                          ),
-                        ],
-                      );
+                            SizedBox(height: 12.h),
+                            ScrollDirectionToggle(
+                              scrollDirection: state.scrollDirection,
+                              onChanged: (val) => context
+                                  .read<SettingsBloc>()
+                                  .add(ChangeScrollDirection(val)),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _TabletDrawerItem(
+                    icon: Icons.search_rounded,
+                    title: l10n.drawerSearch,
+                    subtitle: l10n.drawerSearchSubtitle,
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final result =
+                          await Navigator.push<Map<String, dynamic>>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const QuranSearchScreenTablet(),
+                            ),
+                          );
+                      if (result != null) {
+                        onNavigateToPage(
+                          result['page'],
+                          verseKey: result['verseKey'],
+                        );
+                      }
                     },
                   ),
-                ),
-              ],
-            ),
-          ),
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildDrawerItem(
-                  context,
-                  icon: Icons.search_rounded,
-                  title: l10n.drawerSearch,
-                  subtitle: l10n.drawerSearchSubtitle,
-                  onTap: () async {
-                    Navigator.pop(context);
-                    final result = await Navigator.push<Map<String, dynamic>>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const QuranSearchScreenTablet(),
-                      ),
-                    );
-                    if (result != null) {
-                      onNavigateToPage(
-                        result['page'],
-                        verseKey: result['verseKey'],
+                  _TabletDrawerItem(
+                    icon: Icons.list_alt_rounded,
+                    title: l10n.drawerIndex,
+                    subtitle: l10n.drawerIndexSubtitle,
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final result = await Navigator.push<dynamic>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const QuranIndexViewTablet(),
+                        ),
                       );
-                    }
-                  },
-                ),
-
-                _buildDrawerItem(
-                  context,
-                  icon: Icons.list_alt_rounded,
-                  title: l10n.drawerIndex,
-                  subtitle: l10n.drawerIndexSubtitle,
-                  onTap: () async {
-                    Navigator.pop(context);
-                    final result = await Navigator.push<dynamic>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const QuranIndexViewTablet(),
-                      ),
-                    );
-                    if (result is Map<String, dynamic>) {
-                      onNavigateToPage(
-                        result['page'] as int,
-                        verseKey: result['verseKey'] as String?,
+                      if (result is Map<String, dynamic>) {
+                        onNavigateToPage(
+                          result['page'] as int,
+                          verseKey: result['verseKey'] as String?,
+                        );
+                      } else if (result is int) {
+                        onNavigateToPage(result);
+                      }
+                    },
+                  ),
+                  _TabletDrawerItem(
+                    icon: Icons.bookmark_rounded,
+                    title: l10n.drawerBookmarks,
+                    subtitle: l10n.drawerBookmarksSubtitle,
+                    badge: const _TabletBookmarkBadge(),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final result = await Navigator.push<dynamic>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const QuranBookmarksViewTablet(),
+                        ),
                       );
-                    } else if (result is int) {
-                      onNavigateToPage(result);
-                    }
-                  },
-                ),
-
-
-
-                _buildDrawerItem(
-                  context,
-                  icon: Icons.bookmark_rounded,
-                  title: l10n.drawerBookmarks,
-                  subtitle: l10n.drawerBookmarksSubtitle,
-                  badge: _buildBookmarkBadge(),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    final result = await Navigator.push<dynamic>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const QuranBookmarksViewTablet(),
-                      ),
-                    );
-                    if (result is Map<String, dynamic>) {
-                      onNavigateToPage(
-                        result['page'] as int,
-                        verseKey: result['verseKey'] as String?,
+                      if (result is Map<String, dynamic>) {
+                        onNavigateToPage(
+                          result['page'] as int,
+                          verseKey: result['verseKey'] as String?,
+                        );
+                      }
+                    },
+                  ),
+                  _TabletDrawerItem(
+                    icon: Icons.menu_book_rounded,
+                    title: l10n.drawerTafsir,
+                    subtitle: l10n.drawerTafsirSubtitle,
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final result = await Navigator.push<dynamic>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              QuranFullTafsirView(pageNumber: currentPage),
+                        ),
                       );
-                    }
-                  },
-                ),
-
-                _buildDrawerItem(
-                  context,
-                  icon: Icons.menu_book_rounded,
-                  title: l10n.drawerTafsir,
-                  subtitle: l10n.drawerTafsirSubtitle,
-                  onTap: () async {
-                    Navigator.pop(context);
-                    final result = await Navigator.push<dynamic>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            QuranFullTafsirView(pageNumber: currentPage),
-                      ),
-                    );
-                    if (result is Map<String, dynamic>) {
-                      onNavigateToPage(
-                        result['page'] as int,
-                        verseKey: result['verseKey'] as String?,
+                      if (result is Map<String, dynamic>) {
+                        onNavigateToPage(
+                          result['page'] as int,
+                          verseKey: result['verseKey'] as String?,
+                        );
+                      } else if (result is int) {
+                        onNavigateToPage(result);
+                      }
+                    },
+                  ),
+                  _TabletDrawerItem(
+                    icon: Icons.translate_rounded,
+                    title: l10n.drawerTranslation,
+                    subtitle: l10n.drawerTranslationSubtitle,
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final result = await Navigator.push<dynamic>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              QuranTranslationView(pageNumber: currentPage),
+                        ),
                       );
-                    } else if (result is int) {
-                      onNavigateToPage(result);
-                    }
-                  },
-                ),
-
-                _buildDrawerItem(
-                  context,
-                  icon: Icons.translate_rounded,
-                  title: l10n.drawerTranslation,
-                  subtitle: l10n.drawerTranslationSubtitle,
-                  onTap: () async {
-                    Navigator.pop(context);
-                    final result = await Navigator.push<dynamic>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            QuranTranslationView(pageNumber: currentPage),
-                      ),
-                    );
-                    if (result is Map<String, dynamic>) {
-                      onNavigateToPage(
-                        result['page'] as int,
-                        verseKey: result['verseKey'] as String?,
-                      );
-                    } else if (result is int) {
-                      onNavigateToPage(result);
-                    }
-                  },
-                ),
-                ...[
-                  _buildDrawerItem(
-                    context,
+                      if (result is Map<String, dynamic>) {
+                        onNavigateToPage(
+                          result['page'] as int,
+                          verseKey: result['verseKey'] as String?,
+                        );
+                      } else if (result is int) {
+                        onNavigateToPage(result);
+                      }
+                    },
+                  ),
+                  _TabletDrawerItem(
                     icon: Icons.headphones_rounded,
                     title: l10n.drawerAudioManager,
                     subtitle: l10n.drawerAudioManagerSubtitle,
@@ -236,38 +238,44 @@ class QuranDrawerTablet extends StatelessWidget {
                       );
                     },
                   ),
+                  _TabletDrawerItem(
+                    icon: Icons.palette_rounded,
+                    title: l10n.themeAppearanceTitle,
+                    subtitle: l10n.themeAppearanceSubtitle,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showThemePicker(context);
+                    },
+                  ),
+                  _TabletDrawerItem(
+                    icon: Icons.language_rounded,
+                    title: l10n.drawerLanguage,
+                    subtitle: l10n.drawerLanguageSubtitle,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showLanguagePicker(context, l10n);
+                    },
+                  ),
                 ],
-
-                _buildDrawerItem(
-                  context,
-                  icon: Icons.palette_rounded,
-                  title: l10n.themeAppearanceTitle,
-                  subtitle: l10n.themeAppearanceSubtitle,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showThemePicker(context);
-                  },
-                ),
-
-                _buildDrawerItem(
-                  context,
-                  icon: Icons.language_rounded,
-                  title: l10n.drawerLanguage,
-                  subtitle: l10n.drawerLanguageSubtitle,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showLanguagePicker(context, l10n);
-                  },
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
-  }
 
-  Widget _buildHeader(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(top: 50.h, bottom: 50.h),
+      child: drawer,
+    );
+  }
+}
+
+class _TabletDrawerHeader extends StatelessWidget {
+  const _TabletDrawerHeader();
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: MediaQuery.sizeOf(context).width,
       padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 14.h),
@@ -292,7 +300,7 @@ class QuranDrawerTablet extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
               fontSize: 20.sp,
-              height: 1.8,
+              height: 1.8.h,
               fontWeight: FontWeight.normal,
               color: AppColors.textPrimary.withValues(alpha: 0.9),
             ),
@@ -301,34 +309,13 @@ class QuranDrawerTablet extends StatelessWidget {
       ),
     );
   }
+}
 
-  void _showThemePicker(BuildContext context) {
-    final bloc = context.read<SettingsBloc>();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      builder: (ctx) =>
-          BlocProvider.value(value: bloc, child: const _ThemePickerSheet()),
-    );
-  }
+class _TabletBookmarkBadge extends StatelessWidget {
+  const _TabletBookmarkBadge();
 
-  void _showLanguagePicker(BuildContext context, AppLocalizations l10n) {
-    final cubit = context.read<LocaleCubit>();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.cardCream,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
-      builder: (ctx) => BlocProvider.value(
-        value: cubit,
-        child: _LanguagePickerSheet(l10n: l10n),
-      ),
-    );
-  }
-
-  Widget _buildBookmarkBadge() {
+  @override
+  Widget build(BuildContext context) {
     return BlocBuilder<BookmarkBloc, BookmarkState>(
       builder: (context, state) {
         if (state.bookmarkedVerseKeys.isEmpty) return const SizedBox.shrink();
@@ -350,15 +337,25 @@ class QuranDrawerTablet extends StatelessWidget {
       },
     );
   }
+}
 
-  Widget _buildDrawerItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    Widget? badge,
-  }) {
+class _TabletDrawerItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final Widget? badge;
+
+  const _TabletDrawerItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.badge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -392,7 +389,7 @@ class QuranDrawerTablet extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (badge != null) ...[SizedBox(width: 8.w), badge],
+                      if (badge != null) ...[SizedBox(width: 8.w), badge!],
                     ],
                   ),
                   Text(
@@ -431,11 +428,15 @@ class _LanguagePickerSheet extends StatelessWidget {
       builder: (context, locale) {
         final isArabic = locale.languageCode == 'ar';
         return Padding(
-          padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, math.max(32.h, MediaQuery.paddingOf(context).bottom)),
+          padding: EdgeInsets.fromLTRB(
+            24.w,
+            16.h,
+            24.w,
+            math.max(32.h, MediaQuery.paddingOf(context).bottom),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Drag handle
               Container(
                 width: 40.w,
                 height: 4.h,
@@ -556,7 +557,6 @@ class ScrollDirectionToggle extends StatelessWidget {
 
     final activeTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
 
-    // In RTL, Alignment.centerRight corresponds to the first item visually.
     final horizontalAlignment = isArabic
         ? Alignment.centerRight
         : Alignment.centerLeft;
@@ -684,32 +684,20 @@ class _ThemePickerSheet extends StatelessWidget {
 
   String _getThemeName(BuildContext context, String id) {
     final l10n = AppLocalizations.of(context)!;
-    switch (id) {
-      case 'cream':
-        return l10n.themeCream;
-      case 'white':
-        return l10n.themeWhite;
-      case 'mint':
-        return l10n.themeMint;
-      case 'iceBlue':
-        return l10n.themeIceBlue;
-      case 'parchment':
-        return l10n.themeParchment;
-      case 'roseGold':
-        return l10n.themeRoseGold;
-      case 'slate':
-        return l10n.themeSlate;
-      case 'olive':
-        return l10n.themeOlive;
-      case 'emerald':
-        return l10n.themeEmerald;
-      case 'burgundy':
-        return l10n.themeBurgundy;
-      case 'dark':
-        return l10n.themeDark;
-      default:
-        return id;
-    }
+    return switch (id) {
+      'cream' => l10n.themeCream,
+      'white' => l10n.themeWhite,
+      'mint' => l10n.themeMint,
+      'iceBlue' => l10n.themeIceBlue,
+      'parchment' => l10n.themeParchment,
+      'roseGold' => l10n.themeRoseGold,
+      'slate' => l10n.themeSlate,
+      'olive' => l10n.themeOlive,
+      'emerald' => l10n.themeEmerald,
+      'burgundy' => l10n.themeBurgundy,
+      'dark' => l10n.themeDark,
+      _ => id,
+    };
   }
 
   @override
@@ -724,12 +712,16 @@ class _ThemePickerSheet extends StatelessWidget {
             borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
           ),
           child: Padding(
-            padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, math.max(32.h, MediaQuery.paddingOf(context).bottom)),
+            padding: EdgeInsets.fromLTRB(
+              24.w,
+              16.h,
+              24.w,
+              math.max(32.h, MediaQuery.paddingOf(context).bottom),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Drag handle
                 Center(
                   child: Container(
                     width: 40.w,
@@ -751,8 +743,6 @@ class _ThemePickerSheet extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 24.h),
-
-                // Dark Mode Toggle
                 Directionality(
                   textDirection: TextDirection.rtl,
                   child: Container(
@@ -789,21 +779,29 @@ class _ThemePickerSheet extends StatelessWidget {
                         ),
                         Switch(
                           value: isDark,
-                          thumbColor: WidgetStateProperty.resolveWith<Color>((states) {
-                            if (states.contains(WidgetState.selected)) {
-                              return state.effectiveMushafTheme.goldColor;
-                            }
-                            return state.effectiveMushafTheme.textColor.withValues(alpha: 0.75);
-                          }),
-                          trackColor: WidgetStateProperty.resolveWith<Color>((states) {
-                            if (states.contains(WidgetState.selected)) {
-                              return state.effectiveMushafTheme.goldColor.withValues(alpha: 0.45);
-                            }
-                            return state.effectiveMushafTheme.innerBorderColor;
-                          }),
-                          trackOutlineColor: WidgetStateProperty.resolveWith<Color>((states) {
-                            return state.effectiveMushafTheme.goldColor.withValues(alpha: 0.35);
-                          }),
+                          thumbColor:
+                              WidgetStateProperty.resolveWith<Color>((states) {
+                                if (states.contains(WidgetState.selected)) {
+                                  return state.effectiveMushafTheme.goldColor;
+                                }
+                                return state.effectiveMushafTheme.textColor
+                                    .withValues(alpha: 0.75);
+                              }),
+                          trackColor:
+                              WidgetStateProperty.resolveWith<Color>((states) {
+                                if (states.contains(WidgetState.selected)) {
+                                  return state.effectiveMushafTheme.goldColor
+                                      .withValues(alpha: 0.45);
+                                }
+                                return state
+                                    .effectiveMushafTheme
+                                    .innerBorderColor;
+                              }),
+                          trackOutlineColor:
+                              WidgetStateProperty.resolveWith<Color>((states) {
+                                return state.effectiveMushafTheme.goldColor
+                                    .withValues(alpha: 0.35);
+                              }),
                           onChanged: (val) {
                             context.read<SettingsBloc>().add(
                               ToggleThemeMode(
@@ -816,10 +814,7 @@ class _ThemePickerSheet extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 SizedBox(height: 24.h),
-
-                // Mushaf Colors List
                 Directionality(
                   textDirection: TextDirection.rtl,
                   child: Text(
@@ -832,8 +827,6 @@ class _ThemePickerSheet extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 12.h),
-
-                // Grid of colors (5x2 perfectly symmetrical layout)
                 Directionality(
                   textDirection: TextDirection.rtl,
                   child: GridView.builder(
@@ -919,5 +912,3 @@ class _ThemePickerSheet extends StatelessWidget {
     );
   }
 }
-
-

@@ -1,16 +1,16 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../../../../l10n/app_localizations.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../../core/utils/app_snack_bar.dart';
+import '../../../../../core/utils/reciter_localization.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_event.dart';
 import '../../../bloc/audio/audio_state.dart';
-import '../../../../../core/theme/app_text_styles.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'audio_settings_sheet_web.dart';
-import '../../../../../core/utils/reciter_localization.dart';
-import '../../../../../core/utils/app_snack_bar.dart';
 
 class MediaControlBarWeb extends StatefulWidget {
   final bool isExpanded;
@@ -71,7 +71,7 @@ class _MediaControlBarWebState extends State<MediaControlBarWeb> {
               _timerEndTime = null;
             });
           } else {
-            setState(() {}); // trigger rebuild to update countdown text
+            setState(() {});
           }
         } else {
           timer.cancel();
@@ -90,12 +90,32 @@ class _MediaControlBarWebState extends State<MediaControlBarWeb> {
       crossFadeState: widget.isExpanded
           ? CrossFadeState.showFirst
           : CrossFadeState.showSecond,
-      firstChild: _buildExpandedPlayer(context),
-      secondChild: _buildMiniPlayer(context),
+      firstChild: _WebExpandedPlayer(
+        onToggleExpanded: widget.onToggleExpanded,
+        sleepTimerMinutes: _sleepTimerMinutes,
+        timerEndTime: _timerEndTime,
+        onSleepTimerSelected: _handleSleepTimerSelection,
+      ),
+      secondChild: _WebMiniPlayer(onToggleExpanded: widget.onToggleExpanded),
     );
   }
+}
 
-  Widget _buildExpandedPlayer(BuildContext context) {
+class _WebExpandedPlayer extends StatelessWidget {
+  final VoidCallback onToggleExpanded;
+  final int? sleepTimerMinutes;
+  final DateTime? timerEndTime;
+  final ValueChanged<int> onSleepTimerSelected;
+
+  const _WebExpandedPlayer({
+    required this.onToggleExpanded,
+    required this.sleepTimerMinutes,
+    required this.timerEndTime,
+    required this.onSleepTimerSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -113,17 +133,44 @@ class _MediaControlBarWebState extends State<MediaControlBarWeb> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildTopRow(context),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.inkBrown,
+                  size: 28,
+                ),
+                onPressed: onToggleExpanded,
+              ),
+              const Expanded(child: _WebReciterButton()),
+              _WebSleepTimerAndClose(
+                sleepTimerMinutes: sleepTimerMinutes,
+                timerEndTime: timerEndTime,
+                onSleepTimerSelected: onSleepTimerSelected,
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
-          _buildPlaybackRow(),
+          const _WebPlaybackRow(),
         ],
       ),
     );
   }
+}
 
-  Widget _buildMiniPlayer(BuildContext context) {
+class _WebMiniPlayer extends StatelessWidget {
+  final VoidCallback onToggleExpanded;
+
+  const _WebMiniPlayer({required this.onToggleExpanded});
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: widget.onToggleExpanded,
+      onTap: onToggleExpanded,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
@@ -186,8 +233,7 @@ class _MediaControlBarWebState extends State<MediaControlBarWeb> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildPlayPauseButton(
-                      context,
+                    _WebPlayPauseButton(
                       isPlaying: isPlaying,
                       isLoading: isLoading,
                       size: 40,
@@ -208,28 +254,13 @@ class _MediaControlBarWebState extends State<MediaControlBarWeb> {
       ),
     );
   }
+}
 
-  Widget _buildTopRow(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        IconButton(
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
-          icon: Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: AppColors.inkBrown,
-            size: 28,
-          ),
-          onPressed: widget.onToggleExpanded,
-        ),
-        Expanded(child: _buildReciterButton(context)),
-        _buildTimerAndCloseButtons(context),
-      ],
-    );
-  }
+class _WebReciterButton extends StatelessWidget {
+  const _WebReciterButton();
 
-  Widget _buildReciterButton(BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => showAudioSettingsSheetWeb(context),
       child: Container(
@@ -279,8 +310,28 @@ class _MediaControlBarWebState extends State<MediaControlBarWeb> {
       ),
     );
   }
+}
 
-  Widget _buildTimerAndCloseButtons(BuildContext context) {
+class _WebSleepTimerAndClose extends StatelessWidget {
+  final int? sleepTimerMinutes;
+  final DateTime? timerEndTime;
+  final ValueChanged<int> onSleepTimerSelected;
+
+  const _WebSleepTimerAndClose({
+    required this.sleepTimerMinutes,
+    required this.timerEndTime,
+    required this.onSleepTimerSelected,
+  });
+
+  String _formatRemainingTime(Duration duration) {
+    if (duration.isNegative) return '00:00';
+    final m = duration.inMinutes.toString().padLeft(2, '0');
+    final s = (duration.inSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -291,7 +342,7 @@ class _MediaControlBarWebState extends State<MediaControlBarWeb> {
             borderRadius: BorderRadius.circular(12),
           ),
           offset: const Offset(0, -180),
-          onSelected: _handleSleepTimerSelection,
+          onSelected: onSleepTimerSelected,
           itemBuilder: (ctx) {
             final l10n = AppLocalizations.of(ctx)!;
             return [
@@ -361,16 +412,14 @@ class _MediaControlBarWebState extends State<MediaControlBarWeb> {
               children: [
                 Icon(
                   Icons.timer_outlined,
-                  color: _sleepTimerMinutes != null
+                  color: sleepTimerMinutes != null
                       ? AppColors.bronzeDark
                       : AppColors.inkBrown,
                   size: 24,
                 ),
-                if (_timerEndTime != null)
+                if (timerEndTime != null)
                   Text(
-                    _formatRemainingTime(
-                      _timerEndTime!.difference(DateTime.now()),
-                    ),
+                    _formatRemainingTime(timerEndTime!.difference(DateTime.now())),
                     style: TextStyle(
                       fontSize: 10,
                       color: AppColors.bronzeDark,
@@ -396,15 +445,13 @@ class _MediaControlBarWebState extends State<MediaControlBarWeb> {
       ],
     );
   }
+}
 
-  String _formatRemainingTime(Duration duration) {
-    if (duration.isNegative) return '00:00';
-    final m = duration.inMinutes.toString().padLeft(2, '0');
-    final s = (duration.inSeconds % 60).toString().padLeft(2, '0');
-    return '$m:$s';
-  }
+class _WebPlaybackRow extends StatelessWidget {
+  const _WebPlaybackRow();
 
-  Widget _buildPlaybackRow() {
+  @override
+  Widget build(BuildContext context) {
     return BlocBuilder<AudioBloc, AudioState>(
       builder: (context, state) {
         final isPlaying = state is AudioPlaying;
@@ -439,8 +486,7 @@ class _MediaControlBarWebState extends State<MediaControlBarWeb> {
                         context.read<AudioBloc>().add(const PreviousAyah()),
                   ),
                   const SizedBox(width: 8),
-                  _buildPlayPauseButton(
-                    context,
+                  _WebPlayPauseButton(
                     isPlaying: isPlaying,
                     isLoading: isLoading,
                     size: 56,
@@ -475,14 +521,23 @@ class _MediaControlBarWebState extends State<MediaControlBarWeb> {
       },
     );
   }
+}
 
-  Widget _buildPlayPauseButton(
-    BuildContext context, {
-    required bool isPlaying,
-    required bool isLoading,
-    required double size,
-    required double iconSize,
-  }) {
+class _WebPlayPauseButton extends StatelessWidget {
+  final bool isPlaying;
+  final bool isLoading;
+  final double size;
+  final double iconSize;
+
+  const _WebPlayPauseButton({
+    required this.isPlaying,
+    required this.isLoading,
+    required this.size,
+    required this.iconSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         if (isPlaying) {

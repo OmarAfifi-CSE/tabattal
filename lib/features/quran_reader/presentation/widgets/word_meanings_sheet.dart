@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/quran_metadata.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -17,6 +17,24 @@ class WordMeaningItem {
     required this.word,
     required this.meaning,
   });
+}
+
+List<WordMeaningItem> _parseGhareeb(String raw) {
+  final lines = raw.split('\n');
+  final items = <WordMeaningItem>[];
+  for (final line in lines) {
+    final trimmed = line.trim();
+    if (trimmed.isEmpty) continue;
+    final colonIdx = trimmed.indexOf(':');
+    if (colonIdx != -1) {
+      final word = trimmed.substring(0, colonIdx).trim();
+      final meaning = trimmed.substring(colonIdx + 1).trim();
+      items.add(WordMeaningItem(word: word, meaning: meaning));
+    } else {
+      items.add(WordMeaningItem(word: '', meaning: trimmed));
+    }
+  }
+  return items;
 }
 
 class WordMeaningsSheet extends StatefulWidget {
@@ -71,24 +89,6 @@ class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
     );
   }
 
-  List<WordMeaningItem> _parseGhareeb(String raw) {
-    final lines = raw.split('\n');
-    final items = <WordMeaningItem>[];
-    for (final line in lines) {
-      final trimmed = line.trim();
-      if (trimmed.isEmpty) continue;
-      final colonIdx = trimmed.indexOf(':');
-      if (colonIdx != -1) {
-        final word = trimmed.substring(0, colonIdx).trim();
-        final meaning = trimmed.substring(colonIdx + 1).trim();
-        items.add(WordMeaningItem(word: word, meaning: meaning));
-      } else {
-        items.add(WordMeaningItem(word: '', meaning: trimmed));
-      }
-    }
-    return items;
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -139,52 +139,11 @@ class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
             ),
 
             // Header: Title & Surah/Ayah Reference
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.translate_rounded,
-                        color: AppColors.verseMarkerGold,
-                        size: 22.sp,
-                      ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        l10n.wordMeaningsTitle,
-                        style: AppTextStyles.headerText.copyWith(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.verseMarkerGold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
-                    decoration: BoxDecoration(
-                      color: AppColors.verseMarkerGold.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(
-                        color: AppColors.verseMarkerGold.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Text(
-                      isArabic
-                          ? 'سورة $surahName : ${ayahNumber.toString().toArabicDigits}'
-                          : 'Surah $surahName : $ayahNumber',
-                      style: TextStyle(
-                        fontFamily: isArabic ? 'Amiri' : null,
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.verseMarkerGold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            _WordMeaningsHeader(
+              surahName: surahName,
+              ayahNumber: ayahNumber,
+              isArabic: isArabic,
+              l10n: l10n,
             ),
 
             SizedBox(height: 12.h),
@@ -201,31 +160,7 @@ class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
                 ),
               )
             else if (_meanings == null || _meanings!.isEmpty)
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.check_circle_outline_rounded,
-                      color: AppColors.verseMarkerGold.withValues(alpha: 0.8),
-                      size: 36.sp,
-                    ),
-                    SizedBox(height: 10.h),
-                    Text(
-                      isArabic
-                          ? 'جميع مفردات الآية الكريمة واضحة وجلية المعنى'
-                          : 'All words in this verse are clear and straightforward.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: isArabic ? 'Amiri' : null,
-                        color: AppColors.textSecondary,
-                        fontSize: 15.sp,
-                      ),
-                    ),
-                  ],
-                ),
-              )
+              _WordMeaningsEmptyState(isArabic: isArabic)
             else
               Flexible(
                 child: ListView.separated(
@@ -237,88 +172,202 @@ class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
                   itemCount: _meanings!.length,
                   separatorBuilder: (context, index) => SizedBox(height: 10.h),
                   itemBuilder: (context, index) {
-                    final item = _meanings![index];
-
-                    return Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 12.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardBackground,
-                        borderRadius: BorderRadius.circular(14.r),
-                        border: Border.all(
-                          color: AppColors.verseMarkerGold.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        textDirection: TextDirection.rtl,
-                        children: [
-                          // Index Badge
-                          Container(
-                            width: 26.r,
-                            height: 26.r,
-                            margin: EdgeInsets.only(top: 2.h),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: AppColors.verseMarkerGold
-                                  .withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              (index + 1).toString().toArabicDigits,
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.verseMarkerGold,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 12.w),
-
-                          // Word and its Arabic Meaning
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (item.word.isNotEmpty) ...[
-                                  Text(
-                                    item.word,
-                                    textDirection: TextDirection.rtl,
-                                    style: TextStyle(
-                                      fontFamily:
-                                          'KFGQPC HAFS Uthmanic Script Regular',
-                                      fontSize: 20.sp,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.verseMarkerGold,
-                                      height: 1.4,
-                                    ),
-                                  ),
-                                  SizedBox(height: 7.h),
-                                ],
-                                Text(
-                                  item.meaning,
-                                  textDirection: TextDirection.rtl,
-                                  style: TextStyle(
-                                    fontFamily: 'Amiri',
-                                    fontSize: 16.sp,
-                                    height: 1.6,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                    return _WordMeaningCard(
+                      item: _meanings![index],
+                      index: index,
                     );
                   },
                 ),
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _WordMeaningsHeader extends StatelessWidget {
+  final String surahName;
+  final int ayahNumber;
+  final bool isArabic;
+  final AppLocalizations l10n;
+
+  const _WordMeaningsHeader({
+    required this.surahName,
+    required this.ayahNumber,
+    required this.isArabic,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.translate_rounded,
+                color: AppColors.verseMarkerGold,
+                size: 22.sp,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                l10n.wordMeaningsTitle,
+                style: AppTextStyles.headerText.copyWith(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.verseMarkerGold,
+                ),
+              ),
+            ],
+          ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+            decoration: BoxDecoration(
+              color: AppColors.verseMarkerGold.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(
+                color: AppColors.verseMarkerGold.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Text(
+              isArabic
+                  ? 'سورة $surahName : ${ayahNumber.toString().toArabicDigits}'
+                  : 'Surah $surahName : $ayahNumber',
+              style: TextStyle(
+                fontFamily: isArabic ? 'Amiri' : null,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.verseMarkerGold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WordMeaningsEmptyState extends StatelessWidget {
+  final bool isArabic;
+
+  const _WordMeaningsEmptyState({required this.isArabic});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.check_circle_outline_rounded,
+            color: AppColors.verseMarkerGold.withValues(alpha: 0.8),
+            size: 36.sp,
+          ),
+          SizedBox(height: 10.h),
+          Text(
+            isArabic
+                ? 'جميع مفردات الآية الكريمة واضحة وجلية المعنى'
+                : 'All words in this verse are clear and straightforward.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: isArabic ? 'Amiri' : null,
+              color: AppColors.textSecondary,
+              fontSize: 15.sp,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WordMeaningCard extends StatelessWidget {
+  final WordMeaningItem item;
+  final int index;
+
+  const _WordMeaningCard({
+    required this.item,
+    required this.index,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: 16.w,
+        vertical: 12.h,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(
+          color: AppColors.verseMarkerGold.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        textDirection: TextDirection.rtl,
+        children: [
+          // Index Badge
+          Container(
+            width: 26.r,
+            height: 26.r,
+            margin: EdgeInsets.only(top: 2.h),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.verseMarkerGold.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              (index + 1).toString().toArabicDigits,
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.verseMarkerGold,
+              ),
+            ),
+          ),
+          SizedBox(width: 12.w),
+
+          // Word and its Arabic Meaning
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (item.word.isNotEmpty) ...[
+                  Text(
+                    item.word,
+                    textDirection: TextDirection.rtl,
+                    style: TextStyle(
+                      fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.verseMarkerGold,
+                      height: 1.4,
+                    ),
+                  ),
+                  SizedBox(height: 7.h),
+                ],
+                Text(
+                  item.meaning,
+                  textDirection: TextDirection.rtl,
+                  style: TextStyle(
+                    fontFamily: 'Amiri',
+                    fontSize: 16.sp,
+                    height: 1.6,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

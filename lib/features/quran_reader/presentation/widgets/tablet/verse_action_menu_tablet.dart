@@ -124,8 +124,10 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
     Color? iconColor,
     bool closeMenu = true,
   }) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return _VerseActionMenuItemTablet(
+      icon: icon,
+      text: text,
+      iconColor: iconColor,
       onTap: () {
         if (_isClosing) return;
         if (closeMenu) {
@@ -133,24 +135,6 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
         }
         onTap();
       },
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor ?? AppColors.bronzeIcon, size: 22.sp),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                text,
-                style: AppTextStyles.menuItemText.copyWith(
-                  color: AppColors.inkBrown,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1040,4 +1024,42 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
   }
 }
 
+class _VerseActionMenuItemTablet extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final VoidCallback onTap;
+  final Color? iconColor;
 
+  const _VerseActionMenuItemTablet({
+    required this.icon,
+    required this.text,
+    required this.onTap,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor ?? AppColors.bronzeIcon, size: 22.sp),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Text(
+                text,
+                style: AppTextStyles.menuItemText.copyWith(
+                  color: AppColors.inkBrown,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

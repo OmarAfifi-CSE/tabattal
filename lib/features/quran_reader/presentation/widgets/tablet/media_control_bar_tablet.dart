@@ -1,16 +1,17 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../../../../l10n/app_localizations.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../../core/utils/app_snack_bar.dart';
+import '../../../../../core/utils/reciter_localization.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_event.dart';
 import '../../../bloc/audio/audio_state.dart';
-import '../../../../../core/theme/app_text_styles.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'audio_settings_sheet_tablet.dart';
-import '../../../../../core/utils/reciter_localization.dart';
-import '../../../../../core/utils/app_snack_bar.dart';
 
 class MediaControlBarTablet extends StatefulWidget {
   final bool isExpanded;
@@ -71,7 +72,7 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
               _timerEndTime = null;
             });
           } else {
-            setState(() {}); // trigger rebuild to update countdown text
+            setState(() {});
           }
         } else {
           timer.cancel();
@@ -90,51 +91,98 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
       crossFadeState: widget.isExpanded
           ? CrossFadeState.showFirst
           : CrossFadeState.showSecond,
-      firstChild: _buildExpandedPlayer(context),
-      secondChild: _buildMiniPlayer(context),
+      firstChild: _TabletExpandedPlayer(
+        onToggleExpanded: widget.onToggleExpanded,
+        sleepTimerMinutes: _sleepTimerMinutes,
+        timerEndTime: _timerEndTime,
+        onSleepTimerSelected: _handleSleepTimerSelection,
+      ),
+      secondChild: _TabletMiniPlayer(onToggleExpanded: widget.onToggleExpanded),
     );
   }
+}
 
-  Widget _buildExpandedPlayer(BuildContext context) {
+class _TabletExpandedPlayer extends StatelessWidget {
+  final VoidCallback onToggleExpanded;
+  final int? sleepTimerMinutes;
+  final DateTime? timerEndTime;
+  final ValueChanged<int> onSleepTimerSelected;
+
+  const _TabletExpandedPlayer({
+    required this.onToggleExpanded,
+    required this.sleepTimerMinutes,
+    required this.timerEndTime,
+    required this.onSleepTimerSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: AppColors.cardCream,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.bronzeIcon, width: 1.2),
+        borderRadius: BorderRadius.circular(24.r),
+        border: Border.all(color: AppColors.bronzeIcon, width: 1.2.w),
         boxShadow: [
           BoxShadow(
             color: AppColors.textPrimary.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 10.r,
+            offset: Offset(0, 4.h),
           ),
         ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildTopRow(context),
-          const SizedBox(height: 12),
-          _buildPlaybackRow(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.inkBrown,
+                  size: 28.sp,
+                ),
+                onPressed: onToggleExpanded,
+              ),
+              const Expanded(child: _TabletReciterButton()),
+              _TabletSleepTimerAndClose(
+                sleepTimerMinutes: sleepTimerMinutes,
+                timerEndTime: timerEndTime,
+                onSleepTimerSelected: onSleepTimerSelected,
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          const _TabletPlaybackRow(),
         ],
       ),
     );
   }
+}
 
-  Widget _buildMiniPlayer(BuildContext context) {
+class _TabletMiniPlayer extends StatelessWidget {
+  final VoidCallback onToggleExpanded;
+
+  const _TabletMiniPlayer({required this.onToggleExpanded});
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: widget.onToggleExpanded,
+      onTap: onToggleExpanded,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
           color: AppColors.cardCream,
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: AppColors.bronzeIcon, width: 1.2),
+          borderRadius: BorderRadius.circular(30.r),
+          border: Border.all(color: AppColors.bronzeIcon, width: 1.2.w),
           boxShadow: [
             BoxShadow(
               color: AppColors.textPrimary.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              blurRadius: 10.r,
+              offset: Offset(0, 4.h),
             ),
           ],
         ),
@@ -163,9 +211,9 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
                       Icon(
                         Icons.multitrack_audio_rounded,
                         color: AppColors.bronzeIcon,
-                        size: 24,
+                        size: 24.sp,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8.w),
                       Flexible(
                         child: Text(
                           '$reciterName ($categoryName)',
@@ -174,7 +222,7 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
                               isEn ? TextDirection.ltr : TextDirection.rtl,
                           style: AppTextStyles.menuItemText.copyWith(
                             color: AppColors.inkBrown,
-                            fontSize: 12,
+                            fontSize: 12.sp,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -182,22 +230,21 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8.w),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildPlayPauseButton(
-                      context,
+                    _TabletPlayPauseButton(
                       isPlaying: isPlaying,
                       isLoading: isLoading,
-                      size: 40,
-                      iconSize: 24,
+                      size: 40.r,
+                      iconSize: 24.sp,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8.w),
                     Icon(
                       Icons.keyboard_arrow_up_rounded,
                       color: AppColors.inkBrown,
-                      size: 28,
+                      size: 28.sp,
                     ),
                   ],
                 ),
@@ -208,38 +255,23 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
       ),
     );
   }
+}
 
-  Widget _buildTopRow(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        IconButton(
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
-          icon: Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: AppColors.inkBrown,
-            size: 28,
-          ),
-          onPressed: widget.onToggleExpanded,
-        ),
-        Expanded(child: _buildReciterButton(context)),
-        _buildTimerAndCloseButtons(context),
-      ],
-    );
-  }
+class _TabletReciterButton extends StatelessWidget {
+  const _TabletReciterButton();
 
-  Widget _buildReciterButton(BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => showAudioSettingsSheetTablet(context),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: EdgeInsets.symmetric(horizontal: 8.w),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
           border: Border.all(
             color: AppColors.bronzeIcon.withValues(alpha: 0.5),
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -247,9 +279,9 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
             Icon(
               Icons.keyboard_arrow_up_rounded,
               color: AppColors.bronzeIcon,
-              size: 24,
+              size: 24.sp,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8.w),
             Expanded(
               child: BlocBuilder<AudioBloc, AudioState>(
                 builder: (context, state) {
@@ -265,7 +297,7 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
                     textAlign: isEn ? TextAlign.left : TextAlign.right,
                     style: AppTextStyles.menuItemText.copyWith(
                       color: AppColors.inkBrown,
-                      fontSize: 14,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -279,8 +311,28 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
       ),
     );
   }
+}
 
-  Widget _buildTimerAndCloseButtons(BuildContext context) {
+class _TabletSleepTimerAndClose extends StatelessWidget {
+  final int? sleepTimerMinutes;
+  final DateTime? timerEndTime;
+  final ValueChanged<int> onSleepTimerSelected;
+
+  const _TabletSleepTimerAndClose({
+    required this.sleepTimerMinutes,
+    required this.timerEndTime,
+    required this.onSleepTimerSelected,
+  });
+
+  String _formatRemainingTime(Duration duration) {
+    if (duration.isNegative) return '00:00';
+    final m = duration.inMinutes.toString().padLeft(2, '0');
+    final s = (duration.inSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -288,10 +340,10 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
           splashRadius: 0.1,
           color: AppColors.cardCream,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
           ),
-          offset: const Offset(0, -180),
-          onSelected: _handleSleepTimerSelection,
+          offset: Offset(0, -180.h),
+          onSelected: onSleepTimerSelected,
           itemBuilder: (ctx) {
             final l10n = AppLocalizations.of(ctx)!;
             return [
@@ -355,24 +407,22 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
             ];
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   Icons.timer_outlined,
-                  color: _sleepTimerMinutes != null
+                  color: sleepTimerMinutes != null
                       ? AppColors.bronzeDark
                       : AppColors.inkBrown,
-                  size: 24,
+                  size: 24.sp,
                 ),
-                if (_timerEndTime != null)
+                if (timerEndTime != null)
                   Text(
-                    _formatRemainingTime(
-                      _timerEndTime!.difference(DateTime.now()),
-                    ),
+                    _formatRemainingTime(timerEndTime!.difference(DateTime.now())),
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 10.sp,
                       color: AppColors.bronzeDark,
                       fontWeight: FontWeight.bold,
                     ),
@@ -381,30 +431,28 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8.w),
         GestureDetector(
           onTap: () => context.read<AudioBloc>().add(const StopAudio()),
           child: Container(
-            padding: const EdgeInsets.all(4),
+            padding: EdgeInsets.all(4.r),
             decoration: BoxDecoration(
               color: AppColors.textPrimary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.close, color: AppColors.inkBrown, size: 24),
+            child: Icon(Icons.close, color: AppColors.inkBrown, size: 24.sp),
           ),
         ),
       ],
     );
   }
+}
 
-  String _formatRemainingTime(Duration duration) {
-    if (duration.isNegative) return '00:00';
-    final m = duration.inMinutes.toString().padLeft(2, '0');
-    final s = (duration.inSeconds % 60).toString().padLeft(2, '0');
-    return '$m:$s';
-  }
+class _TabletPlaybackRow extends StatelessWidget {
+  const _TabletPlaybackRow();
 
-  Widget _buildPlaybackRow() {
+  @override
+  Widget build(BuildContext context) {
     return BlocBuilder<AudioBloc, AudioState>(
       builder: (context, state) {
         final isPlaying = state is AudioPlaying;
@@ -413,7 +461,7 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(width: 8),
+            SizedBox(width: 8.w),
             Directionality(
               textDirection: TextDirection.ltr,
               child: Row(
@@ -423,45 +471,44 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
                     icon: Icon(
                       Icons.fast_rewind_rounded,
                       color: AppColors.inkBrown,
-                      size: 30,
+                      size: 30.sp,
                     ),
                     onPressed: () =>
                         context.read<AudioBloc>().add(const PreviousSurah()),
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4.w),
                   IconButton(
                     icon: Icon(
                       Icons.skip_previous_rounded,
                       color: AppColors.inkBrown,
-                      size: 32,
+                      size: 32.sp,
                     ),
                     onPressed: () =>
                         context.read<AudioBloc>().add(const PreviousAyah()),
                   ),
-                  const SizedBox(width: 8),
-                  _buildPlayPauseButton(
-                    context,
+                  SizedBox(width: 8.w),
+                  _TabletPlayPauseButton(
                     isPlaying: isPlaying,
                     isLoading: isLoading,
-                    size: 56,
-                    iconSize: 32,
+                    size: 56.r,
+                    iconSize: 32.sp,
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8.w),
                   IconButton(
                     icon: Icon(
                       Icons.skip_next_rounded,
                       color: AppColors.inkBrown,
-                      size: 32,
+                      size: 32.sp,
                     ),
                     onPressed: () =>
                         context.read<AudioBloc>().add(const NextAyah()),
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4.w),
                   IconButton(
                     icon: Icon(
                       Icons.fast_forward_rounded,
                       color: AppColors.inkBrown,
-                      size: 30,
+                      size: 30.sp,
                     ),
                     onPressed: () =>
                         context.read<AudioBloc>().add(const NextSurah()),
@@ -469,20 +516,29 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8.w),
           ],
         );
       },
     );
   }
+}
 
-  Widget _buildPlayPauseButton(
-    BuildContext context, {
-    required bool isPlaying,
-    required bool isLoading,
-    required double size,
-    required double iconSize,
-  }) {
+class _TabletPlayPauseButton extends StatelessWidget {
+  final bool isPlaying;
+  final bool isLoading;
+  final double size;
+  final double iconSize;
+
+  const _TabletPlayPauseButton({
+    required this.isPlaying,
+    required this.isLoading,
+    required this.size,
+    required this.iconSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         if (isPlaying) {

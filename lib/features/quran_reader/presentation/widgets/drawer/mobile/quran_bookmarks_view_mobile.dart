@@ -2,15 +2,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../../../../core/utils/arabic_text_utils.dart';
+import '../../../../../../../core/utils/verse_ref.dart';
 import '../../../../../../../l10n/app_localizations.dart';
+import '../../../../../../core/constants/quran_metadata.dart';
 import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../quran_reader/domain/repositories/quran_repository.dart';
 import '../../../../bloc/bookmark/bookmark_bloc.dart';
 import '../../../../bloc/bookmark/bookmark_event.dart';
 import '../../../../bloc/bookmark/bookmark_state.dart';
-import '../../../../../quran_reader/domain/repositories/quran_repository.dart';
-import '../../../../../../core/utils/verse_ref.dart';
-import '../../../../../../core/utils/arabic_text_utils.dart';
-import '../../../../../../core/constants/quran_metadata.dart';
 
 class QuranBookmarksViewMobile extends StatelessWidget {
   const QuranBookmarksViewMobile({super.key});
@@ -18,7 +18,7 @@ class QuranBookmarksViewMobile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final content = Scaffold(
+    return Scaffold(
       backgroundColor: AppColors.surfaceCream,
       appBar: AppBar(
         backgroundColor: AppColors.surfaceCream,
@@ -44,7 +44,7 @@ class QuranBookmarksViewMobile extends StatelessWidget {
       body: BlocBuilder<BookmarkBloc, BookmarkState>(
         builder: (context, state) {
           if (state.bookmarkedVerseKeys.isEmpty) {
-            return _buildEmptyState(context);
+            return const _EmptyBookmarksView();
           }
 
           return ListView.separated(
@@ -70,10 +70,14 @@ class QuranBookmarksViewMobile extends StatelessWidget {
         },
       ),
     );
-    return content;
   }
+}
 
-  Widget _buildEmptyState(BuildContext context) {
+class _EmptyBookmarksView extends StatelessWidget {
+  const _EmptyBookmarksView();
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
