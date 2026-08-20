@@ -62,15 +62,109 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
     super.dispose();
   }
 
+  bool _isPageFlipping = false;
+  double _dragAccumulator = 0.0;
+  bool _hasTriggeredInCurrentDrag = false;
+
+  void _nextPage() {
+    if (_isPageFlipping) return;
+    if (_currentPage < QuranConstants.totalPages) {
+      _flipToPage(_currentPage + 1);
+    }
+  }
+
+  void _previousPage() {
+    if (_isPageFlipping) return;
+    if (_currentPage > 1) {
+      _flipToPage(_currentPage - 1);
+    }
+  }
+
+  void _flipToPage(int targetPage) {
+    if (_isPageFlipping) return;
+    _isPageFlipping = true;
+    _prefetchTimer?.cancel();
+    QuranPageWidgetMobile.dismissActiveMenu();
+
+    final targetIndex = targetPage - 1;
+    _pageController
+        .animateToPage(
+          targetIndex,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOutCubic,
+        )
+        .then((_) {
+          if (mounted) {
+            _isPageFlipping = false;
+          }
+        });
+  }
+
+  void _onDragStart(DragStartDetails details) {
+    _dragAccumulator = 0.0;
+    _hasTriggeredInCurrentDrag = false;
+    QuranPageWidgetMobile.dismissActiveMenu();
+  }
+
+  void _onHorizontalDragUpdate(DragUpdateDetails details) {
+    if (_hasTriggeredInCurrentDrag || _isPageFlipping) return;
+    _dragAccumulator += details.primaryDelta ?? 0.0;
+    const threshold = 28.0;
+    if (_dragAccumulator > threshold) {
+      // Swiped Right (->) -> Next Page
+      _hasTriggeredInCurrentDrag = true;
+      _nextPage();
+    } else if (_dragAccumulator < -threshold) {
+      // Swiped Left (<-) -> Previous Page
+      _hasTriggeredInCurrentDrag = true;
+      _previousPage();
+    }
+  }
+
+  void _onHorizontalDragEnd(DragEndDetails details) {
+    if (_hasTriggeredInCurrentDrag || _isPageFlipping) return;
+    final velocity = details.primaryVelocity ?? 0.0;
+    if (velocity > 120) {
+      _hasTriggeredInCurrentDrag = true;
+      _nextPage();
+    } else if (velocity < -120) {
+      _hasTriggeredInCurrentDrag = true;
+      _previousPage();
+    }
+  }
+
+  void _onVerticalDragUpdate(DragUpdateDetails details) {
+    if (_hasTriggeredInCurrentDrag || _isPageFlipping) return;
+    _dragAccumulator += details.primaryDelta ?? 0.0;
+    const threshold = 28.0;
+    if (_dragAccumulator < -threshold) {
+      // Swiped Up -> Next Page
+      _hasTriggeredInCurrentDrag = true;
+      _nextPage();
+    } else if (_dragAccumulator > threshold) {
+      // Swiped Down -> Previous Page
+      _hasTriggeredInCurrentDrag = true;
+      _previousPage();
+    }
+  }
+
+  void _onVerticalDragEnd(DragEndDetails details) {
+    if (_hasTriggeredInCurrentDrag || _isPageFlipping) return;
+    final velocity = details.primaryVelocity ?? 0.0;
+    if (velocity < -120) {
+      _hasTriggeredInCurrentDrag = true;
+      _nextPage();
+    } else if (velocity > 120) {
+      _hasTriggeredInCurrentDrag = true;
+      _previousPage();
+    }
+  }
+
   void _jumpToPage(int pageNumber, {String? verseKey, bool animate = false}) {
     final targetPage = pageNumber.clamp(1, QuranConstants.totalPages);
     final targetIndex = targetPage - 1;
     if (animate) {
-      _pageController.animateToPage(
-        targetIndex,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      _flipToPage(targetPage);
     } else {
       _pageController.jumpToPage(targetIndex);
     }
@@ -241,34 +335,55 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                           }
                           return false;
                         },
-                        child: PageView.builder(
-                          dragStartBehavior: DragStartBehavior.down,
-                          physics: const BouncingScrollPhysics(),
-                          controller: _pageController,
-                          allowImplicitScrolling: true,
-                          itemCount: QuranConstants.totalPages,
-                          scrollDirection: settingsState.scrollDirection,
-                          reverse: false,
-                          onPageChanged: (index) {
-                            final page = index + 1;
-                            if (_currentPage != page) {
-                              _currentPage = page;
-                              context.read<AudioPreferencesService>().saveLastReadPage(_currentPage);
-                              _prefetchAdjacentPages(_currentPage);
-                            }
-                          },
-                          itemBuilder: (context, index) {
-                            final pageNumber = index + 1;
-                            return QuranPageWidgetMobile(
-                              key: ValueKey(pageNumber),
-                              pageNumber: pageNumber,
-                              onNavigateToPage: (page, {verseKey}) =>
-                                  _jumpToPage(page, verseKey: verseKey),
-                              highlightVerseKey: pageNumber == _currentPage
-                                  ? _highlightVerseKey
-                                  : null,
-                            );
-                          },
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onHorizontalDragStart: settingsState.scrollDirection == Axis.horizontal
+                              ? _onDragStart
+                              : null,
+                          onHorizontalDragUpdate: settingsState.scrollDirection == Axis.horizontal
+                              ? _onHorizontalDragUpdate
+                              : null,
+                          onHorizontalDragEnd: settingsState.scrollDirection == Axis.horizontal
+                              ? _onHorizontalDragEnd
+                              : null,
+                          onVerticalDragStart: settingsState.scrollDirection == Axis.vertical
+                              ? _onDragStart
+                              : null,
+                          onVerticalDragUpdate: settingsState.scrollDirection == Axis.vertical
+                              ? _onVerticalDragUpdate
+                              : null,
+                          onVerticalDragEnd: settingsState.scrollDirection == Axis.vertical
+                              ? _onVerticalDragEnd
+                              : null,
+                          child: PageView.builder(
+                            dragStartBehavior: DragStartBehavior.down,
+                            physics: const NeverScrollableScrollPhysics(),
+                            controller: _pageController,
+                            allowImplicitScrolling: true,
+                            itemCount: QuranConstants.totalPages,
+                            scrollDirection: settingsState.scrollDirection,
+                            reverse: false,
+                            onPageChanged: (index) {
+                              final page = index + 1;
+                              if (_currentPage != page) {
+                                _currentPage = page;
+                                context.read<AudioPreferencesService>().saveLastReadPage(_currentPage);
+                                _prefetchAdjacentPages(_currentPage);
+                              }
+                            },
+                            itemBuilder: (context, index) {
+                              final pageNumber = index + 1;
+                              return QuranPageWidgetMobile(
+                                key: ValueKey(pageNumber),
+                                pageNumber: pageNumber,
+                                onNavigateToPage: (page, {verseKey}) =>
+                                    _jumpToPage(page, verseKey: verseKey),
+                                highlightVerseKey: pageNumber == _currentPage
+                                    ? _highlightVerseKey
+                                    : null,
+                              );
+                            },
+                          ),
                         ),
                       ),
                     );

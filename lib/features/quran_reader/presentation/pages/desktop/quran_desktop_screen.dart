@@ -92,26 +92,125 @@ class _QuranDesktopScreenState extends State<QuranDesktopScreen> {
     super.dispose();
   }
 
+  bool _isPageFlipping = false;
+  double _dragAccumulator = 0.0;
+  bool _hasTriggeredInCurrentDrag = false;
+
+  void _nextPage(bool isTwoPageMode) {
+    if (_isPageFlipping) return;
+    final step = isTwoPageMode ? 2 : 1;
+    if (_currentPage + step <= QuranConstants.totalPages) {
+      _flipToPage(_currentPage + step);
+    }
+  }
+
+  void _previousPage(bool isTwoPageMode) {
+    if (_isPageFlipping) return;
+    final step = isTwoPageMode ? 2 : 1;
+    if (_currentPage - step >= 1) {
+      _flipToPage(_currentPage - step);
+    }
+  }
+
+  void _flipToPage(int targetPage) {
+    if (_isPageFlipping) return;
+    _isPageFlipping = true;
+    _prefetchTimer?.cancel();
+    QuranPageWidgetDesktop.dismissActiveMenu();
+
+    final targetIndexSingle = targetPage - 1;
+    final targetIndexDouble = (targetPage - 1) ~/ 2;
+
+    final futures = <Future>[];
+    if (_pageControllerSingle.hasClients) {
+      futures.add(_pageControllerSingle.animateToPage(
+        targetIndexSingle,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOutCubic,
+      ));
+    }
+    if (_pageControllerDouble.hasClients) {
+      futures.add(_pageControllerDouble.animateToPage(
+        targetIndexDouble,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOutCubic,
+      ));
+    }
+
+    Future.wait(futures).then((_) {
+      if (mounted) {
+        _isPageFlipping = false;
+      }
+    });
+  }
+
+  void _onDragStart(DragStartDetails details) {
+    _dragAccumulator = 0.0;
+    _hasTriggeredInCurrentDrag = false;
+    QuranPageWidgetDesktop.dismissActiveMenu();
+  }
+
+  void _onHorizontalDragUpdate(DragUpdateDetails details, bool isTwoPageMode) {
+    if (_hasTriggeredInCurrentDrag || _isPageFlipping) return;
+    _dragAccumulator += details.primaryDelta ?? 0.0;
+    const threshold = 28.0;
+    if (_dragAccumulator > threshold) {
+      // Swiped Right (->) -> Next Page
+      _hasTriggeredInCurrentDrag = true;
+      _nextPage(isTwoPageMode);
+    } else if (_dragAccumulator < -threshold) {
+      // Swiped Left (<-) -> Previous Page
+      _hasTriggeredInCurrentDrag = true;
+      _previousPage(isTwoPageMode);
+    }
+  }
+
+  void _onHorizontalDragEnd(DragEndDetails details, bool isTwoPageMode) {
+    if (_hasTriggeredInCurrentDrag || _isPageFlipping) return;
+    final velocity = details.primaryVelocity ?? 0.0;
+    if (velocity > 120) {
+      _hasTriggeredInCurrentDrag = true;
+      _nextPage(isTwoPageMode);
+    } else if (velocity < -120) {
+      _hasTriggeredInCurrentDrag = true;
+      _previousPage(isTwoPageMode);
+    }
+  }
+
+  void _onVerticalDragUpdate(DragUpdateDetails details, bool isTwoPageMode) {
+    if (_hasTriggeredInCurrentDrag || _isPageFlipping) return;
+    _dragAccumulator += details.primaryDelta ?? 0.0;
+    const threshold = 28.0;
+    if (_dragAccumulator < -threshold) {
+      // Swiped Up -> Next Page
+      _hasTriggeredInCurrentDrag = true;
+      _nextPage(isTwoPageMode);
+    } else if (_dragAccumulator > threshold) {
+      // Swiped Down -> Previous Page
+      _hasTriggeredInCurrentDrag = true;
+      _previousPage(isTwoPageMode);
+    }
+  }
+
+  void _onVerticalDragEnd(DragEndDetails details, bool isTwoPageMode) {
+    if (_hasTriggeredInCurrentDrag || _isPageFlipping) return;
+    final velocity = details.primaryVelocity ?? 0.0;
+    if (velocity < -120) {
+      _hasTriggeredInCurrentDrag = true;
+      _nextPage(isTwoPageMode);
+    } else if (velocity > 120) {
+      _hasTriggeredInCurrentDrag = true;
+      _previousPage(isTwoPageMode);
+    }
+  }
+
   void _jumpToPage(int pageNumber, {String? verseKey, bool animate = false}) {
     final targetPage = pageNumber.clamp(1, QuranConstants.totalPages);
     final targetIndexSingle = targetPage - 1;
     final targetIndexDouble = (targetPage - 1) ~/ 2;
 
     if (animate) {
-      if (_pageControllerSingle.hasClients) {
-        _pageControllerSingle.animateToPage(
-          targetIndexSingle,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
-      if (_pageControllerDouble.hasClients) {
-        _pageControllerDouble.animateToPage(
-          targetIndexDouble,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
+      _flipToPage(targetPage);
     } else {
       if (_pageControllerSingle.hasClients) {
         _pageControllerSingle.jumpToPage(targetIndexSingle);
@@ -359,19 +458,39 @@ class _QuranDesktopScreenState extends State<QuranDesktopScreen> {
                                   }
                                   return false;
                                 },
-                                child: PageView.builder(
-                                  dragStartBehavior: DragStartBehavior.down,
-                                  physics: const BouncingScrollPhysics(),
-                                  key: ValueKey('page_view_$isTwoPageMode'),
-                                  controller: isTwoPageMode
-                                      ? _pageControllerDouble
-                                      : _pageControllerSingle,
-                                  allowImplicitScrolling: true,
-                                  itemCount: isTwoPageMode
-                                      ? (QuranConstants.totalPages / 2).ceil()
-                                      : QuranConstants.totalPages,
-                                  scrollDirection: settingsState.scrollDirection,
-                                  reverse: false,
+                                child: GestureDetector(
+                                   behavior: HitTestBehavior.translucent,
+                                   onHorizontalDragStart: settingsState.scrollDirection == Axis.horizontal
+                                       ? _onDragStart
+                                       : null,
+                                   onHorizontalDragUpdate: settingsState.scrollDirection == Axis.horizontal
+                                       ? (d) => _onHorizontalDragUpdate(d, isTwoPageMode)
+                                       : null,
+                                   onHorizontalDragEnd: settingsState.scrollDirection == Axis.horizontal
+                                       ? (d) => _onHorizontalDragEnd(d, isTwoPageMode)
+                                       : null,
+                                   onVerticalDragStart: settingsState.scrollDirection == Axis.vertical
+                                       ? _onDragStart
+                                       : null,
+                                   onVerticalDragUpdate: settingsState.scrollDirection == Axis.vertical
+                                       ? (d) => _onVerticalDragUpdate(d, isTwoPageMode)
+                                       : null,
+                                   onVerticalDragEnd: settingsState.scrollDirection == Axis.vertical
+                                       ? (d) => _onVerticalDragEnd(d, isTwoPageMode)
+                                       : null,
+                                   child: PageView.builder(
+                                     dragStartBehavior: DragStartBehavior.down,
+                                     physics: const NeverScrollableScrollPhysics(),
+                                     key: ValueKey('page_view_$isTwoPageMode'),
+                                     controller: isTwoPageMode
+                                         ? _pageControllerDouble
+                                         : _pageControllerSingle,
+                                     allowImplicitScrolling: true,
+                                     itemCount: isTwoPageMode
+                                         ? (QuranConstants.totalPages / 2).ceil()
+                                         : QuranConstants.totalPages,
+                                     scrollDirection: settingsState.scrollDirection,
+                                     reverse: false,
                                   itemBuilder: (context, index) {
                                   if (isTwoPageMode) {
                                     final rightPage = (index * 2) + 1;
@@ -506,8 +625,9 @@ class _QuranDesktopScreenState extends State<QuranDesktopScreen> {
                               ),
                             ),
                           ),
-                        );
-                        },
+                        ),
+                      );
+                    },
                       ),
                       const HifzToolbarWidget(),
                       BlocBuilder<AudioBloc, AudioState>(
