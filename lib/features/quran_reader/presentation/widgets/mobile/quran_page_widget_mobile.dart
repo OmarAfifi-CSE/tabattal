@@ -321,6 +321,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     final quranBloc = context.read<QuranBloc>();
     final audioBloc = context.read<AudioBloc>();
     final bookmarkBloc = context.read<BookmarkBloc>();
+    final hifzBloc = context.read<HifzBloc>();
 
     _activeOverlayEntry = OverlayEntry(
       builder: (overlayContext) => MultiBlocProvider(
@@ -328,6 +329,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
           BlocProvider.value(value: quranBloc),
           BlocProvider.value(value: audioBloc),
           BlocProvider.value(value: bookmarkBloc),
+          BlocProvider.value(value: hifzBloc),
         ],
         child: VerseActionMenuMobile(
           position: tapPosition,
@@ -554,20 +556,13 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
           _wordTapStart = null;
         },
         onPointerCancel: (_) => _wordTapStart = null,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned.fill(
-              child: Container(
-                margin: maskMargin,
-                decoration: maskDecoration,
-              ),
-            ),
-            Text(
-              displayText,
-              style: transparentWordStyle,
-            ),
-          ],
+        child: Container(
+          margin: maskMargin,
+          decoration: maskDecoration,
+          child: Text(
+            displayText,
+            style: transparentWordStyle,
+          ),
         ),
       );
     }

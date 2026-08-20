@@ -296,7 +296,7 @@ class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
                                       height: 1.4,
                                     ),
                                   ),
-                                  SizedBox(height: 4.h),
+                                  SizedBox(height: 7.h),
                                 ],
                                 Text(
                                   item.meaning,

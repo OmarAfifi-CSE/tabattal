@@ -27,6 +27,9 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
     final isWeb = widget.isWeb;
 
     return BlocBuilder<HifzBloc, HifzState>(
+      buildWhen: (prev, curr) =>
+          prev.isHifzModeActive != curr.isHifzModeActive ||
+          prev.maskingType != curr.maskingType,
       builder: (context, state) {
         if (!state.isHifzModeActive) return const SizedBox.shrink();
 

@@ -43,6 +43,11 @@ abstract class QuranLocalDataSource {
 class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   final DatabaseHelper databaseHelper;
 
+  final Map<String, String> _ghareebCache = {};
+  final Map<String, TafsirModel> _tafsirCache = {};
+  final Map<String, String> _translationCache = {};
+  final Map<String, int> _pageForVerseCache = {};
+
   QuranLocalDataSourceImpl({required this.databaseHelper});
 
   @override
@@ -77,13 +82,15 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
         for (final map in maps) {
           final page = map['page'] as int;
           final line = map['line_number'] as int;
+          final vk = map['verse_key'] as String;
+          _pageForVerseCache[vk] ??= page;
           final word = WordModel(
             id: map['id'] as int,
             textUthmani: map['text_uthmani'] as String,
             codeV2: map['code_v2'] as String? ?? '',
             lineNumber: line,
             charTypeName: map['char_type_name'] as String,
-            verseKey: map['verse_key'] as String,
+            verseKey: vk,
           );
 
           pageMap
@@ -109,6 +116,15 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
 
   @override
   Future<List<WordModel>> getWordsByPage(int pageNumber) async {
+    final cached = QuranPageCache.get(pageNumber);
+    if (cached != null) {
+      final words = <WordModel>[];
+      for (final line in cached.lines) {
+        words.addAll(line.words);
+      }
+      if (words.isNotEmpty) return words;
+    }
+
     try {
       final db = await databaseHelper.database;
       final List<Map<String, dynamic>> maps = await db.query(
@@ -142,6 +158,20 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
 
   @override
   Future<List<WordModel>> getWordsByVerse(String verseKey) async {
+    final cachedPageNumber = _pageForVerseCache[verseKey];
+    if (cachedPageNumber != null) {
+      final cachedPage = QuranPageCache.get(cachedPageNumber);
+      if (cachedPage != null) {
+        final words = <WordModel>[];
+        for (final line in cachedPage.lines) {
+          for (final w in line.words) {
+            if (w.verseKey == verseKey) words.add(w);
+          }
+        }
+        if (words.isNotEmpty) return words;
+      }
+    }
+
     try {
       final db = await databaseHelper.database;
       final List<Map<String, dynamic>> maps = await db.query(
@@ -171,6 +201,10 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
 
   @override
   Future<String?> getGhareebByVerse(String verseKey) async {
+    if (_ghareebCache.containsKey(verseKey)) {
+      return _ghareebCache[verseKey];
+    }
+
     try {
       final db = await databaseHelper.database;
       final List<Map<String, dynamic>> maps = await db.query(
@@ -181,7 +215,9 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
         limit: 1,
       );
       if (maps.isNotEmpty && maps.first['text'] != null) {
-        return maps.first['text'] as String;
+        final text = maps.first['text'] as String;
+        _ghareebCache[verseKey] = text;
+        return text;
       }
       return null;
     } catch (_) {
@@ -191,6 +227,10 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
 
   @override
   Future<int> getPageForVerse(String verseKey) async {
+    if (_pageForVerseCache.containsKey(verseKey)) {
+      return _pageForVerseCache[verseKey]!;
+    }
+
     try {
       final db = await databaseHelper.database;
       final List<Map<String, dynamic>> maps = await db.query(
@@ -201,7 +241,9 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
         limit: 1,
       );
       if (maps.isNotEmpty) {
-        return maps.first['page'] as int;
+        final p = maps.first['page'] as int;
+        _pageForVerseCache[verseKey] = p;
+        return p;
       }
       return 1;
     } catch (e) {
@@ -220,6 +262,11 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
     String verseKey,
     int resourceId,
   ) async {
+    final cacheKey = '$resourceId:$verseKey';
+    if (_tafsirCache.containsKey(cacheKey)) {
+      return _tafsirCache[cacheKey]!;
+    }
+
     try {
       final db = await databaseHelper.database;
       final parts = verseKey.split(':');
@@ -259,7 +306,9 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       }
 
       if (tafsirText.trim().isEmpty) {
-        return TafsirModel(id: 0, tafsirId: resourceId, text: '');
+        final emptyModel = TafsirModel(id: 0, tafsirId: resourceId, text: '');
+        _tafsirCache[cacheKey] = emptyModel;
+        return emptyModel;
       }
 
       String? groupVerseRange;
@@ -268,10 +317,10 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       final List<Map<String, dynamic>> nextEntries = await db.query(
         'tafsir',
         where:
-            'CAST(substr(verse_key, 1, instr(verse_key, ":") - 1) AS INTEGER) = ? AND CAST(substr(verse_key, instr(verse_key, ":") + 1) AS INTEGER) > ? AND resource_id = ? AND TRIM(text) != ""',
+            "CAST(substr(verse_key, 1, instr(verse_key, ':') - 1) AS INTEGER) = ? AND CAST(substr(verse_key, instr(verse_key, ':') + 1) AS INTEGER) > ? AND resource_id = ? AND TRIM(text) != ''",
         whereArgs: [chapterId, rootAyah, resourceId],
         orderBy:
-            'CAST(substr(verse_key, instr(verse_key, ":") + 1) AS INTEGER) ASC',
+            "CAST(substr(verse_key, instr(verse_key, ':') + 1) AS INTEGER) ASC",
         limit: 1,
       );
 
@@ -299,7 +348,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
         groupVerseRange = '$rootAyah - $endAyah';
       }
 
-      return TafsirModel(
+      final resultModel = TafsirModel(
         id: 0,
         tafsirId: resourceId,
         verseKey: verseKey,
@@ -307,6 +356,8 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
         groupVerseRange: groupVerseRange,
         isGroupContinuation: isGroupContinuation,
       );
+      _tafsirCache[cacheKey] = resultModel;
+      return resultModel;
     } catch (e) {
       throw CacheException('Error fetching tafsir: ${e.toString()}');
     }
@@ -314,6 +365,11 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
 
   @override
   Future<String> getTranslationForVerse(String verseKey, int resourceId) async {
+    final cacheKey = '$resourceId:$verseKey';
+    if (_translationCache.containsKey(cacheKey)) {
+      return _translationCache[cacheKey]!;
+    }
+
     try {
       final db = await databaseHelper.database;
       final List<Map<String, dynamic>> maps = await db.query(
@@ -323,7 +379,9 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
         limit: 1,
       );
       if (maps.isNotEmpty && maps.first['text'] != null) {
-        return maps.first['text'] as String;
+        final text = maps.first['text'] as String;
+        _translationCache[cacheKey] = text;
+        return text;
       }
       return '';
     } catch (e) {
@@ -470,10 +528,10 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       final List<Map<String, dynamic>> maps = await db.query(
         'translation',
         where:
-            'CAST(substr(verse_key, 1, instr(verse_key, ":") - 1) AS INTEGER) = ? AND resource_id = ?',
+            "CAST(substr(verse_key, 1, instr(verse_key, ':') - 1) AS INTEGER) = ? AND resource_id = ?",
         whereArgs: [surahId, resourceId],
         orderBy:
-            'CAST(substr(verse_key, instr(verse_key, ":") + 1) AS INTEGER) ASC',
+            "CAST(substr(verse_key, instr(verse_key, ':') + 1) AS INTEGER) ASC",
       );
       return maps;
     } catch (e) {
@@ -483,6 +541,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
 
   @override
   Future<void> insertTafsirs(List<Map<String, dynamic>> rows) async {
+    _tafsirCache.clear();
     final db = await databaseHelper.database;
     final batch = db.batch();
     for (var row in rows) {
@@ -518,7 +577,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
     try {
       final db = await databaseHelper.database;
       final result = await db.rawQuery(
-        'SELECT MAX(CAST(substr(verse_key, 1, instr(verse_key, ":") - 1) AS INTEGER)) as max_chap FROM tafsir WHERE resource_id = ?',
+        "SELECT MAX(CAST(substr(verse_key, 1, instr(verse_key, ':') - 1) AS INTEGER)) as max_chap FROM tafsir WHERE resource_id = ?",
         [resourceId],
       );
       return Sqflite.firstIntValue(result) ?? 0;

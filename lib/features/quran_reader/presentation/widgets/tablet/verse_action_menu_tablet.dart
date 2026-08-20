@@ -25,55 +25,7 @@ import '../../../bloc/hifz/hifz_state.dart';
 import '../verse_card_generator_sheet.dart';
 import '../tafsir_selector_menu.dart';
 import '../word_meanings_sheet.dart';
-
-class OverlayPositionDelegate extends SingleChildLayoutDelegate {
-  final Offset tapPosition;
-  final Rect? verseRect;
-  final Size menuSize;
-
-  OverlayPositionDelegate({
-    required this.tapPosition,
-    this.verseRect,
-    required this.menuSize,
-  });
-
-  @override
-  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
-    return BoxConstraints(minWidth: menuSize.width, maxWidth: menuSize.width);
-  }
-
-  @override
-  Offset getPositionForChild(Size size, Size childSize) {
-    double left = tapPosition.dx;
-    // If verseRect is provided, use its bottom boundary, otherwise fallback to tapPosition + 35
-    double top = (verseRect != null && verseRect!.height > 0)
-        ? verseRect!.bottom + 10
-        : tapPosition.dy + 35;
-
-    if (left + childSize.width > size.width - 16) {
-      left = size.width - childSize.width - 16;
-    }
-    if (top + childSize.height > size.height - 16) {
-      // If opening below goes off-screen, try opening ABOVE the verse
-      top = (verseRect != null && verseRect!.height > 0)
-          ? verseRect!.top - childSize.height - 10
-          : tapPosition.dy - childSize.height - 35;
-      if (top < 16) {
-        // Extreme edge case: screen too small to fit above or below, clamp to top
-        top = 16;
-      }
-    }
-
-    if (left < 16) left = 16;
-
-    return Offset(left, top);
-  }
-
-  @override
-  bool shouldRelayout(covariant OverlayPositionDelegate oldDelegate) {
-    return tapPosition != oldDelegate.tapPosition;
-  }
-}
+import '../overlay_position_delegate.dart';
 
 class VerseActionMenuTablet extends StatefulWidget {
   final void Function({bool keepHighlight}) onDismiss;
@@ -104,7 +56,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-  bool _isAnimating = false;
+  bool _isClosing = false;
   final Map<int, double> _tafsirProgress = {16: 1.0};
 
   @override
@@ -126,8 +78,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _checkDownloadedTafsirs();
-    _isAnimating = true;
-    _controller.forward().then((_) => _isAnimating = false);
+    _controller.forward();
   }
 
   Future<void> _checkDownloadedTafsirs() async {
@@ -144,14 +95,18 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
       168,
       817,
     ]; // Add all non-bundled tafsirs
+    final Map<int, double> newProgress = {};
     for (int id in toCheck) {
       final progressResult = await repo.getTafsirDownloadProgress(id);
       progressResult.fold((f) => null, (progress) {
-        if (progress > 0.0 && mounted) {
-          setState(() {
-            _tafsirProgress[id] = progress;
-          });
+        if (progress > 0.0) {
+          newProgress[id] = progress;
         }
+      });
+    }
+    if (newProgress.isNotEmpty && mounted) {
+      setState(() {
+        _tafsirProgress.addAll(newProgress);
       });
     }
   }
@@ -172,7 +127,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
-        if (_isAnimating) return;
+        if (_isClosing) return;
         if (closeMenu) {
           widget.onDismiss();
         }
@@ -200,10 +155,10 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
   }
 
   void _close({bool keepHighlight = false}) {
-    if (_isAnimating) return;
-    _isAnimating = true;
+    if (_isClosing) return;
+    _isClosing = true;
     _controller.reverse().then((_) {
-      _isAnimating = false;
+      _isClosing = false;
       widget.onDismiss(keepHighlight: keepHighlight);
     });
   }
@@ -859,6 +814,8 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
             tapPosition: widget.position,
             verseRect: widget.verseRect,
             menuSize: menuSize,
+            topPadding: MediaQuery.paddingOf(context).top,
+            bottomPadding: MediaQuery.paddingOf(context).bottom,
           ),
           child: FadeTransition(
             opacity: _fadeAnimation,
