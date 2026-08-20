@@ -1,17 +1,14 @@
 import '../../widgets/drawer/mobile/quran_drawer_mobile.dart';
 import '../../widgets/hifz/hifz_toolbar_widget.dart';
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../widgets/mobile/quran_page_widget_mobile.dart';
+import '../../widgets/page_navigation/quran_page_navigator.dart';
 import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_state.dart';
 import '../../widgets/mobile/media_control_bar_mobile.dart';
 import '../../../../../core/services/audio_preferences_service.dart';
-import '../../../bloc/quran/quran_page_cache.dart';
-import '../../../bloc/quran/quran_state.dart';
 import '../../../domain/repositories/quran_repository.dart';
 import '../../../data/models/search_verse_model.dart';
 import '../../../../../core/utils/verse_ref.dart';
@@ -34,17 +31,24 @@ class QuranMobileScreen extends StatefulWidget {
 }
 
 class _QuranMobileScreenState extends State<QuranMobileScreen> {
-  late PageController _pageController;
+  final GlobalKey<QuranPageNavigatorState> _navigatorKey =
+      GlobalKey<QuranPageNavigatorState>();
+
   int _currentPage = 1;
+  int _pageChangeToken = 0;
   String? _highlightVerseKey;
   bool _isAudioExpanded = true;
 
   @override
   void initState() {
     super.initState();
-    _currentPage = context.read<AudioPreferencesService>().lastReadPage;
-    _pageController = PageController(initialPage: _currentPage - 1);
-    _prefetchAdjacentPages(_currentPage);
+    _currentPage =
+        widget.initialPage ??
+        context.read<AudioPreferencesService>().lastReadPage;
+    _highlightVerseKey = widget.initialVerseKey;
+
+    // Trigger initial page load
+    context.read<QuranRepository>().getLinesByPage(_currentPage);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -53,167 +57,32 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
     });
   }
 
-  Timer? _prefetchTimer;
-
-  @override
-  void dispose() {
-    _prefetchTimer?.cancel();
-    _pageController.dispose();
-    super.dispose();
+  void _onPageChanged(int newPage) {
+    if (_currentPage == newPage) return;
+    _commitPageChange(newPage, ++_pageChangeToken);
   }
 
-  bool _isPageFlipping = false;
-  double _dragAccumulator = 0.0;
-  bool _hasTriggeredInCurrentDrag = false;
-
-  void _nextPage() {
-    if (_isPageFlipping) return;
-    if (_currentPage < QuranConstants.totalPages) {
-      _flipToPage(_currentPage + 1);
-    }
-  }
-
-  void _previousPage() {
-    if (_isPageFlipping) return;
-    if (_currentPage > 1) {
-      _flipToPage(_currentPage - 1);
-    }
-  }
-
-  void _flipToPage(int targetPage) {
-    if (_isPageFlipping) return;
-    _isPageFlipping = true;
-    _prefetchTimer?.cancel();
-    QuranPageWidgetMobile.dismissActiveMenu();
-
-    final targetIndex = targetPage - 1;
-    _pageController
-        .animateToPage(
-          targetIndex,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeInOutCubic,
-        )
-        .then((_) {
-          if (mounted) {
-            _isPageFlipping = false;
-          }
-        });
-  }
-
-  void _onDragStart(DragStartDetails details) {
-    _dragAccumulator = 0.0;
-    _hasTriggeredInCurrentDrag = false;
-    QuranPageWidgetMobile.dismissActiveMenu();
-  }
-
-  void _onHorizontalDragUpdate(DragUpdateDetails details) {
-    if (_hasTriggeredInCurrentDrag || _isPageFlipping) return;
-    _dragAccumulator += details.primaryDelta ?? 0.0;
-    const threshold = 28.0;
-    if (_dragAccumulator > threshold) {
-      // Swiped Right (->) -> Next Page
-      _hasTriggeredInCurrentDrag = true;
-      _nextPage();
-    } else if (_dragAccumulator < -threshold) {
-      // Swiped Left (<-) -> Previous Page
-      _hasTriggeredInCurrentDrag = true;
-      _previousPage();
-    }
-  }
-
-  void _onHorizontalDragEnd(DragEndDetails details) {
-    if (_hasTriggeredInCurrentDrag || _isPageFlipping) return;
-    final velocity = details.primaryVelocity ?? 0.0;
-    if (velocity > 120) {
-      _hasTriggeredInCurrentDrag = true;
-      _nextPage();
-    } else if (velocity < -120) {
-      _hasTriggeredInCurrentDrag = true;
-      _previousPage();
-    }
-  }
-
-  void _onVerticalDragUpdate(DragUpdateDetails details) {
-    if (_hasTriggeredInCurrentDrag || _isPageFlipping) return;
-    _dragAccumulator += details.primaryDelta ?? 0.0;
-    const threshold = 28.0;
-    if (_dragAccumulator < -threshold) {
-      // Swiped Up -> Next Page
-      _hasTriggeredInCurrentDrag = true;
-      _nextPage();
-    } else if (_dragAccumulator > threshold) {
-      // Swiped Down -> Previous Page
-      _hasTriggeredInCurrentDrag = true;
-      _previousPage();
-    }
-  }
-
-  void _onVerticalDragEnd(DragEndDetails details) {
-    if (_hasTriggeredInCurrentDrag || _isPageFlipping) return;
-    final velocity = details.primaryVelocity ?? 0.0;
-    if (velocity < -120) {
-      _hasTriggeredInCurrentDrag = true;
-      _nextPage();
-    } else if (velocity > 120) {
-      _hasTriggeredInCurrentDrag = true;
-      _previousPage();
-    }
-  }
-
-  void _jumpToPage(int pageNumber, {String? verseKey, bool animate = false}) {
-    final targetPage = pageNumber.clamp(1, QuranConstants.totalPages);
-    final targetIndex = targetPage - 1;
-    if (animate) {
-      _flipToPage(targetPage);
-    } else {
-      _pageController.jumpToPage(targetIndex);
-    }
-    setState(() {
-      _currentPage = targetPage;
-      _highlightVerseKey = verseKey;
-    });
-    context.read<AudioPreferencesService>().saveLastReadPage(_currentPage);
-  }
-
-
-  /// Immediate pre-warming for neighbors in post-frame callback
-  /// so when the user touches the screen to drag, adjacent page fonts and SQLite lines
-  /// are ALREADY 100% in memory — delivering 0ms initial touch lag.
-  void _prefetchAdjacentPages(int page) {
-    _prefetchTimer?.cancel();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _prefetchNeighbors(page);
-    });
-  }
-
-  Future<void> _prefetchNeighbors(int page) async {
-    if (!mounted) return;
-    final repository = context.read<QuranRepository>();
-
-    final neighbors = [
-      page + 1,
-      page - 1,
-      page + 2,
-      page - 2,
-    ];
-
-    await Future.wait(
-      neighbors.map((neighbor) async {
-        if (!mounted) return;
-        if (neighbor >= 1 && neighbor <= QuranConstants.totalPages) {
-          if (QuranPageCache.get(neighbor) == null) {
-            final result = await repository.getLinesByPage(neighbor);
-            result.fold((_) {}, (lines) {
-              QuranPageCache.put(
-                neighbor,
-                QuranLoaded(lines: lines, currentPage: neighbor),
-              );
-            });
-          }
-        }
-      }),
+  Future<void> _commitPageChange(int newPage, int token) async {
+    final result = await context.read<QuranRepository>().getLinesByPage(
+      newPage,
     );
+    if (!mounted || token != _pageChangeToken) return;
+    result.fold((_) {}, (_) {
+      if (!mounted || token != _pageChangeToken) return;
+      setState(() => _currentPage = newPage);
+      context.read<AudioPreferencesService>().saveLastReadPage(newPage);
+    });
+  }
+
+  void _navigateToPage(int pageNumber, {String? verseKey}) {
+    final targetPage = pageNumber.clamp(1, QuranConstants.totalPages);
+    _highlightVerseKey = verseKey;
+
+    if (_navigatorKey.currentState != null && targetPage != _currentPage) {
+      _navigatorKey.currentState!.navigateToPage(targetPage);
+    } else {
+      _onPageChanged(targetPage);
+    }
   }
 
   void _handleAudioStateChange(BuildContext context, AudioState state) {
@@ -222,7 +91,7 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
     } else if (state is AudioPlaying) {
       _navigateToPlayingVerse(context, state.currentVerseId);
     } else if (state is AudioIdle) {
-      _isAudioExpanded = true; // reset to expanded for next time
+      _isAudioExpanded = true;
     }
   }
 
@@ -269,7 +138,7 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
               .firstOrNull;
           final targetPage = matchingVerse?.page;
           if (targetPage != null && targetPage != _currentPage) {
-            _jumpToPage(targetPage, verseKey: null, animate: true);
+            _navigateToPage(targetPage, verseKey: null);
           }
         },
       );
@@ -278,29 +147,25 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch SettingsBloc so this screen rebuilds instantly on theme change
     final settingsState = context.watch<SettingsBloc>().state;
-    final isDark = settingsState.effectiveMushafTheme.isDarkTheme;
+
+    final isDark = settingsState.themeMode == ThemeMode.dark;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarDividerColor: Colors.transparent,
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: AppColors.background,
         systemNavigationBarIconBrightness: isDark
             ? Brightness.light
             : Brightness.dark,
-        systemNavigationBarContrastEnforced: false,
-        systemStatusBarContrastEnforced: false,
       ),
       child: Scaffold(
         backgroundColor: AppColors.background,
         drawer: QuranDrawerMobile(
           currentPage: _currentPage,
           onNavigateToPage: (page, {String? verseKey}) =>
-              _jumpToPage(page, verseKey: verseKey),
+              _navigateToPage(page, verseKey: verseKey),
         ),
         body: SafeArea(
           child: BlocListener<AudioBloc, AudioState>(
@@ -319,72 +184,32 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                     final isVisible =
                         state is! AudioIdle && state is! AudioError;
                     final double paddingBottom = isVisible
-                        ? (_isAudioExpanded ? 170.h : 80.h)
+                        ? (_isAudioExpanded ? 160.h : 80.h)
                         : 0;
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeOutCubic,
                       padding: EdgeInsets.only(bottom: paddingBottom),
-                      child: NotificationListener<ScrollNotification>(
-                        onNotification: (notification) {
-                          if (notification.depth == 0) {
-                            if (notification is ScrollStartNotification) {
-                              _prefetchTimer?.cancel();
-                              QuranPageWidgetMobile.dismissActiveMenu();
-                            }
-                          }
-                          return false;
+                      child: QuranPageNavigator(
+                        key: _navigatorKey,
+                        currentPage: _currentPage,
+                        pageStep: 1,
+                        scrollDirection: settingsState.scrollDirection,
+                        onInteractionStart: () {
+                          QuranPageWidgetMobile.dismissActiveMenu();
                         },
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-                          onHorizontalDragStart: settingsState.scrollDirection == Axis.horizontal
-                              ? _onDragStart
-                              : null,
-                          onHorizontalDragUpdate: settingsState.scrollDirection == Axis.horizontal
-                              ? _onHorizontalDragUpdate
-                              : null,
-                          onHorizontalDragEnd: settingsState.scrollDirection == Axis.horizontal
-                              ? _onHorizontalDragEnd
-                              : null,
-                          onVerticalDragStart: settingsState.scrollDirection == Axis.vertical
-                              ? _onDragStart
-                              : null,
-                          onVerticalDragUpdate: settingsState.scrollDirection == Axis.vertical
-                              ? _onVerticalDragUpdate
-                              : null,
-                          onVerticalDragEnd: settingsState.scrollDirection == Axis.vertical
-                              ? _onVerticalDragEnd
-                              : null,
-                          child: PageView.builder(
-                            dragStartBehavior: DragStartBehavior.down,
-                            physics: const NeverScrollableScrollPhysics(),
-                            controller: _pageController,
-                            allowImplicitScrolling: true,
-                            itemCount: QuranConstants.totalPages,
-                            scrollDirection: settingsState.scrollDirection,
-                            reverse: false,
-                            onPageChanged: (index) {
-                              final page = index + 1;
-                              if (_currentPage != page) {
-                                _currentPage = page;
-                                context.read<AudioPreferencesService>().saveLastReadPage(_currentPage);
-                                _prefetchAdjacentPages(_currentPage);
-                              }
-                            },
-                            itemBuilder: (context, index) {
-                              final pageNumber = index + 1;
-                              return QuranPageWidgetMobile(
-                                key: ValueKey(pageNumber),
-                                pageNumber: pageNumber,
-                                onNavigateToPage: (page, {verseKey}) =>
-                                    _jumpToPage(page, verseKey: verseKey),
-                                highlightVerseKey: pageNumber == _currentPage
-                                    ? _highlightVerseKey
-                                    : null,
-                              );
-                            },
-                          ),
-                        ),
+                        onPageChanged: _onPageChanged,
+                        pageBuilder: (context, page) {
+                          return QuranPageWidgetMobile(
+                            key: ValueKey('page_$page'),
+                            pageNumber: page,
+                            onNavigateToPage: (p, {verseKey}) =>
+                                _navigateToPage(p, verseKey: verseKey),
+                            highlightVerseKey: page == _currentPage
+                                ? _highlightVerseKey
+                                : null,
+                          );
+                        },
                       ),
                     );
                   },

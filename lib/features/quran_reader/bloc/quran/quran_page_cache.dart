@@ -1,17 +1,14 @@
 import 'quran_state.dart';
 
-/// App-wide LRU cache for already-loaded Quran page data.
-/// Keeps the last [_maxSize] pages so re-visiting a page is instant
-/// and never triggers a [QuranLoading] state again.
+/// Small in-memory cache for recently used Quran pages.
+/// Keeps page data available while the fixed viewport swaps its content.
 class QuranPageCache {
   QuranPageCache._();
 
-  static const int _maxSize = 604;
+  static const int _maxSize = 12;
 
   static final Map<int, QuranLoaded> _cache = {};
   static final List<int> _lruOrder = [];
-
-  static bool get isFullyLoaded => _cache.length >= 604;
 
   static QuranLoaded? get(int pageNumber) {
     final state = _cache[pageNumber];

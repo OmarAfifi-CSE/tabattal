@@ -1,4 +1,3 @@
-import 'dart:async';
 import '../../../../core/error/either.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/exceptions.dart';
@@ -12,9 +11,10 @@ import '../../data/models/verse_model.dart';
 import '../../data/models/tafsir_model.dart';
 import '../../data/models/translation_model.dart';
 import '../../data/models/search_verse_model.dart';
+import '../../bloc/quran/quran_page_cache.dart';
+import '../../bloc/quran/quran_state.dart';
 
 abstract class QuranRepository {
-  Future<void> preloadAllPages();
   Future<Either<Failure, List<LineData>>> getLinesByPage(int pageNumber);
   Future<Either<Failure, List<WordModel>>> getWordsByVerse(String verseKey);
   Future<Either<Failure, String?>> getGhareebByVerse(String verseKey);
@@ -61,9 +61,6 @@ class QuranRepositoryImpl implements QuranRepository {
     required this.tafsirDownloadService,
   });
 
-  @override
-  Future<void> preloadAllPages() => localDataSource.preloadAllPages();
-
   Future<Either<Failure, T>> _execute<T>(Future<T> Function() action) async {
     try {
       final result = await action();
@@ -92,6 +89,11 @@ class QuranRepositoryImpl implements QuranRepository {
           lines.add(LineData(lineNumber: i, words: groupedByLine[i]!));
         }
       }
+
+      QuranPageCache.put(
+        pageNumber,
+        QuranLoaded(lines: lines, currentPage: pageNumber),
+      );
 
       return lines;
     });

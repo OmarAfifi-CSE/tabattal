@@ -59,10 +59,7 @@ class QuranPageWidgetWeb extends StatefulWidget {
 }
 
 class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
-    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
+    with SingleTickerProviderStateMixin {
   int? _activeVerseId;
   OverlayEntry? _activeOverlayEntry;
   final GlobalKey _pageColumnKey = GlobalKey();
@@ -1065,7 +1062,6 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     return BlocProvider.value(
       value: _quranBloc,
       child: BlocBuilder<QuranBloc, QuranState>(

@@ -28,12 +28,6 @@ import '../../../bloc/hifz/hifz_event.dart';
 import '../../../bloc/hifz/hifz_state.dart';
 
 // ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-// Removed _kBasmalaWidget constant. It is now a method in _QuranPageWidgetState.
-
-// ---------------------------------------------------------------------------
 // Widget
 // ---------------------------------------------------------------------------
 
@@ -60,11 +54,7 @@ class QuranPageWidgetMobile extends StatefulWidget {
   State<QuranPageWidgetMobile> createState() => _QuranPageWidgetMobileState();
 }
 
-class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
+class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> {
   int? _activeVerseId;
   OverlayEntry? _activeOverlayEntry;
   final GlobalKey _pageColumnKey = GlobalKey();
@@ -113,9 +103,14 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
   Future<void> _loadPageDataFallback() async {
     try {
-      final result = await context.read<QuranRepository>().getLinesByPage(widget.pageNumber);
+      final result = await context.read<QuranRepository>().getLinesByPage(
+        widget.pageNumber,
+      );
       result.fold((_) {}, (lines) {
-        final loaded = QuranLoaded(lines: lines, currentPage: widget.pageNumber);
+        final loaded = QuranLoaded(
+          lines: lines,
+          currentPage: widget.pageNumber,
+        );
         QuranPageCache.put(widget.pageNumber, loaded);
         if (mounted) setState(() {});
       });
@@ -191,22 +186,23 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   /// Eliminates TextPainter.layout and loops from the frame layout pass.
   double _computeCanvasWidth(double availW, double availH) {
     final fontSize = 32.sp;
-    final maxLineWidth = QuranPageCache.getCachedLineWidth(widget.pageNumber) ?? 480.0.w;
+    final maxLineWidth =
+        QuranPageCache.getCachedLineWidth(widget.pageNumber) ?? 480.0.w;
 
     final textLineH = fontSize * 1.5 + 4.0.h;
     final surahHeaderH = 85.0.h;
-    final spacerH =
-        (widget.pageNumber == 1 || widget.pageNumber == 2) ? 0.0 : 45.0.h;
+    final spacerH = (widget.pageNumber == 1 || widget.pageNumber == 2)
+        ? 0.0
+        : 45.0.h;
     final totalChildrenH =
         _textLineCount * textLineH +
         _surahHeaderCount * surahHeaderH +
         _spacerCount * spacerH;
 
     const paddingFactor = 1.0 / (1.0 - 0.027 - 0.032); // ≈ 1.063
-    final minCanvasWForHeight =
-        availW > 0 && availH > 0
-            ? totalChildrenH * paddingFactor * availW / availH
-            : 0.0;
+    final minCanvasWForHeight = availW > 0 && availH > 0
+        ? totalChildrenH * paddingFactor * availW / availH
+        : 0.0;
 
     return maxLineWidth > minCanvasWForHeight
         ? maxLineWidth
@@ -214,10 +210,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   }
 
   /// Computes the screen rect occupied by [verseKey] using the page column layout.
-  Rect _calculateVerseScreenRect(
-    String verseKey,
-    Offset fallbackPosition,
-  ) {
+  Rect _calculateVerseScreenRect(String verseKey, Offset fallbackPosition) {
     int minLine = 16;
     int maxLine = 0;
     for (final line in _cachedLines ?? []) {
@@ -404,10 +397,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     return count;
   }
 
-  Widget _buildEmptyLineWidget(
-    int lineNumber,
-    MushafTheme mushafTheme,
-  ) {
+  Widget _buildEmptyLineWidget(int lineNumber, MushafTheme mushafTheme) {
     // ── Case A: A new Surah starts later on this page ──────────────────────
     final nextSurah = _findNextSurahStartOnPage(lineNumber);
     if (nextSurah != null) {
@@ -437,7 +427,9 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       // Determine whether the header should appear on this line or one earlier
       final prevPrevLineData = _lineMap[ayah1Line - 2];
       final bool mustSquashBothOnLineMinus1 =
-          ayah1Line > 2 && prevPrevLineData != null && prevPrevLineData.words.isNotEmpty ||
+          ayah1Line > 2 &&
+              prevPrevLineData != null &&
+              prevPrevLineData.words.isNotEmpty ||
           ayah1Line == 2 && widget.pageNumber == 1;
 
       if (lineNumber == ayah1Line - 1) {
@@ -514,8 +506,9 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
     bool isWordMasked = false;
     if (hifzState.isHifzModeActive && word.charTypeName != 'end') {
-      final isVerseRevealed =
-          hifzState.revealedVerseKeys.contains(word.verseKey);
+      final isVerseRevealed = hifzState.revealedVerseKeys.contains(
+        word.verseKey,
+      );
       final isWordRevealed = hifzState.revealedWordKeys.contains(wordKey);
 
       if (!isVerseRevealed && !isWordRevealed) {
@@ -559,10 +552,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         child: Container(
           margin: maskMargin,
           decoration: maskDecoration,
-          child: Text(
-            displayText,
-            style: transparentWordStyle,
-          ),
+          child: Text(displayText, style: transparentWordStyle),
         ),
       );
     }
@@ -607,7 +597,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     final List<Widget> wordWidgets = [];
     bool fatihahBasmalaAdded = false;
 
-    final isFullVerseMode = hifzState.isHifzModeActive &&
+    final isFullVerseMode =
+        hifzState.isHifzModeActive &&
         hifzState.maskingType == HifzMaskingType.fullVerse;
 
     final pageStr = widget.pageNumber.toString().padLeft(3, '0');
@@ -634,7 +625,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       // Al-Fatiha Basmala: replace individual QCF_P001 glyphs with a single unified widget
       if (word.verseKey == '1:1' && word.charTypeName != 'end') {
         if (!fatihahBasmalaAdded) {
-          final isBasmalaMasked = hifzState.isHifzModeActive &&
+          final isBasmalaMasked =
+              hifzState.isHifzModeActive &&
               !hifzState.revealedVerseKeys.contains('1:1');
 
           if (isBasmalaMasked) {
@@ -644,7 +636,9 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
                 onPointerDown: (e) => _wordTapStart = e.position,
                 onPointerUp: (e) {
                   if (_isWordTap(e.position)) {
-                    context.read<HifzBloc>().add(const ToggleVerseReveal('1:1'));
+                    context.read<HifzBloc>().add(
+                      const ToggleVerseReveal('1:1'),
+                    );
                   }
                   _wordTapStart = null;
                 },
@@ -730,8 +724,9 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
       // Check if this word should be masked in full verse mode
       if (isFullVerseMode && word.charTypeName != 'end') {
-        final isVerseRevealed =
-            hifzState.revealedVerseKeys.contains(word.verseKey);
+        final isVerseRevealed = hifzState.revealedVerseKeys.contains(
+          word.verseKey,
+        );
 
         if (!isVerseRevealed) {
           final currentVerseKey = word.verseKey;
@@ -750,9 +745,9 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
               onPointerDown: (e) => _wordTapStart = e.position,
               onPointerUp: (e) {
                 if (_isWordTap(e.position)) {
-                  context
-                      .read<HifzBloc>()
-                      .add(ToggleVerseReveal(currentVerseKey));
+                  context.read<HifzBloc>().add(
+                    ToggleVerseReveal(currentVerseKey),
+                  );
                 }
                 _wordTapStart = null;
               },
@@ -766,10 +761,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
                   textDirection: TextDirection.rtl,
                   children: maskedRun.map((w) {
                     final displayText = w.code;
-                    return Text(
-                      displayText,
-                      style: transparentWordStyle,
-                    );
+                    return Text(displayText, style: transparentWordStyle);
                   }).toList(),
                 ),
               ),
@@ -818,7 +810,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     );
   }
 
-
   /// Builds the full loaded page content with all 15 line slots.
   Widget _buildLoadedPage(QuranLoaded state, MushafTheme mushafTheme) {
     final lines = state.lines;
@@ -846,171 +837,201 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         ? AppLocalizations.of(context)!.juzListItem(juzNum.toString())
         : QuranMetadata.getJuzNameWithTashkeel(juzNum);
 
-
     return RepaintBoundary(
       key: _pageRepaintKey,
       child: Stack(
         children: [
           GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () {
-            if (_tapHandledByWord) {
-              _tapHandledByWord = false;
-              return;
-            }
-            if (_activeOverlayEntry != null) {
-              _removeVerseMenu();
-            }
-          },
-          child: QuranPageFrameMobile(
-            pageNumber: widget.pageNumber,
-            onNavigateToPage: widget.onNavigateToPage,
-            surahName: surahName,
-            juzName: juzName,
-            onHeaderTap: () {
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              if (_tapHandledByWord) {
+                _tapHandledByWord = false;
+                return;
+              }
               if (_activeOverlayEntry != null) {
                 _removeVerseMenu();
               }
             },
-            child: BlocBuilder<BookmarkBloc, BookmarkState>(
-              buildWhen: (prev, curr) {
-                final hasPrev = _parsedVerseKeys.keys.any((k) => prev.isBookmarked(k));
-                final hasCurr = _parsedVerseKeys.keys.any((k) => curr.isBookmarked(k));
-                if (hasPrev != hasCurr) return true;
-                for (final k in _parsedVerseKeys.keys) {
-                  if (prev.isBookmarked(k) != curr.isBookmarked(k)) return true;
+            child: QuranPageFrameMobile(
+              pageNumber: widget.pageNumber,
+              onNavigateToPage: widget.onNavigateToPage,
+              surahName: surahName,
+              juzName: juzName,
+              onHeaderTap: () {
+                if (_activeOverlayEntry != null) {
+                  _removeVerseMenu();
                 }
-                return false;
               },
-              builder: (context, bookmarkState) {
-                return BlocBuilder<HifzBloc, HifzState>(
-                  buildWhen: (prev, curr) {
-                    if (prev.isHifzModeActive != curr.isHifzModeActive) return true;
-                    if (!curr.isHifzModeActive && !prev.isHifzModeActive) return false;
-                    if (prev.maskingType != curr.maskingType) return true;
-                    if (prev.revealedVerseKeys != curr.revealedVerseKeys) {
-                      final diff = prev.revealedVerseKeys
-                          .difference(curr.revealedVerseKeys)
-                          .union(curr.revealedVerseKeys.difference(prev.revealedVerseKeys));
-                      if (diff.any((k) => _parsedVerseKeys.containsKey(k))) return true;
-                    }
-                    if (prev.revealedWordKeys != curr.revealedWordKeys) {
-                      final diff = prev.revealedWordKeys
-                          .difference(curr.revealedWordKeys)
-                          .union(curr.revealedWordKeys.difference(prev.revealedWordKeys));
-                      if (diff.any((k) {
-                        final colonIdx = k.indexOf(':');
-                        final vKey = colonIdx != -1 && k.indexOf(':', colonIdx + 1) != -1
-                            ? k.substring(0, k.lastIndexOf(':'))
-                            : k;
-                        return _parsedVerseKeys.containsKey(vKey);
-                      })) {
+              child: BlocBuilder<BookmarkBloc, BookmarkState>(
+                buildWhen: (prev, curr) {
+                  final hasPrev = _parsedVerseKeys.keys.any(
+                    (k) => prev.isBookmarked(k),
+                  );
+                  final hasCurr = _parsedVerseKeys.keys.any(
+                    (k) => curr.isBookmarked(k),
+                  );
+                  if (hasPrev != hasCurr) return true;
+                  for (final k in _parsedVerseKeys.keys) {
+                    if (prev.isBookmarked(k) != curr.isBookmarked(k))
+                      return true;
+                  }
+                  return false;
+                },
+                builder: (context, bookmarkState) {
+                  return BlocBuilder<HifzBloc, HifzState>(
+                    buildWhen: (prev, curr) {
+                      if (prev.isHifzModeActive != curr.isHifzModeActive)
                         return true;
+                      if (!curr.isHifzModeActive && !prev.isHifzModeActive)
+                        return false;
+                      if (prev.maskingType != curr.maskingType) return true;
+                      if (prev.revealedVerseKeys != curr.revealedVerseKeys) {
+                        final diff = prev.revealedVerseKeys
+                            .difference(curr.revealedVerseKeys)
+                            .union(
+                              curr.revealedVerseKeys.difference(
+                                prev.revealedVerseKeys,
+                              ),
+                            );
+                        if (diff.any((k) => _parsedVerseKeys.containsKey(k)))
+                          return true;
                       }
-                    }
-                    return false;
-                  },
-                  builder: (context, hifzState) {
-                    return BlocBuilder<AudioBloc, AudioState>(
-                      buildWhen: (prev, curr) {
-                        final prevId = prev is AudioPlaying
-                            ? prev.currentVerseId
-                            : (prev is AudioPaused ? prev.currentVerseId : null);
-                        final currId = curr is AudioPlaying
-                            ? curr.currentVerseId
-                            : (curr is AudioPaused ? curr.currentVerseId : null);
-                        final prevOnPage =
-                            prevId != null && _verseKeyToIntIdMap.containsValue(prevId);
-                        final currOnPage =
-                            currId != null && _verseKeyToIntIdMap.containsValue(currId);
-                        return prevOnPage || currOnPage;
-                      },
-                      builder: (context, audioState) {
-                        int? playingVerseId;
-                        final activeAudioVerseId = audioState is AudioPlaying
-                            ? audioState.currentVerseId
-                            : (audioState is AudioPaused ? audioState.currentVerseId : null);
-                        if (activeAudioVerseId != null &&
-                            _verseKeyToIntIdMap.containsValue(activeAudioVerseId)) {
-                          playingVerseId = activeAudioVerseId;
+                      if (prev.revealedWordKeys != curr.revealedWordKeys) {
+                        final diff = prev.revealedWordKeys
+                            .difference(curr.revealedWordKeys)
+                            .union(
+                              curr.revealedWordKeys.difference(
+                                prev.revealedWordKeys,
+                              ),
+                            );
+                        if (diff.any((k) {
+                          final colonIdx = k.indexOf(':');
+                          final vKey =
+                              colonIdx != -1 &&
+                                  k.indexOf(':', colonIdx + 1) != -1
+                              ? k.substring(0, k.lastIndexOf(':'))
+                              : k;
+                          return _parsedVerseKeys.containsKey(vKey);
+                        })) {
+                          return true;
                         }
+                      }
+                      return false;
+                    },
+                    builder: (context, hifzState) {
+                      return BlocBuilder<AudioBloc, AudioState>(
+                        buildWhen: (prev, curr) {
+                          final prevId = prev is AudioPlaying
+                              ? prev.currentVerseId
+                              : (prev is AudioPaused
+                                    ? prev.currentVerseId
+                                    : null);
+                          final currId = curr is AudioPlaying
+                              ? curr.currentVerseId
+                              : (curr is AudioPaused
+                                    ? curr.currentVerseId
+                                    : null);
+                          final prevOnPage =
+                              prevId != null &&
+                              _verseKeyToIntIdMap.containsValue(prevId);
+                          final currOnPage =
+                              currId != null &&
+                              _verseKeyToIntIdMap.containsValue(currId);
+                          return prevOnPage || currOnPage;
+                        },
+                        builder: (context, audioState) {
+                          int? playingVerseId;
+                          final activeAudioVerseId = audioState is AudioPlaying
+                              ? audioState.currentVerseId
+                              : (audioState is AudioPaused
+                                    ? audioState.currentVerseId
+                                    : null);
+                          if (activeAudioVerseId != null &&
+                              _verseKeyToIntIdMap.containsValue(
+                                activeAudioVerseId,
+                              )) {
+                            playingVerseId = activeAudioVerseId;
+                          }
 
-                        return MediaQuery.withNoTextScaling(
-                          child: Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                final availW = constraints.maxWidth;
-                                final availH = constraints.maxHeight;
+                          return MediaQuery.withNoTextScaling(
+                            child: Directionality(
+                              textDirection: TextDirection.rtl,
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final availW = constraints.maxWidth;
+                                  final availH = constraints.maxHeight;
 
-                                if (_lineMap.isNotEmpty &&
-                                    (_precomputedCanvasWidth == null ||
-                                        (availH - _lastComputedAvailH).abs() > 1.0)) {
-                                  _lastComputedAvailH = availH;
-                                  _precomputedCanvasWidth =
-                                      _computeCanvasWidth(availW, availH);
-                                }
+                                  if (_lineMap.isNotEmpty &&
+                                      (_precomputedCanvasWidth == null ||
+                                          (availH - _lastComputedAvailH).abs() >
+                                              1.0)) {
+                                    _lastComputedAvailH = availH;
+                                    _precomputedCanvasWidth =
+                                        _computeCanvasWidth(availW, availH);
+                                  }
 
-                                final canvasW = _precomputedCanvasWidth ?? 490.w;
-                                final canvasH = availH * canvasW / availW;
-                                return FittedBox(
-                                  fit: BoxFit.contain,
-                                  alignment: Alignment.center,
-                                  child: SizedBox(
-                                    width: canvasW,
-                                    height: canvasH,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(
-                                        top: canvasH * 0.027,
-                                        bottom: canvasH * 0.032,
-                                      ),
-                                      child: Column(
-                                        key: _pageColumnKey,
-                                        mainAxisSize: MainAxisSize.max,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        children: List.generate(15, (index) {
-                                          final lineNumber = index + 1;
-                                          final lineData = _lineMap[lineNumber];
+                                  final canvasW =
+                                      _precomputedCanvasWidth ?? 490.w;
+                                  final canvasH = availH * canvasW / availW;
+                                  return FittedBox(
+                                    fit: BoxFit.contain,
+                                    alignment: Alignment.center,
+                                    child: SizedBox(
+                                      width: canvasW,
+                                      height: canvasH,
+                                      child: Padding(
+                                        padding: EdgeInsets.only(
+                                          top: canvasH * 0.027,
+                                          bottom: canvasH * 0.032,
+                                        ),
+                                        child: Column(
+                                          key: _pageColumnKey,
+                                          mainAxisSize: MainAxisSize.max,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: List.generate(15, (index) {
+                                            final lineNumber = index + 1;
+                                            final lineData =
+                                                _lineMap[lineNumber];
 
-                                          if (lineData == null ||
-                                              lineData.words.isEmpty) {
-                                            return _buildEmptyLineWidget(
-                                              lineNumber,
-                                              mushafTheme,
+                                            if (lineData == null ||
+                                                lineData.words.isEmpty) {
+                                              return _buildEmptyLineWidget(
+                                                lineNumber,
+                                                mushafTheme,
+                                              );
+                                            }
+
+                                            return _buildWordRow(
+                                              lineWords: lineData.words,
+                                              playingVerseId: playingVerseId,
+                                              audioState: audioState,
+                                              bookmarkState: bookmarkState,
+                                              mushafTheme: mushafTheme,
+                                              hifzState: hifzState,
                                             );
-                                          }
-
-                                          return _buildWordRow(
-                                            lineWords: lineData.words,
-                                            playingVerseId: playingVerseId,
-                                            audioState: audioState,
-                                            bookmarkState: bookmarkState,
-                                            mushafTheme: mushafTheme,
-                                            hifzState: hifzState,
-                                          );
-                                        }).toList(),
+                                          }).toList(),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              },
+                                  );
+                                },
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
-              },
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -1019,7 +1040,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     final mushafTheme = context
         .watch<SettingsBloc>()
         .state

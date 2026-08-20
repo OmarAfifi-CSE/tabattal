@@ -10,10 +10,8 @@ import '../../../../core/constants/quran_constants.dart';
 import '../../../../core/constants/quran_topics.dart';
 
 import '../../bloc/quran/quran_page_cache.dart';
-import '../../bloc/quran/quran_state.dart';
 
 abstract class QuranLocalDataSource {
-  Future<void> preloadAllPages();
   Future<List<WordModel>> getWordsByPage(int pageNumber);
   Future<List<WordModel>> getWordsByVerse(String verseKey);
   Future<String?> getGhareebByVerse(String verseKey);
@@ -51,70 +49,6 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   QuranLocalDataSourceImpl({required this.databaseHelper});
 
   @override
-  Future<void> preloadAllPages() async {
-    if (QuranPageCache.isFullyLoaded) return;
-    try {
-      final db = await databaseHelper.database;
-      const chunkSize = 100;
-      final Map<int, Map<int, List<WordModel>>> pageMap = {};
-
-      for (int startPage = 1;
-          startPage <= QuranConstants.totalPages;
-          startPage += chunkSize) {
-        final endPage = (startPage + chunkSize - 1)
-            .clamp(1, QuranConstants.totalPages);
-        final List<Map<String, dynamic>> maps = await db.query(
-          'quran_words',
-          columns: [
-            'id',
-            'page',
-            'line_number',
-            'verse_key',
-            'text_uthmani',
-            'char_type_name',
-            'code_v2'
-          ],
-          where: 'page >= ? AND page <= ?',
-          whereArgs: [startPage, endPage],
-          orderBy: 'page ASC, id ASC',
-        );
-
-        for (final map in maps) {
-          final page = map['page'] as int;
-          final line = map['line_number'] as int;
-          final vk = map['verse_key'] as String;
-          _pageForVerseCache[vk] ??= page;
-          final word = WordModel(
-            id: map['id'] as int,
-            textUthmani: map['text_uthmani'] as String,
-            codeV2: map['code_v2'] as String? ?? '',
-            lineNumber: line,
-            charTypeName: map['char_type_name'] as String,
-            verseKey: vk,
-          );
-
-          pageMap
-              .putIfAbsent(page, () => {})
-              .putIfAbsent(line, () => [])
-              .add(word);
-        }
-      }
-
-      for (final entry in pageMap.entries) {
-        final page = entry.key;
-        final linesByNum = entry.value;
-        final List<LineData> lines = [];
-        for (int i = 1; i <= QuranConstants.linesPerPage; i++) {
-          if (linesByNum.containsKey(i)) {
-            lines.add(LineData(lineNumber: i, words: linesByNum[i]!));
-          }
-        }
-        QuranPageCache.put(page, QuranLoaded(lines: lines, currentPage: page));
-      }
-    } catch (_) {}
-  }
-
-  @override
   Future<List<WordModel>> getWordsByPage(int pageNumber) async {
     final cached = QuranPageCache.get(pageNumber);
     if (cached != null) {
@@ -129,7 +63,15 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       final db = await databaseHelper.database;
       final List<Map<String, dynamic>> maps = await db.query(
         'quran_words',
-        columns: ['id', 'page', 'line_number', 'verse_key', 'text_uthmani', 'char_type_name', 'code_v2'],
+        columns: [
+          'id',
+          'page',
+          'line_number',
+          'verse_key',
+          'text_uthmani',
+          'char_type_name',
+          'code_v2',
+        ],
         where: 'page = ?',
         whereArgs: [pageNumber],
         orderBy: 'id ASC',
@@ -176,7 +118,15 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       final db = await databaseHelper.database;
       final List<Map<String, dynamic>> maps = await db.query(
         'quran_words',
-        columns: ['id', 'page', 'line_number', 'verse_key', 'text_uthmani', 'char_type_name', 'code_v2'],
+        columns: [
+          'id',
+          'page',
+          'line_number',
+          'verse_key',
+          'text_uthmani',
+          'char_type_name',
+          'code_v2',
+        ],
         where: 'verse_key = ?',
         whereArgs: [verseKey],
         orderBy: 'id ASC',
@@ -327,8 +277,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       int endAyah = rootAyah;
       if (nextEntries.isNotEmpty) {
         final nextKey = nextEntries.first['verse_key'] as String;
-        final nextAyah =
-            int.tryParse(nextKey.split(':')[1]) ?? (rootAyah + 1);
+        final nextAyah = int.tryParse(nextKey.split(':')[1]) ?? (rootAyah + 1);
         endAyah = nextAyah - 1;
       } else {
         final List<Map<String, dynamic>> maxAyahRes = await db.query(
@@ -413,7 +362,11 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
 
       final rawKeywords = cleaned.split(RegExp(r'[,،|]+'));
       final keywords = rawKeywords
-          .map((k) => ArabicTextUtils.normalizeArabicDiacritics(k.trim()).replaceAll(' ', ''))
+          .map(
+            (k) => ArabicTextUtils.normalizeArabicDiacritics(
+              k.trim(),
+            ).replaceAll(' ', ''),
+          )
           .where((k) => k.isNotEmpty)
           .toList();
 

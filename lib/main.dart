@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
@@ -50,9 +49,6 @@ void main() async {
 
   final container = await configureDependencies();
 
-  // Asynchronously preload all remaining 604 Quran pages from SQLite into RAM
-  unawaited(container.localDataSource.preloadAllPages());
-
   runApp(TabattalApp(container: container));
 }
 
@@ -99,9 +95,7 @@ class TabattalApp extends StatelessWidget {
           BlocProvider<SettingsBloc>(
             create: (_) => SettingsBloc(prefs: container.sharedPreferences),
           ),
-          BlocProvider<HifzBloc>(
-            create: (_) => HifzBloc(),
-          ),
+          BlocProvider<HifzBloc>(create: (_) => HifzBloc()),
         ],
         child: BlocBuilder<SettingsBloc, SettingsState>(
           builder: (context, settingsState) {
