@@ -31,9 +31,10 @@ Infinite sharpness at any resolution, responsive page transitions, lightweight s
 
 ## ✨ Key Features & Capabilities
 
-### 🖌️ Pixel-Perfect QCF V2 Vector Pagination
+### 🖌️ Pixel-Perfect QCF V2 Vector Pagination & Single-Viewport Engine
 * **100% Authentic Madani Mushaf Layout:** Exactly 15 lines per page, matching the physical printed copy with genuine Quranic glyphs and stop signs.
-* **Instant Native Typography & LRU Page Caching:** Zero-latency page transitions powered by native Flutter Engine font rendering and smart LRU memory caches.
+* **Single-Viewport Zero-Jank Architecture:** Custom physics-driven bidirectional page flip locked at 120 FPS with 0ms page switching and zero frame drops.
+* **Instant Native Typography:** All 604 page fonts declared natively and pre-warmed directly in RAM, eliminating background zip extraction and runtime layout overhead.
 
 ### 🎨 Verse Card Generator & Full-Page Export
 * **Custom Verse Sharing Cards:** Create stunning, high-resolution aesthetic cards for individual verses or selected verse ranges (up to 25 ayahs).
@@ -43,22 +44,24 @@ Infinite sharpness at any resolution, responsive page transitions, lightweight s
 
 ### 🔍 Thematic & Deep Text Search
 * **Quran Topics Catalog:** Explore the Holy Quran categorized by themes (Aqeedah, Acts of Worship, Ethics, Stories of the Prophets, and Social Conduct).
-* **Intelligent Keyword Engine:** Instant search with prefix/suffix normalization, surah name matching, and direct in-page verse highlighting.
+* **Intelligent Keyword Engine:** Instant search with prefix/suffix normalization, surah name matching, and direct in-page verse highlighting with gentle breathing animations.
 
 ### 🎧 Comprehensive Audio & Offline Manager
 * **Extensive Reciter Catalog:** High-fidelity recitations across multiple categories: Murattal, Mujawwad, Warsh narration, Teacher mode, and English translations.
 * **Play-Once Mode:** Listen to a single verse and pause automatically for focused memorization, reflection, and manual repetition.
+* **Smart Sleep Timer:** Integrated timer with custom durations for relaxing bedtime listening.
 * **Robust Offline Download Manager:** Download entire Surahs for offline listening with real-time progress indicators and instant cancellation tokens.
 * **Background Media Service:** Continuous playback with system lockscreen controls, notification actions, and resilient network recovery.
 
-### 📚 Grouped Tafsir & Translation
+### 📚 Grouped Tafsir, Translation & Quran Vocabulary
+* **Offline Quran Vocabulary (Ghareeb Al-Quran):** Instant offline lookup for the meanings of unfamiliar and difficult Quranic words directly per verse.
 * **Grouped Tafsir Context:** Smart detection and display of multi-verse commentary spans, showing continuation context across grouped passages.
-* **Streamlined Tafsir Downloader:** Fast, offline-accessible commentaries with one-tap downloads and live progress feedback.
+* **Smart Tafsir Selector:** Fast, offline-accessible commentaries with upward-opening selectors and live progress feedback.
 * **Authentic English Translations:** Clear, dignified English translations displayed alongside Arabic text.
 
 ### 🧠 Interactive Memorization Test Mode (Hifz Tool)
-* **On-Page Ayah Masking:** Conceal verse text directly on the Mushaf page to test and reinforce memorization.
-* **Tap-to-Reveal & Floating Toolbar:** Seamlessly reveal verses line-by-line or ayah-by-ayah with dedicated floating revision controls.
+* **Word-by-Word & Ayah Masking:** Conceal words or full verses directly on the Mushaf page with pixel-stable visual spacing and zero text shifting.
+* **Tap-to-Reveal & Seamless Actions:** Reveal hidden words and verses on tap, with full access to verse options and translations once revealed.
 
 ### 🎨 11 Handcrafted Mushaf Color Themes & Adaptive UI
 * **Curated Color Palettes:** Creamy, Parchment, Rose Gold, Mint, Olive, Ice Blue, Slate, Emerald, Burgundy, Pure White, and OLED Dark.
@@ -80,7 +83,7 @@ Tabattal is crafted according to strict architectural guidelines, modern perform
 * **State Management:** [BLoC / Cubit](https://bloclibrary.dev) (Predictable, testable, and reactive state streams).
 * **Architecture Pattern:** Clean Architecture (Strictly decoupled Domain, Data, and Presentation layers).
 * **Audio Pipeline:** `just_audio` & `audio_service` with Android MediaSession background capabilities.
-* **Database & Caching:** SQLite via `sqflite` with indexed word-level spatial lookup tables and LRU page cache.
+* **Database & Caching:** SQLite via `sqflite` with indexed word-level spatial lookup tables and in-memory page cache.
 * **Typography:** 604 King Fahd Complex QCF V2 vector font families declared natively and managed directly by the Flutter Engine.
 * **Static Analysis:** Strict zero-lint policy with optimized frame rendering and clean architectural hygiene.
 
