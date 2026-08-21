@@ -35,12 +35,14 @@ class QuranPageWidgetMobile extends StatefulWidget {
   final int pageNumber;
   final void Function(int page, {String? verseKey})? onNavigateToPage;
   final String? highlightVerseKey;
+  final int highlightToken;
 
   const QuranPageWidgetMobile({
     super.key,
     required this.pageNumber,
     this.onNavigateToPage,
     this.highlightVerseKey,
+    this.highlightToken = 0,
   });
 
   static VoidCallback? _activeMenuDismissCallback;
@@ -54,12 +56,16 @@ class QuranPageWidgetMobile extends StatefulWidget {
   State<QuranPageWidgetMobile> createState() => _QuranPageWidgetMobileState();
 }
 
-class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> {
+class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
+    with SingleTickerProviderStateMixin {
   int? _activeVerseId;
   OverlayEntry? _activeOverlayEntry;
   final GlobalKey _pageColumnKey = GlobalKey();
 
+  late final AnimationController _bookmarkFadeController;
+  late final Animation<double> _bookmarkFadeAnimation;
   int? _bookmarkHighlightVerseId;
+  int _lastConsumedToken = 0;
   final GlobalKey _pageRepaintKey = GlobalKey();
 
   // Prevents the page-level GestureDetector.onTap from dismissing a menu that
@@ -92,11 +98,22 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> {
   @override
   void initState() {
     super.initState();
+    _bookmarkFadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _bookmarkFadeAnimation = Tween<double>(begin: 0.04, end: 0.24).animate(
+      CurvedAnimation(
+        parent: _bookmarkFadeController,
+        curve: Curves.easeInOut,
+      ),
+    );
     final cached = QuranPageCache.get(widget.pageNumber);
     if (cached == null) {
       _loadPageDataFallback();
     }
-    if (widget.highlightVerseKey != null) {
+    if (widget.highlightVerseKey != null && widget.highlightToken > 0) {
+      _lastConsumedToken = widget.highlightToken;
       _activateBookmarkHighlight(widget.highlightVerseKey!);
     }
   }
@@ -124,17 +141,21 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> {
       final cached = QuranPageCache.get(widget.pageNumber);
       if (cached == null) _loadPageDataFallback();
     }
-    if (widget.highlightVerseKey != oldWidget.highlightVerseKey) {
-      if (widget.highlightVerseKey != null) {
-        _activateBookmarkHighlight(widget.highlightVerseKey!);
-      } else {
-        setState(() => _bookmarkHighlightVerseId = null);
-      }
+    if (widget.highlightVerseKey != null &&
+        widget.highlightToken > 0 &&
+        widget.highlightToken != _lastConsumedToken) {
+      _lastConsumedToken = widget.highlightToken;
+      _activateBookmarkHighlight(widget.highlightVerseKey!);
+    } else if (widget.highlightVerseKey == null &&
+        oldWidget.highlightVerseKey != null) {
+      _bookmarkFadeController.stop();
+      setState(() => _bookmarkHighlightVerseId = null);
     }
   }
 
   @override
   void dispose() {
+    _bookmarkFadeController.dispose();
     _activeOverlayEntry?.remove();
     _activeOverlayEntry?.dispose();
     _activeOverlayEntry = null;
@@ -148,12 +169,15 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> {
   void _activateBookmarkHighlight(String verseKey) {
     final parsed = ArabicTextUtils.parseVerseKey(verseKey);
     if (parsed == null) return;
-    setState(
-      () => _bookmarkHighlightVerseId = parsed.surah * 1000 + parsed.ayah,
-    );
-    // Auto-clear after 5 s so it doesn't stay permanently highlighted
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) {
+    final verseId = parsed.surah * 1000 + parsed.ayah;
+    setState(() => _bookmarkHighlightVerseId = verseId);
+    if (!_bookmarkFadeController.isAnimating) {
+      _bookmarkFadeController.repeat(reverse: true);
+    }
+    // Auto-clear after 4 seconds so it doesn't stay permanently highlighted
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted && _bookmarkHighlightVerseId == verseId) {
+        _bookmarkFadeController.stop();
         setState(() => _bookmarkHighlightVerseId = null);
       }
     });
@@ -557,16 +581,40 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> {
       );
     }
 
-    final backgroundColor = (isAudioHighlighted || isMenuHighlighted)
-        ? mushafTheme.goldColor.withValues(alpha: 0.2)
-        : Colors.transparent;
-
     Color textColor = mushafTheme.textColor;
     if (isAudioHighlighted) {
       textColor = mushafTheme.goldColor;
     } else if (isPermanentlyBookmarked && word.charTypeName == 'end') {
       textColor = mushafTheme.bookmarkedMarkerColor;
     }
+
+    if (isBookmarkHighlighted) {
+      return AnimatedBuilder(
+        animation: _bookmarkFadeAnimation,
+        builder: (context, _) => Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (e) => _wordTapStart = e.position,
+          onPointerUp: (e) {
+            if (_isWordTap(e.position)) handleTap(e.position);
+            _wordTapStart = null;
+          },
+          onPointerCancel: (_) => _wordTapStart = null,
+          child: ColoredBox(
+            color: mushafTheme.goldColor.withValues(
+              alpha: _bookmarkFadeAnimation.value,
+            ),
+            child: Text(
+              displayText,
+              style: wordTextStyle.copyWith(color: textColor),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final backgroundColor = (isAudioHighlighted || isMenuHighlighted)
+        ? mushafTheme.goldColor.withValues(alpha: 0.2)
+        : Colors.transparent;
 
     return Listener(
       behavior: HitTestBehavior.translucent,
@@ -669,11 +717,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> {
 
           final isMenuHighlighted = _activeVerseId == verseId;
           final isAudioHighlighted = playingVerseId == verseId;
+          final isBookmarkHighlighted = _bookmarkHighlightVerseId == verseId;
           final isBookmarked = bookmarkState.isBookmarked(word.verseKey);
-
-          final backgroundColor = (isAudioHighlighted || isMenuHighlighted)
-              ? mushafTheme.goldColor.withValues(alpha: 0.2)
-              : Colors.transparent;
 
           Color textColor = mushafTheme.textColor;
           if (isAudioHighlighted) {
@@ -682,18 +727,43 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> {
             textColor = mushafTheme.bookmarkedMarkerColor;
           }
 
-          Widget basmala = ColoredBox(
-            color: backgroundColor,
-            child: Text(
-              '1 2 3',
-              style: TextStyle(
-                fontFamily: 'QCF_BSML',
-                fontSize: 26.sp,
-                color: textColor,
-                height: 1.0.h,
+          Widget basmala;
+          if (isBookmarkHighlighted) {
+            basmala = AnimatedBuilder(
+              animation: _bookmarkFadeAnimation,
+              builder: (context, _) => ColoredBox(
+                color: mushafTheme.goldColor.withValues(
+                  alpha: _bookmarkFadeAnimation.value,
+                ),
+                child: Text(
+                  '1 2 3',
+                  style: TextStyle(
+                    fontFamily: 'QCF_BSML',
+                    fontSize: 26.sp,
+                    color: textColor,
+                    height: 1.0.h,
+                  ),
+                ),
               ),
-            ),
-          );
+            );
+          } else {
+            final backgroundColor = (isAudioHighlighted || isMenuHighlighted)
+                ? mushafTheme.goldColor.withValues(alpha: 0.2)
+                : Colors.transparent;
+
+            basmala = ColoredBox(
+              color: backgroundColor,
+              child: Text(
+                '1 2 3',
+                style: TextStyle(
+                  fontFamily: 'QCF_BSML',
+                  fontSize: 26.sp,
+                  color: textColor,
+                  height: 1.0.h,
+                ),
+              ),
+            );
+          }
 
           wordWidgets.add(
             Listener(
@@ -872,18 +942,21 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> {
                   );
                   if (hasPrev != hasCurr) return true;
                   for (final k in _parsedVerseKeys.keys) {
-                    if (prev.isBookmarked(k) != curr.isBookmarked(k))
+                    if (prev.isBookmarked(k) != curr.isBookmarked(k)) {
                       return true;
+                    }
                   }
                   return false;
                 },
                 builder: (context, bookmarkState) {
                   return BlocBuilder<HifzBloc, HifzState>(
                     buildWhen: (prev, curr) {
-                      if (prev.isHifzModeActive != curr.isHifzModeActive)
+                      if (prev.isHifzModeActive != curr.isHifzModeActive) {
                         return true;
-                      if (!curr.isHifzModeActive && !prev.isHifzModeActive)
+                      }
+                      if (!curr.isHifzModeActive && !prev.isHifzModeActive) {
                         return false;
+                      }
                       if (prev.maskingType != curr.maskingType) return true;
                       if (prev.revealedVerseKeys != curr.revealedVerseKeys) {
                         final diff = prev.revealedVerseKeys
@@ -893,8 +966,9 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile> {
                                 prev.revealedVerseKeys,
                               ),
                             );
-                        if (diff.any((k) => _parsedVerseKeys.containsKey(k)))
+                        if (diff.any((k) => _parsedVerseKeys.containsKey(k))) {
                           return true;
+                        }
                       }
                       if (prev.revealedWordKeys != curr.revealedWordKeys) {
                         final diff = prev.revealedWordKeys

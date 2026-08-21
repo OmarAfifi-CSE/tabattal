@@ -37,6 +37,8 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
   int _currentPage = 1;
   int _pageChangeToken = 0;
   String? _highlightVerseKey;
+  int? _highlightTargetPage;
+  int _highlightToken = 0;
   bool _isAudioExpanded = true;
 
   @override
@@ -46,6 +48,10 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
         widget.initialPage ??
         context.read<AudioPreferencesService>().lastReadPage;
     _highlightVerseKey = widget.initialVerseKey;
+    _highlightTargetPage = _currentPage;
+    if (_highlightVerseKey != null) {
+      _highlightToken = 1;
+    }
 
     // Trigger initial page load
     context.read<QuranRepository>().getLinesByPage(_currentPage);
@@ -59,6 +65,10 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
 
   void _onPageChanged(int newPage) {
     if (_currentPage == newPage) return;
+    if (newPage != _highlightTargetPage) {
+      _highlightVerseKey = null;
+      _highlightTargetPage = null;
+    }
     _commitPageChange(newPage, ++_pageChangeToken);
   }
 
@@ -76,7 +86,13 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
 
   void _navigateToPage(int pageNumber, {String? verseKey}) {
     final targetPage = pageNumber.clamp(1, QuranConstants.totalPages);
-    _highlightVerseKey = verseKey;
+    setState(() {
+      _highlightVerseKey = verseKey;
+      _highlightTargetPage = targetPage;
+      if (verseKey != null) {
+        _highlightToken++;
+      }
+    });
 
     if (_navigatorKey.currentState != null && targetPage != _currentPage) {
       _navigatorKey.currentState!.navigateToPage(targetPage);
@@ -208,6 +224,9 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                             highlightVerseKey: page == _currentPage
                                 ? _highlightVerseKey
                                 : null,
+                            highlightToken: page == _currentPage
+                                ? _highlightToken
+                                : 0,
                           );
                         },
                       ),
