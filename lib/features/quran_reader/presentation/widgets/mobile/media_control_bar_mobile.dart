@@ -11,6 +11,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_event.dart';
 import '../../../bloc/audio/audio_state.dart';
+import '../sleep_timer_selector_menu.dart';
 import 'audio_settings_sheet_mobile.dart';
 
 class MediaControlBarMobile extends StatefulWidget {
@@ -118,18 +119,11 @@ class _MobileExpandedPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: AppColors.cardCream,
-        borderRadius: BorderRadius.circular(24.r),
+        borderRadius: BorderRadius.circular(18.r),
         border: Border.all(color: AppColors.bronzeIcon, width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.textPrimary.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -143,7 +137,7 @@ class _MobileExpandedPlayer extends StatelessWidget {
                 icon: Icon(
                   Icons.keyboard_arrow_down_rounded,
                   color: AppColors.inkBrown,
-                  size: 28.sp,
+                  size: 24.sp,
                 ),
                 onPressed: onToggleExpanded,
               ),
@@ -155,7 +149,6 @@ class _MobileExpandedPlayer extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 12.h),
           const _MobilePlaybackRow(),
         ],
       ),
@@ -173,18 +166,11 @@ class _MobileMiniPlayer extends StatelessWidget {
     return GestureDetector(
       onTap: onToggleExpanded,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
         decoration: BoxDecoration(
           color: AppColors.cardCream,
-          borderRadius: BorderRadius.circular(30.r),
+          borderRadius: BorderRadius.circular(24.r),
           border: Border.all(color: AppColors.bronzeIcon, width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.textPrimary.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: BlocBuilder<AudioBloc, AudioState>(
           builder: (context, state) {
@@ -211,9 +197,9 @@ class _MobileMiniPlayer extends StatelessWidget {
                       Icon(
                         Icons.multitrack_audio_rounded,
                         color: AppColors.bronzeIcon,
-                        size: 24.sp,
+                        size: 20.sp,
                       ),
-                      SizedBox(width: 8.w),
+                      SizedBox(width: 6.w),
                       Flexible(
                         child: Text(
                           '$reciterName ($categoryName)',
@@ -222,7 +208,7 @@ class _MobileMiniPlayer extends StatelessWidget {
                               isEn ? TextDirection.ltr : TextDirection.rtl,
                           style: AppTextStyles.menuItemText.copyWith(
                             color: AppColors.inkBrown,
-                            fontSize: 12.sp,
+                            fontSize: 14.sp,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -230,21 +216,21 @@ class _MobileMiniPlayer extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: 8.w),
+                SizedBox(width: 6.w),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _MobilePlayPauseButton(
                       isPlaying: isPlaying,
                       isLoading: isLoading,
-                      size: 40.r,
-                      iconSize: 24.sp,
+                      size: 34.r,
+                      iconSize: 20.sp,
                     ),
-                    SizedBox(width: 8.w),
+                    SizedBox(width: 6.w),
                     Icon(
                       Icons.keyboard_arrow_up_rounded,
                       color: AppColors.inkBrown,
-                      size: 28.sp,
+                      size: 22.sp,
                     ),
                   ],
                 ),
@@ -265,13 +251,13 @@ class _MobileReciterButton extends StatelessWidget {
     return GestureDetector(
       onTap: () => showAudioSettingsSheetMobile(context),
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 8.w),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        margin: EdgeInsets.symmetric(horizontal: 14.w),
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
         decoration: BoxDecoration(
           border: Border.all(
             color: AppColors.bronzeIcon.withValues(alpha: 0.5),
           ),
-          borderRadius: BorderRadius.circular(20.r),
+          borderRadius: BorderRadius.circular(14.r),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -279,9 +265,9 @@ class _MobileReciterButton extends StatelessWidget {
             Icon(
               Icons.keyboard_arrow_up_rounded,
               color: AppColors.bronzeIcon,
-              size: 24.sp,
+              size: 20.sp,
             ),
-            SizedBox(width: 8.w),
+            SizedBox(width: 4.w),
             Expanded(
               child: BlocBuilder<AudioBloc, AudioState>(
                 builder: (context, state) {
@@ -336,78 +322,15 @@ class _MobileSleepTimerAndClose extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        PopupMenuButton<int>(
-          splashRadius: 0.1,
-          color: AppColors.cardCream,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          offset: Offset(0, -180.h),
+        SleepTimerSelectorMenu(
+          selectedMinutes: sleepTimerMinutes,
           onSelected: onSleepTimerSelected,
-          itemBuilder: (ctx) {
-            final l10n = AppLocalizations.of(ctx)!;
-            return [
-              PopupMenuItem(
-                value: 0,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(l10n.timerStop, textDirection: TextDirection.rtl),
-                ),
-              ),
-              PopupMenuItem(
-                value: 5,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    l10n.timerMinutes5,
-                    textDirection: TextDirection.rtl,
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 10,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    l10n.timerMinutes10,
-                    textDirection: TextDirection.rtl,
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 15,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    l10n.timerMinutes15,
-                    textDirection: TextDirection.rtl,
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 30,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    l10n.timerMinutes30,
-                    textDirection: TextDirection.rtl,
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 60,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    l10n.timerMinutes60,
-                    textDirection: TextDirection.rtl,
-                  ),
-                ),
-              ),
-            ];
-          },
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+          itemHeight: 36.h,
+          maxHeight: 150.h,
+          itemFontSize: 12.5.sp,
+          menuWidth: 135.w,
+          trigger: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 2.h),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -435,7 +358,7 @@ class _MobileSleepTimerAndClose extends StatelessWidget {
         GestureDetector(
           onTap: () => context.read<AudioBloc>().add(const StopAudio()),
           child: Container(
-            padding: EdgeInsets.all(4.r),
+            padding: EdgeInsets.all(3.r),
             decoration: BoxDecoration(
               color: AppColors.textPrimary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
@@ -461,54 +384,62 @@ class _MobilePlaybackRow extends StatelessWidget {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(width: 8.w),
+            SizedBox(width: 4.w),
             Directionality(
               textDirection: TextDirection.ltr,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                     icon: Icon(
                       Icons.fast_rewind_rounded,
                       color: AppColors.inkBrown,
-                      size: 30.sp,
+                      size: 22.sp,
                     ),
                     onPressed: () =>
                         context.read<AudioBloc>().add(const PreviousSurah()),
                   ),
-                  SizedBox(width: 4.w),
+                  SizedBox(width: 6.w),
                   IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                     icon: Icon(
                       Icons.skip_previous_rounded,
                       color: AppColors.inkBrown,
-                      size: 32.sp,
+                      size: 24.sp,
                     ),
                     onPressed: () =>
                         context.read<AudioBloc>().add(const PreviousAyah()),
                   ),
-                  SizedBox(width: 8.w),
+                  SizedBox(width: 10.w),
                   _MobilePlayPauseButton(
                     isPlaying: isPlaying,
                     isLoading: isLoading,
-                    size: 56.r,
-                    iconSize: 32.sp,
+                    size: 40.r,
+                    iconSize: 22.sp,
                   ),
-                  SizedBox(width: 8.w),
+                  SizedBox(width: 10.w),
                   IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                     icon: Icon(
                       Icons.skip_next_rounded,
                       color: AppColors.inkBrown,
-                      size: 32.sp,
+                      size: 24.sp,
                     ),
                     onPressed: () =>
                         context.read<AudioBloc>().add(const NextAyah()),
                   ),
-                  SizedBox(width: 4.w),
+                  SizedBox(width: 6.w),
                   IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                     icon: Icon(
                       Icons.fast_forward_rounded,
                       color: AppColors.inkBrown,
-                      size: 30.sp,
+                      size: 22.sp,
                     ),
                     onPressed: () =>
                         context.read<AudioBloc>().add(const NextSurah()),
@@ -516,7 +447,7 @@ class _MobilePlaybackRow extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(width: 8.w),
+            SizedBox(width: 4.w),
           ],
         );
       },

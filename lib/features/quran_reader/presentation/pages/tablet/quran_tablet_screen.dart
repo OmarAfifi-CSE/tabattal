@@ -1,6 +1,7 @@
 import '../../widgets/drawer/tablet/quran_drawer_tablet.dart';
 import '../../widgets/hifz/hifz_toolbar_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -140,15 +141,29 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
   @override
   Widget build(BuildContext context) {
     final settingsState = context.watch<SettingsBloc>().state;
+    final isDark = settingsState.effectiveMushafTheme.isDarkTheme;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      drawer: QuranDrawerTablet(
-        currentPage: _currentPage,
-        onNavigateToPage: (page, {String? verseKey}) =>
-            _navigateToPage(page, verseKey: verseKey),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
+        systemNavigationBarContrastEnforced: false,
+        systemStatusBarContrastEnforced: false,
       ),
-      body: SafeArea(
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        drawer: QuranDrawerTablet(
+          currentPage: _currentPage,
+          onNavigateToPage: (page, {String? verseKey}) =>
+              _navigateToPage(page, verseKey: verseKey),
+        ),
+        body: SafeArea(
         child: BlocListener<AudioBloc, AudioState>(
           listener: _handleAudioStateChange,
           child: LayoutBuilder(
@@ -367,6 +382,7 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

@@ -836,7 +836,7 @@ class _ThemePickerSheet extends StatelessWidget {
                       crossAxisCount: 5,
                       mainAxisSpacing: 12.h,
                       crossAxisSpacing: 6.w,
-                      childAspectRatio: 0.80,
+                      childAspectRatio: 0.81,
                     ),
                     itemCount: MushafTheme.values.length,
                     itemBuilder: (context, index) {

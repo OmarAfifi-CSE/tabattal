@@ -164,17 +164,20 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
   @override
   Widget build(BuildContext context) {
     final settingsState = context.watch<SettingsBloc>().state;
-
-    final isDark = settingsState.themeMode == ThemeMode.dark;
+    final isDark = settingsState.effectiveMushafTheme.isDarkTheme;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-        systemNavigationBarColor: AppColors.background,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
         systemNavigationBarIconBrightness: isDark
             ? Brightness.light
             : Brightness.dark,
+        systemNavigationBarContrastEnforced: false,
+        systemStatusBarContrastEnforced: false,
       ),
       child: Scaffold(
         backgroundColor: AppColors.background,
@@ -200,7 +203,7 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                     final isVisible =
                         state is! AudioIdle && state is! AudioError;
                     final double paddingBottom = isVisible
-                        ? (_isAudioExpanded ? 160.h : 80.h)
+                        ? (_isAudioExpanded ? 125.h : 42.h)
                         : 0;
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
@@ -241,7 +244,7 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                     return AnimatedPositioned(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeOutCubic,
-                      bottom: isVisible ? 16.h : -200.h,
+                      bottom: isVisible ? 0 : -200,
                       left: 16.w,
                       right: 16.w,
                       child: MediaControlBarMobile(

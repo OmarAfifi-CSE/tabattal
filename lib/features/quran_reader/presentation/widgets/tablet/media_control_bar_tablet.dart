@@ -11,6 +11,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_event.dart';
 import '../../../bloc/audio/audio_state.dart';
+import '../sleep_timer_selector_menu.dart';
 import 'audio_settings_sheet_tablet.dart';
 
 class MediaControlBarTablet extends StatefulWidget {
@@ -123,13 +124,6 @@ class _TabletExpandedPlayer extends StatelessWidget {
         color: AppColors.cardCream,
         borderRadius: BorderRadius.circular(24.r),
         border: Border.all(color: AppColors.bronzeIcon, width: 1.2.w),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.textPrimary.withValues(alpha: 0.1),
-            blurRadius: 10.r,
-            offset: Offset(0, 4.h),
-          ),
-        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -178,13 +172,6 @@ class _TabletMiniPlayer extends StatelessWidget {
           color: AppColors.cardCream,
           borderRadius: BorderRadius.circular(30.r),
           border: Border.all(color: AppColors.bronzeIcon, width: 1.2.w),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.textPrimary.withValues(alpha: 0.1),
-              blurRadius: 10.r,
-              offset: Offset(0, 4.h),
-            ),
-          ],
         ),
         child: BlocBuilder<AudioBloc, AudioState>(
           builder: (context, state) {
@@ -336,77 +323,14 @@ class _TabletSleepTimerAndClose extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        PopupMenuButton<int>(
-          splashRadius: 0.1,
-          color: AppColors.cardCream,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          offset: Offset(0, -180.h),
+        SleepTimerSelectorMenu(
+          selectedMinutes: sleepTimerMinutes,
           onSelected: onSleepTimerSelected,
-          itemBuilder: (ctx) {
-            final l10n = AppLocalizations.of(ctx)!;
-            return [
-              PopupMenuItem(
-                value: 0,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(l10n.timerStop, textDirection: TextDirection.rtl),
-                ),
-              ),
-              PopupMenuItem(
-                value: 5,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    l10n.timerMinutes5,
-                    textDirection: TextDirection.rtl,
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 10,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    l10n.timerMinutes10,
-                    textDirection: TextDirection.rtl,
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 15,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    l10n.timerMinutes15,
-                    textDirection: TextDirection.rtl,
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 30,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    l10n.timerMinutes30,
-                    textDirection: TextDirection.rtl,
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 60,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    l10n.timerMinutes60,
-                    textDirection: TextDirection.rtl,
-                  ),
-                ),
-              ),
-            ];
-          },
-          child: Padding(
+          itemHeight: 42.h,
+          maxHeight: 180.h,
+          itemFontSize: 14.sp,
+          menuWidth: 160.w,
+          trigger: Padding(
             padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
             child: Column(
               mainAxisSize: MainAxisSize.min,
