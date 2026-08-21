@@ -475,7 +475,7 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
           Center(
             child: Icon(
               Icons.search_rounded,
-              size: 72,
+              size: 150,
               color: AppColors.accentGold.withValues(alpha: 0.5),
             ),
           ),
@@ -485,32 +485,32 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
               l10n.searchByHint,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 height: 1.6,
                 color: AppColors.textPrimary.withValues(alpha: 0.6),
               ),
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 90),
           Row(
             children: [
               Icon(
                 Icons.grid_view_rounded,
-                size: 20,
+                size: 26,
                 color: AppColors.accentGold,
               ),
               const SizedBox(width: 8),
               Text(
                 l10n.topicSectionsTitle,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 20),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -552,7 +552,7 @@ class _QuranSearchScreenWebState extends State<QuranSearchScreenWeb> {
                             title,
                             maxLines: 1,
                             style: TextStyle(
-                              fontSize: 14.5,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textPrimary,
                             ),

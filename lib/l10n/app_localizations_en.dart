@@ -15,7 +15,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawerSearch => 'Advanced Search';
 
   @override
-  String get drawerSearchSubtitle => 'Search by text or numbers';
+  String get drawerSearchSubtitle => 'Search in verses & topics';
 
   @override
   String get drawerIndex => 'Index';
@@ -102,14 +102,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noResults => 'No results found';
 
   @override
-  String get searchHint => 'Search by text or number...';
+  String get searchHint => 'Search verse, surah, juz, or page...';
 
   @override
   String get searchBy => 'Search by';
 
   @override
   String get searchByHint =>
-      'Page number • Juz number • Surah number\nor Quranic text';
+      'Quranic text • Surah name or number\nPage number • Juz number';
 
   @override
   String get pagePrefix => 'Page';

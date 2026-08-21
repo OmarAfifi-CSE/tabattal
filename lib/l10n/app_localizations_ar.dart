@@ -15,7 +15,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get drawerSearch => 'البحث المتقدم';
 
   @override
-  String get drawerSearchSubtitle => 'بحث في النصوص والأرقام';
+  String get drawerSearchSubtitle => 'بحث في الآيات والموضوعات';
 
   @override
   String get drawerIndex => 'الفهرس';
@@ -102,14 +102,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noResults => 'لم يتم العثور على نتائج';
 
   @override
-  String get searchHint => 'البحث بالنصوص أو الأرقام...';
+  String get searchHint => 'ابحث عن آية، سورة، جزء، أو صفحة...';
 
   @override
   String get searchBy => 'ابحث عن طريق';
 
   @override
   String get searchByHint =>
-      'رقم الصفحة • رقم الجزء • رقم السورة\nأو النص القرآني';
+      'النص القرآني • اسم السورة أو رقمها\nرقم الصفحة • رقم الجزء';
 
   @override
   String get pagePrefix => 'صفحة';

@@ -113,7 +113,7 @@ abstract class AppLocalizations {
   /// No description provided for @drawerSearchSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'بحث في النصوص والأرقام'**
+  /// **'بحث في الآيات والموضوعات'**
   String get drawerSearchSubtitle;
 
   /// No description provided for @drawerIndex.
@@ -287,7 +287,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchHint.
   ///
   /// In ar, this message translates to:
-  /// **'البحث بالنصوص أو الأرقام...'**
+  /// **'ابحث عن آية، سورة، جزء، أو صفحة...'**
   String get searchHint;
 
   /// No description provided for @searchBy.
@@ -299,7 +299,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchByHint.
   ///
   /// In ar, this message translates to:
-  /// **'رقم الصفحة • رقم الجزء • رقم السورة\nأو النص القرآني'**
+  /// **'النص القرآني • اسم السورة أو رقمها\nرقم الصفحة • رقم الجزء'**
   String get searchByHint;
 
   /// No description provided for @pagePrefix.

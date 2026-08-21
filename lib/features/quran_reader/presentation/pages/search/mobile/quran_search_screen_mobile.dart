@@ -472,7 +472,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
           Center(
             child: Icon(
               Icons.search_rounded,
-              size: 68.r,
+              size: 150.r,
               color: AppColors.accentGold.withValues(alpha: 0.5),
             ),
           ),
@@ -482,32 +482,32 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
               l10n.searchByHint,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 15.sp,
+                fontSize: 18.sp,
                 height: 1.6.h,
                 color: AppColors.textPrimary.withValues(alpha: 0.6),
               ),
             ),
           ),
-          SizedBox(height: 28.h),
+          SizedBox(height: 90.h),
           Row(
             children: [
               Icon(
                 Icons.grid_view_rounded,
-                size: 20.r,
+                size: 26.r,
                 color: AppColors.accentGold,
               ),
               SizedBox(width: 8.w),
               Text(
                 l10n.topicSectionsTitle,
                 style: TextStyle(
-                  fontSize: 16.sp,
+                  fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 14.h),
+          SizedBox(height: 20.h),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -538,7 +538,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
                     children: [
                       Icon(
                         topic.icon,
-                        size: 18.r,
+                        size: 20.r,
                         color: AppColors.accentGold,
                       ),
                       SizedBox(width: 8.w),
@@ -549,7 +549,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
                             title,
                             maxLines: 1,
                             style: TextStyle(
-                              fontSize: 13.5.sp,
+                              fontSize: 16.sp,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textPrimary,
                             ),
