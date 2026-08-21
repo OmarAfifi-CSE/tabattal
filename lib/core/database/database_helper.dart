@@ -45,8 +45,7 @@ class DatabaseHelper {
     final dbVersion = prefs.getInt('db_version') ?? 0;
 
     // Increment this whenever we update quran.db in assets
-    const currentDbVersion =
-        23; // bumped to 23: pruned redundant indexes, page_size 4096, vacuumed & compact
+    const currentDbVersion = 30;
 
     if (!exists || dbVersion < currentDbVersion) {
       if (!kIsWeb) {
