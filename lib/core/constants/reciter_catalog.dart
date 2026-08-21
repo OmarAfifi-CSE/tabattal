@@ -12,6 +12,7 @@ class ReciterCatalog {
       'محمود خليل الحصري': 'Husary_128kbps',
       'عبد الباسط عبد الصمد': 'Abdul_Basit_Murattal_192kbps',
       'محمود علي البنا': 'mahmoud_ali_al_banna_32kbps',
+      'محمد محمود الطبلاوي': 'Mohammad_al_Tablaway_128kbps',
       'أحمد نعينع': 'Ahmed_Neana_128kbps',
 
       // 2. الجيل الحديث (سريع وتلاوة معاصرة)
@@ -53,8 +54,6 @@ class ReciterCatalog {
       'عبد الباسط عبد الصمد': 'Abdul_Basit_Mujawwad_128kbps',
       'محمد صديق المنشاوي': 'Minshawy_Mujawwad_192kbps',
       'محمود خليل الحصري': 'Husary_128kbps_Mujawwad',
-      'محمد محمود الطبلاوي': 'Mohammad_al_Tablaway_128kbps',
-      'مصطفى إسماعيل': 'Mustafa_Ismail_48kbps',
     },
     'المصحف المعلم': {
       'محمود خليل الحصري': 'Husary_Muallim_128kbps',
@@ -64,7 +63,6 @@ class ReciterCatalog {
     },
     'رواية ورش': {
       'ياسين الجزائري': 'warsh/warsh_yassin_al_jazaery_64kbps',
-      'عبد الباسط عبد الصمد': 'warsh/warsh_Abdul_Basit_128kbps',
       'إبراهيم الدوسري': 'warsh/warsh_ibrahim_aldosary_128kbps',
     },
     'الترجمات الصوتية': {

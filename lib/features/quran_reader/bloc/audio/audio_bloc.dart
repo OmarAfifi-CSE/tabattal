@@ -389,19 +389,28 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       _playedCount = 0;
       _isPlayingOnce = _playOnce;
       final verse = VerseRef.fromId(event.verseId);
+      final reciterPath = AudioDownloadManager.getReciterPath(
+        _currentCategory,
+        _currentReciter,
+      );
+      final bool hasBuiltinBasmalah =
+          reciterPath.contains('mahmoud_ali_al_banna') ||
+          reciterPath.contains('al-Ajamy') ||
+          reciterPath.contains('Muhammad_AbdulKareem');
+
       final bool needsBasmalah =
+          !hasBuiltinBasmalah &&
           !event.skipBasmalah &&
           verse.ayah == 1 &&
           verse.surah != 1 &&
           verse.surah != 9;
+
       final int repeat = _currentRepeatCount > 0 ? _currentRepeatCount : 1;
 
       // --- Step 1: Pre-download first 3 ayahs (+ Basmalah) in PARALLEL ---
-      // _nextVerses is BOUNDED to the same surah — it never crosses into the
-      // next surah, which would cause ayahs to play without their basmalah.
       final List<Future<String>> downloadFutures = [];
       if (needsBasmalah) {
-        downloadFutures.add(_ensureLocalPath(1, 1, 1001));
+        downloadFutures.add(_ensureLocalPath(1, 0, 1000));
       }
       int preloadCount = kIsWeb ? 1 : 3;
       if (_isPlayingOnce) preloadCount = 1;

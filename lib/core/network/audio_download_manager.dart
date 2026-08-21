@@ -47,6 +47,25 @@ class AudioDownloadManager {
     return null;
   }
 
+  /// Constructs the EveryAyah backend URL for a verse or Basmalah.
+  static String getEveryAyahUrl(
+    String category,
+    String reciterKey,
+    int surah,
+    int ayah,
+  ) {
+    final reciterPath = getReciterPath(category, reciterKey);
+
+    // Basmalah for any reciter (represented as ayah == 0):
+    if (ayah == 0) {
+      return 'https://everyayah.com/data/$reciterPath/001001.mp3';
+    }
+
+    final surahStr = surah.toString().padLeft(3, '0');
+    final ayahStr = ayah.toString().padLeft(3, '0');
+    return 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
+  }
+
   /// Returns the local path for a specific verse if it exists, otherwise null
   Future<String> getVerseAudioPath(
     String category,
@@ -54,11 +73,7 @@ class AudioDownloadManager {
     int surah,
     int ayah,
   ) async {
-    final reciterPath = getReciterPath(category, reciterKey);
-    final surahStr = surah.toString().padLeft(3, '0');
-    final ayahStr = ayah.toString().padLeft(3, '0');
-
-    final url = 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
+    final url = getEveryAyahUrl(category, reciterKey, surah, ayah);
 
     if (kIsWeb) return url;
 
@@ -82,11 +97,7 @@ class AudioDownloadManager {
     Function(double)? onProgress, {
     CancelToken? cancelToken,
   }) async {
-    final reciterPath = getReciterPath(category, reciterKey);
-    final surahStr = surah.toString().padLeft(3, '0');
-    final ayahStr = ayah.toString().padLeft(3, '0');
-
-    final url = 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
+    final url = getEveryAyahUrl(category, reciterKey, surah, ayah);
 
     if (kIsWeb) return url;
 
@@ -265,10 +276,7 @@ class AudioDownloadManager {
     int surah,
     int ayah,
   ) {
-    final reciterPath = getReciterPath(category, reciterKey);
-    final surahStr = surah.toString().padLeft(3, '0');
-    final ayahStr = ayah.toString().padLeft(3, '0');
-    return 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
+    return getEveryAyahUrl(category, reciterKey, surah, ayah);
   }
 
   /// Predictive Prefetching Queue Engine (Anti-Stuttering)
