@@ -89,9 +89,13 @@ class VerseCardImageExporter {
         : 'Verse_${surahNumber}_${startAyah}_to_${endAyah}_$timestamp.png';
 
     if (kIsWeb) {
-      await Share.shareXFiles([
-        XFile.fromData(imageBytes, mimeType: 'image/png', name: fileName),
-      ]);
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [
+            XFile.fromData(imageBytes, mimeType: 'image/png', name: fileName),
+          ],
+        ),
+      );
     } else {
       final tempDir = await getTemporaryDirectory();
 
@@ -111,12 +115,18 @@ class VerseCardImageExporter {
       await tempFile.writeAsBytes(imageBytes);
 
       try {
-        await Share.shareXFiles([XFile(tempFile.path, mimeType: 'image/png')]);
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(tempFile.path, mimeType: 'image/png')],
+          ),
+        );
       } on MissingPluginException {
-        await Share.share(
-          isEn
-              ? '( $fallbackText ) — Surah $surahName'
-              : '﴿ $fallbackText ﴾ — سورة $surahName',
+        await SharePlus.instance.share(
+          ShareParams(
+            text: isEn
+                ? '( $fallbackText ) — Surah $surahName'
+                : '﴿ $fallbackText ﴾ — سورة $surahName',
+          ),
         );
       }
     }

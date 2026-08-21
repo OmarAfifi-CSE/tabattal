@@ -506,7 +506,6 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
     required TextStyle wordTextStyle,
     required TextStyle transparentWordStyle,
     required BoxDecoration maskDecoration,
-    required EdgeInsets maskMargin,
   }) {
     final displayText = word.code;
     final wordKey = word.wordKey;
@@ -545,13 +544,16 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
       }
     }
 
+    const wordMarginHifz = EdgeInsets.symmetric(horizontal: 2.0);
+    final wordMargin = hifzState.isHifzModeActive ? wordMarginHifz : EdgeInsets.zero;
+
     if (isWordMasked) {
       return GestureDetector(
         onTapUp: handleTap,
         onTap: () {},
         onLongPress: () {},
         child: Container(
-          margin: maskMargin,
+          margin: wordMargin,
           decoration: maskDecoration,
           child: Text(
             displayText,
@@ -569,6 +571,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
           onTap: () {},
           onLongPress: () {},
           child: Container(
+            margin: wordMargin,
             color: mushafTheme.goldColor.withValues(
               alpha: _bookmarkPulseAnimation.value,
             ),
@@ -599,7 +602,8 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
       onTapUp: handleTap,
       onTap: () {},
       onLongPress: () {},
-      child: ColoredBox(
+      child: Container(
+        margin: wordMargin,
         color: backgroundColor,
         child: Text(
           displayText,
@@ -637,7 +641,6 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
       color: mushafTheme.textColor.withValues(alpha: 0.18),
       borderRadius: BorderRadius.circular(4),
     );
-    const maskMargin = EdgeInsets.symmetric(horizontal: 2.0);
 
     int i = 0;
     while (i < lineWords.length) {
@@ -825,7 +828,6 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
           wordTextStyle: wordTextStyle,
           transparentWordStyle: transparentWordStyle,
           maskDecoration: maskDecoration,
-          maskMargin: maskMargin,
         ),
       );
       i++;

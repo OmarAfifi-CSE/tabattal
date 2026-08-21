@@ -510,7 +510,6 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
     required TextStyle wordTextStyle,
     required TextStyle transparentWordStyle,
     required BoxDecoration maskDecoration,
-    required EdgeInsets maskMargin,
   }) {
     final displayText = word.code;
     final wordKey = word.wordKey;
@@ -546,6 +545,10 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
       }
     }
 
+    final wordMargin = hifzState.isHifzModeActive
+        ? EdgeInsets.symmetric(horizontal: 2.0.w)
+        : EdgeInsets.zero;
+
     if (isWordMasked) {
       return Listener(
         behavior: HitTestBehavior.translucent,
@@ -556,7 +559,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
         },
         onPointerCancel: (_) => _wordTapStart = null,
         child: Container(
-          margin: maskMargin,
+          margin: wordMargin,
           decoration: maskDecoration,
           child: Text(
             displayText,
@@ -578,6 +581,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
           },
           onPointerCancel: (_) => _wordTapStart = null,
           child: Container(
+            margin: wordMargin,
             color: mushafTheme.goldColor.withValues(
               alpha: _bookmarkPulseAnimation.value,
             ),
@@ -612,7 +616,8 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
         _wordTapStart = null;
       },
       onPointerCancel: (_) => _wordTapStart = null,
-      child: ColoredBox(
+      child: Container(
+        margin: wordMargin,
         color: backgroundColor,
         child: Text(
           displayText,
@@ -650,7 +655,6 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
       color: mushafTheme.textColor.withValues(alpha: 0.18),
       borderRadius: BorderRadius.circular(4.r),
     );
-    final maskMargin = EdgeInsets.symmetric(horizontal: 2.0.w);
 
     int i = 0;
     while (i < lineWords.length) {
@@ -838,7 +842,6 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
           wordTextStyle: wordTextStyle,
           transparentWordStyle: transparentWordStyle,
           maskDecoration: maskDecoration,
-          maskMargin: maskMargin,
         ),
       );
       i++;

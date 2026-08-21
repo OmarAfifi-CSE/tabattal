@@ -336,7 +336,14 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                           ),
                                         );
                                       },
-                                      menuWidth: 180.w,
+                                      openUpwards: true,
+                                      menuWidth:
+                                          Localizations.localeOf(
+                                                context,
+                                              ).languageCode ==
+                                              'en'
+                                          ? 180.w
+                                          : 120.w,
                                       itemHeight: 38.h,
                                       itemFontSize: 14.sp,
                                       trigger: Container(

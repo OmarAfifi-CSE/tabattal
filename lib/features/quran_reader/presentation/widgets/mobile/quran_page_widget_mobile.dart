@@ -523,7 +523,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     required TextStyle wordTextStyle,
     required TextStyle transparentWordStyle,
     required BoxDecoration maskDecoration,
-    required EdgeInsets maskMargin,
   }) {
     final displayText = word.code;
     final wordKey = '${word.verseKey}:${word.id}';
@@ -564,6 +563,10 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       }
     }
 
+    final wordMargin = hifzState.isHifzModeActive
+        ? EdgeInsets.symmetric(horizontal: 1.5.w)
+        : EdgeInsets.zero;
+
     if (isWordMasked) {
       return Listener(
         behavior: HitTestBehavior.translucent,
@@ -574,7 +577,7 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         },
         onPointerCancel: (_) => _wordTapStart = null,
         child: Container(
-          margin: maskMargin,
+          margin: wordMargin,
           decoration: maskDecoration,
           child: Text(displayText, style: transparentWordStyle),
         ),
@@ -599,7 +602,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
             _wordTapStart = null;
           },
           onPointerCancel: (_) => _wordTapStart = null,
-          child: ColoredBox(
+          child: Container(
+            margin: wordMargin,
             color: mushafTheme.goldColor.withValues(
               alpha: _bookmarkFadeAnimation.value,
             ),
@@ -624,7 +628,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         _wordTapStart = null;
       },
       onPointerCancel: (_) => _wordTapStart = null,
-      child: ColoredBox(
+      child: Container(
+        margin: wordMargin,
         color: backgroundColor,
         child: Text(
           displayText,
@@ -663,7 +668,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       color: mushafTheme.textColor.withValues(alpha: 0.18),
       borderRadius: BorderRadius.circular(4.r),
     );
-    final maskMargin = EdgeInsets.symmetric(horizontal: 1.5.w);
 
     int i = 0;
     while (i < lineWords.length) {
@@ -860,7 +864,6 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
           wordTextStyle: wordTextStyle,
           transparentWordStyle: transparentWordStyle,
           maskDecoration: maskDecoration,
-          maskMargin: maskMargin,
         ),
       );
       i++;

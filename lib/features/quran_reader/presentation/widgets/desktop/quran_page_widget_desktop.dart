@@ -511,7 +511,6 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
     required TextStyle wordTextStyle,
     required TextStyle transparentWordStyle,
     required BoxDecoration maskDecoration,
-    required EdgeInsets maskMargin,
   }) {
     final displayText = word.code;
     final wordKey = word.wordKey;
@@ -547,6 +546,9 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
       }
     }
 
+    const wordMarginHifz = EdgeInsets.symmetric(horizontal: 2.0);
+    final wordMargin = hifzState.isHifzModeActive ? wordMarginHifz : EdgeInsets.zero;
+
     if (isWordMasked) {
       return Listener(
         behavior: HitTestBehavior.translucent,
@@ -557,7 +559,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
         },
         onPointerCancel: (_) => _wordTapStart = null,
         child: Container(
-          margin: maskMargin,
+          margin: wordMargin,
           decoration: maskDecoration,
           child: Text(
             displayText,
@@ -579,6 +581,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
           },
           onPointerCancel: (_) => _wordTapStart = null,
           child: Container(
+            margin: wordMargin,
             color: mushafTheme.goldColor.withValues(
               alpha: _bookmarkPulseAnimation.value,
             ),
@@ -613,7 +616,8 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
         _wordTapStart = null;
       },
       onPointerCancel: (_) => _wordTapStart = null,
-      child: ColoredBox(
+      child: Container(
+        margin: wordMargin,
         color: backgroundColor,
         child: Text(
           displayText,
@@ -651,7 +655,6 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
       color: mushafTheme.textColor.withValues(alpha: 0.18),
       borderRadius: BorderRadius.circular(4),
     );
-    const maskMargin = EdgeInsets.symmetric(horizontal: 2.0);
 
     int i = 0;
     while (i < lineWords.length) {
@@ -839,7 +842,6 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
           wordTextStyle: wordTextStyle,
           transparentWordStyle: transparentWordStyle,
           maskDecoration: maskDecoration,
-          maskMargin: maskMargin,
         ),
       );
       i++;

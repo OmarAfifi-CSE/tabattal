@@ -333,7 +333,14 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                           ),
                                         );
                                       },
-                                      menuWidth: 180,
+                                      openUpwards: true,
+                                      menuWidth:
+                                          Localizations.localeOf(
+                                                context,
+                                              ).languageCode ==
+                                              'en'
+                                          ? 180
+                                          : 145,
                                       itemHeight: 38,
                                       itemFontSize: 14,
                                       trigger: Container(

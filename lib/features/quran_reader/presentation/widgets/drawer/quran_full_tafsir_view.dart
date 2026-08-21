@@ -525,7 +525,6 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
                   activeDownloadProgress: _downloadProgress,
                 ),
                 onSelected: _changeTafsir,
-                menuWidth: 190,
                 itemHeight: 38,
                 itemFontSize: 14,
               ),

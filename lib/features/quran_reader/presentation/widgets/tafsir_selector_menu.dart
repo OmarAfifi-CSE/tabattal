@@ -86,7 +86,8 @@ class TafsirSelectorMenu extends StatelessWidget {
   final double itemHeight;
   final double? maxHeight;
   final double itemFontSize;
-  final double menuWidth;
+  final double? menuWidth;
+  final bool openUpwards;
 
   const TafsirSelectorMenu({
     super.key,
@@ -97,7 +98,8 @@ class TafsirSelectorMenu extends StatelessWidget {
     this.itemHeight = 38.0,
     this.maxHeight,
     this.itemFontSize = 14.0,
-    this.menuWidth = 190.0,
+    this.menuWidth,
+    this.openUpwards = false,
   });
 
   @override
@@ -105,17 +107,18 @@ class TafsirSelectorMenu extends StatelessWidget {
     final itemH = itemHeight;
     final maxH = maxHeight ?? math.min(220.0, options.length * itemH);
     final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final effectiveWidth = menuWidth ?? (isEn ? 190.0 : 120.0);
 
     return PopupMenuButton<int>(
       splashRadius: 0.1,
-      position: PopupMenuPosition.under,
-      offset: const Offset(0, 4),
+      position: openUpwards ? PopupMenuPosition.over : PopupMenuPosition.under,
+      offset: openUpwards ? Offset(0, -maxH - 6) : const Offset(0, 4),
       color: AppColors.cardCream,
       elevation: 4,
       menuPadding: EdgeInsets.zero,
       constraints: BoxConstraints(
-        minWidth: menuWidth,
-        maxWidth: menuWidth + 20,
+        minWidth: effectiveWidth,
+        maxWidth: effectiveWidth,
         maxHeight: maxH,
       ),
       shape: RoundedRectangleBorder(
