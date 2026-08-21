@@ -70,203 +70,207 @@ class QuranDrawerMobile extends StatelessWidget {
       ),
       child: Directionality(
         textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  const _MobileDrawerHeader(),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
-                    child: BlocBuilder<SettingsBloc, SettingsState>(
-                      builder: (context, state) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Directionality(
-                              textDirection: TextDirection.rtl,
-                              child: Text(
-                                l10n.themeScrollDirection,
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const _MobileDrawerHeader(),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
+                          child: BlocBuilder<SettingsBloc, SettingsState>(
+                            builder: (context, state) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Directionality(
+                                    textDirection: TextDirection.rtl,
+                                    child: Text(
+                                      l10n.themeScrollDirection,
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: 12.h),
+                                  ScrollDirectionToggle(
+                                    scrollDirection: state.scrollDirection,
+                                    onChanged: (val) => context
+                                        .read<SettingsBloc>()
+                                        .add(ChangeScrollDirection(val)),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    _MobileDrawerItem(
+                      icon: Icons.search_rounded,
+                      title: l10n.drawerSearch,
+                      subtitle: l10n.drawerSearchSubtitle,
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final result =
+                            await Navigator.push<Map<String, dynamic>>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const QuranSearchScreenMobile(),
                               ),
-                            ),
-                            SizedBox(height: 12.h),
-                            ScrollDirectionToggle(
-                              scrollDirection: state.scrollDirection,
-                              onChanged: (val) => context
-                                  .read<SettingsBloc>()
-                                  .add(ChangeScrollDirection(val)),
-                            ),
-                          ],
+                            );
+                        if (result != null) {
+                          onNavigateToPage(
+                            result['page'],
+                            verseKey: result['verseKey'],
+                          );
+                        }
+                      },
+                    ),
+                    _MobileDrawerItem(
+                      icon: Icons.list_alt_rounded,
+                      title: l10n.drawerIndex,
+                      subtitle: l10n.drawerIndexSubtitle,
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final result = await Navigator.push<dynamic>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const QuranIndexViewMobile(),
+                          ),
+                        );
+                        if (result is Map<String, dynamic>) {
+                          onNavigateToPage(
+                            result['page'] as int,
+                            verseKey: result['verseKey'] as String?,
+                          );
+                        } else if (result is int) {
+                          onNavigateToPage(result);
+                        }
+                      },
+                    ),
+                    _MobileDrawerItem(
+                      icon: Icons.bookmark_rounded,
+                      title: l10n.drawerBookmarks,
+                      subtitle: l10n.drawerBookmarksSubtitle,
+                      badge: const _MobileBookmarkBadge(),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final result = await Navigator.push<dynamic>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const QuranBookmarksViewMobile(),
+                          ),
+                        );
+                        if (result is Map<String, dynamic>) {
+                          onNavigateToPage(
+                            result['page'] as int,
+                            verseKey: result['verseKey'] as String?,
+                          );
+                        }
+                      },
+                    ),
+                    _MobileDrawerItem(
+                      icon: Icons.menu_book_rounded,
+                      title: l10n.drawerTafsir,
+                      subtitle: l10n.drawerTafsirSubtitle,
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final result = await Navigator.push<dynamic>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                QuranFullTafsirView(pageNumber: currentPage),
+                          ),
+                        );
+                        if (result is Map<String, dynamic>) {
+                          onNavigateToPage(
+                            result['page'] as int,
+                            verseKey: result['verseKey'] as String?,
+                          );
+                        } else if (result is int) {
+                          onNavigateToPage(result);
+                        }
+                      },
+                    ),
+                    _MobileDrawerItem(
+                      icon: Icons.translate_rounded,
+                      title: l10n.drawerTranslation,
+                      subtitle: l10n.drawerTranslationSubtitle,
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final result = await Navigator.push<dynamic>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                QuranTranslationView(pageNumber: currentPage),
+                          ),
+                        );
+                        if (result is Map<String, dynamic>) {
+                          onNavigateToPage(
+                            result['page'] as int,
+                            verseKey: result['verseKey'] as String?,
+                          );
+                        } else if (result is int) {
+                          onNavigateToPage(result);
+                        }
+                      },
+                    ),
+                    _MobileDrawerItem(
+                      icon: Icons.headphones_rounded,
+                      title: l10n.drawerAudioManager,
+                      subtitle: l10n.drawerAudioManagerSubtitle,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const QuranAudioManagerView(),
+                          ),
                         );
                       },
                     ),
-                  ),
-                ],
+                    _MobileDrawerItem(
+                      icon: Icons.palette_rounded,
+                      title: l10n.themeAppearanceTitle,
+                      subtitle: l10n.themeAppearanceSubtitle,
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showThemePicker(context);
+                      },
+                    ),
+                    _MobileDrawerItem(
+                      icon: Icons.language_rounded,
+                      title: l10n.drawerLanguage,
+                      subtitle: l10n.drawerLanguageSubtitle,
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showLanguagePicker(context, l10n);
+                      },
+                    ),
+                    SizedBox(height: 8.h),
+                  ],
+                ),
               ),
-            ),
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _MobileDrawerItem(
-                    icon: Icons.search_rounded,
-                    title: l10n.drawerSearch,
-                    subtitle: l10n.drawerSearchSubtitle,
-                    onTap: () async {
-                      Navigator.pop(context);
-                      final result =
-                          await Navigator.push<Map<String, dynamic>>(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const QuranSearchScreenMobile(),
-                            ),
-                          );
-                      if (result != null) {
-                        onNavigateToPage(
-                          result['page'],
-                          verseKey: result['verseKey'],
-                        );
-                      }
-                    },
-                  ),
-                  _MobileDrawerItem(
-                    icon: Icons.list_alt_rounded,
-                    title: l10n.drawerIndex,
-                    subtitle: l10n.drawerIndexSubtitle,
-                    onTap: () async {
-                      Navigator.pop(context);
-                      final result = await Navigator.push<dynamic>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const QuranIndexViewMobile(),
-                        ),
-                      );
-                      if (result is Map<String, dynamic>) {
-                        onNavigateToPage(
-                          result['page'] as int,
-                          verseKey: result['verseKey'] as String?,
-                        );
-                      } else if (result is int) {
-                        onNavigateToPage(result);
-                      }
-                    },
-                  ),
-                  _MobileDrawerItem(
-                    icon: Icons.bookmark_rounded,
-                    title: l10n.drawerBookmarks,
-                    subtitle: l10n.drawerBookmarksSubtitle,
-                    badge: const _MobileBookmarkBadge(),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      final result = await Navigator.push<dynamic>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const QuranBookmarksViewMobile(),
-                        ),
-                      );
-                      if (result is Map<String, dynamic>) {
-                        onNavigateToPage(
-                          result['page'] as int,
-                          verseKey: result['verseKey'] as String?,
-                        );
-                      }
-                    },
-                  ),
-                  _MobileDrawerItem(
-                    icon: Icons.menu_book_rounded,
-                    title: l10n.drawerTafsir,
-                    subtitle: l10n.drawerTafsirSubtitle,
-                    onTap: () async {
-                      Navigator.pop(context);
-                      final result = await Navigator.push<dynamic>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              QuranFullTafsirView(pageNumber: currentPage),
-                        ),
-                      );
-                      if (result is Map<String, dynamic>) {
-                        onNavigateToPage(
-                          result['page'] as int,
-                          verseKey: result['verseKey'] as String?,
-                        );
-                      } else if (result is int) {
-                        onNavigateToPage(result);
-                      }
-                    },
-                  ),
-                  _MobileDrawerItem(
-                    icon: Icons.translate_rounded,
-                    title: l10n.drawerTranslation,
-                    subtitle: l10n.drawerTranslationSubtitle,
-                    onTap: () async {
-                      Navigator.pop(context);
-                      final result = await Navigator.push<dynamic>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              QuranTranslationView(pageNumber: currentPage),
-                        ),
-                      );
-                      if (result is Map<String, dynamic>) {
-                        onNavigateToPage(
-                          result['page'] as int,
-                          verseKey: result['verseKey'] as String?,
-                        );
-                      } else if (result is int) {
-                        onNavigateToPage(result);
-                      }
-                    },
-                  ),
-                  _MobileDrawerItem(
-                    icon: Icons.headphones_rounded,
-                    title: l10n.drawerAudioManager,
-                    subtitle: l10n.drawerAudioManagerSubtitle,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const QuranAudioManagerView(),
-                        ),
-                      );
-                    },
-                  ),
-                  _MobileDrawerItem(
-                    icon: Icons.palette_rounded,
-                    title: l10n.themeAppearanceTitle,
-                    subtitle: l10n.themeAppearanceSubtitle,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showThemePicker(context);
-                    },
-                  ),
-                  _MobileDrawerItem(
-                    icon: Icons.language_rounded,
-                    title: l10n.drawerLanguage,
-                    subtitle: l10n.drawerLanguageSubtitle,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showLanguagePicker(context, l10n);
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
 
-    return Padding(
-      padding: EdgeInsets.only(top: 50.h, bottom: 50.h),
-      child: drawer,
+    return RepaintBoundary(
+      child: Padding(
+        padding: EdgeInsets.only(top: 50.h, bottom: 50.h),
+        child: drawer,
+      ),
     );
   }
 }

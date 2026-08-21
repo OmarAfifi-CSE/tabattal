@@ -68,7 +68,11 @@ class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
   @override
   void initState() {
     super.initState();
-    _loadMeanings();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadMeanings();
+      }
+    });
   }
 
   Future<void> _loadMeanings() async {

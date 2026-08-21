@@ -115,11 +115,15 @@ class _SurahListTabState extends State<_SurahListTab>
 
     return Directionality(
       textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
-      child: ListView.separated(
-        padding: EdgeInsets.all(16.r),
+      child: ListView.builder(
+        padding: EdgeInsets.fromLTRB(
+          16.w,
+          8.h,
+          16.w,
+          MediaQuery.paddingOf(context).bottom,
+        ),
         itemCount: 114,
-        separatorBuilder: (context, index) =>
-            Divider(color: AppColors.divider, height: 1.h),
+        itemExtent: 66.h,
         itemBuilder: (context, index) {
           final surahNum = index + 1;
           final startPage = QuranMetadata.getStartPageForSurah(surahNum);
@@ -128,11 +132,13 @@ class _SurahListTabState extends State<_SurahListTab>
               : QuranMetadata.getSurahName(surahNum);
 
           return _IndexSurahTile(
+            key: ValueKey('surah_$surahNum'),
             surahNum: surahNum,
             startPage: startPage,
             surahName: surahName,
             isEn: isEn,
             l10n: l10n,
+            showDivider: surahNum < 114,
             onTap: () => widget.onSelectPage(startPage),
           );
         },
@@ -147,41 +153,60 @@ class _IndexSurahTile extends StatelessWidget {
   final String surahName;
   final bool isEn;
   final AppLocalizations l10n;
+  final bool showDivider;
   final VoidCallback onTap;
 
   const _IndexSurahTile({
+    super.key,
     required this.surahNum,
     required this.startPage,
     required this.surahName,
     required this.isEn,
     required this.l10n,
+    this.showDivider = true,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    return InkWell(
       onTap: onTap,
-      contentPadding: EdgeInsets.symmetric(
-        horizontal: 12.w,
-        vertical: 4.h,
-      ),
-      leading: _IndexNumberBadge(label: '$surahNum', filled: true),
-      title: Text(
-        l10n.surahListItem(surahName),
-        style: TextStyle(
-          fontSize: 18.sp,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: 12.w,
+          vertical: 4.h,
         ),
-      ),
-      trailing: Text(
-        l10n.pageListItem(
-          isEn ? startPage.toString() : startPage.toArabicDigits,
+        decoration: BoxDecoration(
+          border: showDivider
+              ? Border(
+                  bottom: BorderSide(color: AppColors.divider, width: 1.h),
+                )
+              : null,
         ),
-        style: TextStyle(
-          fontSize: 14.sp,
-          color: AppColors.textPrimary.withValues(alpha: 0.6),
+        child: Row(
+          children: [
+            _IndexNumberBadge(label: '$surahNum', filled: true),
+            SizedBox(width: 14.w),
+            Expanded(
+              child: Text(
+                l10n.surahListItem(surahName),
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            Text(
+              l10n.pageListItem(
+                isEn ? startPage.toString() : startPage.toArabicDigits,
+              ),
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textPrimary.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -214,20 +239,26 @@ class _JuzListTabState extends State<_JuzListTab>
 
     return Directionality(
       textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
-      child: ListView.separated(
-        padding: EdgeInsets.all(16.r),
+      child: ListView.builder(
+        padding: EdgeInsets.fromLTRB(
+          16.w,
+          8.h,
+          16.w,
+          MediaQuery.paddingOf(context).bottom,
+        ),
         itemCount: 30,
-        separatorBuilder: (context, index) =>
-            Divider(color: AppColors.divider, height: 1.h),
+        itemExtent: 66.h,
         itemBuilder: (context, index) {
           final juzNum = index + 1;
           final startPage = widget.juzStartPages[index];
 
           return _IndexJuzTile(
+            key: ValueKey('juz_$juzNum'),
             juzNum: juzNum,
             startPage: startPage,
             isEn: isEn,
             l10n: l10n,
+            showDivider: juzNum < 30,
             onTap: () => widget.onSelectPage(startPage),
           );
         },
@@ -241,38 +272,61 @@ class _IndexJuzTile extends StatelessWidget {
   final int startPage;
   final bool isEn;
   final AppLocalizations l10n;
+  final bool showDivider;
   final VoidCallback onTap;
 
   const _IndexJuzTile({
+    super.key,
     required this.juzNum,
     required this.startPage,
     required this.isEn,
     required this.l10n,
+    this.showDivider = true,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    return InkWell(
       onTap: onTap,
-      leading: _IndexNumberBadge(label: '$juzNum', filled: false),
-      title: Text(
-        l10n.juzListItem(
-          isEn ? juzNum.toString() : QuranMetadata.getJuzName(juzNum),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: 12.w,
+          vertical: 4.h,
         ),
-        style: TextStyle(
-          fontSize: 18.sp,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+        decoration: BoxDecoration(
+          border: showDivider
+              ? Border(
+                  bottom: BorderSide(color: AppColors.divider, width: 1.h),
+                )
+              : null,
         ),
-      ),
-      trailing: Text(
-        l10n.pageListItem(
-          isEn ? startPage.toString() : startPage.toArabicDigits,
-        ),
-        style: TextStyle(
-          fontSize: 14.sp,
-          color: AppColors.textPrimary.withValues(alpha: 0.6),
+        child: Row(
+          children: [
+            _IndexNumberBadge(label: '$juzNum', filled: false),
+            SizedBox(width: 14.w),
+            Expanded(
+              child: Text(
+                l10n.juzListItem(
+                  isEn ? juzNum.toString() : QuranMetadata.getJuzName(juzNum),
+                ),
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            Text(
+              l10n.pageListItem(
+                isEn ? startPage.toString() : startPage.toArabicDigits,
+              ),
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textPrimary.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
         ),
       ),
     );

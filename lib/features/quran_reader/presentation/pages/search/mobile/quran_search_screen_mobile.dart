@@ -236,7 +236,16 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
     Navigator.pop(context, {'page': pageNumber, 'verseKey': verseKey});
   }
 
-  String _normalizeArabicNumbers(String input) {
+  static final _tashkeelRegex = RegExp(
+    r'[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED\u0640]',
+  );
+  static final _alefRegex = RegExp(r'[اأإآٱى]');
+  static final _surahPrefixRegex = RegExp(r'^(سورة|سوره|surah)\s*', caseSensitive: false);
+  static final _delimiterRegex = RegExp(r'[,،|]+');
+  static final _whitespaceRegex = RegExp(r'\s+');
+  static final _nonAlphaNumeric = RegExp(r'[^a-z0-9]');
+
+  static String _normalizeArabicNumbers(String input) {
     const arabicNumbers = '٠١٢٣٤٥٦٧٨٩';
     const englishNumbers = '0123456789';
     String result = input;
@@ -246,30 +255,31 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
     return result;
   }
 
-  String _smartNormalize(String text) {
+  static String _smartNormalize(String text) {
     String c = _normalizeArabicNumbers(text);
-    c = c.replaceAll(
-      RegExp(
-        r'[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED\u0640]',
-      ),
-      '',
-    );
+    c = c.replaceAll(_tashkeelRegex, '');
     c = c.replaceAll('ـ', '');
-    c = c.replaceAll(RegExp(r'[اأإآٱى]'), '');
-    c = c.replaceAll(RegExp(r'ة'), 'ه');
-    c = c.replaceAll(RegExp(r'[ئ]'), 'ي');
-    c = c.replaceAll(RegExp(r'ؤ'), 'و');
+    c = c.replaceAll(_alefRegex, '');
+    c = c.replaceAll('ة', 'ه');
+    c = c.replaceAll('ئ', 'ي');
+    c = c.replaceAll('ؤ', 'و');
     return c;
   }
+
+  static final List<({int surahNum, String normArabic, String normEnglish})> _normalizedSurahCache = [
+    for (int i = 1; i <= 114; i++)
+      (
+        surahNum: i,
+        normArabic: _smartNormalize(QuranMetadata.getSurahName(i)),
+        normEnglish: QuranMetadata.getSurahNameEnglish(i).toLowerCase().replaceAll(_nonAlphaNumeric, ''),
+      )
+  ];
 
   List<int> _getMatchingSurahs(String rawQuery) {
     final queryText = rawQuery.trim();
     if (queryText.isEmpty) return [];
 
-    String cleaned = queryText.replaceAll(
-      RegExp(r'^(سورة|سوره|surah)\s*', caseSensitive: false),
-      '',
-    );
+    String cleaned = queryText.replaceAll(_surahPrefixRegex, '');
     if (cleaned.isEmpty) return [];
 
     final normQuery = _smartNormalize(cleaned);
@@ -277,18 +287,13 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
 
     final exactMatches = <int>[];
     final partialMatches = <int>[];
+    final normQueryLower = normQuery.toLowerCase();
 
-    for (int i = 1; i <= 114; i++) {
-      final arabicName = QuranMetadata.getSurahName(i);
-      final englishName = QuranMetadata.getSurahNameEnglish(i);
-
-      final normArabic = _smartNormalize(arabicName);
-      final normEnglish = englishName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-
-      if (normArabic == normQuery || normEnglish == normQuery.toLowerCase()) {
-        exactMatches.add(i);
-      } else if (normArabic.contains(normQuery) || normEnglish.contains(normQuery.toLowerCase())) {
-        partialMatches.add(i);
+    for (final s in _normalizedSurahCache) {
+      if (s.normArabic == normQuery || s.normEnglish == normQueryLower) {
+        exactMatches.add(s.surahNum);
+      } else if (s.normArabic.contains(normQuery) || s.normEnglish.contains(normQueryLower)) {
+        partialMatches.add(s.surahNum);
       }
     }
 
@@ -302,16 +307,13 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
   ) {
     if (query.isEmpty) return [TextSpan(text: textUthmani)];
 
-    String cleanedQuery = query.trim().replaceAll(
-      RegExp(r'^(سورة|سوره|surah)\s*', caseSensitive: false),
-      '',
-    );
+    String cleanedQuery = query.trim().replaceAll(_surahPrefixRegex, '');
     if (cleanedQuery.isEmpty) cleanedQuery = query.trim();
 
-    final rawTerms = cleanedQuery.split(RegExp(r'[,،|]+'));
+    final rawTerms = cleanedQuery.split(_delimiterRegex);
     final queryWords = <String>[];
     for (final term in rawTerms) {
-      for (final w in term.trim().split(RegExp(r'\s+'))) {
+      for (final w in term.trim().split(_whitespaceRegex)) {
         final norm = _smartNormalize(w);
         if (norm.isNotEmpty) queryWords.add(norm);
       }

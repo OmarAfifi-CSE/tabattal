@@ -77,8 +77,11 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
       end: 1.0,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
-    _checkDownloadedTafsirs();
-    _controller.forward();
+    _controller.forward().then((_) {
+      if (mounted) {
+        _checkDownloadedTafsirs();
+      }
+    });
   }
 
   Future<void> _checkDownloadedTafsirs() async {

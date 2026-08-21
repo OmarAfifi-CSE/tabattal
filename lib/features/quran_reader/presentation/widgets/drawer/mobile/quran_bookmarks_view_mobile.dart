@@ -48,7 +48,12 @@ class QuranBookmarksViewMobile extends StatelessWidget {
           }
 
           return ListView.separated(
-            padding: EdgeInsets.all(16.r),
+            padding: EdgeInsets.fromLTRB(
+              16.w,
+              16.h,
+              16.w,
+              MediaQuery.paddingOf(context).bottom,
+            ),
             itemCount: state.bookmarkedVerseKeys.length,
             separatorBuilder: (context, index) => SizedBox(height: 12.h),
             itemBuilder: (context, index) {
@@ -152,7 +157,11 @@ class _BookmarkCardState extends State<_BookmarkCard>
       _surahStartPage = _versePageCache[widget.verseKey]!;
       _isLoadingPage = false;
     } else {
-      _loadVersePage();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _loadVersePage();
+        }
+      });
     }
   }
 
