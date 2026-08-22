@@ -73,6 +73,7 @@ Future<DependencyContainer> configureDependencies() async {
       androidNotificationChannelName: isEnLocale
           ? 'Quran Recitations'
           : 'تلاوات القرآن',
+      androidNotificationIcon: 'mipmap/ic_launcher',
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
     ),

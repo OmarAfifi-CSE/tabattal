@@ -8,6 +8,42 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   final AudioPlayer _player = AudioPlayer();
   final _actionSubject = StreamController<QuranAudioAction>.broadcast();
 
+  static const _previousSurahControl = MediaControl(
+    androidIcon: 'drawable/ic_media_rewind',
+    label: 'Previous Surah',
+    action: MediaAction.rewind,
+  );
+  static const _previousControl = MediaControl(
+    androidIcon: 'drawable/ic_media_previous',
+    label: 'Previous',
+    action: MediaAction.skipToPrevious,
+  );
+  static const _playControl = MediaControl(
+    androidIcon: 'drawable/ic_media_play',
+    label: 'Play',
+    action: MediaAction.play,
+  );
+  static const _pauseControl = MediaControl(
+    androidIcon: 'drawable/ic_media_pause',
+    label: 'Pause',
+    action: MediaAction.pause,
+  );
+  static const _nextControl = MediaControl(
+    androidIcon: 'drawable/ic_media_next',
+    label: 'Next',
+    action: MediaAction.skipToNext,
+  );
+  static const _nextSurahControl = MediaControl(
+    androidIcon: 'drawable/ic_media_fast_forward',
+    label: 'Next Surah',
+    action: MediaAction.fastForward,
+  );
+  static const _stopControl = MediaControl(
+    androidIcon: 'drawable/ic_media_stop',
+    label: 'Stop',
+    action: MediaAction.stop,
+  );
+
   Stream<QuranAudioAction> get actions => _actionSubject.stream;
   AudioPlayer get player => _player;
 
@@ -29,12 +65,12 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   PlaybackState _transformEvent(PlaybackEvent event) {
     return PlaybackState(
       controls: [
-        MediaControl.rewind, // Previous Surah
-        MediaControl.skipToPrevious, // Previous Ayah
-        if (_player.playing) MediaControl.pause else MediaControl.play,
-        MediaControl.skipToNext, // Next Ayah
-        MediaControl.fastForward, // Next Surah
-        MediaControl.stop,
+        _previousSurahControl,
+        _previousControl, // Previous Ayah
+        if (_player.playing) _pauseControl else _playControl,
+        _nextControl, // Next Ayah
+        _nextSurahControl,
+        _stopControl,
       ],
       systemActions: const {
         MediaAction.seek,
@@ -110,7 +146,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     );
     playbackState.add(
       PlaybackState(
-        controls: const [MediaControl.stop],
+        controls: const [_stopControl],
         systemActions: const {},
         processingState: AudioProcessingState.completed,
         playing: false,
