@@ -11,9 +11,12 @@ class VerseCardActionButtons extends StatelessWidget {
   final ShareFormat selectedFormat;
   final bool isSharing;
   final bool isSaving;
+  final bool isExportingVideo;
   final VoidCallback onShare;
   final VoidCallback onSave;
   final VoidCallback onCopyText;
+  final VoidCallback? onShareVideo;
+  final VoidCallback? onSaveVideo;
   final String? statusMessage;
   final bool isSuccessStatus;
 
@@ -22,9 +25,12 @@ class VerseCardActionButtons extends StatelessWidget {
     required this.selectedFormat,
     required this.isSharing,
     required this.isSaving,
+    this.isExportingVideo = false,
     required this.onShare,
     required this.onSave,
     required this.onCopyText,
+    this.onShareVideo,
+    this.onSaveVideo,
     this.statusMessage,
     this.isSuccessStatus = true,
   });
@@ -33,6 +39,189 @@ class VerseCardActionButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     const isWeb = kIsWeb;
+
+    Widget buildButtons() {
+      switch (selectedFormat) {
+        case ShareFormat.video:
+          return Row(
+            key: const ValueKey('video_action_buttons'),
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: isExportingVideo ? null : onShareVideo,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accentGold,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        AppColors.accentGold.withValues(alpha: 0.85),
+                    disabledForegroundColor:
+                        Colors.white.withValues(alpha: 0.9),
+                    padding: EdgeInsets.symmetric(
+                      vertical: isWeb ? 14 : 12.h,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                    elevation: 2,
+                  ),
+                  icon: isExportingVideo
+                      ? CupertinoActivityIndicator(
+                          radius: isWeb ? 8 : 8.r,
+                          color: Colors.white,
+                        )
+                      : const Icon(Icons.share_rounded),
+                  label: Text(
+                    'مشاركة الفيديو',
+                    style: TextStyle(
+                      fontSize: isWeb ? 15 : 14.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: isExportingVideo ? null : onSaveVideo,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.accentGold,
+                    disabledForegroundColor:
+                        AppColors.accentGold.withValues(alpha: 0.85),
+                    side: BorderSide(
+                      color: AppColors.accentGold.withValues(
+                        alpha: isExportingVideo ? 0.85 : 1.0,
+                      ),
+                      width: 1.5,
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      vertical: isWeb ? 14 : 12.h,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                  ),
+                  icon: isExportingVideo
+                      ? CupertinoActivityIndicator(
+                          radius: isWeb ? 8 : 8.r,
+                          color: AppColors.accentGold,
+                        )
+                      : const Icon(Icons.download_rounded),
+                  label: Text(
+                    'حفظ الفيديو',
+                    style: TextStyle(
+                      fontSize: isWeb ? 15 : 14.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        case ShareFormat.image:
+        case ShareFormat.fullPage:
+          return Row(
+            key: const ValueKey('image_action_buttons'),
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: (isSharing || isSaving) ? null : onShare,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accentGold,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        AppColors.accentGold.withValues(alpha: 0.85),
+                    disabledForegroundColor:
+                        Colors.white.withValues(alpha: 0.9),
+                    padding: EdgeInsets.symmetric(
+                      vertical: isWeb ? 14 : 12.h,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                    elevation: 2,
+                  ),
+                  icon: isSharing
+                      ? CupertinoActivityIndicator(
+                          radius: isWeb ? 8 : 8.r,
+                          color: Colors.white,
+                        )
+                      : const Icon(Icons.share_rounded),
+                  label: Text(
+                    l10n.verseCardShareImage,
+                    style: TextStyle(
+                      fontSize: isWeb ? 15 : 14.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: (isSaving || isSharing) ? null : onSave,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.accentGold,
+                    disabledForegroundColor:
+                        AppColors.accentGold.withValues(alpha: 0.85),
+                    side: BorderSide(
+                      color: AppColors.accentGold.withValues(
+                        alpha: (isSaving || isSharing) ? 0.85 : 1.0,
+                      ),
+                      width: 1.5,
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      vertical: isWeb ? 14 : 12.h,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                  ),
+                  icon: isSaving
+                      ? CupertinoActivityIndicator(
+                          radius: isWeb ? 8 : 8.r,
+                          color: AppColors.accentGold,
+                        )
+                      : const Icon(Icons.download_rounded),
+                  label: Text(
+                    l10n.verseCardSaveImage,
+                    style: TextStyle(
+                      fontSize: isWeb ? 15 : 14.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        case ShareFormat.text:
+          return SizedBox(
+            key: const ValueKey('text_action_buttons'),
+            width: MediaQuery.sizeOf(context).width,
+            child: ElevatedButton.icon(
+              onPressed: onCopyText,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accentGold,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(
+                  vertical: isWeb ? 14 : 12.h,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                ),
+                elevation: 2,
+              ),
+              icon: const Icon(Icons.copy_rounded),
+              label: Text(
+                l10n.verseCardCopyText,
+                style: TextStyle(
+                  fontSize: isWeb ? 15 : 14.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          );
+      }
+    }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -102,109 +291,7 @@ class VerseCardActionButtons extends StatelessWidget {
           switchOutCurve: Curves.easeInCubic,
           transitionBuilder: (child, animation) =>
               FadeTransition(opacity: animation, child: child),
-          child: (selectedFormat == ShareFormat.image ||
-                  selectedFormat == ShareFormat.fullPage)
-              ? Row(
-                  key: const ValueKey('image_action_buttons'),
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: (isSharing || isSaving) ? null : onShare,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accentGold,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: AppColors.accentGold
-                              .withValues(alpha: 0.85),
-                          disabledForegroundColor: Colors.white.withValues(
-                            alpha: 0.9,
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            vertical: isWeb ? 14 : 12.h,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14.r),
-                          ),
-                          elevation: 2,
-                        ),
-                        icon: isSharing
-                            ? CupertinoActivityIndicator(
-                                radius: isWeb ? 8 : 8.r,
-                                color: Colors.white,
-                              )
-                            : const Icon(Icons.share_rounded),
-                        label: Text(
-                          l10n.verseCardShareImage,
-                          style: TextStyle(
-                            fontSize: isWeb ? 15 : 14.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10.w),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: (isSaving || isSharing) ? null : onSave,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.accentGold,
-                          disabledForegroundColor: AppColors.accentGold
-                              .withValues(alpha: 0.85),
-                          side: BorderSide(
-                            color: AppColors.accentGold.withValues(
-                              alpha: (isSaving || isSharing) ? 0.85 : 1.0,
-                            ),
-                            width: 1.5,
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            vertical: isWeb ? 14 : 12.h,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14.r),
-                          ),
-                        ),
-                        icon: isSaving
-                            ? CupertinoActivityIndicator(
-                                radius: isWeb ? 8 : 8.r,
-                                color: AppColors.accentGold,
-                              )
-                            : const Icon(Icons.download_rounded),
-                        label: Text(
-                          l10n.verseCardSaveImage,
-                          style: TextStyle(
-                            fontSize: isWeb ? 15 : 14.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : SizedBox(
-                  key: const ValueKey('text_action_buttons'),
-                  width: MediaQuery.sizeOf(context).width,
-                  child: ElevatedButton.icon(
-                    onPressed: onCopyText,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accentGold,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(
-                        vertical: isWeb ? 14 : 12.h,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14.r),
-                      ),
-                      elevation: 2,
-                    ),
-                    icon: const Icon(Icons.copy_rounded),
-                    label: Text(
-                      l10n.verseCardCopyText,
-                      style: TextStyle(
-                        fontSize: isWeb ? 15 : 14.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
+          child: buildButtons(),
         ),
       ],
     );

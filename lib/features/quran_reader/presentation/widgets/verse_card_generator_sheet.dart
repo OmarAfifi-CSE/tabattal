@@ -14,6 +14,22 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../settings/bloc/settings_bloc.dart';
 import '../../data/models/verse_model.dart';
 
+import '../../../quran_video_studio/data/repositories/video_studio_repository_impl.dart';
+import '../../../quran_video_studio/data/services/video_export_service.dart';
+import '../../../quran_video_studio/domain/entities/video_enums.dart';
+import '../../../quran_video_studio/domain/entities/video_project_config.dart';
+import '../../../quran_video_studio/presentation/bloc/video_studio_bloc.dart';
+import '../../../quran_video_studio/presentation/bloc/video_studio_event.dart';
+import '../../../quran_video_studio/presentation/bloc/video_studio_state.dart';
+import '../../../quran_video_studio/presentation/widgets/video_aspect_ratio_bar.dart';
+import '../../../quran_video_studio/presentation/widgets/video_export_progress_dialog.dart';
+import '../../../quran_video_studio/presentation/widgets/video_fullscreen_preview_modal.dart';
+import '../../../quran_video_studio/presentation/widgets/video_options_selector.dart';
+import '../../../quran_video_studio/presentation/widgets/video_preview_viewport.dart';
+import '../../../quran_video_studio/presentation/widgets/video_range_picker.dart';
+import '../../../quran_video_studio/presentation/widgets/video_reciter_selector.dart';
+import '../../../quran_video_studio/presentation/widgets/video_theme_selector.dart';
+
 import 'verse_card/helpers/verse_card_text_utils.dart';
 import 'verse_card/models/verse_card_theme.dart';
 import 'verse_card/services/verse_card_image_exporter.dart';
@@ -29,7 +45,7 @@ import 'verse_card/widgets/verse_card_theme_selector.dart';
 // Re-export models for external consumers
 export 'verse_card/models/verse_card_theme.dart';
 
-/// Shows the Verse Card Generator modal.
+/// Shows the unified Verse Card & Video Generator modal.
 void showVerseCardGeneratorModal(
   BuildContext context, {
   required VerseModel verse,
@@ -37,6 +53,8 @@ void showVerseCardGeneratorModal(
   String? translationText,
   GlobalKey? pageRepaintKey,
   int? pageNumber,
+  ShareFormat initialFormat = ShareFormat.video,
+  List<VerseModel>? initialVerses,
 }) {
   const isWeb = kIsWeb;
   final isWide = MediaQuery.sizeOf(context).width > 600;
@@ -47,19 +65,21 @@ void showVerseCardGeneratorModal(
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 550, maxHeight: 800),
+          constraints: const BoxConstraints(maxWidth: 550, maxHeight: 850),
           child: VerseCardGeneratorSheet(
             verse: verse,
             tafsirText: tafsirText,
             translationText: translationText,
             pageRepaintKey: pageRepaintKey,
             pageNumber: pageNumber,
+            initialFormat: initialFormat,
+            initialVerses: initialVerses,
           ),
         ),
       ),
     );
   } else {
-    final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.85;
+    final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.90;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -75,18 +95,22 @@ void showVerseCardGeneratorModal(
           translationText: translationText,
           pageRepaintKey: pageRepaintKey,
           pageNumber: pageNumber,
+          initialFormat: initialFormat,
+          initialVerses: initialVerses,
         ),
       ),
     );
   }
 }
 
-class VerseCardGeneratorSheet extends StatefulWidget {
+class VerseCardGeneratorSheet extends StatelessWidget {
   final VerseModel verse;
   final String? tafsirText;
   final String? translationText;
   final GlobalKey? pageRepaintKey;
   final int? pageNumber;
+  final ShareFormat initialFormat;
+  final List<VerseModel>? initialVerses;
 
   const VerseCardGeneratorSheet({
     super.key,
@@ -95,14 +119,65 @@ class VerseCardGeneratorSheet extends StatefulWidget {
     this.translationText,
     this.pageRepaintKey,
     this.pageNumber,
+    this.initialFormat = ShareFormat.video,
+    this.initialVerses,
   });
 
   @override
-  State<VerseCardGeneratorSheet> createState() =>
-      _VerseCardGeneratorSheetState();
+  Widget build(BuildContext context) {
+    final surahNum = int.tryParse(verse.verseKey.split(':')[0]) ?? 1;
+    return BlocProvider(
+      create: (context) => VideoStudioBloc(
+        repository: VideoStudioRepositoryImpl(),
+        initialConfig: VideoProjectConfig(
+          surahNumber: surahNum,
+          startAyah: verse.verseNumber,
+          endAyah: verse.verseNumber,
+        ),
+      )..add(
+          VideoStudioInitRequested(
+            surahNumber: surahNum,
+            startAyah: verse.verseNumber,
+            endAyah: verse.verseNumber,
+            verses: initialVerses ?? [verse],
+          ),
+        ),
+      child: _VerseCardGeneratorSheetContent(
+        verse: verse,
+        tafsirText: tafsirText,
+        translationText: translationText,
+        pageRepaintKey: pageRepaintKey,
+        pageNumber: pageNumber,
+        initialFormat: initialFormat,
+      ),
+    );
+  }
 }
 
-class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
+class _VerseCardGeneratorSheetContent extends StatefulWidget {
+  final VerseModel verse;
+  final String? tafsirText;
+  final String? translationText;
+  final GlobalKey? pageRepaintKey;
+  final int? pageNumber;
+  final ShareFormat initialFormat;
+
+  const _VerseCardGeneratorSheetContent({
+    required this.verse,
+    this.tafsirText,
+    this.translationText,
+    this.pageRepaintKey,
+    this.pageNumber,
+    required this.initialFormat,
+  });
+
+  @override
+  State<_VerseCardGeneratorSheetContent> createState() =>
+      _VerseCardGeneratorSheetContentState();
+}
+
+class _VerseCardGeneratorSheetContentState
+    extends State<_VerseCardGeneratorSheetContent> {
   final GlobalKey _repaintKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
 
@@ -113,7 +188,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   int _selectedThemeIndex = 0;
   bool _includeTafsir = false;
   bool _includeTranslation = false;
-  ShareFormat _selectedFormat = ShareFormat.image;
+  late ShareFormat _selectedFormat;
   bool _isSharing = false;
   bool _isSaving = false;
   String _verseTextUthmani = '';
@@ -129,6 +204,9 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   bool _isSuccessStatus = true;
   List<TextSpan> _qcfSpans = [];
 
+  bool _isExportDialogOpen = false;
+  BuildContext? _dialogContext;
+
   VerseCardTheme get _activeTheme => VerseCardTheme.themes[_selectedThemeIndex];
   int get _surahNumber =>
       int.tryParse(widget.verse.verseKey.split(':')[0]) ?? 1;
@@ -136,6 +214,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   @override
   void initState() {
     super.initState();
+    _selectedFormat = widget.initialFormat;
     _selectedThemeIndex = _getInitialThemeIndex();
     _startAyah = widget.verse.verseNumber;
     _endAyah = widget.verse.verseNumber;
@@ -222,6 +301,49 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
     });
   }
 
+  void _dismissExportDialog() {
+    if (_isExportDialogOpen &&
+        _dialogContext != null &&
+        _dialogContext!.mounted) {
+      _isExportDialogOpen = false;
+      Navigator.of(_dialogContext!, rootNavigator: true).pop();
+      _dialogContext = null;
+    }
+  }
+
+  void _showExportDialog(BuildContext context, VideoStudioBloc bloc) {
+    if (_isExportDialogOpen) return;
+    _isExportDialogOpen = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) {
+        _dialogContext = dialogCtx;
+        return BlocProvider.value(
+          value: bloc,
+          child: BlocBuilder<VideoStudioBloc, VideoStudioState>(
+            builder: (context, state) {
+              return VideoExportProgressDialog(
+                progress: state.exportProgress,
+                onCancel: () {
+                  bloc.add(const VideoStudioExportCancelled());
+                  _dismissExportDialog();
+                },
+                onDismiss: () {
+                  _dismissExportDialog();
+                },
+              );
+            },
+          ),
+        );
+      },
+    ).then((_) {
+      _isExportDialogOpen = false;
+      _dialogContext = null;
+    });
+  }
+
   Future<void> _loadAllVerseData() async {
     setState(() {
       _isLoadingText = true;
@@ -249,56 +371,69 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
   Future<void> _loadVerseTextAndFont(Database? database) async {
     try {
       final db = database ?? await DatabaseHelper().database;
+
+      final safeStart = _startAyah <= _endAyah ? _startAyah : _endAyah;
+      final safeEnd = _endAyah >= _startAyah ? _endAyah : _startAyah;
+
       final verseKeys = List.generate(
-        _endAyah - _startAyah + 1,
-        (i) => '$_surahNumber:${_startAyah + i}',
+        safeEnd - safeStart + 1,
+        (i) => '$_surahNumber:${safeStart + i}',
+      );
+      final placeholders = List.filled(verseKeys.length, '?').join(',');
+
+      final searchMaps = await db.query(
+        'quran_search',
+        columns: ['verse_key', 'text_uthmani'],
+        where: 'verse_key IN ($placeholders)',
+        whereArgs: verseKeys,
       );
 
-      final placeholders = List.filled(verseKeys.length, '?').join(',');
-      final maps = await db.query(
+      final Map<String, String> searchMap = {
+        for (final row in searchMaps)
+          (row['verse_key'] as String?) ?? '':
+              (row['text_uthmani'] as String?) ?? '',
+      };
+
+      final List<Map<String, dynamic>> wordsMaps = await db.query(
         'quran_words',
         columns: [
-          'code_v2',
+          'verse_key',
           'page',
+          'code_v2',
           'text_uthmani',
           'char_type_name',
-          'verse_key',
         ],
         where: 'verse_key IN ($placeholders)',
         whereArgs: verseKeys,
         orderBy: 'id ASC',
       );
 
-      final searchMaps = await db.query(
-        'quran_search',
-        columns: ['text_uthmani', 'verse_key'],
-        where: 'verse_key IN ($placeholders)',
-        whereArgs: verseKeys,
-        orderBy: 'id ASC',
-      );
+      if (wordsMaps.isNotEmpty) {
+        final Map<String, List<Map<String, dynamic>>> wordsByVerse = {};
+        for (final row in wordsMaps) {
+          final vk = (row['verse_key'] as String?) ?? '';
+          wordsByVerse.putIfAbsent(vk, () => []).add(row);
+        }
 
-      final searchMap = {
-        for (var m in searchMaps)
-          m['verse_key'] as String: m['text_uthmani'] as String,
-      };
-
-      if (maps.isNotEmpty) {
         final newSpans = <TextSpan>[];
         final verseUthmaniList = <String>[];
 
         for (int i = 0; i < verseKeys.length; i++) {
           final vk = verseKeys[i];
-          final currentAyahNum = _startAyah + i;
-          final wordsForVerse = maps.where((m) => m['verse_key'] == vk);
-          if (wordsForVerse.isNotEmpty) {
-            final pageNum = wordsForVerse.first['page'] as int;
+          final currentAyahNum = safeStart + i;
+          final wordsForVerse = wordsByVerse[vk];
+
+          if (wordsForVerse != null && wordsForVerse.isNotEmpty) {
+            final pageNum = wordsForVerse.first['page'] as int? ?? 1;
             final pageStr = pageNum.toString().padLeft(3, '0');
             final fontFamily = 'QCF_P$pageStr';
+
             final codeText = wordsForVerse
                 .map(
                   (m) =>
                       (m['code_v2'] as String?) ??
-                      (m['text_uthmani'] as String),
+                      (m['text_uthmani'] as String?) ??
+                      '',
                 )
                 .join(' ');
 
@@ -316,7 +451,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
                 searchMap[vk] ??
                 wordsForVerse
                     .where((m) => m['char_type_name'] == 'word')
-                    .map((m) => m['text_uthmani'] as String)
+                    .map((m) => (m['text_uthmani'] as String?) ?? '')
                     .join(' ');
 
             final cleanVerseText = VerseCardTextUtils.cleanTextForSharing(
@@ -343,34 +478,35 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
 
       final fallbackList = <String>[];
       for (int i = 0; i < searchMaps.length; i++) {
-        final text = searchMaps[i]['text_uthmani'] as String;
-        final currentAyahNum = _startAyah + i;
+        final text = (searchMaps[i]['text_uthmani'] as String?) ?? '';
+        final currentAyahNum = safeStart + i;
         final cleanText = VerseCardTextUtils.cleanTextForSharing(text);
         final arabicAyahNum = VerseCardTextUtils.toArabicDigits(currentAyahNum);
         fallbackList.add('$cleanText ﴿$arabicAyahNum﴾');
       }
 
-      final fallbackText = fallbackList.isNotEmpty
-          ? fallbackList.join(' ')
-          : '${VerseCardTextUtils.cleanTextForSharing(widget.verse.textUthmani)} ﴿${VerseCardTextUtils.toArabicDigits(widget.verse.verseNumber)}﴾';
-
       if (mounted) {
         setState(() {
           _qcfSpans = [];
-          _verseTextUthmani = fallbackText;
+          _verseTextUthmani = fallbackList.join(' ');
           _isLoadingText = false;
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _isLoadingText = false);
+      if (mounted) {
+        setState(() => _isLoadingText = false);
+      }
     }
   }
 
   Future<void> _loadTafsirForRange(Database db) async {
     try {
+      final safeStart = _startAyah <= _endAyah ? _startAyah : _endAyah;
+      final safeEnd = _endAyah >= _startAyah ? _endAyah : _startAyah;
+
       final verseKeys = List.generate(
-        _endAyah - _startAyah + 1,
-        (i) => '$_surahNumber:${_startAyah + i}',
+        safeEnd - safeStart + 1,
+        (i) => '$_surahNumber:${safeStart + i}',
       );
       final placeholders = List.filled(verseKeys.length, '?').join(',');
 
@@ -410,7 +546,7 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
       final List<String> resultSegments = [];
       String lastGroupText = '';
 
-      for (int ayah = _startAyah; ayah <= _endAyah; ayah++) {
+      for (int ayah = safeStart; ayah <= safeEnd; ayah++) {
         String verseTafsir = '';
         if (tafsirMap.containsKey(ayah)) {
           verseTafsir = tafsirMap[ayah]!;
@@ -446,9 +582,12 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
 
   Future<void> _loadTranslationForRange(Database db) async {
     try {
+      final safeStart = _startAyah <= _endAyah ? _startAyah : _endAyah;
+      final safeEnd = _endAyah >= _startAyah ? _endAyah : _startAyah;
+
       final verseKeys = List.generate(
-        _endAyah - _startAyah + 1,
-        (i) => '$_surahNumber:${_startAyah + i}',
+        safeEnd - safeStart + 1,
+        (i) => '$_surahNumber:${safeStart + i}',
       );
       final placeholders = List.filled(verseKeys.length, '?').join(',');
 
@@ -486,19 +625,14 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
       }
 
       final List<String> resultSegments = [];
-      for (int ayah = _startAyah; ayah <= _endAyah; ayah++) {
-        final text = translationMap[ayah];
-        if (text != null && text.isNotEmpty) {
-          if (_startAyah == _endAyah) {
-            resultSegments.add(text);
-          } else {
-            resultSegments.add('($ayah) $text');
-          }
+      for (int ayah = safeStart; ayah <= safeEnd; ayah++) {
+        if (translationMap.containsKey(ayah)) {
+          resultSegments.add(translationMap[ayah]!);
         }
       }
 
       final combinedTranslation = resultSegments.isNotEmpty
-          ? resultSegments.join(' ')
+          ? resultSegments.join('\n\n')
           : ArabicTextUtils.cleanTafsirOrHtml(widget.translationText ?? '');
 
       if (mounted) {
@@ -668,233 +802,517 @@ class _VerseCardGeneratorSheetState extends State<VerseCardGeneratorSheet> {
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     const isWeb = kIsWeb;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.85;
+    final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.90;
 
-    return Directionality(
-      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxSheetHeight),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.cardCream,
-            borderRadius: isWeb || MediaQuery.sizeOf(context).width > 600
-                ? BorderRadius.circular(20)
-                : BorderRadius.vertical(top: Radius.circular(24.r)),
-          ),
-          padding: EdgeInsets.only(
-            left: isWeb ? 20 : 16.w,
-            right: isWeb ? 20 : 16.w,
-            top: isWeb ? 20 : 16.h,
-            bottom: (isWeb ? 20 : 16.h) + bottomInset,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.verseCardTitle,
-                    style: TextStyle(
-                      fontSize: isWeb ? 18 : 17.sp,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
-                    splashRadius: 20,
-                  ),
-                ],
+    return BlocConsumer<VideoStudioBloc, VideoStudioState>(
+      listener: (context, videoState) async {
+        if (videoState.exportProgress.isRendering && !_isExportDialogOpen) {
+          _showExportDialog(context, context.read<VideoStudioBloc>());
+        } else if (videoState.exportProgress.isCompleted &&
+            _isExportDialogOpen) {
+          _dismissExportDialog();
+
+          final outputPath = videoState.exportProgress.outputPath;
+          if (outputPath != null && outputPath.isNotEmpty) {
+            if (videoState.pendingExportAction == VideoExportAction.share) {
+              await VideoExportService.shareOutput(
+                filePath: outputPath,
+                title: 'تلاوة عطرة من تطبيق تبتل',
+              );
+            } else {
+              final saved = await VideoExportService.saveToGallery(
+                filePath: outputPath,
+              );
+              if (mounted) {
+                setState(() {
+                  _statusMessage = saved
+                      ? 'تم حفظ مقطع الفيديو في المعرض بنجاح'
+                      : 'تعذر حفظ الفيديو في المعرض';
+                  _isSuccessStatus = saved;
+                });
+                _scrollToStatusBanner();
+              }
+            }
+          }
+        }
+      },
+      builder: (context, videoState) {
+        return Directionality(
+          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxSheetHeight),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.cardCream,
+                borderRadius: isWeb || MediaQuery.sizeOf(context).width > 600
+                    ? BorderRadius.circular(20)
+                    : BorderRadius.vertical(top: Radius.circular(24.r)),
               ),
-              const Divider(height: 1),
-              SizedBox(height: isWeb ? 12 : 10.h),
-              Flexible(
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
+              padding: EdgeInsets.only(
+                left: isWeb ? 20 : 16.w,
+                right: isWeb ? 20 : 16.w,
+                top: isWeb ? 20 : 16.h,
+                bottom: (isWeb ? 20 : 16.h) + bottomInset,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      RepaintBoundary(
-                        key: _repaintKey,
-                        child: AnimatedCrossFade(
-                          duration: const Duration(milliseconds: 220),
-                          sizeCurve: Curves.fastOutSlowIn,
-                          firstCurve: Curves.easeOut,
-                          secondCurve: Curves.easeIn,
-                          crossFadeState: _selectedFormat == ShareFormat.text
-                              ? CrossFadeState.showSecond
-                              : CrossFadeState.showFirst,
-                          firstChild: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
-                            switchInCurve: Curves.easeInOut,
-                            switchOutCurve: Curves.easeInOut,
-                            child: _selectedFormat == ShareFormat.fullPage
-                                ? VerseCardFullPagePreview(
-                                    theme: _activeTheme,
-                                    isCapturingSnapshot: _isCapturingSnapshot,
-                                    pageSnapshot: _pageSnapshot,
-                                    onRetryCapture: _loadFullPageData,
-                                  )
-                                : ClipRRect(
-                                    key: const ValueKey('image_card_preview'),
-                                    borderRadius: BorderRadius.circular(16.r),
-                                    child: VerseCardContentPreview(
-                                      theme: _activeTheme,
-                                      surahNumber: _surahNumber,
-                                      startAyah: _startAyah,
-                                      endAyah: _endAyah,
-                                      verseTextUthmani: _verseTextUthmani,
-                                      qcfSpans: _qcfSpans,
-                                      isLoadingText: _isLoadingText,
-                                      includeTafsir: _includeTafsir,
-                                      tafsirText: _tafsirText,
-                                      isLoadingTafsir: _isLoadingTafsir,
-                                      includeTranslation: _includeTranslation,
-                                      translationText: _translationText,
-                                      isLoadingTranslation:
-                                          _isLoadingTranslation,
-                                    ),
-                                  ),
-                          ),
-                          secondChild: VerseCardTextPreview(
-                            theme: _activeTheme,
-                            surahNumber: _surahNumber,
-                            startAyah: _startAyah,
-                            endAyah: _endAyah,
-                            verseTextUthmani: _verseTextUthmani,
-                            qcfSpans: _qcfSpans,
-                            isLoadingText: _isLoadingText,
-                            includeTafsir: _includeTafsir,
-                            tafsirText: _tafsirText,
-                            isLoadingTafsir: _isLoadingTafsir,
-                            includeTranslation: _includeTranslation,
-                            translationText: _translationText,
-                            isLoadingTranslation: _isLoadingTranslation,
-                          ),
+                      Text(
+                        l10n.verseCardTitle,
+                        style: TextStyle(
+                          fontSize: isWeb ? 18 : 17.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
                         ),
                       ),
-                      SizedBox(height: isWeb ? 16 : 14.h),
-                      VerseCardFormatSelector(
-                        selectedFormat: _selectedFormat,
-                        onFormatChanged: (newFormat) {
-                          if (_selectedFormat != newFormat) {
-                            setState(() {
-                              _selectedFormat = newFormat;
-                              _statusMessage = null;
-                            });
-                            if (newFormat == ShareFormat.fullPage) {
-                              _loadFullPageData();
-                            }
-                          }
-                        },
-                      ),
-                      AnimatedCrossFade(
-                        duration: const Duration(milliseconds: 200),
-                        sizeCurve: Curves.fastOutSlowIn,
-                        firstCurve: Curves.easeOut,
-                        secondCurve: Curves.easeIn,
-                        crossFadeState:
-                            (_selectedFormat == ShareFormat.image ||
-                                _selectedFormat == ShareFormat.fullPage)
-                            ? CrossFadeState.showFirst
-                            : CrossFadeState.showSecond,
-                        firstChild: VerseCardThemeSelector(
-                          selectedThemeIndex: _selectedThemeIndex,
-                          onThemeSelected: (index) =>
-                              setState(() => _selectedThemeIndex = index),
-                        ),
-                        secondChild: const SizedBox.shrink(),
-                      ),
-                      AnimatedCrossFade(
-                        duration: const Duration(milliseconds: 200),
-                        sizeCurve: Curves.fastOutSlowIn,
-                        firstCurve: Curves.easeOut,
-                        secondCurve: Curves.easeIn,
-                        crossFadeState: _selectedFormat != ShareFormat.fullPage
-                            ? CrossFadeState.showFirst
-                            : CrossFadeState.showSecond,
-                        firstChild: VerseCardRangePicker(
-                          startAyah: _startAyah,
-                          endAyah: _endAyah,
-                          totalAyahsInSurah: _totalAyahsInSurah,
-                          onStartAyahChanged: (newStart) {
-                            if (newStart == _startAyah) return;
-                            final maxEnd = (newStart + 24).clamp(
-                              1,
-                              _totalAyahsInSurah,
-                            );
-                            setState(() {
-                              _startAyah = newStart;
-                              if (_endAyah < _startAyah) {
-                                _endAyah = _startAyah;
-                              } else if (_endAyah > maxEnd) {
-                                _endAyah = maxEnd;
-                              }
-                            });
-                            _loadAllVerseData();
-                          },
-                          onEndAyahChanged: (newEnd) {
-                            if (newEnd == _endAyah) return;
-                            setState(() => _endAyah = newEnd);
-                            _loadAllVerseData();
-                          },
-                        ),
-                        secondChild: const SizedBox.shrink(),
-                      ),
-                      SizedBox(height: isWeb ? 8 : 6.h),
-                      AnimatedCrossFade(
-                        duration: const Duration(milliseconds: 200),
-                        sizeCurve: Curves.fastOutSlowIn,
-                        firstCurve: Curves.easeOut,
-                        secondCurve: Curves.easeIn,
-                        crossFadeState: _selectedFormat != ShareFormat.fullPage
-                            ? CrossFadeState.showFirst
-                            : CrossFadeState.showSecond,
-                        firstChild: VerseCardOptionsBar(
-                          includeTafsir: _includeTafsir,
-                          onToggleTafsir: (val) {
-                            setState(() {
-                              _includeTafsir = val;
-                              _statusMessage = null;
-                            });
-                            if (val && _tafsirText.isEmpty) {
-                              _loadAllVerseData();
-                            }
-                          },
-                          includeTranslation: _includeTranslation,
-                          onToggleTranslation: (val) {
-                            setState(() {
-                              _includeTranslation = val;
-                              _statusMessage = null;
-                            });
-                            if (val && _translationText.isEmpty) {
-                              _loadAllVerseData();
-                            }
-                          },
-                        ),
-                        secondChild: const SizedBox.shrink(),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close_rounded),
+                        splashRadius: 20,
                       ),
                     ],
                   ),
-                ),
+                  const Divider(height: 1),
+                  SizedBox(height: isWeb ? 12 : 10.h),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        children: [
+                          // ---------------- PREVIEW AREA ----------------
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            switchInCurve: Curves.easeOutCubic,
+                            switchOutCurve: Curves.easeInCubic,
+                            child: _buildPreviewArea(videoState),
+                          ),
+                          SizedBox(height: isWeb ? 16 : 14.h),
+
+                          // ---------------- FORMAT SELECTOR ----------------
+                          VerseCardFormatSelector(
+                            selectedFormat: _selectedFormat,
+                            onFormatChanged: (newFormat) {
+                              if (_selectedFormat != newFormat) {
+                                setState(() {
+                                  _selectedFormat = newFormat;
+                                  _statusMessage = null;
+                                });
+                                if (newFormat == ShareFormat.fullPage) {
+                                  _loadFullPageData();
+                                }
+                              }
+                            },
+                          ),
+
+                          // ---------------- DYNAMIC OPTIONS PER FORMAT ----------------
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            switchInCurve: Curves.easeOutCubic,
+                            switchOutCurve: Curves.easeInCubic,
+                            child: _buildOptionsArea(videoState),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: isWeb ? 16 : 12.h),
+
+                  // ---------------- ACTION BUTTONS ----------------
+                  VerseCardActionButtons(
+                    selectedFormat: _selectedFormat,
+                    isSharing: _isSharing,
+                    isSaving: _isSaving,
+                    isExportingVideo: videoState.exportProgress.isRendering,
+                    onShare: _shareCard,
+                    onSave: _saveCardImage,
+                    onCopyText: () => _copyTextToClipboard(context),
+                    onShareVideo: () {
+                      context.read<VideoStudioBloc>().add(
+                            const VideoStudioExportStarted(
+                              action: VideoExportAction.share,
+                            ),
+                          );
+                    },
+                    onSaveVideo: () {
+                      context.read<VideoStudioBloc>().add(
+                            const VideoStudioExportStarted(
+                              action: VideoExportAction.saveToGallery,
+                            ),
+                          );
+                    },
+                    statusMessage: _statusMessage,
+                    isSuccessStatus: _isSuccessStatus,
+                  ),
+                ],
               ),
-              SizedBox(height: isWeb ? 16 : 12.h),
-              VerseCardActionButtons(
-                selectedFormat: _selectedFormat,
-                isSharing: _isSharing,
-                isSaving: _isSaving,
-                onShare: _shareCard,
-                onSave: _saveCardImage,
-                onCopyText: () => _copyTextToClipboard(context),
-                statusMessage: _statusMessage,
-                isSuccessStatus: _isSuccessStatus,
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
+  }
+
+  Widget _buildPreviewArea(VideoStudioState videoState) {
+    switch (_selectedFormat) {
+      case ShareFormat.video:
+        return KeyedSubtree(
+          key: const ValueKey('video_studio_preview'),
+          child: VideoPreviewViewport(
+            state: videoState,
+            onTogglePlay: () {
+              context
+                  .read<VideoStudioBloc>()
+                  .add(const VideoStudioPlaybackToggled());
+            },
+            onVerseIndexChanged: (index) {
+              context
+                  .read<VideoStudioBloc>()
+                  .add(VideoStudioActiveVerseIndexChanged(index));
+            },
+            onOpenFullscreen: () {
+              VideoFullscreenPreviewModal.show(context);
+            },
+          ),
+        );
+
+      case ShareFormat.image:
+        return RepaintBoundary(
+          key: _repaintKey,
+          child: ClipRRect(
+            key: const ValueKey('image_card_preview'),
+            borderRadius: BorderRadius.circular(16.r),
+            child: VerseCardContentPreview(
+              theme: _activeTheme,
+              surahNumber: _surahNumber,
+              startAyah: _startAyah,
+              endAyah: _endAyah,
+              verseTextUthmani: _verseTextUthmani,
+              qcfSpans: _qcfSpans,
+              isLoadingText: _isLoadingText,
+              includeTafsir: _includeTafsir,
+              tafsirText: _tafsirText,
+              isLoadingTafsir: _isLoadingTafsir,
+              includeTranslation: _includeTranslation,
+              translationText: _translationText,
+              isLoadingTranslation: _isLoadingTranslation,
+            ),
+          ),
+        );
+
+      case ShareFormat.text:
+        return KeyedSubtree(
+          key: const ValueKey('text_preview'),
+          child: VerseCardTextPreview(
+            theme: _activeTheme,
+            surahNumber: _surahNumber,
+            startAyah: _startAyah,
+            endAyah: _endAyah,
+            verseTextUthmani: _verseTextUthmani,
+            qcfSpans: _qcfSpans,
+            isLoadingText: _isLoadingText,
+            includeTafsir: _includeTafsir,
+            tafsirText: _tafsirText,
+            isLoadingTafsir: _isLoadingTafsir,
+            includeTranslation: _includeTranslation,
+            translationText: _translationText,
+            isLoadingTranslation: _isLoadingTranslation,
+          ),
+        );
+
+      case ShareFormat.fullPage:
+        return KeyedSubtree(
+          key: const ValueKey('full_page_preview'),
+          child: VerseCardFullPagePreview(
+            theme: _activeTheme,
+            isCapturingSnapshot: _isCapturingSnapshot,
+            pageSnapshot: _pageSnapshot,
+            onRetryCapture: _loadFullPageData,
+          ),
+        );
+    }
+  }
+
+  Widget _buildOptionsArea(VideoStudioState videoState) {
+    const isWeb = kIsWeb;
+    final config = videoState.config;
+
+    switch (_selectedFormat) {
+      case ShareFormat.video:
+        return Column(
+          key: const ValueKey('video_options_group'),
+          children: [
+            VideoAspectRatioBar(
+              selectedRatio: config.aspectRatio,
+              onRatioSelected: (ratio) {
+                context
+                    .read<VideoStudioBloc>()
+                    .add(VideoStudioAspectRatioChanged(ratio));
+              },
+            ),
+            SizedBox(height: 12.h),
+            VideoThemeSelector(
+              selectedPreset: config.themePreset,
+              onThemeSelected: (theme) {
+                context
+                    .read<VideoStudioBloc>()
+                    .add(VideoStudioThemeChanged(theme));
+              },
+            ),
+            SizedBox(height: 12.h),
+            VideoRangePicker(
+              surahNumber: config.surahNumber,
+              startAyah: _startAyah,
+              endAyah: _endAyah,
+              onStartAyahChanged: (start) {
+                if (start == _startAyah) return;
+                final maxEnd = (start + 9).clamp(1, _totalAyahsInSurah);
+                int newEnd = _endAyah;
+                if (newEnd < start) {
+                  newEnd = start;
+                } else if (newEnd > maxEnd) {
+                  newEnd = maxEnd;
+                }
+                setState(() {
+                  _startAyah = start;
+                  _endAyah = newEnd;
+                });
+                context.read<VideoStudioBloc>().add(
+                      VideoStudioVerseRangeChanged(
+                        startAyah: start,
+                        endAyah: newEnd,
+                      ),
+                    );
+                _loadAllVerseData();
+              },
+              onEndAyahChanged: (end) {
+                if (end == _endAyah) return;
+                int newStart = _startAyah;
+                if (newStart > end) {
+                  newStart = end;
+                }
+                setState(() {
+                  _startAyah = newStart;
+                  _endAyah = end;
+                });
+                context.read<VideoStudioBloc>().add(
+                      VideoStudioVerseRangeChanged(
+                        startAyah: newStart,
+                        endAyah: end,
+                      ),
+                    );
+                _loadAllVerseData();
+              },
+            ),
+            SizedBox(height: 12.h),
+            VideoReciterSelector(
+              selectedReciter: config.reciterName,
+              onReciterSelected: (name, category, path) {
+                context.read<VideoStudioBloc>().add(
+                      VideoStudioReciterChanged(
+                        reciterName: name,
+                        reciterCategory: category,
+                        reciterPath: path,
+                      ),
+                    );
+              },
+            ),
+            SizedBox(height: 12.h),
+            VideoOptionsSelector(
+              config: config,
+              onQualityChanged: (quality) {
+                context
+                    .read<VideoStudioBloc>()
+                    .add(VideoStudioQualityChanged(quality));
+              },
+              onToggleOption: ({
+                showSurahBadge,
+                showReciterName,
+                showTafsir,
+                showEnglishTranslation,
+                showAudioWaveform,
+              }) {
+                context.read<VideoStudioBloc>().add(
+                      VideoStudioOptionToggled(
+                        showSurahBadge: showSurahBadge,
+                        showReciterName: showReciterName,
+                        showTafsir: showTafsir,
+                        showEnglishTranslation: showEnglishTranslation,
+                        showAudioWaveform: showAudioWaveform,
+                      ),
+                    );
+              },
+            ),
+          ],
+        );
+
+      case ShareFormat.image:
+        return Column(
+          key: const ValueKey('image_options_group'),
+          children: [
+            VerseCardThemeSelector(
+              selectedThemeIndex: _selectedThemeIndex,
+              onThemeSelected: (index) =>
+                  setState(() => _selectedThemeIndex = index),
+            ),
+            VerseCardRangePicker(
+              startAyah: _startAyah,
+              endAyah: _endAyah,
+              totalAyahsInSurah: _totalAyahsInSurah,
+              onStartAyahChanged: (newStart) {
+                if (newStart == _startAyah) return;
+                final maxEnd = (newStart + 24).clamp(1, _totalAyahsInSurah);
+                int newEnd = _endAyah;
+                if (newEnd < newStart) {
+                  newEnd = newStart;
+                } else if (newEnd > maxEnd) {
+                  newEnd = maxEnd;
+                }
+                setState(() {
+                  _startAyah = newStart;
+                  _endAyah = newEnd;
+                });
+                context.read<VideoStudioBloc>().add(
+                      VideoStudioVerseRangeChanged(
+                        startAyah: newStart,
+                        endAyah: newEnd,
+                      ),
+                    );
+                _loadAllVerseData();
+              },
+              onEndAyahChanged: (newEnd) {
+                if (newEnd == _endAyah) return;
+                int newStart = _startAyah;
+                if (newStart > newEnd) {
+                  newStart = newEnd;
+                }
+                setState(() {
+                  _startAyah = newStart;
+                  _endAyah = newEnd;
+                });
+                context.read<VideoStudioBloc>().add(
+                      VideoStudioVerseRangeChanged(
+                        startAyah: newStart,
+                        endAyah: newEnd,
+                      ),
+                    );
+                _loadAllVerseData();
+              },
+            ),
+            SizedBox(height: isWeb ? 8 : 6.h),
+            VerseCardOptionsBar(
+              includeTafsir: _includeTafsir,
+              onToggleTafsir: (val) {
+                setState(() {
+                  _includeTafsir = val;
+                  _statusMessage = null;
+                });
+                if (val && _tafsirText.isEmpty) {
+                  _loadAllVerseData();
+                }
+              },
+              includeTranslation: _includeTranslation,
+              onToggleTranslation: (val) {
+                setState(() {
+                  _includeTranslation = val;
+                  _statusMessage = null;
+                });
+                if (val && _translationText.isEmpty) {
+                  _loadAllVerseData();
+                }
+              },
+            ),
+          ],
+        );
+
+      case ShareFormat.text:
+        return Column(
+          key: const ValueKey('text_options_group'),
+          children: [
+            VerseCardRangePicker(
+              startAyah: _startAyah,
+              endAyah: _endAyah,
+              totalAyahsInSurah: _totalAyahsInSurah,
+              onStartAyahChanged: (newStart) {
+                if (newStart == _startAyah) return;
+                final maxEnd = (newStart + 24).clamp(1, _totalAyahsInSurah);
+                int newEnd = _endAyah;
+                if (newEnd < newStart) {
+                  newEnd = newStart;
+                } else if (newEnd > maxEnd) {
+                  newEnd = maxEnd;
+                }
+                setState(() {
+                  _startAyah = newStart;
+                  _endAyah = newEnd;
+                });
+                context.read<VideoStudioBloc>().add(
+                      VideoStudioVerseRangeChanged(
+                        startAyah: newStart,
+                        endAyah: newEnd,
+                      ),
+                    );
+                _loadAllVerseData();
+              },
+              onEndAyahChanged: (newEnd) {
+                if (newEnd == _endAyah) return;
+                int newStart = _startAyah;
+                if (newStart > newEnd) {
+                  newStart = newEnd;
+                }
+                setState(() {
+                  _startAyah = newStart;
+                  _endAyah = newEnd;
+                });
+                context.read<VideoStudioBloc>().add(
+                      VideoStudioVerseRangeChanged(
+                        startAyah: newStart,
+                        endAyah: newEnd,
+                      ),
+                    );
+                _loadAllVerseData();
+              },
+            ),
+            SizedBox(height: isWeb ? 8 : 6.h),
+            VerseCardOptionsBar(
+              includeTafsir: _includeTafsir,
+              onToggleTafsir: (val) {
+                setState(() {
+                  _includeTafsir = val;
+                  _statusMessage = null;
+                });
+                if (val && _tafsirText.isEmpty) {
+                  _loadAllVerseData();
+                }
+              },
+              includeTranslation: _includeTranslation,
+              onToggleTranslation: (val) {
+                setState(() {
+                  _includeTranslation = val;
+                  _statusMessage = null;
+                });
+                if (val && _translationText.isEmpty) {
+                  _loadAllVerseData();
+                }
+              },
+            ),
+          ],
+        );
+
+      case ShareFormat.fullPage:
+        return Column(
+          key: const ValueKey('full_page_options_group'),
+          children: [
+            VerseCardThemeSelector(
+              selectedThemeIndex: _selectedThemeIndex,
+              onThemeSelected: (index) =>
+                  setState(() => _selectedThemeIndex = index),
+            ),
+          ],
+        );
+    }
   }
 }

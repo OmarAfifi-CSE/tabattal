@@ -994,6 +994,8 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                             translationText: translationText,
                             pageRepaintKey: widget.pageRepaintKey,
                             pageNumber: widget.pageNumber,
+                            initialFormat: ShareFormat.video,
+                            initialVerses: [widget.verse],
                           );
                         },
                       ),

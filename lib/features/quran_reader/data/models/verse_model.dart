@@ -5,6 +5,7 @@ class WordModel {
   final int lineNumber;
   final String charTypeName; // 'word' or 'end'
   final String verseKey;
+  final int pageNumber;
 
   const WordModel({
     required this.id,
@@ -13,6 +14,7 @@ class WordModel {
     required this.lineNumber,
     required this.charTypeName,
     required this.verseKey,
+    this.pageNumber = 1,
   });
 
   /// Primary glyph code to display from QCF V2
@@ -29,6 +31,7 @@ class WordModel {
       lineNumber: json['line_number'] as int? ?? 1,
       charTypeName: json['char_type_name'] as String? ?? 'word',
       verseKey: json['verse_key'] as String? ?? '',
+      pageNumber: json['page_number'] as int? ?? json['page'] as int? ?? 1,
     );
   }
 }
@@ -40,6 +43,8 @@ class VerseModel {
   final String textUthmani;
   final List<WordModel> words;
   final int juzNumber;
+  final String? translation;
+  final String? tafsir;
 
   VerseModel({
     required this.id,
@@ -48,6 +53,8 @@ class VerseModel {
     required this.textUthmani,
     required this.words,
     required this.juzNumber,
+    this.translation,
+    this.tafsir,
   });
 
   factory VerseModel.fromJson(Map<String, dynamic> json) {
@@ -61,6 +68,8 @@ class VerseModel {
           json['text_uthmani'] as String? ?? 'Error loading verse text',
       words: wordsJson.map((w) => WordModel.fromJson(w)).toList(),
       juzNumber: json['juz_number'] as int? ?? 1,
+      translation: json['translation'] as String?,
+      tafsir: json['tafsir'] as String?,
     );
   }
 }

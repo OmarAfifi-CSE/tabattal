@@ -453,6 +453,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verseCardFormatLabel => 'Share Format';
 
   @override
+  String get verseCardFormatVideo => 'Quran Video';
+
+  @override
   String get verseCardFormatImage => 'Verse Card';
 
   @override
@@ -520,4 +523,159 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get topicCreation => 'Creation & Universe';
+
+  @override
+  String get videoStudioTitle => 'Quran Video Maker';
+
+  @override
+  String get videoStudioSubtitle => 'Create and export recitation video clips';
+
+  @override
+  String videoStudioSurahVerses(String surahName, int startAyah, int endAyah) {
+    return 'Surah $surahName ($startAyah - $endAyah)';
+  }
+
+  @override
+  String get videoStudioThemeAndBg => 'Theme & Background';
+
+  @override
+  String get videoStudioDimensions => 'Video Dimensions & Quality';
+
+  @override
+  String get videoStudioVerseRange => 'Verse Range';
+
+  @override
+  String videoStudioFromAyah(int ayah) {
+    return 'From Ayah: $ayah';
+  }
+
+  @override
+  String videoStudioToAyah(int ayah) {
+    return 'To Ayah: $ayah';
+  }
+
+  @override
+  String get videoStudioReciter => 'Reciter & Recitation';
+
+  @override
+  String get videoStudioQuality => 'Video Quality';
+
+  @override
+  String get videoStudioDisplayOptions => 'Display Options';
+
+  @override
+  String get videoStudioShowSurahBadge => 'Show Surah Name';
+
+  @override
+  String get videoStudioShowReciterName => 'Show Reciter Name';
+
+  @override
+  String get videoStudioShowTafsir => 'Show Tafsir (Al-Muyassar)';
+
+  @override
+  String get videoStudioShowTranslation => 'Show English Translation';
+
+  @override
+  String get videoStudioShare => 'Share Video';
+
+  @override
+  String get videoStudioSave => 'Save Video';
+
+  @override
+  String get videoStudioFullscreenPreview => 'Fullscreen Preview';
+
+  @override
+  String get videoStudioProgressTitle => 'Preparing Quran Video';
+
+  @override
+  String get videoStudioProgressCompleted => 'Video created successfully';
+
+  @override
+  String get videoStudioProgressFailed => 'Failed to create video';
+
+  @override
+  String get videoStudioCancelExport => 'Cancel';
+
+  @override
+  String get videoStudioClose => 'Close';
+
+  @override
+  String videoStudioAyahOf(int current, int total) {
+    return 'Ayah $current of $total';
+  }
+
+  @override
+  String videoStudioAyahOfSurah(int current, int total, String surahName) {
+    return 'Ayah $current of $total (Surah $surahName)';
+  }
+
+  @override
+  String get videoStudioSavedSuccess => 'Video saved to gallery successfully';
+
+  @override
+  String get videoStudioSavedError => 'Failed to save video to gallery';
+
+  @override
+  String get videoStudioAudioLoadError =>
+      'Could not load audio recitation for selected reciter';
+
+  @override
+  String get videoStudioShareCaption => 'Blessed recitation from Tabattal app';
+
+  @override
+  String get videoStudioChooseReciter => 'Select Reciter';
+
+  @override
+  String get videoStudioAllReciters => 'All';
+
+  @override
+  String get videoStudioViewAll => 'View All';
+
+  @override
+  String get videoThemeCream => 'Cream';
+
+  @override
+  String get videoThemeWhite => 'White';
+
+  @override
+  String get videoThemeVintage => 'Vintage';
+
+  @override
+  String get videoThemeRoseGold => 'Rose Gold';
+
+  @override
+  String get videoThemeEmerald => 'Emerald';
+
+  @override
+  String get videoThemeMidnight => 'Midnight';
+
+  @override
+  String get videoThemeRoyalDark => 'Royal Dark';
+
+  @override
+  String get videoRatioStory => 'Story (9:16)';
+
+  @override
+  String get videoRatioSquare => 'Square (1:1)';
+
+  @override
+  String get videoRatioLandscape => 'Landscape (16:9)';
+
+  @override
+  String get videoQuality4K => '4K Ultra';
+
+  @override
+  String get videoQuality1080p => '1080p Full HD';
+
+  @override
+  String get videoQuality720p => '720p HD';
+
+  @override
+  String get videoQualityFast => 'Fast';
+
+  @override
+  String get videoQualityHigh => 'Full HD';
+
+  @override
+  String get videoQualityUltra => 'Ultra HD';
 }

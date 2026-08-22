@@ -990,6 +990,8 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                             translationText: translationText,
                             pageRepaintKey: widget.pageRepaintKey,
                             pageNumber: widget.pageNumber,
+                            initialFormat: ShareFormat.video,
+                            initialVerses: [widget.verse],
                           );
                         },
                       ),

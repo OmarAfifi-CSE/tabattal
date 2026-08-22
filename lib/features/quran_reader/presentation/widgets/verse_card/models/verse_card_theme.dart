@@ -7,7 +7,7 @@ class QuranPageRepaintRegistry {
 }
 
 /// Supported share formats in the generator modal.
-enum ShareFormat { image, text, fullPage }
+enum ShareFormat { video, image, text, fullPage }
 
 /// Represents a color theme for the Verse Card.
 class VerseCardTheme {

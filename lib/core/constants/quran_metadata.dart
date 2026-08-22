@@ -801,4 +801,17 @@ class QuranMetadata {
     }
     return 1;
   }
+
+  static int getPageNumberForAyah(int surahNumber, int ayahNumber) {
+    return getStartPageForSurah(surahNumber);
+  }
+
+  static int getSurahForPage(int pageNumber) {
+    for (int i = surahStartPages.length - 1; i >= 0; i--) {
+      if (pageNumber >= surahStartPages[i]) {
+        return i + 1;
+      }
+    }
+    return 1;
+  }
 }

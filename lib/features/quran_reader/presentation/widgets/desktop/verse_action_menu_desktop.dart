@@ -986,11 +986,13 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                             translationText: translationText,
                             pageRepaintKey: widget.pageRepaintKey,
                             pageNumber: widget.pageNumber,
+                            initialFormat: ShareFormat.video,
+                            initialVerses: [widget.verse],
                           );
                         },
                       ),
                       Divider(
-                        height: 1.h,
+                        height: 1,
                         thickness: 1,
                         color: AppColors.divider,
                       ),

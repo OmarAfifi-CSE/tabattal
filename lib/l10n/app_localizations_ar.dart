@@ -452,6 +452,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get verseCardFormatLabel => 'نوع المشاركة';
 
   @override
+  String get verseCardFormatVideo => 'مقطع فيديو';
+
+  @override
   String get verseCardFormatImage => 'بطاقة الآيات';
 
   @override
@@ -519,4 +522,160 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get topicCreation => 'التفكر والخلق';
+
+  @override
+  String get videoStudioTitle => 'صانع مقاطع القرآن';
+
+  @override
+  String get videoStudioSubtitle => 'تصميم وتصدير مقاطع التلاوات بجودة عالية';
+
+  @override
+  String videoStudioSurahVerses(String surahName, int startAyah, int endAyah) {
+    return 'سورة $surahName ($startAyah - $endAyah)';
+  }
+
+  @override
+  String get videoStudioThemeAndBg => 'المظهر والخلفية';
+
+  @override
+  String get videoStudioDimensions => 'أبعاد ومقاس الفيديو';
+
+  @override
+  String get videoStudioVerseRange => 'نطاق الآيات';
+
+  @override
+  String videoStudioFromAyah(int ayah) {
+    return 'من آية: $ayah';
+  }
+
+  @override
+  String videoStudioToAyah(int ayah) {
+    return 'إلى آية: $ayah';
+  }
+
+  @override
+  String get videoStudioReciter => 'القارئ والتلاوة';
+
+  @override
+  String get videoStudioQuality => 'دقة وجودة الفيديو';
+
+  @override
+  String get videoStudioDisplayOptions => 'خيارات العرض';
+
+  @override
+  String get videoStudioShowSurahBadge => 'إظهار اسم السورة';
+
+  @override
+  String get videoStudioShowReciterName => 'إظهار اسم القارئ';
+
+  @override
+  String get videoStudioShowTafsir => 'إظهار التفسير الميسر';
+
+  @override
+  String get videoStudioShowTranslation => 'إظهار الترجمة الإنجليزية';
+
+  @override
+  String get videoStudioShare => 'مشاركة الفيديو';
+
+  @override
+  String get videoStudioSave => 'حفظ الفيديو';
+
+  @override
+  String get videoStudioFullscreenPreview => 'معاينة بملء الشاشة';
+
+  @override
+  String get videoStudioProgressTitle => 'جاري إعداد مقطع الفيديو';
+
+  @override
+  String get videoStudioProgressCompleted => 'تم إنشاء مقطع الفيديو بنجاح';
+
+  @override
+  String get videoStudioProgressFailed => 'تعذر إعداد مقطع الفيديو';
+
+  @override
+  String get videoStudioCancelExport => 'إلغاء الإعداد';
+
+  @override
+  String get videoStudioClose => 'إغلاق';
+
+  @override
+  String videoStudioAyahOf(int current, int total) {
+    return 'الآية $current من $total';
+  }
+
+  @override
+  String videoStudioAyahOfSurah(int current, int total, String surahName) {
+    return 'الآية $current من $total (سورة $surahName)';
+  }
+
+  @override
+  String get videoStudioSavedSuccess =>
+      'تم حفظ مقطع الفيديو في معرض الهاتف بنجاح';
+
+  @override
+  String get videoStudioSavedError => 'تعذر حفظ الفيديو في المعرض';
+
+  @override
+  String get videoStudioAudioLoadError =>
+      'تعذر تحميل التلاوة الصوتية للقارئ المحدد';
+
+  @override
+  String get videoStudioShareCaption => 'تلاوة عطرة من تطبيق تبتل';
+
+  @override
+  String get videoStudioChooseReciter => 'اختر القارئ';
+
+  @override
+  String get videoStudioAllReciters => 'الكل';
+
+  @override
+  String get videoStudioViewAll => 'عرض الكل';
+
+  @override
+  String get videoThemeCream => 'كريمي';
+
+  @override
+  String get videoThemeWhite => 'أبيض';
+
+  @override
+  String get videoThemeVintage => 'عتيق';
+
+  @override
+  String get videoThemeRoseGold => 'روز جولد';
+
+  @override
+  String get videoThemeEmerald => 'زمردي';
+
+  @override
+  String get videoThemeMidnight => 'كحلي ليلي';
+
+  @override
+  String get videoThemeRoyalDark => 'ملكي داكن';
+
+  @override
+  String get videoRatioStory => 'قصة (9:16)';
+
+  @override
+  String get videoRatioSquare => 'مربع (1:1)';
+
+  @override
+  String get videoRatioLandscape => 'عرضي (16:9)';
+
+  @override
+  String get videoQuality4K => 'فائقة (4K)';
+
+  @override
+  String get videoQuality1080p => 'عالية (1080p)';
+
+  @override
+  String get videoQuality720p => 'سريعة (720p)';
+
+  @override
+  String get videoQualityFast => 'سريعة';
+
+  @override
+  String get videoQualityHigh => 'عالية الدقة';
+
+  @override
+  String get videoQualityUltra => 'فائقة';
 }

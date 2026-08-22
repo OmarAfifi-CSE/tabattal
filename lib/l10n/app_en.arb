@@ -254,6 +254,7 @@
   "verseCardCopyText": "Copy Text",
   "verseCardCopiedSuccess": "Text copied successfully",
   "verseCardFormatLabel": "Share Format",
+  "verseCardFormatVideo": "Quran Video",
   "verseCardFormatImage": "Verse Card",
   "verseCardFormatText": "Plain Text",
   "verseCardFormatFullPage": "Full Page",
@@ -276,5 +277,83 @@
   "topicWarning": "Warning & Reminders",
   "topicProphets": "Prophets Stories",
   "topicMorals": "Morals & Ethics",
-  "topicCreation": "Creation & Universe"
+  "topicCreation": "Creation & Universe",
+  "videoStudioTitle": "Quran Video Maker",
+  "videoStudioSubtitle": "Create and export recitation video clips",
+  "videoStudioSurahVerses": "Surah {surahName} ({startAyah} - {endAyah})",
+  "@videoStudioSurahVerses": {
+    "placeholders": {
+      "surahName": { "type": "String" },
+      "startAyah": { "type": "int" },
+      "endAyah": { "type": "int" }
+    }
+  },
+  "videoStudioThemeAndBg": "Theme & Background",
+  "videoStudioDimensions": "Video Dimensions & Quality",
+  "videoStudioVerseRange": "Verse Range",
+  "videoStudioFromAyah": "From Ayah: {ayah}",
+  "@videoStudioFromAyah": {
+    "placeholders": {
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioToAyah": "To Ayah: {ayah}",
+  "@videoStudioToAyah": {
+    "placeholders": {
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioReciter": "Reciter & Recitation",
+  "videoStudioQuality": "Video Quality",
+  "videoStudioDisplayOptions": "Display Options",
+  "videoStudioShowSurahBadge": "Show Surah Name",
+  "videoStudioShowReciterName": "Show Reciter Name",
+  "videoStudioShowTafsir": "Show Tafsir (Al-Muyassar)",
+  "videoStudioShowTranslation": "Show English Translation",
+  "videoStudioShare": "Share Video",
+  "videoStudioSave": "Save Video",
+  "videoStudioFullscreenPreview": "Fullscreen Preview",
+  "videoStudioProgressTitle": "Preparing Quran Video",
+  "videoStudioProgressCompleted": "Video created successfully",
+  "videoStudioProgressFailed": "Failed to create video",
+  "videoStudioCancelExport": "Cancel",
+  "videoStudioClose": "Close",
+  "videoStudioAyahOf": "Ayah {current} of {total}",
+  "@videoStudioAyahOf": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "videoStudioAyahOfSurah": "Ayah {current} of {total} (Surah {surahName})",
+  "@videoStudioAyahOfSurah": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" },
+      "surahName": { "type": "String" }
+    }
+  },
+  "videoStudioSavedSuccess": "Video saved to gallery successfully",
+  "videoStudioSavedError": "Failed to save video to gallery",
+  "videoStudioAudioLoadError": "Could not load audio recitation for selected reciter",
+  "videoStudioShareCaption": "Blessed recitation from Tabattal app",
+  "videoStudioChooseReciter": "Select Reciter",
+  "videoStudioAllReciters": "All",
+  "videoStudioViewAll": "View All",
+  "videoThemeCream": "Cream",
+  "videoThemeWhite": "White",
+  "videoThemeVintage": "Vintage",
+  "videoThemeRoseGold": "Rose Gold",
+  "videoThemeEmerald": "Emerald",
+  "videoThemeMidnight": "Midnight",
+  "videoThemeRoyalDark": "Royal Dark",
+  "videoRatioStory": "Story (9:16)",
+  "videoRatioSquare": "Square (1:1)",
+  "videoRatioLandscape": "Landscape (16:9)",
+  "videoQuality4K": "4K Ultra",
+  "videoQuality1080p": "1080p Full HD",
+  "videoQuality720p": "720p HD",
+  "videoQualityFast": "Fast",
+  "videoQualityHigh": "Full HD",
+  "videoQualityUltra": "Ultra HD"
 }

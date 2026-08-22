@@ -17,6 +17,8 @@ import '../quran_full_tafsir_view.dart';
 import '../quran_translation_view.dart';
 import 'quran_bookmarks_view_mobile.dart';
 import 'quran_index_view_mobile.dart';
+import '../../../../../../core/constants/quran_metadata.dart';
+import '../../../../../quran_video_studio/presentation/screens/quran_video_studio_screen.dart';
 
 class QuranDrawerMobile extends StatelessWidget {
   final int currentPage;
@@ -235,6 +237,23 @@ class QuranDrawerMobile extends StatelessWidget {
                           MaterialPageRoute(
                             builder: (_) => const QuranAudioManagerView(),
                           ),
+                        );
+                      },
+                    ),
+                    _MobileDrawerItem(
+                      icon: Icons.movie_creation_outlined,
+                      title: l10n.videoStudioTitle,
+                      subtitle: l10n.videoStudioSubtitle,
+                      onTap: () {
+                        Navigator.pop(context);
+                        final surahNum = QuranMetadata.getSurahForPage(currentPage);
+                        const startAyah = 1;
+                        showQuranVideoStudioModal(
+                          context,
+                          surahNumber: surahNum,
+                          startAyah: startAyah,
+                          endAyah: (startAyah + 2).clamp(1, QuranMetadata.getVerseCountForSurah(surahNum)),
+                          initialVerses: const [],
                         );
                       },
                     ),

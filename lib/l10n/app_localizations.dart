@@ -920,6 +920,12 @@ abstract class AppLocalizations {
   /// **'نوع المشاركة'**
   String get verseCardFormatLabel;
 
+  /// No description provided for @verseCardFormatVideo.
+  ///
+  /// In ar, this message translates to:
+  /// **'مقطع فيديو'**
+  String get verseCardFormatVideo;
+
   /// No description provided for @verseCardFormatImage.
   ///
   /// In ar, this message translates to:
@@ -1057,6 +1063,294 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'التفكر والخلق'**
   String get topicCreation;
+
+  /// No description provided for @videoStudioTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'صانع مقاطع القرآن'**
+  String get videoStudioTitle;
+
+  /// No description provided for @videoStudioSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصميم وتصدير مقاطع التلاوات بجودة عالية'**
+  String get videoStudioSubtitle;
+
+  /// No description provided for @videoStudioSurahVerses.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة {surahName} ({startAyah} - {endAyah})'**
+  String videoStudioSurahVerses(String surahName, int startAyah, int endAyah);
+
+  /// No description provided for @videoStudioThemeAndBg.
+  ///
+  /// In ar, this message translates to:
+  /// **'المظهر والخلفية'**
+  String get videoStudioThemeAndBg;
+
+  /// No description provided for @videoStudioDimensions.
+  ///
+  /// In ar, this message translates to:
+  /// **'أبعاد ومقاس الفيديو'**
+  String get videoStudioDimensions;
+
+  /// No description provided for @videoStudioVerseRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'نطاق الآيات'**
+  String get videoStudioVerseRange;
+
+  /// No description provided for @videoStudioFromAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'من آية: {ayah}'**
+  String videoStudioFromAyah(int ayah);
+
+  /// No description provided for @videoStudioToAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلى آية: {ayah}'**
+  String videoStudioToAyah(int ayah);
+
+  /// No description provided for @videoStudioReciter.
+  ///
+  /// In ar, this message translates to:
+  /// **'القارئ والتلاوة'**
+  String get videoStudioReciter;
+
+  /// No description provided for @videoStudioQuality.
+  ///
+  /// In ar, this message translates to:
+  /// **'دقة وجودة الفيديو'**
+  String get videoStudioQuality;
+
+  /// No description provided for @videoStudioDisplayOptions.
+  ///
+  /// In ar, this message translates to:
+  /// **'خيارات العرض'**
+  String get videoStudioDisplayOptions;
+
+  /// No description provided for @videoStudioShowSurahBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار اسم السورة'**
+  String get videoStudioShowSurahBadge;
+
+  /// No description provided for @videoStudioShowReciterName.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار اسم القارئ'**
+  String get videoStudioShowReciterName;
+
+  /// No description provided for @videoStudioShowTafsir.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار التفسير الميسر'**
+  String get videoStudioShowTafsir;
+
+  /// No description provided for @videoStudioShowTranslation.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار الترجمة الإنجليزية'**
+  String get videoStudioShowTranslation;
+
+  /// No description provided for @videoStudioShare.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة الفيديو'**
+  String get videoStudioShare;
+
+  /// No description provided for @videoStudioSave.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ الفيديو'**
+  String get videoStudioSave;
+
+  /// No description provided for @videoStudioFullscreenPreview.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاينة بملء الشاشة'**
+  String get videoStudioFullscreenPreview;
+
+  /// No description provided for @videoStudioProgressTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري إعداد مقطع الفيديو'**
+  String get videoStudioProgressTitle;
+
+  /// No description provided for @videoStudioProgressCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إنشاء مقطع الفيديو بنجاح'**
+  String get videoStudioProgressCompleted;
+
+  /// No description provided for @videoStudioProgressFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر إعداد مقطع الفيديو'**
+  String get videoStudioProgressFailed;
+
+  /// No description provided for @videoStudioCancelExport.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء الإعداد'**
+  String get videoStudioCancelExport;
+
+  /// No description provided for @videoStudioClose.
+  ///
+  /// In ar, this message translates to:
+  /// **'إغلاق'**
+  String get videoStudioClose;
+
+  /// No description provided for @videoStudioAyahOf.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآية {current} من {total}'**
+  String videoStudioAyahOf(int current, int total);
+
+  /// No description provided for @videoStudioAyahOfSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآية {current} من {total} (سورة {surahName})'**
+  String videoStudioAyahOfSurah(int current, int total, String surahName);
+
+  /// No description provided for @videoStudioSavedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حفظ مقطع الفيديو في معرض الهاتف بنجاح'**
+  String get videoStudioSavedSuccess;
+
+  /// No description provided for @videoStudioSavedError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر حفظ الفيديو في المعرض'**
+  String get videoStudioSavedError;
+
+  /// No description provided for @videoStudioAudioLoadError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تحميل التلاوة الصوتية للقارئ المحدد'**
+  String get videoStudioAudioLoadError;
+
+  /// No description provided for @videoStudioShareCaption.
+  ///
+  /// In ar, this message translates to:
+  /// **'تلاوة عطرة من تطبيق تبتل'**
+  String get videoStudioShareCaption;
+
+  /// No description provided for @videoStudioChooseReciter.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر القارئ'**
+  String get videoStudioChooseReciter;
+
+  /// No description provided for @videoStudioAllReciters.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get videoStudioAllReciters;
+
+  /// No description provided for @videoStudioViewAll.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض الكل'**
+  String get videoStudioViewAll;
+
+  /// No description provided for @videoThemeCream.
+  ///
+  /// In ar, this message translates to:
+  /// **'كريمي'**
+  String get videoThemeCream;
+
+  /// No description provided for @videoThemeWhite.
+  ///
+  /// In ar, this message translates to:
+  /// **'أبيض'**
+  String get videoThemeWhite;
+
+  /// No description provided for @videoThemeVintage.
+  ///
+  /// In ar, this message translates to:
+  /// **'عتيق'**
+  String get videoThemeVintage;
+
+  /// No description provided for @videoThemeRoseGold.
+  ///
+  /// In ar, this message translates to:
+  /// **'روز جولد'**
+  String get videoThemeRoseGold;
+
+  /// No description provided for @videoThemeEmerald.
+  ///
+  /// In ar, this message translates to:
+  /// **'زمردي'**
+  String get videoThemeEmerald;
+
+  /// No description provided for @videoThemeMidnight.
+  ///
+  /// In ar, this message translates to:
+  /// **'كحلي ليلي'**
+  String get videoThemeMidnight;
+
+  /// No description provided for @videoThemeRoyalDark.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملكي داكن'**
+  String get videoThemeRoyalDark;
+
+  /// No description provided for @videoRatioStory.
+  ///
+  /// In ar, this message translates to:
+  /// **'قصة (9:16)'**
+  String get videoRatioStory;
+
+  /// No description provided for @videoRatioSquare.
+  ///
+  /// In ar, this message translates to:
+  /// **'مربع (1:1)'**
+  String get videoRatioSquare;
+
+  /// No description provided for @videoRatioLandscape.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرضي (16:9)'**
+  String get videoRatioLandscape;
+
+  /// No description provided for @videoQuality4K.
+  ///
+  /// In ar, this message translates to:
+  /// **'فائقة (4K)'**
+  String get videoQuality4K;
+
+  /// No description provided for @videoQuality1080p.
+  ///
+  /// In ar, this message translates to:
+  /// **'عالية (1080p)'**
+  String get videoQuality1080p;
+
+  /// No description provided for @videoQuality720p.
+  ///
+  /// In ar, this message translates to:
+  /// **'سريعة (720p)'**
+  String get videoQuality720p;
+
+  /// No description provided for @videoQualityFast.
+  ///
+  /// In ar, this message translates to:
+  /// **'سريعة'**
+  String get videoQualityFast;
+
+  /// No description provided for @videoQualityHigh.
+  ///
+  /// In ar, this message translates to:
+  /// **'عالية الدقة'**
+  String get videoQualityHigh;
+
+  /// No description provided for @videoQualityUltra.
+  ///
+  /// In ar, this message translates to:
+  /// **'فائقة'**
+  String get videoQualityUltra;
 }
 
 class _AppLocalizationsDelegate

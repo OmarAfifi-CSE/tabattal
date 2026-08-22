@@ -49,6 +49,15 @@ class VerseCardFormatSelector extends StatelessWidget {
               children: [
                 Expanded(
                   child: _FormatOptionTile(
+                    label: l10n.verseCardFormatVideo,
+                    icon: Icons.videocam_rounded,
+                    isSelected: selectedFormat == ShareFormat.video,
+                    onTap: () => onFormatChanged(ShareFormat.video),
+                  ),
+                ),
+                SizedBox(width: 3.w),
+                Expanded(
+                  child: _FormatOptionTile(
                     label: l10n.verseCardFormatImage,
                     icon: Icons.image_rounded,
                     isSelected: selectedFormat == ShareFormat.image,

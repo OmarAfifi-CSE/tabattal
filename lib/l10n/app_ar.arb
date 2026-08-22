@@ -253,6 +253,7 @@
   "verseCardCopyText": "نسخ النص",
   "verseCardCopiedSuccess": "تم نسخ النص بنجاح",
   "verseCardFormatLabel": "نوع المشاركة",
+  "verseCardFormatVideo": "مقطع فيديو",
   "verseCardFormatImage": "بطاقة الآيات",
   "verseCardFormatText": "نص قرآني",
   "verseCardFormatFullPage": "صفحة كاملة",
@@ -275,5 +276,83 @@
   "topicWarning": "الإنذار والوعيد",
   "topicProphets": "قصص الأنبياء",
   "topicMorals": "الأخلاق والمعاملات",
-  "topicCreation": "التفكر والخلق"
+  "topicCreation": "التفكر والخلق",
+  "videoStudioTitle": "صانع مقاطع القرآن",
+  "videoStudioSubtitle": "تصميم وتصدير مقاطع التلاوات بجودة عالية",
+  "videoStudioSurahVerses": "سورة {surahName} ({startAyah} - {endAyah})",
+  "@videoStudioSurahVerses": {
+    "placeholders": {
+      "surahName": { "type": "String" },
+      "startAyah": { "type": "int" },
+      "endAyah": { "type": "int" }
+    }
+  },
+  "videoStudioThemeAndBg": "المظهر والخلفية",
+  "videoStudioDimensions": "أبعاد ومقاس الفيديو",
+  "videoStudioVerseRange": "نطاق الآيات",
+  "videoStudioFromAyah": "من آية: {ayah}",
+  "@videoStudioFromAyah": {
+    "placeholders": {
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioToAyah": "إلى آية: {ayah}",
+  "@videoStudioToAyah": {
+    "placeholders": {
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioReciter": "القارئ والتلاوة",
+  "videoStudioQuality": "دقة وجودة الفيديو",
+  "videoStudioDisplayOptions": "خيارات العرض",
+  "videoStudioShowSurahBadge": "إظهار اسم السورة",
+  "videoStudioShowReciterName": "إظهار اسم القارئ",
+  "videoStudioShowTafsir": "إظهار التفسير الميسر",
+  "videoStudioShowTranslation": "إظهار الترجمة الإنجليزية",
+  "videoStudioShare": "مشاركة الفيديو",
+  "videoStudioSave": "حفظ الفيديو",
+  "videoStudioFullscreenPreview": "معاينة بملء الشاشة",
+  "videoStudioProgressTitle": "جاري إعداد مقطع الفيديو",
+  "videoStudioProgressCompleted": "تم إنشاء مقطع الفيديو بنجاح",
+  "videoStudioProgressFailed": "تعذر إعداد مقطع الفيديو",
+  "videoStudioCancelExport": "إلغاء الإعداد",
+  "videoStudioClose": "إغلاق",
+  "videoStudioAyahOf": "الآية {current} من {total}",
+  "@videoStudioAyahOf": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "videoStudioAyahOfSurah": "الآية {current} من {total} (سورة {surahName})",
+  "@videoStudioAyahOfSurah": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" },
+      "surahName": { "type": "String" }
+    }
+  },
+  "videoStudioSavedSuccess": "تم حفظ مقطع الفيديو في معرض الهاتف بنجاح",
+  "videoStudioSavedError": "تعذر حفظ الفيديو في المعرض",
+  "videoStudioAudioLoadError": "تعذر تحميل التلاوة الصوتية للقارئ المحدد",
+  "videoStudioShareCaption": "تلاوة عطرة من تطبيق تبتل",
+  "videoStudioChooseReciter": "اختر القارئ",
+  "videoStudioAllReciters": "الكل",
+  "videoStudioViewAll": "عرض الكل",
+  "videoThemeCream": "كريمي",
+  "videoThemeWhite": "أبيض",
+  "videoThemeVintage": "عتيق",
+  "videoThemeRoseGold": "روز جولد",
+  "videoThemeEmerald": "زمردي",
+  "videoThemeMidnight": "كحلي ليلي",
+  "videoThemeRoyalDark": "ملكي داكن",
+  "videoRatioStory": "قصة (9:16)",
+  "videoRatioSquare": "مربع (1:1)",
+  "videoRatioLandscape": "عرضي (16:9)",
+  "videoQuality4K": "فائقة (4K)",
+  "videoQuality1080p": "عالية (1080p)",
+  "videoQuality720p": "سريعة (720p)",
+  "videoQualityFast": "سريعة",
+  "videoQualityHigh": "عالية الدقة",
+  "videoQualityUltra": "فائقة"
 }

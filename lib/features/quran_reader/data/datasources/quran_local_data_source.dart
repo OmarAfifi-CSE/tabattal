@@ -90,6 +90,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
               lineNumber: map['line_number'] as int,
               charTypeName: map['char_type_name'] as String,
               verseKey: map['verse_key'] as String,
+              pageNumber: (map['page'] as int?) ?? pageNumber,
             ),
           )
           .toList();
@@ -141,6 +142,7 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
               lineNumber: map['line_number'] as int,
               charTypeName: map['char_type_name'] as String,
               verseKey: map['verse_key'] as String,
+              pageNumber: (map['page'] as int?) ?? 1,
             ),
           )
           .toList();
