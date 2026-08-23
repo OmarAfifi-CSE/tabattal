@@ -1,10 +1,7 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../../../l10n/app_localizations.dart';
-import '../../../../../../core/bloc/locale/locale_cubit.dart';
 import '../../../../../../core/theme/app_colors.dart';
-import '../../../../../../core/theme/mushaf_theme.dart';
 import '../../../../../settings/bloc/settings_bloc.dart';
 import '../../../../../settings/bloc/settings_event.dart';
 import '../../../../../settings/bloc/settings_state.dart';
@@ -14,6 +11,7 @@ import '../../../pages/search/web/quran_search_screen_web.dart';
 import '../quran_audio_manager_view.dart';
 import '../quran_full_tafsir_view.dart';
 import '../quran_translation_view.dart';
+import '../theme_and_language_sheet.dart';
 import 'quran_bookmarks_view_web.dart';
 import 'quran_index_view_web.dart';
 
@@ -26,32 +24,6 @@ class QuranDrawerWeb extends StatelessWidget {
     required this.currentPage,
     required this.onNavigateToPage,
   });
-
-  void _showThemePicker(BuildContext context) {
-    final bloc = context.read<SettingsBloc>();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      builder: (ctx) =>
-          BlocProvider.value(value: bloc, child: const _ThemePickerSheet()),
-    );
-  }
-
-  void _showLanguagePicker(BuildContext context, AppLocalizations l10n) {
-    final cubit = context.read<LocaleCubit>();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.cardCream,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => BlocProvider.value(
-        value: cubit,
-        child: _LanguagePickerSheet(l10n: l10n),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -238,21 +210,12 @@ class QuranDrawerWeb extends StatelessWidget {
                     },
                   ),
                   _WebDrawerItem(
-                    icon: Icons.palette_rounded,
-                    title: l10n.themeAppearanceTitle,
-                    subtitle: l10n.themeAppearanceSubtitle,
+                    iconWidget: const ThemeAndLanguageDrawerIcon(isWeb: true),
+                    title: l10n.drawerThemeAndLanguage,
+                    subtitle: l10n.drawerThemeAndLanguageSubtitle,
                     onTap: () {
                       Navigator.pop(context);
-                      _showThemePicker(context);
-                    },
-                  ),
-                  _WebDrawerItem(
-                    icon: Icons.language_rounded,
-                    title: l10n.drawerLanguage,
-                    subtitle: l10n.drawerLanguageSubtitle,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showLanguagePicker(context, l10n);
+                      showThemeAndLanguageModal(context);
                     },
                   ),
                 ],
@@ -339,14 +302,16 @@ class _WebBookmarkBadge extends StatelessWidget {
 }
 
 class _WebDrawerItem extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final Widget? iconWidget;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
   final Widget? badge;
 
   const _WebDrawerItem({
-    required this.icon,
+    this.icon,
+    this.iconWidget,
     required this.title,
     required this.subtitle,
     required this.onTap,
@@ -369,7 +334,10 @@ class _WebDrawerItem extends StatelessWidget {
                 color: AppColors.accentGold.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: AppColors.accentGold, size: 22),
+              child: iconWidget ??
+                  (icon != null
+                      ? Icon(icon, color: AppColors.accentGold, size: 22)
+                      : const SizedBox.shrink()),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -416,125 +384,6 @@ class _WebDrawerItem extends StatelessWidget {
 }
 
 // ─── Language Picker Sheet ────────────────────────────────────────────────────
-
-class _LanguagePickerSheet extends StatelessWidget {
-  final AppLocalizations l10n;
-  const _LanguagePickerSheet({required this.l10n});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<LocaleCubit, Locale>(
-      builder: (context, locale) {
-        final isArabic = locale.languageCode == 'ar';
-        return Padding(
-          padding: EdgeInsets.fromLTRB(
-            24,
-            16,
-            24,
-            math.max(32, MediaQuery.paddingOf(context).bottom),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: AppColors.accentGold,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Text(
-                l10n.languagePickerTitle,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 20),
-              _LanguageOption(
-                label: l10n.languageArabic,
-                isSelected: isArabic,
-                onTap: () {
-                  context.read<LocaleCubit>().setLocale('ar');
-                  Navigator.pop(context);
-                },
-              ),
-              const SizedBox(height: 12),
-              _LanguageOption(
-                label: l10n.languageEnglish,
-                isSelected: !isArabic,
-                onTap: () {
-                  context.read<LocaleCubit>().setLocale('en');
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _LanguageOption extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _LanguageOption({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.accentGold.withValues(alpha: 0.12)
-              : AppColors.surfaceCream,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isSelected ? AppColors.accentGold : AppColors.borderLight,
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              isSelected
-                  ? Icons.check_circle_rounded
-                  : Icons.radio_button_unchecked_rounded,
-              color: isSelected
-                  ? AppColors.accentGold
-                  : AppColors.textPrimary.withValues(alpha: 0.3),
-              size: 22,
-            ),
-            const SizedBox(width: 14),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected
-                    ? AppColors.accentGold
-                    : AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ─── Scroll Direction Toggle ──────────────────────────────────────────────────
 
@@ -676,238 +525,3 @@ class ScrollDirectionToggle extends StatelessWidget {
   }
 }
 
-// ─── Theme Picker Sheet ───────────────────────────────────────────────────────
-
-class _ThemePickerSheet extends StatelessWidget {
-  const _ThemePickerSheet();
-
-  String _getThemeName(BuildContext context, String id) {
-    final l10n = AppLocalizations.of(context)!;
-    return switch (id) {
-      'cream' => l10n.themeCream,
-      'white' => l10n.themeWhite,
-      'mint' => l10n.themeMint,
-      'iceBlue' => l10n.themeIceBlue,
-      'parchment' => l10n.themeParchment,
-      'roseGold' => l10n.themeRoseGold,
-      'slate' => l10n.themeSlate,
-      'olive' => l10n.themeOlive,
-      'emerald' => l10n.themeEmerald,
-      'burgundy' => l10n.themeBurgundy,
-      'dark' => l10n.themeDark,
-      _ => id,
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return BlocBuilder<SettingsBloc, SettingsState>(
-      builder: (context, state) {
-        final isDark = state.themeMode == ThemeMode.dark;
-        return Container(
-          decoration: BoxDecoration(
-            color: AppColors.cardCream,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              24,
-              16,
-              24,
-              math.max(32, MediaQuery.paddingOf(context).bottom),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 20),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentGold,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                Text(
-                  l10n.themeAppearanceTitle,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceCream,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.borderLight),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              isDark
-                                  ? Icons.dark_mode_rounded
-                                  : Icons.light_mode_rounded,
-                              color: state.effectiveMushafTheme.goldColor,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              l10n.themeDarkMode,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Switch(
-                          value: isDark,
-                          thumbColor:
-                              WidgetStateProperty.resolveWith<Color>((states) {
-                                if (states.contains(WidgetState.selected)) {
-                                  return state.effectiveMushafTheme.goldColor;
-                                }
-                                return state.effectiveMushafTheme.textColor
-                                    .withValues(alpha: 0.75);
-                              }),
-                          trackColor:
-                              WidgetStateProperty.resolveWith<Color>((states) {
-                                if (states.contains(WidgetState.selected)) {
-                                  return state.effectiveMushafTheme.goldColor
-                                      .withValues(alpha: 0.45);
-                                }
-                                return state
-                                    .effectiveMushafTheme
-                                    .innerBorderColor;
-                              }),
-                          trackOutlineColor:
-                              WidgetStateProperty.resolveWith<Color>((states) {
-                                return state.effectiveMushafTheme.goldColor
-                                    .withValues(alpha: 0.35);
-                              }),
-                          onChanged: (val) {
-                            context.read<SettingsBloc>().add(
-                              ToggleThemeMode(
-                                val ? ThemeMode.dark : ThemeMode.light,
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: Text(
-                    l10n.themeMushafColor,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 5,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 6,
-                      childAspectRatio: 0.80,
-                    ),
-                    itemCount: MushafTheme.values.length,
-                    itemBuilder: (context, index) {
-                      final theme = MushafTheme.values[index];
-                      final isSelected = state.mushafTheme.id == theme.id;
-                      return GestureDetector(
-                        onTap: () {
-                          context.read<SettingsBloc>().add(
-                            ChangeMushafTheme(theme.id),
-                          );
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: theme.backgroundColor,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isSelected
-                                      ? theme.goldColor
-                                      : AppColors.borderLight,
-                                  width: isSelected ? 2.5 : 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.textPrimary.withValues(
-                                      alpha: 0.05,
-                                    ),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: isSelected
-                                  ? Icon(
-                                      Icons.check_rounded,
-                                      color: theme.goldColor,
-                                      size: 20,
-                                    )
-                                  : null,
-                            ),
-                            const SizedBox(height: 6),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                _getThemeName(context, theme.id),
-                                maxLines: 1,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: isSelected
-                                      ? theme.goldColor
-                                      : AppColors.textPrimary,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}

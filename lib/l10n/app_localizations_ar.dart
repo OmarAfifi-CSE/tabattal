@@ -54,6 +54,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get drawerLanguageSubtitle => 'العربية / English';
 
   @override
+  String get drawerThemeAndLanguage => 'المظهر واللغة';
+
+  @override
+  String get drawerThemeAndLanguageSubtitle =>
+      'تخصيص المصحف والوضع الداكن • العربية / English';
+
+  @override
+  String get themeAndLanguageTitle => 'المظهر واللغة';
+
+  @override
   String get menuTafsir => 'التفسير';
 
   @override

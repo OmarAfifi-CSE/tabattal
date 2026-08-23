@@ -54,6 +54,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawerLanguageSubtitle => 'العربية / English';
 
   @override
+  String get drawerThemeAndLanguage => 'Appearance & Language';
+
+  @override
+  String get drawerThemeAndLanguageSubtitle =>
+      'Customize Mushaf & Dark Mode • العربية / English';
+
+  @override
+  String get themeAndLanguageTitle => 'Appearance & Language';
+
+  @override
   String get menuTafsir => 'Tafsir';
 
   @override

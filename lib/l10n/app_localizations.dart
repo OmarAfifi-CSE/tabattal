@@ -188,6 +188,24 @@ abstract class AppLocalizations {
   /// **'العربية / English'**
   String get drawerLanguageSubtitle;
 
+  /// No description provided for @drawerThemeAndLanguage.
+  ///
+  /// In ar, this message translates to:
+  /// **'المظهر واللغة'**
+  String get drawerThemeAndLanguage;
+
+  /// No description provided for @drawerThemeAndLanguageSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تخصيص المصحف والوضع الداكن • العربية / English'**
+  String get drawerThemeAndLanguageSubtitle;
+
+  /// No description provided for @themeAndLanguageTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المظهر واللغة'**
+  String get themeAndLanguageTitle;
+
   /// No description provided for @menuTafsir.
   ///
   /// In ar, this message translates to:
