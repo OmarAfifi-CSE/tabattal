@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/constants/reciter_catalog.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -14,49 +15,6 @@ class VideoReciterSelector extends StatefulWidget {
     this.selectedCategory,
     required this.onReciterSelected,
   });
-
-  /// Reciters with 100% verified millisecond-accurate word timing data from Quran.com API
-  static const Map<String, List<Map<String, String>>> verifiedRecitersByCategory = {
-    'مرتل': [
-      {
-        'name': 'محمد صديق المنشاوي',
-        'category': 'مرتل',
-        'path': 'Minshawy_Murattal_128kbps',
-      },
-      {
-        'name': 'محمود خليل الحصري',
-        'category': 'مرتل',
-        'path': 'Husary_128kbps',
-      },
-      {
-        'name': 'عبد الباسط عبد الصمد',
-        'category': 'مرتل',
-        'path': 'Abdul_Basit_Murattal_192kbps',
-      },
-      {
-        'name': 'أبو بكر الشاطري',
-        'category': 'مرتل',
-        'path': 'Abu_Bakr_Ash-Shaatree_128kbps',
-      },
-      {
-        'name': 'سعود الشريم',
-        'category': 'مرتل',
-        'path': 'Saood_ash-Shuraym_128kbps',
-      },
-    ],
-    'مجود': [
-      {
-        'name': 'محمد صديق المنشاوي',
-        'category': 'مجود',
-        'path': 'Minshawy_Mujawwad_192kbps',
-      },
-      {
-        'name': 'عبد الباسط عبد الصمد',
-        'category': 'مجود',
-        'path': 'Abdul_Basit_Mujawwad_128kbps',
-      },
-    ],
-  };
 
   @override
   State<VideoReciterSelector> createState() => _VideoReciterSelectorState();
@@ -81,6 +39,8 @@ class _VideoReciterSelectorState extends State<VideoReciterSelector> {
 
   void _showAllRecitersSheet(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.cardCream,
@@ -90,13 +50,13 @@ class _VideoReciterSelectorState extends State<VideoReciterSelector> {
       ),
       builder: (ctx) {
         return Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
           child: DefaultTabController(
-            initialIndex: VideoReciterSelector.verifiedRecitersByCategory.keys
+            initialIndex: ReciterCatalog.verifiedVideoRecitersByCategory.keys
                 .toList()
                 .indexOf(_activeCategory)
-                .clamp(0, VideoReciterSelector.verifiedRecitersByCategory.keys.length - 1),
-            length: VideoReciterSelector.verifiedRecitersByCategory.keys.length,
+                .clamp(0, ReciterCatalog.verifiedVideoRecitersByCategory.keys.length - 1),
+            length: ReciterCatalog.verifiedVideoRecitersByCategory.keys.length,
             child: Container(
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.sizeOf(ctx).height * 0.75,
@@ -142,13 +102,13 @@ class _VideoReciterSelectorState extends State<VideoReciterSelector> {
                     unselectedLabelColor: AppColors.textPrimary.withValues(alpha: 0.6),
                     indicatorColor: AppColors.accentGold,
                     labelStyle: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold),
-                    tabs: VideoReciterSelector.verifiedRecitersByCategory.keys
-                        .map((cat) => Tab(text: cat))
+                    tabs: ReciterCatalog.verifiedVideoRecitersByCategory.keys
+                        .map((cat) => Tab(text: isEn ? ReciterCatalog.getCategoryNameEnglish(cat) : cat))
                         .toList(),
                   ),
                   Expanded(
                     child: TabBarView(
-                      children: VideoReciterSelector.verifiedRecitersByCategory.entries.map((entry) {
+                      children: ReciterCatalog.verifiedVideoRecitersByCategory.entries.map((entry) {
                         final cat = entry.key;
                         final reciters = entry.value;
 
@@ -160,6 +120,9 @@ class _VideoReciterSelectorState extends State<VideoReciterSelector> {
                           itemBuilder: (subCtx, idx) {
                             final item = reciters[idx];
                             final isSelected = item['name'] == widget.selectedReciter && _activeCategory == cat;
+                            final reciterDisplayName = isEn
+                                ? ReciterCatalog.getReciterNameEnglish(item['name']!)
+                                : item['name']!;
 
                             return ListTile(
                               leading: Icon(
@@ -168,7 +131,7 @@ class _VideoReciterSelectorState extends State<VideoReciterSelector> {
                                 size: 20.sp,
                               ),
                               title: Text(
-                                item['name']!,
+                                reciterDisplayName,
                                 style: TextStyle(
                                   fontSize: 14.sp,
                                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -203,7 +166,7 @@ class _VideoReciterSelectorState extends State<VideoReciterSelector> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final currentReciters = VideoReciterSelector.verifiedRecitersByCategory[_activeCategory] ?? [];
+    final currentReciters = ReciterCatalog.verifiedVideoRecitersByCategory[_activeCategory] ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,29 +183,6 @@ class _VideoReciterSelectorState extends State<VideoReciterSelector> {
                     fontSize: 13.sp,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
-                  ),
-                ),
-                SizedBox(width: 6.w),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                  decoration: BoxDecoration(
-                    color: AppColors.accentGold.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.verified_rounded, size: 11.sp, color: AppColors.accentGold),
-                      SizedBox(width: 3.w),
-                      Text(
-                        'توقيت دقيق',
-                        style: TextStyle(
-                          fontSize: 9.5.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.accentGold,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ],
@@ -272,18 +212,19 @@ class _VideoReciterSelectorState extends State<VideoReciterSelector> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            itemCount: VideoReciterSelector.verifiedRecitersByCategory.keys.length,
+            itemCount: ReciterCatalog.verifiedVideoRecitersByCategory.keys.length,
             separatorBuilder: (_, _) => SizedBox(width: 8.w),
             itemBuilder: (context, index) {
-              final cat = VideoReciterSelector.verifiedRecitersByCategory.keys.elementAt(index);
+              final cat = ReciterCatalog.verifiedVideoRecitersByCategory.keys.elementAt(index);
               final isCatSelected = cat == _activeCategory;
+              final isEn = Localizations.localeOf(context).languageCode == 'en';
 
               return InkWell(
                 onTap: () {
                   setState(() {
                     _activeCategory = cat;
                   });
-                  final reciters = VideoReciterSelector.verifiedRecitersByCategory[cat]!;
+                  final reciters = ReciterCatalog.verifiedVideoRecitersByCategory[cat]!;
                   final matchingInCat = reciters.where((r) => r['name'] == widget.selectedReciter).firstOrNull;
                   if (matchingInCat != null) {
                     widget.onReciterSelected(matchingInCat['name']!, cat, matchingInCat['path']!);
@@ -310,7 +251,7 @@ class _VideoReciterSelectorState extends State<VideoReciterSelector> {
                   ),
                   child: Center(
                     child: Text(
-                      cat,
+                      isEn ? ReciterCatalog.getCategoryNameEnglish(cat) : cat,
                       style: TextStyle(
                         fontSize: 11.5.sp,
                         fontWeight: isCatSelected ? FontWeight.bold : FontWeight.w500,
@@ -336,6 +277,10 @@ class _VideoReciterSelectorState extends State<VideoReciterSelector> {
             itemBuilder: (context, index) {
               final reciter = currentReciters[index];
               final isSelected = reciter['name'] == widget.selectedReciter;
+              final isEn = Localizations.localeOf(context).languageCode == 'en';
+              final reciterDisplayName = isEn
+                  ? ReciterCatalog.getReciterNameEnglish(reciter['name']!)
+                  : reciter['name']!;
 
               return InkWell(
                 onTap: () {
@@ -371,7 +316,7 @@ class _VideoReciterSelectorState extends State<VideoReciterSelector> {
                       ),
                       SizedBox(width: 6.w),
                       Text(
-                        reciter['name']!,
+                        reciterDisplayName,
                         style: TextStyle(
                           fontSize: 11.5.sp,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

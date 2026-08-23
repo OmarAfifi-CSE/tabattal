@@ -884,6 +884,24 @@ abstract class AppLocalizations {
   /// **'مشاركة الآيات'**
   String get verseCardTitle;
 
+  /// No description provided for @verseCardTitleImage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصميم بطاقة الآية'**
+  String get verseCardTitleImage;
+
+  /// No description provided for @verseCardTitleText.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة النص'**
+  String get verseCardTitleText;
+
+  /// No description provided for @verseCardTitleFullPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة صفحة المصحف'**
+  String get verseCardTitleFullPage;
+
   /// No description provided for @verseCardShareImage.
   ///
   /// In ar, this message translates to:

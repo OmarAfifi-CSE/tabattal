@@ -1,11 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../../../core/constants/quran_metadata.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../l10n/app_localizations.dart';
+import '../helpers/verse_card_text_utils.dart';
 
 /// Verse range picker with from/to selector buttons and bottom sheet picker modal.
 class VerseCardRangePicker extends StatelessWidget {
+  final int? surahNumber;
   final int startAyah;
   final int endAyah;
   final int totalAyahsInSurah;
@@ -14,6 +17,7 @@ class VerseCardRangePicker extends StatelessWidget {
 
   const VerseCardRangePicker({
     super.key,
+    this.surahNumber,
     required this.startAyah,
     required this.endAyah,
     required this.totalAyahsInSurah,
@@ -128,7 +132,9 @@ class VerseCardRangePicker extends StatelessWidget {
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            isEn ? 'Ayah $item' : 'آية $item',
+                            isEn
+                                ? 'Ayah $item'
+                                : 'آية ${VerseCardTextUtils.toArabicDigits(item)}',
                             style: TextStyle(
                               fontSize: isWeb ? 13 : 12.sp,
                               fontWeight: FontWeight.bold,
@@ -156,138 +162,149 @@ class VerseCardRangePicker extends StatelessWidget {
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     const isWeb = kIsWeb;
 
+    final startOptions = List.generate(totalAyahsInSurah, (i) => i + 1);
     final maxEndForCurrentStart = _getMaxEndAyah(startAyah);
-    final availableEndAyahs = List.generate(
+    final endOptions = List.generate(
       maxEndForCurrentStart - startAyah + 1,
       (i) => startAyah + i,
     );
 
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            l10n.verseCardVerseRange,
-            style: TextStyle(
-              fontSize: isWeb ? 14 : 13.sp,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          Row(
-            children: [
-              // From Ayah Tile
-              GestureDetector(
-                onTap: () => _showAyahPickerSheet(
-                  context: context,
-                  title: l10n.verseCardStartAyah,
-                  currentValue: startAyah,
-                  options: List.generate(totalAyahsInSurah, (i) => i + 1),
-                  onSelected: onStartAyahChanged,
-                ),
-                child: Container(
-                  height: 34.h,
-                  padding: EdgeInsets.symmetric(horizontal: 10.w),
-                  decoration: BoxDecoration(
-                    color: AppColors.cardCream,
-                    borderRadius: BorderRadius.circular(10.r),
-                    border: Border.all(
-                      color: AppColors.accentGold.withValues(alpha: 0.6),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.accentGold.withValues(alpha: 0.1),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        isEn ? 'Ayah $startAyah' : 'آية $startAyah',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      SizedBox(width: 4.w),
-                      Icon(
-                        Icons.arrow_drop_down_rounded,
-                        size: 18.r,
-                        color: AppColors.accentGold,
-                      ),
-                    ],
-                  ),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Header with Surah Badge
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.verseCardVerseRange,
+              style: TextStyle(
+                fontSize: isWeb ? 14 : 13.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
-
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 6.w),
+            ),
+            if (surahNumber != null) ...[
+              SizedBox(width: 6.w),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: AppColors.accentGold.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6.r),
+                  border: Border.all(
+                    color: AppColors.accentGold.withValues(alpha: 0.28),
+                    width: 1,
+                  ),
+                ),
                 child: Text(
-                  '—',
+                  isEn
+                      ? 'Surah ${QuranMetadata.getSurahNameEnglish(surahNumber!)}'
+                      : 'سورة ${QuranMetadata.getSurahName(surahNumber!)}',
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 11.sp,
                     fontWeight: FontWeight.bold,
                     color: AppColors.accentGold,
                   ),
                 ),
               ),
+            ],
+          ],
+        ),
+        SizedBox(height: 6.h),
 
-              // To Ayah Tile
-              GestureDetector(
+        // 2. From Ayah / To Ayah Selectors
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
                 onTap: () => _showAyahPickerSheet(
                   context: context,
-                  title: l10n.verseCardEndAyah,
-                  currentValue: endAyah,
-                  options: availableEndAyahs,
-                  onSelected: onEndAyahChanged,
+                  title: l10n.verseCardStartAyah,
+                  currentValue: startAyah,
+                  options: startOptions,
+                  onSelected: onStartAyahChanged,
                 ),
+                borderRadius: BorderRadius.circular(12.r),
                 child: Container(
-                  height: 34.h,
-                  padding: EdgeInsets.symmetric(horizontal: 10.w),
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                   decoration: BoxDecoration(
-                    color: AppColors.cardCream,
-                    borderRadius: BorderRadius.circular(10.r),
+                    color: AppColors.accentGold.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
-                      color: AppColors.accentGold.withValues(alpha: 0.6),
-                      width: 1.5,
+                      color: AppColors.accentGold.withValues(alpha: 0.2),
+                      width: 1,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.accentGold.withValues(alpha: 0.1),
-                        blurRadius: 4,
-                      ),
-                    ],
                   ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        isEn ? 'Ayah $endAyah' : 'آية $endAyah',
+                        isEn
+                            ? 'From Ayah $startAyah'
+                            : 'من آية ${VerseCardTextUtils.toArabicDigits(startAyah)}',
                         style: TextStyle(
                           fontSize: 12.sp,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      SizedBox(width: 4.w),
                       Icon(
-                        Icons.arrow_drop_down_rounded,
-                        size: 18.r,
+                        Icons.keyboard_arrow_down_rounded,
                         color: AppColors.accentGold,
+                        size: 20.sp,
                       ),
                     ],
                   ),
                 ),
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: InkWell(
+                onTap: () => _showAyahPickerSheet(
+                  context: context,
+                  title: l10n.verseCardEndAyah,
+                  currentValue: endAyah,
+                  options: endOptions,
+                  onSelected: onEndAyahChanged,
+                ),
+                borderRadius: BorderRadius.circular(12.r),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentGold.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: AppColors.accentGold.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        isEn
+                            ? 'To Ayah $endAyah'
+                            : 'إلى آية ${VerseCardTextUtils.toArabicDigits(endAyah)}',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.accentGold,
+                        size: 20.sp,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

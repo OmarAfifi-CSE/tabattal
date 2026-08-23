@@ -3,12 +3,14 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../../../../core/constants/quran_metadata.dart';
+import '../../../../core/constants/reciter_catalog.dart';
 import '../../../quran_reader/data/models/verse_model.dart';
 import '../../domain/entities/video_enums.dart';
 import '../../domain/entities/video_project_config.dart';
 
 import '../../domain/entities/word_timing_segment.dart';
 import 'word_timing_service.dart';
+import '../../../quran_reader/presentation/widgets/verse_card/helpers/verse_card_text_utils.dart';
 
 class _CachedDynamicLayout {
   final TextPainter versePainter;
@@ -306,7 +308,7 @@ class CanvasOverlayGenerator {
     canvas.drawRRect(cardRect, cardBgPaint);
     canvas.drawRRect(cardRect, cardBorderPaint);
 
-    // Decorative Top Ornament inside Card
+    // Decorative Top Ornament inside Card (100% Matching VerseCard Star Ornament)
     final double ornamentCenterY = config.aspectRatio == VideoAspectRatio.landscape16x9
         ? cardMarginV + (height * 0.038)
         : (config.aspectRatio == VideoAspectRatio.square1x1
@@ -318,7 +320,7 @@ class CanvasOverlayGenerator {
       ..strokeWidth = baseScale * 0.002;
 
     final lineLength = baseScale * 0.12;
-    final space = baseScale * 0.03;
+    final space = baseScale * 0.032;
     canvas.drawLine(
       Offset((width / 2) - lineLength - space, ornamentCenterY),
       Offset((width / 2) - space, ornamentCenterY),
@@ -330,8 +332,25 @@ class CanvasOverlayGenerator {
       linePaint,
     );
 
-    final dotPaint = Paint()..color = theme.accentColor.withValues(alpha: 0.7);
-    canvas.drawCircle(Offset(width / 2, ornamentCenterY), baseScale * 0.008, dotPaint);
+    // Draw Center Rounded Star Icon (Matching VerseCard Image Header)
+    final starSize = baseScale * 0.026;
+    final starPainter = TextPainter(
+      text: TextSpan(
+        text: String.fromCharCode(Icons.star_rate_rounded.codePoint),
+        style: TextStyle(
+          fontSize: starSize,
+          fontFamily: Icons.star_rate_rounded.fontFamily,
+          package: Icons.star_rate_rounded.fontPackage,
+          color: theme.accentColor.withValues(alpha: 0.75),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    starPainter.paint(
+      canvas,
+      Offset((width - starPainter.width) / 2, ornamentCenterY - (starPainter.height / 2)),
+    );
   }
 
   static void _drawHeaderBadges(
@@ -345,8 +364,9 @@ class CanvasOverlayGenerator {
     if (!config.showSurahBadge && !config.showReciterName) return;
 
     final theme = config.themePreset;
-    final surahName = QuranMetadata.getSurahName(config.surahNumber);
-    final reciterName = config.reciterName;
+    final isEn = config.isEnglish;
+    final surahName = QuranMetadata.getSurahNameByLang(isEn, config.surahNumber);
+    final reciterName = ReciterCatalog.localizeByLang(isEn, config.reciterName);
 
     final double cardMarginV = height * 0.05;
     final double surahCenterY = config.aspectRatio == VideoAspectRatio.landscape16x9
@@ -361,25 +381,40 @@ class CanvasOverlayGenerator {
             ? cardMarginV + (height * 0.160)
             : cardMarginV + (height * 0.125));
 
-    // Surah Badge (سورة without Tashkeel)
+    // Surah Badge:
+    // In lineByLine mode: Surah name + Ayah number with language-specific numerals and star (سورة الفاتحة • الآية ١ / Surah Al-Fatihah • Ayah 1)
+    // In wholeVerse mode: Surah name only (سورة الفاتحة / Surah Al-Fatihah)
     if (config.showSurahBadge) {
-      final surahText = 'سورة $surahName';
+      final bool isLineByLine = config.textDisplayMode == VideoTextDisplayMode.lineByLine;
+      final String surahText;
+      if (isLineByLine) {
+        final ayahNum = verse?.verseNumber ?? config.startAyah;
+        if (isEn) {
+          surahText = 'Surah $surahName • Ayah $ayahNum';
+        } else {
+          final arabicAyahNum = VerseCardTextUtils.toArabicDigits(ayahNum);
+          surahText = 'سورة $surahName • الآية $arabicAyahNum';
+        }
+      } else {
+        surahText = isEn ? 'Surah $surahName' : 'سورة $surahName';
+      }
+
       final textPainter = TextPainter(
         text: TextSpan(
           text: surahText,
           style: TextStyle(
             color: theme.accentColor,
-            fontSize: baseScale * 0.032,
+            fontSize: baseScale * 0.029,
             fontWeight: FontWeight.bold,
-            fontFamily: 'Amiri',
+            letterSpacing: 0.2,
           ),
         ),
-        textDirection: TextDirection.rtl,
+        textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
         textAlign: TextAlign.center,
-      )..layout(maxWidth: width * 0.8);
+      )..layout(maxWidth: width * 0.85);
 
-      final badgeWidth = textPainter.width + (baseScale * 0.08);
-      final badgeHeight = textPainter.height + (height * 0.016);
+      final badgeWidth = textPainter.width + (baseScale * 0.06);
+      final badgeHeight = textPainter.height + (height * 0.014);
       final badgeRect = RRect.fromRectAndRadius(
         Rect.fromCenter(
           center: Offset(width / 2, surahCenterY),
@@ -389,9 +424,9 @@ class CanvasOverlayGenerator {
         Radius.circular(badgeHeight / 2),
       );
 
-      final badgePaint = Paint()..color = theme.badgeBackgroundColor;
+      final badgePaint = Paint()..color = theme.accentColor.withValues(alpha: 0.15);
       final borderPaint = Paint()
-        ..color = theme.accentColor.withValues(alpha: 0.4)
+        ..color = theme.accentColor.withValues(alpha: 0.40)
         ..style = PaintingStyle.stroke
         ..strokeWidth = baseScale * 0.002;
 
@@ -406,20 +441,19 @@ class CanvasOverlayGenerator {
 
     // Reciter Name
     if (config.showReciterName) {
-      final reciterText = 'بصوت القارئ: $reciterName';
+      final reciterText = isEn ? 'Recited by: $reciterName' : 'بصوت القارئ: $reciterName';
       final textPainter = TextPainter(
         text: TextSpan(
           text: reciterText,
           style: TextStyle(
             color: theme.secondaryTextColor,
-            fontSize: baseScale * 0.024,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Amiri',
+            fontSize: baseScale * 0.023,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        textDirection: TextDirection.rtl,
+        textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
         textAlign: TextAlign.center,
-      )..layout(maxWidth: width * 0.8);
+      )..layout(maxWidth: width * 0.85);
 
       textPainter.paint(
         canvas,
@@ -565,13 +599,12 @@ class CanvasOverlayGenerator {
         }
       }
     } else {
-      // Whole verse crossfade matching export video engine
+      // Whole verse mode:
+      // Always 100% solid & fully visible at rest and at the beginning of playback.
+      // Smooth cubic fade-out only at the tail end when transitioning between verses.
       final totalMs = timings.isNotEmpty ? timings.last.endMs : 4000;
-      const fadeMs = 250;
-      if (playbackPositionMs < fadeMs && fadeMs > 0) {
-        final t = playbackPositionMs / fadeMs;
-        lineCrossfadeOpacity = Curves.easeInOutCubic.transform(t.clamp(0.0, 1.0));
-      } else if (playbackPositionMs > totalMs - fadeMs && fadeMs > 0 && totalMs > fadeMs * 2) {
+      const fadeMs = 200;
+      if (playbackPositionMs > totalMs - fadeMs && fadeMs > 0 && totalMs > fadeMs * 2) {
         final t = (totalMs - playbackPositionMs) / fadeMs;
         lineCrossfadeOpacity = Curves.easeInOutCubic.transform(t.clamp(0.0, 1.0));
       } else {
@@ -785,7 +818,7 @@ class CanvasOverlayGenerator {
       );
     }
 
-    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${hasTafsir}_${hasTranslation}_${overrideLineIndex ?? activeLine?.lineNumber ?? 0}_${width.round()}_${height.round()}';
+    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}_${hasTafsir}_${hasTranslation}_${overrideLineIndex ?? activeLine?.lineNumber ?? 0}_${width.round()}_${height.round()}';
 
     _CachedDynamicLayout? cached = _dynamicLayoutCache[cacheKey];
     if (cached == null) {
@@ -827,24 +860,45 @@ class CanvasOverlayGenerator {
     final sectionGap = cached.sectionGap;
     final totalContentHeight = cached.totalContentHeight;
 
-    // Center content area vertically between header and footer
-    final double centerZoneY = topLimit + ((bottomLimit - topLimit) / 2);
+    // Center content area vertically:
+    // When no tafsir and no translation are present, center perfectly at geometric & optical card center (height / 2).
+    final double centerZoneY;
+    if (!hasTafsir && !hasTranslation) {
+      centerZoneY = height / 2;
+    } else {
+      centerZoneY = topLimit + ((bottomLimit - topLimit) / 2);
+    }
     double currentY = (centerZoneY - (totalContentHeight / 2)).clamp(topLimit, bottomLimit);
 
-    // Apply GPU layer opacity only during active fade transition on bounded text zone
-    final bool isFading = lineCrossfadeOpacity < 0.999;
-    if (isFading) {
+    // In line-by-line mode: ONLY the Quran line transitions/fades between lines.
+    // Tafsir and Translation remain 100% rock-solid and stationary throughout all lines of the Ayah!
+    final bool isLineFading = isLineByLine && lineCrossfadeOpacity < 0.999;
+    final bool isAyahFading = !isLineByLine && lineCrossfadeOpacity < 0.999;
+
+    if (isAyahFading) {
       canvas.saveLayer(
         Rect.fromLTWH(0, topLimit, width, availableHeight),
         Paint()..color = Color.fromRGBO(0, 0, 0, lineCrossfadeOpacity),
       );
     }
 
-    // Draw Verse Text
+    // Draw Verse Text with line fade (if in lineByLine mode)
+    if (isLineFading) {
+      canvas.saveLayer(
+        Rect.fromLTWH(0, currentY - 10, width, versePainter.height + 20),
+        Paint()..color = Color.fromRGBO(0, 0, 0, lineCrossfadeOpacity),
+      );
+    }
+
     versePainter.paint(canvas, Offset((width - versePainter.width) / 2, currentY));
+
+    if (isLineFading) {
+      canvas.restore();
+    }
+
     currentY += versePainter.height;
 
-    // Draw Tafsir (if active)
+    // Draw Tafsir (if active) - 100% Solid & stationary throughout the Ayah
     if (tafsirTextPainter != null && tafsirBadgePainter != null) {
       currentY += sectionGap;
 
@@ -871,7 +925,7 @@ class CanvasOverlayGenerator {
       currentY += tafsirTextPainter.height;
     }
 
-    // Draw Translation (if active)
+    // Draw Translation (if active) - 100% Solid & stationary throughout the Ayah
     if (translationTextPainter != null) {
       currentY += sectionGap;
 
@@ -899,7 +953,7 @@ class CanvasOverlayGenerator {
       translationTextPainter.paint(canvas, Offset((width - translationTextPainter.width) / 2, currentY));
     }
 
-    if (isFading) {
+    if (isAyahFading) {
       canvas.restore();
     }
   }

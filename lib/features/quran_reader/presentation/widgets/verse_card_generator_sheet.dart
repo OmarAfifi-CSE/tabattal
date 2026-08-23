@@ -126,6 +126,7 @@ class VerseCardGeneratorSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final surahNum = int.tryParse(verse.verseKey.split(':')[0]) ?? 1;
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
     return BlocProvider(
       create: (context) => VideoStudioBloc(
         repository: VideoStudioRepositoryImpl(),
@@ -133,6 +134,7 @@ class VerseCardGeneratorSheet extends StatelessWidget {
           surahNumber: surahNum,
           startAyah: verse.verseNumber,
           endAyah: verse.verseNumber,
+          isEnglish: isEn,
         ),
       )..add(
           VideoStudioInitRequested(
@@ -796,13 +798,28 @@ class _VerseCardGeneratorSheetContentState
     }
   }
 
+  String _getDynamicSheetTitle(AppLocalizations l10n) {
+    switch (_selectedFormat) {
+      case ShareFormat.video:
+        return l10n.videoStudioTitle;
+      case ShareFormat.image:
+        return l10n.verseCardTitleImage;
+      case ShareFormat.text:
+        return l10n.verseCardTitleText;
+      case ShareFormat.fullPage:
+        return l10n.verseCardTitleFullPage;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     const isWeb = kIsWeb;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.90;
+    final maxSheetHeight = isWeb
+        ? MediaQuery.sizeOf(context).height * 0.90
+        : MediaQuery.sizeOf(context).height * 0.88;
 
     return BlocConsumer<VideoStudioBloc, VideoStudioState>(
       listener: (context, videoState) async {
@@ -860,12 +877,20 @@ class _VerseCardGeneratorSheetContentState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        l10n.verseCardTitle,
-                        style: TextStyle(
-                          fontSize: isWeb ? 18 : 17.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                        child: Text(
+                          _getDynamicSheetTitle(l10n),
+                          key: ValueKey(_selectedFormat),
+                          style: TextStyle(
+                            fontSize: isWeb ? 18 : 17.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -884,11 +909,32 @@ class _VerseCardGeneratorSheetContentState
                       child: Column(
                         children: [
                           // ---------------- PREVIEW AREA ----------------
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 220),
-                            switchInCurve: Curves.easeOutCubic,
-                            switchOutCurve: Curves.easeInCubic,
-                            child: _buildPreviewArea(videoState),
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 280),
+                            curve: Curves.easeInOutCubic,
+                            alignment: Alignment.topCenter,
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 240),
+                              reverseDuration: const Duration(milliseconds: 160),
+                              switchInCurve: Curves.easeOutCubic,
+                              switchOutCurve: Curves.easeInCubic,
+                              layoutBuilder: (currentChild, previousChildren) {
+                                return Stack(
+                                  alignment: Alignment.topCenter,
+                                  children: <Widget>[
+                                    ...previousChildren,
+                                    ?currentChild,
+                                  ],
+                                );
+                              },
+                              transitionBuilder: (child, animation) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                );
+                              },
+                              child: _buildPreviewArea(videoState),
+                            ),
                           ),
                           SizedBox(height: isWeb ? 16 : 14.h),
 
@@ -897,6 +943,11 @@ class _VerseCardGeneratorSheetContentState
                             selectedFormat: _selectedFormat,
                             onFormatChanged: (newFormat) {
                               if (_selectedFormat != newFormat) {
+                                if (_selectedFormat == ShareFormat.video) {
+                                  context
+                                      .read<VideoStudioBloc>()
+                                      .add(const VideoStudioPlaybackReset());
+                                }
                                 setState(() {
                                   _selectedFormat = newFormat;
                                   _statusMessage = null;
@@ -909,11 +960,32 @@ class _VerseCardGeneratorSheetContentState
                           ),
 
                           // ---------------- DYNAMIC OPTIONS PER FORMAT ----------------
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 220),
-                            switchInCurve: Curves.easeOutCubic,
-                            switchOutCurve: Curves.easeInCubic,
-                            child: _buildOptionsArea(videoState),
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 280),
+                            curve: Curves.easeInOutCubic,
+                            alignment: Alignment.topCenter,
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 240),
+                              reverseDuration: const Duration(milliseconds: 160),
+                              switchInCurve: Curves.easeOutCubic,
+                              switchOutCurve: Curves.easeInCubic,
+                              layoutBuilder: (currentChild, previousChildren) {
+                                return Stack(
+                                  alignment: Alignment.topCenter,
+                                  children: <Widget>[
+                                    ...previousChildren,
+                                    ?currentChild,
+                                  ],
+                                );
+                              },
+                              transitionBuilder: (child, animation) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                );
+                              },
+                              child: _buildOptionsArea(videoState),
+                            ),
                           ),
                         ],
                       ),
@@ -982,9 +1054,11 @@ class _VerseCardGeneratorSheetContentState
       case ShareFormat.image:
         return RepaintBoundary(
           key: _repaintKey,
-          child: ClipRRect(
+          child: Container(
             key: const ValueKey('image_card_preview'),
-            borderRadius: BorderRadius.circular(16.r),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16.r),
+            ),
             child: VerseCardContentPreview(
               theme: _activeTheme,
               surahNumber: _surahNumber,
@@ -1164,7 +1238,9 @@ class _VerseCardGeneratorSheetContentState
               onThemeSelected: (index) =>
                   setState(() => _selectedThemeIndex = index),
             ),
+            SizedBox(height: isWeb ? 10 : 8.h),
             VerseCardRangePicker(
+              surahNumber: _surahNumber,
               startAyah: _startAyah,
               endAyah: _endAyah,
               totalAyahsInSurah: _totalAyahsInSurah,
@@ -1239,6 +1315,7 @@ class _VerseCardGeneratorSheetContentState
           key: const ValueKey('text_options_group'),
           children: [
             VerseCardRangePicker(
+              surahNumber: _surahNumber,
               startAyah: _startAyah,
               endAyah: _endAyah,
               totalAyahsInSurah: _totalAyahsInSurah,

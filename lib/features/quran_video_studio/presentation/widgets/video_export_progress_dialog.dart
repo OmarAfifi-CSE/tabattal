@@ -96,14 +96,12 @@ class VideoExportProgressDialog extends StatelessWidget {
 
               if (progress.isRendering) ...[
                 SizedBox(height: 14.h),
-                ClipRRect(
+                LinearProgressIndicator(
+                  value: progress.progress,
+                  minHeight: 6.h,
                   borderRadius: BorderRadius.circular(8.r),
-                  child: LinearProgressIndicator(
-                    value: progress.progress,
-                    minHeight: 6.h,
-                    color: AppColors.accentGold,
-                    backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
-                  ),
+                  color: AppColors.accentGold,
+                  backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
                 ),
                 SizedBox(height: 6.h),
                 Text(

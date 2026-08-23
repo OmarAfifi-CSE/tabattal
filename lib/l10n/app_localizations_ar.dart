@@ -434,6 +434,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get verseCardTitle => 'مشاركة الآيات';
 
   @override
+  String get verseCardTitleImage => 'تصميم بطاقة الآية';
+
+  @override
+  String get verseCardTitleText => 'مشاركة النص';
+
+  @override
+  String get verseCardTitleFullPage => 'مشاركة صفحة المصحف';
+
+  @override
   String get verseCardShareImage => 'مشاركة البطاقة';
 
   @override

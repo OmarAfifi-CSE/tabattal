@@ -1,3 +1,5 @@
+import 'package:flutter/widgets.dart';
+
 class ReciterCatalog {
   const ReciterCatalog._();
 
@@ -67,6 +69,144 @@ class ReciterCatalog {
           'MultiLanguage/Basfar_Walk_192kbps',
     },
   };
+
+  /// English names for reciter categories
+  static const Map<String, String> categoryEnglishNames = {
+    'مرتل': 'Murattal',
+    'مجود': 'Mujawwad',
+    'المصحف المعلم': 'Teacher (Muallim)',
+    'رواية ورش': 'Warsh Recitation',
+    'الترجمات الصوتية': 'Audio Translations',
+  };
+
+  /// English transliterated names for reciters
+  static const Map<String, String> reciterEnglishNames = {
+    'محمد صديق المنشاوي': 'Mohamed Siddiq Al-Minshawi',
+    'محمود خليل الحصري': 'Mahmoud Khalil Al-Husary',
+    'عبد الباسط عبد الصمد': 'Abdul Basit Abdul Samad',
+    'محمود علي البنا': 'Mahmoud Ali Al-Banna',
+    'محمد محمود الطبلاوي': 'Mohammad Al-Tablaway',
+    'ماهر المعيقلي': 'Maher Al-Muaiqly',
+    'ياسر الدوسري': 'Yasser Al-Dossari',
+    'أحمد العجمي': 'Ahmed Al-Ajmy',
+    'سعد الغامدي': 'Saad Al-Ghamdi',
+    'ناصر القطامي': 'Nasser Al-Qatami',
+    'فارس عباد': 'Fares Abbad',
+    'أبو بكر الشاطري': 'Abu Bakr Al-Shatri',
+    'سعود الشريم': 'Saud Al-Shuraim',
+    'عبدالله عواد الجهني': 'Abdullah Awad Al-Juhany',
+    'خالد القحطاني': 'Khaled Al-Qahtani',
+    'هاني الرفاعي': 'Hani Al-Rifai',
+    'علي الحذيفي': 'Ali Al-Hudhaify',
+    'علي جابر': 'Ali Jaber',
+    'محمد أيوب': 'Muhammad Ayyub',
+    'إبراهيم الأخضر': 'Ibrahim Al-Akhdar',
+    'عبدالله المطرود': 'Abdullah Al-Matroud',
+    'محمد جبريل': 'Muhammad Jibreel',
+    'عبد الله بصفر': 'Abdullah Basfar',
+    'صلاح بو خاطر': 'Salah Bukhatir',
+    'نبيل الرفاعي': 'Nabil Al-Rifai',
+    'سهل ياسين': 'Sahl Yassin',
+    'ياسر سلامة': 'Yasser Salameh',
+    'علي حجاج السويسي': 'Ali Hajjaj Al-Suwaisi',
+    'أكرم العلاقمي': 'Akram Al-Alaqimi',
+    'محمد عبد الكريم': 'Muhammad Abdul Kareem',
+    'محسن القاسم': 'Muhsin Al-Qasim',
+    'أيمن سويد': 'Ayman Sowaid',
+    'خليفة الطنيجي': 'Khalifa Al-Tunaiji',
+    'ياسين الجزائري': 'Yassin Al-Jazaery',
+    'إبراهيم الدوسري': 'Ibrahim Al-Dossari',
+    'إبراهيم ووك (إنجليزي)': 'Ibrahim Walk (English)',
+    'عبد الله بصفر وإبراهيم ووك (عربي / إنجليزي)': 'Basfar & Walk (Arabic / English)',
+  };
+
+  /// Reciters with 100% verified millisecond-accurate word timing data for Video Studio
+  static const Map<String, List<Map<String, String>>> verifiedVideoRecitersByCategory = {
+    'مرتل': [
+      {
+        'name': 'محمد صديق المنشاوي',
+        'category': 'مرتل',
+        'path': 'Minshawy_Murattal_128kbps',
+      },
+      {
+        'name': 'محمود خليل الحصري',
+        'category': 'مرتل',
+        'path': 'Husary_128kbps',
+      },
+      {
+        'name': 'عبد الباسط عبد الصمد',
+        'category': 'مرتل',
+        'path': 'Abdul_Basit_Murattal_192kbps',
+      },
+      {
+        'name': 'أبو بكر الشاطري',
+        'category': 'مرتل',
+        'path': 'Abu_Bakr_Ash-Shaatree_128kbps',
+      },
+      {
+        'name': 'سعود الشريم',
+        'category': 'مرتل',
+        'path': 'Saood_ash-Shuraym_128kbps',
+      },
+    ],
+    'مجود': [
+      {
+        'name': 'محمد صديق المنشاوي',
+        'category': 'مجود',
+        'path': 'Minshawy_Mujawwad_192kbps',
+      },
+      {
+        'name': 'عبد الباسط عبد الصمد',
+        'category': 'مجود',
+        'path': 'Abdul_Basit_Mujawwad_128kbps',
+      },
+    ],
+  };
+
+  /// Returns the English name for any reciter
+  static String getReciterNameEnglish(String arabicName) {
+    if (reciterEnglishNames.containsKey(arabicName)) {
+      return reciterEnglishNames[arabicName]!;
+    }
+    for (final entry in reciterEnglishNames.entries) {
+      if (arabicName.contains(entry.key) || entry.key.contains(arabicName)) {
+        return entry.value;
+      }
+    }
+    return arabicName;
+  }
+
+  /// Returns the English name for any category
+  static String getCategoryNameEnglish(String arabicCategory) {
+    return categoryEnglishNames[arabicCategory] ?? arabicCategory;
+  }
+
+  /// Universal localization helper that localizes either a reciter name or category name by boolean
+  static String localizeByLang(bool isEnglish, String arabicNameOrCategory) {
+    if (!isEnglish) return arabicNameOrCategory;
+    if (categoryEnglishNames.containsKey(arabicNameOrCategory)) {
+      return categoryEnglishNames[arabicNameOrCategory]!;
+    }
+    return getReciterNameEnglish(arabicNameOrCategory);
+  }
+
+  /// Universal localization helper using BuildContext
+  static String localize(BuildContext context, String arabicNameOrCategory) {
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    return localizeByLang(isEn, arabicNameOrCategory);
+  }
+
+  /// Localize category by BuildContext
+  static String localizeCategory(BuildContext context, String category) {
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    return isEn ? getCategoryNameEnglish(category) : category;
+  }
+
+  /// Localize reciter by BuildContext
+  static String localizeReciter(BuildContext context, String reciter) {
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    return isEn ? getReciterNameEnglish(reciter) : reciter;
+  }
 
   /// Returns the flat EveryAyah reciter path from any category
   static String getReciterPath(String categoryName, String reciterName) {

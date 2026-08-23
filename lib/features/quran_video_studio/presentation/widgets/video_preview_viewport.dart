@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/quran_metadata.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/entities/video_enums.dart';
 import '../bloc/video_studio_bloc.dart';
 import '../bloc/video_studio_event.dart';
 import '../bloc/video_studio_state.dart';
@@ -40,71 +41,90 @@ class VideoPreviewViewport extends StatelessWidget {
       verse?.verseNumber ?? config.startAyah,
     );
 
+    final double previewHeight;
+    switch (config.aspectRatio) {
+      case VideoAspectRatio.portrait9x16:
+        previewHeight = 345.h;
+        break;
+      case VideoAspectRatio.square1x1:
+        previewHeight = 260.h;
+        break;
+      case VideoAspectRatio.landscape16x9:
+        previewHeight = 180.h;
+        break;
+    }
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 1. Real Video Preview Card (100% WYSIWYG Canvas Rendering)
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOutCubic,
-            height: 380.h,
-            alignment: Alignment.center,
-            child: AspectRatio(
-              aspectRatio: config.aspectRatio.ratio,
-              child: Container(
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // 1. Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
-                    CustomPaint(
-                      painter: VideoStaticFramePainter(
-                        config: config,
-                        verse: verse,
+          // 1. Real Video Preview Card (100% WYSIWYG Canvas Rendering) with shadow breathing room
+          Padding(
+            padding: EdgeInsets.only(top: 14.h, bottom: 6.h, left: 16.w, right: 16.w),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOutCubic,
+              height: previewHeight,
+              alignment: Alignment.center,
+              child: AspectRatio(
+                aspectRatio: config.aspectRatio.ratio,
+                child: Container(
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.16),
+                        blurRadius: 18,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 5),
                       ),
-                      size: Size.infinite,
-                    ),
-
-                    // 2. Dynamic Center Content Layer (100% Solid & Real-time Word Tracking without initial fade)
-                    StreamBuilder<Duration>(
-                      stream: context.read<VideoStudioBloc>().playbackPositionStream,
-                      builder: (context, snapshot) {
-                        final position = snapshot.data ?? Duration.zero;
-
-                        return CustomPaint(
-                          key: ValueKey('preview_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}'),
-                          painter: VideoDynamicContentPainter(
-                            verse: verse,
+                    ],
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // 1. Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
+                      RepaintBoundary(
+                        child: CustomPaint(
+                          painter: VideoStaticFramePainter(
                             config: config,
-                            pageNumber: pageNumber,
-                            tafsirText: verse?.tafsir,
-                            translationText: verse?.translation,
-                            playbackPositionMs: position.inMilliseconds,
-                            wordTimings: state.currentVerseWordTimings,
+                            verse: verse,
                           ),
-                        );
-                      },
-                    ),
+                          size: Size.infinite,
+                        ),
+                      ),
 
+                      // 2. Dynamic Center Content Layer (100% Solid & Real-time Word Tracking without initial fade)
+                      StreamBuilder<Duration>(
+                        stream: context.read<VideoStudioBloc>().playbackPositionStream,
+                        builder: (context, snapshot) {
+                          final position = snapshot.data ?? Duration.zero;
 
-                  ],
+                          return RepaintBoundary(
+                            child: CustomPaint(
+                              key: ValueKey('preview_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}'),
+                              painter: VideoDynamicContentPainter(
+                                verse: verse,
+                                config: config,
+                                pageNumber: pageNumber,
+                                tafsirText: verse?.tafsir,
+                                translationText: verse?.translation,
+                                playbackPositionMs: position.inMilliseconds,
+                                wordTimings: state.currentVerseWordTimings,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
 
-          SizedBox(height: 12.h),
+          SizedBox(height: 10.h),
 
           // 2. Playback and Navigation Control Bar (Cleanly positioned underneath with Zero Overflow)
           Container(

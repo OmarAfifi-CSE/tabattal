@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tabattal/core/constants/reciter_catalog.dart';
 import 'package:tabattal/features/quran_video_studio/data/services/word_timing_service.dart';
-import 'package:tabattal/features/quran_video_studio/presentation/widgets/video_reciter_selector.dart';
 
 void main() {
   test('Rigorous Audit of All Studio Reciters on EveryAyah and Quran.com API', () async {
     final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 8)));
-    const allCategories = VideoReciterSelector.verifiedRecitersByCategory;
+    const allCategories = ReciterCatalog.verifiedVideoRecitersByCategory;
 
     for (final reciters in allCategories.values) {
       for (final r in reciters) {

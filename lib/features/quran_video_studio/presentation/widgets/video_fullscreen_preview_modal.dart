@@ -157,7 +157,7 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
 
                                   return RepaintBoundary(
                                     child: CustomPaint(
-                                      key: ValueKey('fullscreen_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}'),
+                                      key: ValueKey('fullscreen_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}'),
                                       painter: VideoDynamicContentPainter(
                                         verse: verse,
                                         config: config,
@@ -211,7 +211,10 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                               l10n.videoStudioAyahOfSurah(
                                 currentIndex + 1,
                                 totalVerses,
-                                QuranMetadata.getSurahName(config.surahNumber),
+                                QuranMetadata.getSurahNameByLang(
+                                  Localizations.localeOf(context).languageCode == 'en',
+                                  config.surahNumber,
+                                ),
                               ),
                               style: TextStyle(
                                 fontSize: 10.5.sp,

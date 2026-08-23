@@ -23,6 +23,7 @@ class VideoProjectConfig extends Equatable {
   final VideoTextStyle textStyle;
   final VideoQuality videoQuality;
   final VideoTextDisplayMode textDisplayMode;
+  final bool isEnglish;
 
   const VideoProjectConfig({
     required this.surahNumber,
@@ -44,6 +45,7 @@ class VideoProjectConfig extends Equatable {
     this.textStyle = VideoTextStyle.modernCentered,
     this.videoQuality = VideoQuality.fhd1080p,
     this.textDisplayMode = VideoTextDisplayMode.lineByLine,
+    this.isEnglish = false,
   });
 
   int get totalAyahsCount => (endAyah - startAyah + 1).clamp(1, 20);
@@ -69,6 +71,7 @@ class VideoProjectConfig extends Equatable {
     VideoTextStyle? textStyle,
     VideoQuality? videoQuality,
     VideoTextDisplayMode? textDisplayMode,
+    bool? isEnglish,
   }) {
     return VideoProjectConfig(
       surahNumber: surahNumber ?? this.surahNumber,
@@ -92,6 +95,7 @@ class VideoProjectConfig extends Equatable {
       textStyle: textStyle ?? this.textStyle,
       videoQuality: videoQuality ?? this.videoQuality,
       textDisplayMode: textDisplayMode ?? this.textDisplayMode,
+      isEnglish: isEnglish ?? this.isEnglish,
     );
   }
 
@@ -116,5 +120,6 @@ class VideoProjectConfig extends Equatable {
         textStyle,
         videoQuality,
         textDisplayMode,
+        isEnglish,
       ];
 }

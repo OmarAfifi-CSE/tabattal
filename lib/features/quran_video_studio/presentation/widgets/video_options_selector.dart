@@ -200,24 +200,32 @@ class VideoOptionsSelector extends StatelessWidget {
           child: Column(
             children: [
               _buildSwitchRow(
-                title: l10n.videoStudioShowSurahBadge,
+                icon: Icons.bookmark_outline_rounded,
+                title: config.textDisplayMode == VideoTextDisplayMode.lineByLine
+                    ? (Localizations.localeOf(context).languageCode == 'ar'
+                        ? 'إظهار اسم السورة ورقم الآية'
+                        : 'Show Surah Name & Ayah Number')
+                    : l10n.videoStudioShowSurahBadge,
                 value: config.showSurahBadge,
                 onChanged: (val) => onToggleOption(showSurahBadge: val),
               ),
               const Divider(height: 1, indent: 16, endIndent: 16),
               _buildSwitchRow(
+                icon: Icons.record_voice_over_outlined,
                 title: l10n.videoStudioShowReciterName,
                 value: config.showReciterName,
                 onChanged: (val) => onToggleOption(showReciterName: val),
               ),
               const Divider(height: 1, indent: 16, endIndent: 16),
               _buildSwitchRow(
+                icon: Icons.menu_book_outlined,
                 title: l10n.videoStudioShowTafsir,
                 value: config.showTafsir,
                 onChanged: (val) => onToggleOption(showTafsir: val),
               ),
               const Divider(height: 1, indent: 16, endIndent: 16),
               _buildSwitchRow(
+                icon: Icons.g_translate_outlined,
                 title: l10n.videoStudioShowTranslation,
                 value: config.showEnglishTranslation,
                 onChanged: (val) => onToggleOption(showEnglishTranslation: val),
@@ -230,6 +238,7 @@ class VideoOptionsSelector extends StatelessWidget {
   }
 
   Widget _buildSwitchRow({
+    required IconData icon,
     required String title,
     required bool value,
     required ValueChanged<bool> onChanged,
@@ -239,13 +248,23 @@ class VideoOptionsSelector extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary,
-            ),
+          Row(
+            children: [
+              Icon(
+                icon,
+                size: 16.sp,
+                color: AppColors.accentGold,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
           ),
           Switch(
             value: value,

@@ -78,7 +78,9 @@ class VideoThemeSelector extends StatelessWidget {
                       ),
                       SizedBox(width: 6.w),
                       Text(
-                        preset.nameArabic,
+                        Localizations.localeOf(context).languageCode == 'en'
+                            ? preset.nameEnglish
+                            : preset.nameArabic,
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

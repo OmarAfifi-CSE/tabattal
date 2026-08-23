@@ -435,6 +435,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verseCardTitle => 'Share Verses';
 
   @override
+  String get verseCardTitleImage => 'Verse Card Designer';
+
+  @override
+  String get verseCardTitleText => 'Share Text';
+
+  @override
+  String get verseCardTitleFullPage => 'Share Mushaf Page';
+
+  @override
   String get verseCardShareImage => 'Share Card';
 
   @override

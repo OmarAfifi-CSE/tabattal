@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/quran_metadata.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../quran_reader/presentation/widgets/verse_card/helpers/verse_card_text_utils.dart';
 
 class VideoRangePicker extends StatelessWidget {
   final int surahNumber;
@@ -34,6 +35,7 @@ class VideoRangePicker extends StatelessWidget {
     required List<int> options,
     required ValueChanged<int> onSelected,
   }) {
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.cardCream,
@@ -43,7 +45,7 @@ class VideoRangePicker extends StatelessWidget {
       ),
       builder: (ctx) {
         return Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
           child: Container(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.sizeOf(ctx).height * 0.65,
@@ -115,7 +117,7 @@ class VideoRangePicker extends StatelessWidget {
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            '$item',
+                            isEn ? '$item' : VerseCardTextUtils.toArabicDigits(item),
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
@@ -148,13 +150,40 @@ class VideoRangePicker extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.videoStudioVerseRange,
-          style: TextStyle(
-            fontSize: 13.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.videoStudioVerseRange,
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(width: 6.w),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+              decoration: BoxDecoration(
+                color: AppColors.accentGold.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6.r),
+                border: Border.all(
+                  color: AppColors.accentGold.withValues(alpha: 0.28),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                Localizations.localeOf(context).languageCode == 'en'
+                    ? 'Surah ${QuranMetadata.getSurahNameEnglish(surahNumber)}'
+                    : 'سورة ${QuranMetadata.getSurahName(surahNumber)}',
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.accentGold,
+                ),
+              ),
+            ),
+          ],
         ),
         SizedBox(height: 6.h),
         Row(
@@ -187,7 +216,9 @@ class VideoRangePicker extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        l10n.videoStudioFromAyah(startAyah),
+                        Localizations.localeOf(context).languageCode == 'en'
+                            ? 'From Ayah $startAyah'
+                            : 'من آية ${VerseCardTextUtils.toArabicDigits(startAyah)}',
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontWeight: FontWeight.w600,
@@ -233,7 +264,9 @@ class VideoRangePicker extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        l10n.videoStudioToAyah(endAyah),
+                        Localizations.localeOf(context).languageCode == 'en'
+                            ? 'To Ayah $endAyah'
+                            : 'إلى آية ${VerseCardTextUtils.toArabicDigits(endAyah)}',
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontWeight: FontWeight.w600,

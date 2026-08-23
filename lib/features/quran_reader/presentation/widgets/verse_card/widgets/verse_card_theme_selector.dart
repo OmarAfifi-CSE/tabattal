@@ -25,7 +25,7 @@ class VerseCardThemeSelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.themeAppearanceTitle,
+          l10n.videoStudioThemeAndBg,
           style: TextStyle(
             fontSize: isWeb ? 14 : 13.sp,
             fontWeight: FontWeight.bold,

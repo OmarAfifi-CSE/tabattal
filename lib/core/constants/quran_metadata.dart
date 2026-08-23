@@ -557,6 +557,13 @@ class QuranMetadata {
     return '';
   }
 
+  /// Returns the localized Surah name using boolean language flag
+  static String getSurahNameByLang(bool isEnglish, int surahNumber) {
+    return isEnglish
+        ? getSurahNameEnglish(surahNumber)
+        : getSurahName(surahNumber);
+  }
+
   static int surahLengthOf(int surahNumber) {
     if (surahNumber >= 1 && surahNumber <= 114) {
       return surahLengths[surahNumber - 1];
