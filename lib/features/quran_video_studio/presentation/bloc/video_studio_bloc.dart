@@ -6,6 +6,8 @@ import '../../domain/entities/video_enums.dart';
 import '../../domain/entities/video_project_config.dart';
 import '../../domain/entities/video_render_progress.dart';
 import '../../domain/repositories/i_video_studio_repository.dart';
+import '../../data/services/canvas_overlay_generator.dart';
+import '../../data/services/custom_image_service.dart';
 import '../../data/services/word_timing_service.dart';
 import '../../domain/entities/word_timing_segment.dart';
 import 'video_studio_event.dart';
@@ -143,6 +145,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     VideoStudioThemeChanged event,
     Emitter<VideoStudioState> emit,
   ) {
+    CanvasOverlayGenerator.clearLayoutCache();
     emit(state.copyWith(config: state.config.copyWith(themePreset: event.theme)));
   }
 
@@ -150,16 +153,27 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     VideoStudioBackgroundTypeChanged event,
     Emitter<VideoStudioState> emit,
   ) {
+    CanvasOverlayGenerator.clearLayoutCache();
     emit(state.copyWith(config: state.config.copyWith(backgroundType: event.backgroundType)));
   }
 
-  void _onCustomImageSelected(
+  Future<void> _onCustomImageSelected(
     VideoStudioCustomImageSelected event,
     Emitter<VideoStudioState> emit,
-  ) {
+  ) async {
+    CanvasOverlayGenerator.clearLayoutCache();
     if (event.imagePath == null) {
-      emit(state.copyWith(config: state.config.copyWith(clearCustomImage: true)));
+      emit(
+        state.copyWith(
+          config: state.config.copyWith(
+            clearCustomImage: true,
+            backgroundType: VideoBackgroundType.gradient,
+          ),
+        ),
+      );
     } else {
+      await CustomImageService.loadUiImage(event.imagePath!);
+      await CustomImageService.calculateImageLuminance(event.imagePath!);
       emit(
         state.copyWith(
           config: state.config.copyWith(
@@ -175,6 +189,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     VideoStudioDimmingChanged event,
     Emitter<VideoStudioState> emit,
   ) {
+    CanvasOverlayGenerator.clearLayoutCache();
     emit(state.copyWith(config: state.config.copyWith(backgroundDimming: event.dimming)));
   }
 
@@ -203,11 +218,13 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     VideoStudioOptionToggled event,
     Emitter<VideoStudioState> emit,
   ) {
+    CanvasOverlayGenerator.clearLayoutCache();
     emit(
       state.copyWith(
         config: state.config.copyWith(
           showSurahBadge: event.showSurahBadge,
           showReciterName: event.showReciterName,
+          showCardFrame: event.showCardFrame,
           showTafsir: event.showTafsir,
           showEnglishTranslation: event.showEnglishTranslation,
           showAudioWaveform: event.showAudioWaveform,

@@ -87,6 +87,7 @@ class VideoPreviewViewport extends StatelessWidget {
                       // 1. Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
                       RepaintBoundary(
                         child: CustomPaint(
+                          key: ValueKey('static_frame_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.backgroundDimming}'),
                           painter: VideoStaticFramePainter(
                             config: config,
                             verse: verse,
@@ -103,7 +104,7 @@ class VideoPreviewViewport extends StatelessWidget {
 
                           return RepaintBoundary(
                             child: CustomPaint(
-                              key: ValueKey('preview_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}'),
+                              key: ValueKey('preview_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}_${config.customImagePath ?? "no_img"}_${config.backgroundDimming}'),
                               painter: VideoDynamicContentPainter(
                                 verse: verse,
                                 config: config,

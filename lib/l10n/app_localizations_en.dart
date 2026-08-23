@@ -579,6 +579,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoStudioShowReciterName => 'Show Reciter Name';
 
   @override
+  String get videoStudioShowCardFrame => 'Show Card Frame';
+
+  @override
   String get videoStudioShowTafsir => 'Show Tafsir (Al-Muyassar)';
 
   @override

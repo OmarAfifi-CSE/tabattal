@@ -578,6 +578,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get videoStudioShowReciterName => 'إظهار اسم القارئ';
 
   @override
+  String get videoStudioShowCardFrame => 'إظهار إطار البطاقة (البرواز)';
+
+  @override
   String get videoStudioShowTafsir => 'إظهار التفسير الميسر';
 
   @override

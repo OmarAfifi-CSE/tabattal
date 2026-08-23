@@ -31,6 +31,7 @@ dependencies:
   share_plus: ^13.3.0
   ffmpeg_kit_flutter_new_min_gpl: ^2.6.2
   gal: ^2.3.1
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

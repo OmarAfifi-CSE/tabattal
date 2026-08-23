@@ -114,6 +114,7 @@ class VideoStudioTextStyleChanged extends VideoStudioEvent {
 class VideoStudioOptionToggled extends VideoStudioEvent {
   final bool? showSurahBadge;
   final bool? showReciterName;
+  final bool? showCardFrame;
   final bool? showTafsir;
   final bool? showEnglishTranslation;
   final bool? showAudioWaveform;
@@ -121,6 +122,7 @@ class VideoStudioOptionToggled extends VideoStudioEvent {
   const VideoStudioOptionToggled({
     this.showSurahBadge,
     this.showReciterName,
+    this.showCardFrame,
     this.showTafsir,
     this.showEnglishTranslation,
     this.showAudioWaveform,
@@ -130,6 +132,7 @@ class VideoStudioOptionToggled extends VideoStudioEvent {
   List<Object?> get props => [
         showSurahBadge,
         showReciterName,
+        showCardFrame,
         showTafsir,
         showEnglishTranslation,
         showAudioWaveform,

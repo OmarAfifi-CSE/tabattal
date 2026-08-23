@@ -17,6 +17,7 @@ class VideoProjectConfig extends Equatable {
   final double backgroundDimming;
   final bool showSurahBadge;
   final bool showReciterName;
+  final bool showCardFrame;
   final bool showTafsir;
   final bool showEnglishTranslation;
   final bool showAudioWaveform;
@@ -39,6 +40,7 @@ class VideoProjectConfig extends Equatable {
     this.backgroundDimming = 0.35,
     this.showSurahBadge = true,
     this.showReciterName = true,
+    this.showCardFrame = true,
     this.showTafsir = false,
     this.showEnglishTranslation = false,
     this.showAudioWaveform = true,
@@ -65,6 +67,7 @@ class VideoProjectConfig extends Equatable {
     double? backgroundDimming,
     bool? showSurahBadge,
     bool? showReciterName,
+    bool? showCardFrame,
     bool? showTafsir,
     bool? showEnglishTranslation,
     bool? showAudioWaveform,
@@ -88,6 +91,7 @@ class VideoProjectConfig extends Equatable {
       backgroundDimming: backgroundDimming ?? this.backgroundDimming,
       showSurahBadge: showSurahBadge ?? this.showSurahBadge,
       showReciterName: showReciterName ?? this.showReciterName,
+      showCardFrame: showCardFrame ?? this.showCardFrame,
       showTafsir: showTafsir ?? this.showTafsir,
       showEnglishTranslation:
           showEnglishTranslation ?? this.showEnglishTranslation,
@@ -114,6 +118,7 @@ class VideoProjectConfig extends Equatable {
         backgroundDimming,
         showSurahBadge,
         showReciterName,
+        showCardFrame,
         showTafsir,
         showEnglishTranslation,
         showAudioWaveform,

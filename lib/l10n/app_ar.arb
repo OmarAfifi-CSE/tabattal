@@ -310,6 +310,7 @@
   "videoStudioDisplayOptions": "خيارات العرض",
   "videoStudioShowSurahBadge": "إظهار اسم السورة",
   "videoStudioShowReciterName": "إظهار اسم القارئ",
+  "videoStudioShowCardFrame": "إظهار إطار البطاقة (البرواز)",
   "videoStudioShowTafsir": "إظهار التفسير الميسر",
   "videoStudioShowTranslation": "إظهار الترجمة الإنجليزية",
   "videoStudioShare": "مشاركة الفيديو",

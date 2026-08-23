@@ -141,6 +141,7 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                               // Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
                               RepaintBoundary(
                                 child: CustomPaint(
+                                  key: ValueKey('fullscreen_static_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.backgroundDimming}'),
                                   painter: VideoStaticFramePainter(
                                     config: config,
                                     verse: verse,
@@ -157,7 +158,7 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
 
                                   return RepaintBoundary(
                                     child: CustomPaint(
-                                      key: ValueKey('fullscreen_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}'),
+                                      key: ValueKey('fullscreen_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}_${config.customImagePath ?? "no_img"}_${config.backgroundDimming}'),
                                       painter: VideoDynamicContentPainter(
                                         verse: verse,
                                         config: config,
@@ -224,14 +225,14 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                             ),
                           ),
 
-                        // Playback Buttons Row in standard LTR so arrows point outward naturally
-                        Directionality(
-                          textDirection: TextDirection.ltr,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Reset / Replay to initial Ayah Button
-                              IconButton(
+                        // Playback Controls Row: Centered Playback controls with Reset button on the side
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // 1. Reset / Replay to initial Ayah Button on the side (Start edge)
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: IconButton(
                                 onPressed: () {
                                   context
                                       .read<VideoStudioBloc>()
@@ -242,88 +243,97 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                                 iconSize: 24.r,
                                 tooltip: 'إعادة من البداية',
                               ),
-                              SizedBox(width: 8.w),
+                            ),
 
-                              // Previous Verse Button
-                              IconButton(
-                                onPressed: currentIndex > 0
-                                    ? () {
-                                        context.read<VideoStudioBloc>().add(
-                                              VideoStudioActiveVerseIndexChanged(
-                                                currentIndex - 1,
-                                              ),
-                                            );
-                                      }
-                                    : null,
-                                icon: const Icon(Icons.skip_previous_rounded),
-                                color: AppColors.accentGold,
-                                iconSize: 26.r,
-                                disabledColor: Colors.white.withValues(alpha: 0.2),
-                              ),
-                              SizedBox(width: 16.w),
-
-                              // Main Play/Pause Action Button
-                              InkWell(
-                                onTap: () {
-                                  context
-                                      .read<VideoStudioBloc>()
-                                      .add(const VideoStudioPlaybackToggled());
-                                },
-                                borderRadius: BorderRadius.circular(28.r),
-                                child: Container(
-                                  width: 52.r,
-                                  height: 52.r,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
+                            // 2. Playback Buttons Row perfectly centered in standard LTR
+                            Directionality(
+                              textDirection: TextDirection.ltr,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Previous Verse Button
+                                  IconButton(
+                                    onPressed: currentIndex > 0
+                                        ? () {
+                                            context.read<VideoStudioBloc>().add(
+                                                  VideoStudioActiveVerseIndexChanged(
+                                                    currentIndex - 1,
+                                                  ),
+                                                );
+                                          }
+                                        : null,
+                                    icon: const Icon(Icons.skip_previous_rounded),
                                     color: AppColors.accentGold,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.accentGold.withValues(alpha: 0.4),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
+                                    iconSize: 26.r,
+                                    disabledColor: Colors.white.withValues(alpha: 0.2),
                                   ),
-                                  child: state.isPreparingAudio
-                                      ? Center(
-                                          child: SizedBox(
-                                            width: 24.r,
-                                            height: 24.r,
-                                            child: const CircularProgressIndicator(
-                                              strokeWidth: 2.5,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        )
-                                      : Icon(
-                                          state.isPlaying
-                                              ? Icons.pause_rounded
-                                              : Icons.play_arrow_rounded,
-                                          color: Colors.white,
-                                          size: 32.r,
-                                        ),
-                                ),
-                              ),
-                              SizedBox(width: 16.w),
+                                  SizedBox(width: 16.w),
 
-                              // Next Verse Button
-                              IconButton(
-                                onPressed: currentIndex < totalVerses - 1
-                                    ? () {
-                                        context.read<VideoStudioBloc>().add(
-                                              VideoStudioActiveVerseIndexChanged(
-                                                currentIndex + 1,
+                                  // Main Play/Pause Action Button
+                                  InkWell(
+                                    onTap: () {
+                                      context
+                                          .read<VideoStudioBloc>()
+                                          .add(const VideoStudioPlaybackToggled());
+                                    },
+                                    borderRadius: BorderRadius.circular(28.r),
+                                    child: Container(
+                                      width: 52.r,
+                                      height: 52.r,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: AppColors.accentGold,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.accentGold.withValues(alpha: 0.4),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: state.isPreparingAudio
+                                          ? Center(
+                                              child: SizedBox(
+                                                width: 24.r,
+                                                height: 24.r,
+                                                child: const CircularProgressIndicator(
+                                                  strokeWidth: 2.5,
+                                                  color: Colors.white,
+                                                ),
                                               ),
-                                            );
-                                      }
-                                    : null,
-                                icon: const Icon(Icons.skip_next_rounded),
-                                color: AppColors.accentGold,
-                                iconSize: 26.r,
-                                disabledColor: Colors.white.withValues(alpha: 0.2),
+                                            )
+                                          : Icon(
+                                              state.isPlaying
+                                                  ? Icons.pause_rounded
+                                                  : Icons.play_arrow_rounded,
+                                              color: Colors.white,
+                                              size: 32.r,
+                                            ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 16.w),
+
+                                  // Next Verse Button
+                                  IconButton(
+                                    onPressed: currentIndex < totalVerses - 1
+                                        ? () {
+                                            context.read<VideoStudioBloc>().add(
+                                                  VideoStudioActiveVerseIndexChanged(
+                                                    currentIndex + 1,
+                                                  ),
+                                                );
+                                          }
+                                        : null,
+                                    icon: const Icon(Icons.skip_next_rounded),
+                                    color: AppColors.accentGold,
+                                    iconSize: 26.r,
+                                    disabledColor: Colors.white.withValues(alpha: 0.2),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

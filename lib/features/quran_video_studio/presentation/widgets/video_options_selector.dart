@@ -12,6 +12,7 @@ class VideoOptionsSelector extends StatelessWidget {
   final void Function({
     bool? showSurahBadge,
     bool? showReciterName,
+    bool? showCardFrame,
     bool? showTafsir,
     bool? showEnglishTranslation,
     bool? showAudioWaveform,
@@ -199,6 +200,13 @@ class VideoOptionsSelector extends StatelessWidget {
           ),
           child: Column(
             children: [
+              _buildSwitchRow(
+                icon: Icons.crop_free_rounded,
+                title: l10n.videoStudioShowCardFrame,
+                value: config.showCardFrame,
+                onChanged: (val) => onToggleOption(showCardFrame: val),
+              ),
+              const Divider(height: 1, indent: 16, endIndent: 16),
               _buildSwitchRow(
                 icon: Icons.bookmark_outline_rounded,
                 title: config.textDisplayMode == VideoTextDisplayMode.lineByLine

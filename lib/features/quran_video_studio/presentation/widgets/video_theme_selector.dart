@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/video_theme_preset.dart';
 
-/// Theme selector with horizontal luxury theme swatches matching Tabattal design system.
+/// Theme selector with horizontal luxury theme swatches for styling text, badges, and accents.
 class VideoThemeSelector extends StatelessWidget {
   final VideoThemePreset selectedPreset;
   final ValueChanged<VideoThemePreset> onThemeSelected;
@@ -17,13 +16,13 @@ class VideoThemeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.videoStudioThemeAndBg,
+          isEn ? 'Theme & Accent Palette' : 'المظهر والألوان',
           style: TextStyle(
             fontSize: 13.sp,
             fontWeight: FontWeight.bold,
@@ -78,9 +77,7 @@ class VideoThemeSelector extends StatelessWidget {
                       ),
                       SizedBox(width: 6.w),
                       Text(
-                        Localizations.localeOf(context).languageCode == 'en'
-                            ? preset.nameEnglish
-                            : preset.nameArabic,
+                        isEn ? preset.nameEnglish : preset.nameArabic,
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

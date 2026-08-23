@@ -1160,6 +1160,12 @@ abstract class AppLocalizations {
   /// **'إظهار اسم القارئ'**
   String get videoStudioShowReciterName;
 
+  /// No description provided for @videoStudioShowCardFrame.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار إطار البطاقة (البرواز)'**
+  String get videoStudioShowCardFrame;
+
   /// No description provided for @videoStudioShowTafsir.
   ///
   /// In ar, this message translates to:

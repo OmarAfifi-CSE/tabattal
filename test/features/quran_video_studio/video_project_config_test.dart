@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tabattal/features/quran_video_studio/data/services/custom_image_service.dart';
 import 'package:tabattal/features/quran_video_studio/domain/entities/video_enums.dart';
 import 'package:tabattal/features/quran_video_studio/domain/entities/video_project_config.dart';
 import 'package:tabattal/features/quran_video_studio/domain/entities/video_theme_preset.dart';
@@ -137,7 +138,47 @@ void main() {
       expect(lines.isNotEmpty, true);
       expect(lines.first.startMs, 0);
       expect(lines.last.endMs, timings.last.endMs);
+    });
 
+    test('VideoProjectConfig custom image background and dimming', () {
+      const initial = VideoProjectConfig(
+        surahNumber: 1,
+        startAyah: 1,
+        endAyah: 3,
+      );
+
+      expect(initial.customImagePath, isNull);
+      expect(initial.backgroundType, VideoBackgroundType.gradient);
+      expect(initial.backgroundDimming, 0.35);
+      expect(initial.showCardFrame, true);
+
+      final withCustom = initial.copyWith(
+        customImagePath: '/path/to/custom_bg.jpg',
+        backgroundType: VideoBackgroundType.customImage,
+        backgroundDimming: 0.50,
+        showCardFrame: false,
+      );
+
+      expect(withCustom.customImagePath, '/path/to/custom_bg.jpg');
+      expect(withCustom.backgroundType, VideoBackgroundType.customImage);
+      expect(withCustom.backgroundDimming, 0.50);
+      expect(withCustom.showCardFrame, false);
+
+      final cleared = withCustom.copyWith(
+        clearCustomImage: true,
+        backgroundType: VideoBackgroundType.gradient,
+        showCardFrame: true,
+      );
+
+      expect(cleared.customImagePath, isNull);
+      expect(cleared.backgroundType, VideoBackgroundType.gradient);
+      expect(cleared.showCardFrame, true);
+    });
+
+    test('CustomImageService cache and luminance defaults', () {
+      CustomImageService.clearCache();
+      expect(CustomImageService.getCachedUiImage('non_existent.jpg'), isNull);
+      expect(CustomImageService.getCachedLuminance('non_existent.jpg'), 0.5);
     });
   });
 }

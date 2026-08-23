@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,6 +23,7 @@ import '../../../quran_video_studio/presentation/bloc/video_studio_bloc.dart';
 import '../../../quran_video_studio/presentation/bloc/video_studio_event.dart';
 import '../../../quran_video_studio/presentation/bloc/video_studio_state.dart';
 import '../../../quran_video_studio/presentation/widgets/video_aspect_ratio_bar.dart';
+import '../../../quran_video_studio/presentation/widgets/video_background_selector.dart';
 import '../../../quran_video_studio/presentation/widgets/video_export_progress_dialog.dart';
 import '../../../quran_video_studio/presentation/widgets/video_fullscreen_preview_modal.dart';
 import '../../../quran_video_studio/presentation/widgets/video_options_selector.dart';
@@ -877,19 +879,38 @@ class _VerseCardGeneratorSheetContentState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        transitionBuilder: (child, animation) => FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        ),
-                        child: Text(
-                          _getDynamicSheetTitle(l10n),
-                          key: ValueKey(_selectedFormat),
-                          style: TextStyle(
-                            fontSize: isWeb ? 18 : 17.sp,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                      Expanded(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          reverseDuration: const Duration(milliseconds: 140),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          layoutBuilder: (currentChild, previousChildren) {
+                            return Stack(
+                              alignment: AlignmentDirectional.centerStart,
+                              children: <Widget>[
+                                ...previousChildren,
+                                ?currentChild,
+                              ],
+                            );
+                          },
+                          transitionBuilder: (child, animation) => FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          ),
+                          child: Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            key: ValueKey(_selectedFormat),
+                            child: Text(
+                              _getDynamicSheetTitle(l10n),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: isWeb ? 18 : 17.sp,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -1127,16 +1148,41 @@ class _VerseCardGeneratorSheetContentState
                     .add(VideoStudioAspectRatioChanged(ratio));
               },
             ),
-            SizedBox(height: 12.h),
-            VideoThemeSelector(
-              selectedPreset: config.themePreset,
-              onThemeSelected: (theme) {
+            VideoBackgroundSelector(
+              config: config,
+              onCustomImageChanged: (path) {
                 context
                     .read<VideoStudioBloc>()
-                    .add(VideoStudioThemeChanged(theme));
+                    .add(VideoStudioCustomImageSelected(path));
               },
             ),
             SizedBox(height: 12.h),
+            Builder(
+              builder: (context) {
+                final bool hasCustomImage = config.customImagePath != null &&
+                    config.customImagePath!.isNotEmpty &&
+                    File(config.customImagePath!).existsSync();
+                final bool showThemeSelector = !hasCustomImage || config.showCardFrame;
+
+                return AnimatedSize(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  child: showThemeSelector
+                      ? Padding(
+                          padding: EdgeInsets.only(bottom: 12.h),
+                          child: VideoThemeSelector(
+                            selectedPreset: config.themePreset,
+                            onThemeSelected: (theme) {
+                              context
+                                  .read<VideoStudioBloc>()
+                                  .add(VideoStudioThemeChanged(theme));
+                            },
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                );
+              },
+            ),
             VideoRangePicker(
               surahNumber: config.surahNumber,
               startAyah: _startAyah,
@@ -1211,6 +1257,7 @@ class _VerseCardGeneratorSheetContentState
               onToggleOption: ({
                 showSurahBadge,
                 showReciterName,
+                showCardFrame,
                 showTafsir,
                 showEnglishTranslation,
                 showAudioWaveform,
@@ -1219,6 +1266,7 @@ class _VerseCardGeneratorSheetContentState
                       VideoStudioOptionToggled(
                         showSurahBadge: showSurahBadge,
                         showReciterName: showReciterName,
+                        showCardFrame: showCardFrame,
                         showTafsir: showTafsir,
                         showEnglishTranslation: showEnglishTranslation,
                         showAudioWaveform: showAudioWaveform,
