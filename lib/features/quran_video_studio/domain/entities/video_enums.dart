@@ -202,3 +202,26 @@ enum VideoExportAction {
   share;
 }
 
+enum VideoTextDisplayMode {
+  lineByLine,
+  staticFull;
+
+  String get labelArabic {
+    switch (this) {
+      case VideoTextDisplayMode.lineByLine:
+        return 'سطر بسطر';
+      case VideoTextDisplayMode.staticFull:
+        return 'الآية كاملة';
+    }
+  }
+
+  String get labelEnglish {
+    switch (this) {
+      case VideoTextDisplayMode.lineByLine:
+        return 'Line by Line';
+      case VideoTextDisplayMode.staticFull:
+        return 'Full Ayah';
+    }
+  }
+}
+

@@ -3,6 +3,10 @@ import 'package:tabattal/features/quran_video_studio/domain/entities/video_enums
 import 'package:tabattal/features/quran_video_studio/domain/entities/video_project_config.dart';
 import 'package:tabattal/features/quran_video_studio/domain/entities/video_theme_preset.dart';
 
+import 'package:tabattal/features/quran_reader/data/models/verse_model.dart';
+import 'package:tabattal/features/quran_video_studio/data/services/word_timing_service.dart';
+import 'package:tabattal/features/quran_video_studio/domain/entities/word_timing_segment.dart';
+
 void main() {
   group('VideoProjectConfig & Domain Entities Tests', () {
     test('VideoAspectRatio calculations and dimensions', () {
@@ -55,6 +59,7 @@ void main() {
       expect(initial.aspectRatio, VideoAspectRatio.portrait9x16);
       expect(initial.themePreset.id, 'cream');
       expect(initial.videoQuality, VideoQuality.fhd1080p);
+      expect(initial.textDisplayMode, VideoTextDisplayMode.lineByLine);
       expect(initial.showTafsir, false);
       expect(initial.showEnglishTranslation, false);
 
@@ -64,6 +69,7 @@ void main() {
         endAyah: 5,
         themePreset: VideoThemePreset.burgundy,
         videoQuality: VideoQuality.uhd4k,
+        textDisplayMode: VideoTextDisplayMode.staticFull,
         showTafsir: true,
         showEnglishTranslation: true,
       );
@@ -72,8 +78,67 @@ void main() {
       expect(updated.totalAyahsCount, 4);
       expect(updated.themePreset.id, 'burgundy');
       expect(updated.videoQuality, VideoQuality.uhd4k);
+      expect(updated.textDisplayMode, VideoTextDisplayMode.staticFull);
       expect(updated.showTafsir, true);
       expect(updated.showEnglishTranslation, true);
     });
+
+    test('WordTimingSegment and LineTimingSegment helpers', () {
+      const seg1 = WordTimingSegment(wordPosition: 1, startMs: 0, endMs: 1200);
+      const seg2 = WordTimingSegment(wordPosition: 2, startMs: 1200, endMs: 2800);
+
+      expect(seg1.duration, const Duration(milliseconds: 1200));
+      expect(seg1.contains(500), true);
+      expect(seg1.contains(1500), false);
+      expect(seg2.contains(1500), true);
+
+      const line = LineTimingSegment(
+        lineNumber: 1,
+        startWordIndex: 0,
+        endWordIndex: 1,
+        startMs: 0,
+        endMs: 2800,
+      );
+
+      expect(line.duration, const Duration(milliseconds: 2800));
+      expect(line.contains(1000), true);
+      expect(line.contains(3000), false);
+    });
+
+    test('WordTimingService proportional calculation and grouping', () {
+      final verse = VerseModel(
+        id: 1,
+        verseNumber: 1,
+        verseKey: '1:1',
+        textUthmani: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+        juzNumber: 1,
+        words: [
+          const WordModel(id: 1, textUthmani: 'بِسْمِ', codeV2: 'p1w1', lineNumber: 1, charTypeName: 'word', verseKey: '1:1'),
+          const WordModel(id: 2, textUthmani: 'اللَّهِ', codeV2: 'p1w2', lineNumber: 1, charTypeName: 'word', verseKey: '1:1'),
+          const WordModel(id: 3, textUthmani: 'الرَّحْمَٰنِ', codeV2: 'p1w3', lineNumber: 1, charTypeName: 'word', verseKey: '1:1'),
+          const WordModel(id: 4, textUthmani: 'الرَّحِيمِ', codeV2: 'p1w4', lineNumber: 1, charTypeName: 'word', verseKey: '1:1'),
+        ],
+      );
+
+      final timings = WordTimingService.computeProportionalTimings(
+        verse: verse,
+        totalDurationMs: 4000,
+      );
+
+      expect(timings.length, 4);
+      expect(timings.first.startMs, greaterThanOrEqualTo(0));
+      expect(timings.last.endMs, lessThanOrEqualTo(4000));
+
+      final lines = WordTimingService.groupIntoLineSegments(
+        verse: verse,
+        wordTimings: timings,
+      );
+
+      expect(lines.isNotEmpty, true);
+      expect(lines.first.startMs, 0);
+      expect(lines.last.endMs, timings.last.endMs);
+
+    });
   });
 }
+

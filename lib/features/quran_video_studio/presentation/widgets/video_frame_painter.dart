@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../quran_reader/data/models/verse_model.dart';
 import '../../data/services/canvas_overlay_generator.dart';
 import '../../domain/entities/video_project_config.dart';
+import '../../domain/entities/word_timing_segment.dart';
 
 /// Full-frame painter for single-pass rendering.
 class VideoFramePainter extends CustomPainter {
@@ -11,6 +12,9 @@ class VideoFramePainter extends CustomPainter {
   final String? tafsirText;
   final String? translationText;
   final bool includeBackground;
+  final int playbackPositionMs;
+  final List<WordTimingSegment>? wordTimings;
+  final int? overrideLineIndex;
 
   const VideoFramePainter({
     required this.verse,
@@ -19,6 +23,9 @@ class VideoFramePainter extends CustomPainter {
     this.tafsirText,
     this.translationText,
     this.includeBackground = true,
+    this.playbackPositionMs = 0,
+    this.wordTimings,
+    this.overrideLineIndex,
   });
 
   @override
@@ -33,6 +40,9 @@ class VideoFramePainter extends CustomPainter {
       tafsirText: tafsirText ?? verse?.tafsir,
       translationText: translationText ?? verse?.translation,
       includeBackground: includeBackground,
+      playbackPositionMs: playbackPositionMs,
+      wordTimings: wordTimings,
+      overrideLineIndex: overrideLineIndex,
     );
   }
 
@@ -43,7 +53,10 @@ class VideoFramePainter extends CustomPainter {
         oldDelegate.pageNumber != pageNumber ||
         oldDelegate.tafsirText != tafsirText ||
         oldDelegate.translationText != translationText ||
-        oldDelegate.includeBackground != includeBackground;
+        oldDelegate.includeBackground != includeBackground ||
+        oldDelegate.playbackPositionMs != playbackPositionMs ||
+        oldDelegate.wordTimings != wordTimings ||
+        oldDelegate.overrideLineIndex != overrideLineIndex;
   }
 }
 
@@ -74,17 +87,22 @@ class VideoStaticFramePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant VideoStaticFramePainter oldDelegate) {
     return oldDelegate.config != config ||
+        oldDelegate.verse != verse ||
         oldDelegate.includeBackground != includeBackground;
   }
 }
 
-/// Renders ONLY the dynamic center content (Verse text, Tafsir, Translation) for smooth cross-fading.
+
+/// Renders ONLY the dynamic center content (Verse text, Tafsir, Translation) for smooth cross-fading and word tracking.
 class VideoDynamicContentPainter extends CustomPainter {
   final VerseModel? verse;
   final VideoProjectConfig config;
   final int pageNumber;
   final String? tafsirText;
   final String? translationText;
+  final int playbackPositionMs;
+  final List<WordTimingSegment>? wordTimings;
+  final int? overrideLineIndex;
 
   const VideoDynamicContentPainter({
     required this.verse,
@@ -92,6 +110,9 @@ class VideoDynamicContentPainter extends CustomPainter {
     required this.pageNumber,
     this.tafsirText,
     this.translationText,
+    this.playbackPositionMs = 0,
+    this.wordTimings,
+    this.overrideLineIndex,
   });
 
   @override
@@ -105,6 +126,9 @@ class VideoDynamicContentPainter extends CustomPainter {
       pageNumber: pageNumber,
       tafsirText: tafsirText ?? verse?.tafsir,
       translationText: translationText ?? verse?.translation,
+      playbackPositionMs: playbackPositionMs,
+      wordTimings: wordTimings,
+      overrideLineIndex: overrideLineIndex,
     );
   }
 
@@ -114,6 +138,10 @@ class VideoDynamicContentPainter extends CustomPainter {
         oldDelegate.config != config ||
         oldDelegate.pageNumber != pageNumber ||
         oldDelegate.tafsirText != tafsirText ||
-        oldDelegate.translationText != translationText;
+        oldDelegate.translationText != translationText ||
+        oldDelegate.playbackPositionMs != playbackPositionMs ||
+        oldDelegate.wordTimings != wordTimings ||
+        oldDelegate.overrideLineIndex != overrideLineIndex;
   }
 }
+

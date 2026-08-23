@@ -1,16 +1,19 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
+import '../../../../core/constants/quran_metadata.dart';
 import '../../domain/entities/video_enums.dart';
 import '../../domain/entities/video_project_config.dart';
 import '../../domain/entities/video_render_progress.dart';
 import '../../domain/repositories/i_video_studio_repository.dart';
-import '../../../../core/constants/quran_metadata.dart';
+import '../../data/services/word_timing_service.dart';
+import '../../domain/entities/word_timing_segment.dart';
 import 'video_studio_event.dart';
 import 'video_studio_state.dart';
 
 class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   final IVideoStudioRepository repository;
+  final WordTimingService _wordTimingService = WordTimingService();
   final AudioPlayer _previewPlayer = AudioPlayer();
   StreamSubscription<PlayerState>? _playerStateSubscription;
   StreamSubscription<int?>? _currentIndexSubscription;
@@ -28,9 +31,11 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     on<VideoStudioCustomImageSelected>(_onCustomImageSelected);
     on<VideoStudioDimmingChanged>(_onDimmingChanged);
     on<VideoStudioTextStyleChanged>(_onTextStyleChanged);
+    on<VideoStudioTextDisplayModeChanged>(_onTextDisplayModeChanged);
     on<VideoStudioQualityChanged>(_onQualityChanged);
     on<VideoStudioOptionToggled>(_onOptionToggled);
     on<VideoStudioPlaybackToggled>(_onPlaybackToggled);
+    on<VideoStudioPlaybackReset>(_onPlaybackReset);
     on<VideoStudioPlaybackStateChanged>(_onPlaybackStateChanged);
     on<VideoStudioActiveVerseIndexChanged>(_onActiveVerseIndexChanged);
     on<VideoStudioExportStarted>(_onExportStarted);
@@ -180,6 +185,13 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     emit(state.copyWith(config: state.config.copyWith(textStyle: event.textStyle)));
   }
 
+  void _onTextDisplayModeChanged(
+    VideoStudioTextDisplayModeChanged event,
+    Emitter<VideoStudioState> emit,
+  ) {
+    emit(state.copyWith(config: state.config.copyWith(textDisplayMode: event.mode)));
+  }
+
   void _onQualityChanged(
     VideoStudioQualityChanged event,
     Emitter<VideoStudioState> emit,
@@ -230,6 +242,32 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     }
   }
 
+  Future<void> _onPlaybackReset(
+    VideoStudioPlaybackReset event,
+    Emitter<VideoStudioState> emit,
+  ) async {
+    if (_previewPlayer.playing) {
+      await _previewPlayer.pause();
+    }
+    emit(state.copyWith(currentVerseIndex: 0));
+
+    if (state.audioFilePaths.isNotEmpty) {
+      try {
+        if (_previewPlayer.sequence.isNotEmpty) {
+          await _previewPlayer.seek(Duration.zero, index: 0);
+        } else {
+          await _previewPlayer.setAudioSources(
+            state.audioFilePaths.map((path) => AudioSource.file(path)).toList(),
+            initialIndex: 0,
+            initialPosition: Duration.zero,
+          );
+        }
+      } catch (_) {
+        // Safe audio reset fallback
+      }
+    }
+  }
+
   Future<void> _onActiveVerseIndexChanged(
     VideoStudioActiveVerseIndexChanged event,
     Emitter<VideoStudioState> emit,
@@ -275,12 +313,28 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
 
       final durations = await repository.measureVerseDurations(audioFilePaths: paths);
 
+      final effectiveVerses = verses.isNotEmpty ? verses : state.verses;
+      final Map<int, List<WordTimingSegment>> timingsMap = {};
+
+      for (int i = 0; i < effectiveVerses.length; i++) {
+        final v = effectiveVerses[i];
+        final dur = i < durations.length ? durations[i] : const Duration(seconds: 4);
+        final timings = await _wordTimingService.getWordTimings(
+          surahNumber: state.config.surahNumber,
+          verse: v,
+          reciterPath: state.config.reciterPath,
+          totalAyahDuration: dur,
+        );
+        timingsMap[v.verseNumber] = timings;
+      }
+
       if (!emit.isDone) {
         emit(
           state.copyWith(
-            verses: verses.isNotEmpty ? verses : state.verses,
+            verses: effectiveVerses,
             audioFilePaths: paths,
             verseDurations: durations,
+            wordTimingsMap: timingsMap,
             isPreparingAudio: false,
             currentVerseIndex: 0,
           ),

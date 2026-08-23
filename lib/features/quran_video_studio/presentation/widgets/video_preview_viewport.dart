@@ -5,6 +5,7 @@ import '../../../../core/constants/quran_metadata.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../bloc/video_studio_bloc.dart';
+import '../bloc/video_studio_event.dart';
 import '../bloc/video_studio_state.dart';
 import 'video_frame_painter.dart';
 
@@ -13,6 +14,7 @@ import 'video_frame_painter.dart';
 class VideoPreviewViewport extends StatelessWidget {
   final VideoStudioState state;
   final VoidCallback onTogglePlay;
+  final VoidCallback? onReset;
   final ValueChanged<int>? onVerseIndexChanged;
   final VoidCallback? onOpenFullscreen;
 
@@ -20,6 +22,7 @@ class VideoPreviewViewport extends StatelessWidget {
     super.key,
     required this.state,
     required this.onTogglePlay,
+    this.onReset,
     this.onVerseIndexChanged,
     this.onOpenFullscreen,
   });
@@ -73,47 +76,28 @@ class VideoPreviewViewport extends StatelessWidget {
                       size: Size.infinite,
                     ),
 
-                    // 2. Dynamic Center Content Layer (Recitation Fade: Fade-In at verse start, Fade-Out at verse end)
+                    // 2. Dynamic Center Content Layer (100% Solid & Real-time Word Tracking without initial fade)
                     StreamBuilder<Duration>(
                       stream: context.read<VideoStudioBloc>().playbackPositionStream,
                       builder: (context, snapshot) {
                         final position = snapshot.data ?? Duration.zero;
-                        double opacity = 1.0;
 
-                        if (state.isPlaying &&
-                            !state.isPreparingAudio &&
-                            state.verseDurations.isNotEmpty &&
-                            currentIndex < state.verseDurations.length) {
-                          final totalMs = state.verseDurations[currentIndex].inMilliseconds;
-                          final posMs = position.inMilliseconds;
-                          const fadeMs = 450;
-
-                          // Exclude first verse from initial fade-in to prevent initial play flicker
-                          if (currentIndex > 0 && posMs > 0 && posMs < fadeMs) {
-                            opacity = (posMs / fadeMs).clamp(0.0, 1.0);
-                          } else if (posMs > totalMs - fadeMs && totalMs > fadeMs * 2) {
-                            opacity = ((totalMs - posMs) / fadeMs).clamp(0.0, 1.0);
-                          } else {
-                            opacity = 1.0;
-                          }
-                        }
-
-                        return Opacity(
-                          opacity: opacity,
-                          child: CustomPaint(
-                            key: ValueKey('preview_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}'),
-                            painter: VideoDynamicContentPainter(
-                              verse: verse,
-                              config: config,
-                              pageNumber: pageNumber,
-                              tafsirText: verse?.tafsir,
-                              translationText: verse?.translation,
-                            ),
-                            size: Size.infinite,
+                        return CustomPaint(
+                          key: ValueKey('preview_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}'),
+                          painter: VideoDynamicContentPainter(
+                            verse: verse,
+                            config: config,
+                            pageNumber: pageNumber,
+                            tafsirText: verse?.tafsir,
+                            translationText: verse?.translation,
+                            playbackPositionMs: position.inMilliseconds,
+                            wordTimings: state.currentVerseWordTimings,
                           ),
                         );
                       },
                     ),
+
+
                   ],
                 ),
               ),
@@ -158,6 +142,26 @@ class VideoPreviewViewport extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Reset / Replay to initial Ayah button
+                        IconButton(
+                          onPressed: () {
+                            if (onReset != null) {
+                              onReset!();
+                            } else {
+                              context
+                                  .read<VideoStudioBloc>()
+                                  .add(const VideoStudioPlaybackReset());
+                            }
+                          },
+                          icon: const Icon(Icons.replay_rounded),
+                          iconSize: 19.r,
+                          color: AppColors.accentGold,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          tooltip: 'إعادة من البداية',
+                        ),
+                        SizedBox(width: 8.w),
+
                         // Previous Verse Button
                         IconButton(
                           onPressed: currentIndex > 0 && onVerseIndexChanged != null

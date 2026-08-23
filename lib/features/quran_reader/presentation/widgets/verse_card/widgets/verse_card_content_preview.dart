@@ -343,22 +343,6 @@ class VerseCardContentPreview extends StatelessWidget {
                     color: theme.secondaryTextColor.withValues(alpha: 0.85),
                   ),
                 ),
-                Text(
-                  ' • ',
-                  style: TextStyle(
-                    fontSize: isWeb ? 12 : 11.sp,
-                    color: theme.accentColor.withValues(alpha: 0.6),
-                  ),
-                ),
-                Text(
-                  'Tabattal',
-                  style: TextStyle(
-                    fontSize: isWeb ? 12 : 11.sp,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.8,
-                    color: theme.secondaryTextColor.withValues(alpha: 0.85),
-                  ),
-                ),
               ],
             ),
           ],

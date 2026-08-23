@@ -7,8 +7,41 @@ import '../../../quran_reader/data/models/verse_model.dart';
 import '../../domain/entities/video_enums.dart';
 import '../../domain/entities/video_project_config.dart';
 
+import '../../domain/entities/word_timing_segment.dart';
+import 'word_timing_service.dart';
+
+class _CachedDynamicLayout {
+  final TextPainter versePainter;
+  final TextPainter? tafsirBadgePainter;
+  final TextPainter? tafsirTextPainter;
+  final TextPainter? translationBadgePainter;
+  final TextPainter? translationTextPainter;
+  final double tafsirBadgeHeight;
+  final double translationBadgeHeight;
+  final double sectionGap;
+  final double totalContentHeight;
+
+  const _CachedDynamicLayout({
+    required this.versePainter,
+    this.tafsirBadgePainter,
+    this.tafsirTextPainter,
+    this.translationBadgePainter,
+    this.translationTextPainter,
+    required this.tafsirBadgeHeight,
+    required this.translationBadgeHeight,
+    required this.sectionGap,
+    required this.totalContentHeight,
+  });
+}
+
 class CanvasOverlayGenerator {
   const CanvasOverlayGenerator();
+
+  static final Map<String, _CachedDynamicLayout> _dynamicLayoutCache = {};
+
+  static void clearLayoutCache() {
+    _dynamicLayoutCache.clear();
+  }
 
   /// Generates a full-resolution frame PNG for a single verse with customizable content opacity.
   Future<Uint8List?> generateVerseFramePng({
@@ -19,6 +52,9 @@ class CanvasOverlayGenerator {
     String? tafsirText,
     bool includeBackground = true,
     double contentOpacity = 1.0,
+    int playbackPositionMs = 0,
+    List<WordTimingSegment>? wordTimings,
+    int? overrideLineIndex,
   }) async {
     final int width = config.aspectRatio.getTargetWidth(config.videoQuality);
     final int height = config.aspectRatio.getTargetHeight(config.videoQuality);
@@ -36,6 +72,9 @@ class CanvasOverlayGenerator {
       tafsirText: tafsirText,
       includeBackground: includeBackground,
       contentOpacity: contentOpacity,
+      playbackPositionMs: playbackPositionMs,
+      wordTimings: wordTimings,
+      overrideLineIndex: overrideLineIndex,
     );
 
     final picture = recorder.endRecording();
@@ -77,6 +116,9 @@ class CanvasOverlayGenerator {
     required int pageNumber,
     String? translationText,
     String? tafsirText,
+    int playbackPositionMs = 0,
+    List<WordTimingSegment>? wordTimings,
+    int? overrideLineIndex,
   }) async {
     final int width = config.aspectRatio.getTargetWidth(config.videoQuality);
     final int height = config.aspectRatio.getTargetHeight(config.videoQuality);
@@ -92,6 +134,9 @@ class CanvasOverlayGenerator {
       pageNumber: pageNumber,
       translationText: translationText,
       tafsirText: tafsirText,
+      playbackPositionMs: playbackPositionMs,
+      wordTimings: wordTimings,
+      overrideLineIndex: overrideLineIndex,
     );
 
     final picture = recorder.endRecording();
@@ -111,6 +156,9 @@ class CanvasOverlayGenerator {
     String? tafsirText,
     bool includeBackground = true,
     double contentOpacity = 1.0,
+    int playbackPositionMs = 0,
+    List<WordTimingSegment>? wordTimings,
+    int? overrideLineIndex,
   }) {
     paintStaticDecoration(
       canvas,
@@ -129,6 +177,9 @@ class CanvasOverlayGenerator {
       translationText: translationText,
       tafsirText: tafsirText,
       contentOpacity: contentOpacity,
+      playbackPositionMs: playbackPositionMs,
+      wordTimings: wordTimings,
+      overrideLineIndex: overrideLineIndex,
     );
   }
 
@@ -162,6 +213,9 @@ class CanvasOverlayGenerator {
     String? translationText,
     String? tafsirText,
     double contentOpacity = 1.0,
+    int playbackPositionMs = 0,
+    List<WordTimingSegment>? wordTimings,
+    int? overrideLineIndex,
   }) {
     if (contentOpacity <= 0.0) return;
 
@@ -194,6 +248,9 @@ class CanvasOverlayGenerator {
       effectiveTafsir,
       effectiveTranslation,
       baseScale,
+      playbackPositionMs: playbackPositionMs,
+      wordTimings: wordTimings,
+      overrideLineIndex: overrideLineIndex,
     );
 
     if (contentOpacity < 1.0) {
@@ -380,9 +437,16 @@ class CanvasOverlayGenerator {
     int pageNumber,
     String? tafsir,
     String? translation,
-    double baseScale,
-  ) {
+    double baseScale, {
+    int playbackPositionMs = 0,
+    List<WordTimingSegment>? wordTimings,
+    int? overrideLineIndex,
+  }) {
     final theme = config.themePreset;
+    final timings = wordTimings ?? WordTimingService.computeProportionalTimings(
+      verse: verse,
+      totalDurationMs: 5000,
+    );
 
     final double cardMarginV = height * 0.05;
     double topLimit;
@@ -417,11 +481,16 @@ class CanvasOverlayGenerator {
         ? width * 0.78
         : width * 0.84;
 
+    final isLineByLine = config.textDisplayMode == VideoTextDisplayMode.lineByLine;
+
     // 1. Dynamic length scaling matching Tabattal VerseCard generator
     final int len = verse.textUthmani.length;
     double lengthScale;
     double lineHeight;
-    if (len <= 60) {
+    if (isLineByLine) {
+      lengthScale = 1.28;
+      lineHeight = 1.95;
+    } else if (len <= 60) {
       lengthScale = 1.16;
       lineHeight = 1.95;
     } else if (len <= 120) {
@@ -448,9 +517,9 @@ class CanvasOverlayGenerator {
     final hasTafsir = tafsir != null && tafsir.trim().isNotEmpty;
     final hasTranslation = translation != null && translation.trim().isNotEmpty;
     if (hasTafsir && hasTranslation) {
-      optionsScale = 0.76;
+      optionsScale = isLineByLine ? 0.82 : 0.76;
     } else if (hasTafsir || hasTranslation) {
-      optionsScale = 0.88;
+      optionsScale = isLineByLine ? 0.90 : 0.88;
     }
 
     final double baseVerseSize = config.aspectRatio == VideoAspectRatio.landscape16x9
@@ -458,6 +527,57 @@ class CanvasOverlayGenerator {
         : (config.aspectRatio == VideoAspectRatio.square1x1
             ? baseScale * 0.054
             : baseScale * 0.060);
+
+    // Determine active line segment for lineByLine mode
+    List<LineTimingSegment> lineSegments = [];
+    LineTimingSegment? activeLine;
+    double lineCrossfadeOpacity = 1.0;
+
+    if (isLineByLine && verse.words.isNotEmpty) {
+      lineSegments = WordTimingService.groupIntoLineSegments(verse: verse, wordTimings: timings);
+      if (overrideLineIndex != null && overrideLineIndex >= 0 && overrideLineIndex < lineSegments.length) {
+        activeLine = lineSegments[overrideLineIndex];
+      } else {
+        for (int i = 0; i < lineSegments.length; i++) {
+          final line = lineSegments[i];
+          final isLast = i == lineSegments.length - 1;
+          if (isLast ? (playbackPositionMs >= line.startMs) : (playbackPositionMs >= line.startMs && playbackPositionMs < line.endMs)) {
+            activeLine = line;
+            break;
+          }
+        }
+        activeLine ??= lineSegments.first;
+
+        // Smooth cubic line crossfade matching export video engine
+        final lineStart = activeLine.startMs;
+        final lineEnd = activeLine.endMs;
+        final lineDur = max(lineEnd - lineStart, 400);
+        final fadeMs = min(200, (lineDur * 0.16).round());
+
+        if (playbackPositionMs < lineStart + fadeMs && fadeMs > 0 && activeLine != lineSegments.first) {
+          final t = (playbackPositionMs - lineStart) / fadeMs;
+          lineCrossfadeOpacity = Curves.easeInOutCubic.transform(t.clamp(0.0, 1.0));
+        } else if (playbackPositionMs > lineEnd - fadeMs && fadeMs > 0 && activeLine != lineSegments.last) {
+          final t = (lineEnd - playbackPositionMs) / fadeMs;
+          lineCrossfadeOpacity = Curves.easeInOutCubic.transform(t.clamp(0.0, 1.0));
+        } else {
+          lineCrossfadeOpacity = 1.0;
+        }
+      }
+    } else {
+      // Whole verse crossfade matching export video engine
+      final totalMs = timings.isNotEmpty ? timings.last.endMs : 4000;
+      const fadeMs = 250;
+      if (playbackPositionMs < fadeMs && fadeMs > 0) {
+        final t = playbackPositionMs / fadeMs;
+        lineCrossfadeOpacity = Curves.easeInOutCubic.transform(t.clamp(0.0, 1.0));
+      } else if (playbackPositionMs > totalMs - fadeMs && fadeMs > 0 && totalMs > fadeMs * 2) {
+        final t = (totalMs - playbackPositionMs) / fadeMs;
+        lineCrossfadeOpacity = Curves.easeInOutCubic.transform(t.clamp(0.0, 1.0));
+      } else {
+        lineCrossfadeOpacity = 1.0;
+      }
+    }
 
     double currentScaleMultiplier = 1.0;
 
@@ -474,55 +594,85 @@ class CanvasOverlayGenerator {
       double sectionGap,
       double totalHeight
     ) computeLayout(double scale) {
-      final effectiveVerseSize = baseVerseSize * lengthScale * optionsScale * scale;
-      final effectiveTafsirSize = (baseScale * 0.024) * optionsScale * scale;
+      double effectiveVerseSize = baseVerseSize * lengthScale * optionsScale * scale;
+      final effectiveTafsirSize = (baseScale * 0.033) * optionsScale * scale;
       final effectiveTransSize = (baseScale * 0.022) * optionsScale * scale;
 
-      // Verse painter
-      TextSpan verseTextSpan;
-      if (verse.words.isNotEmpty) {
-        final children = <InlineSpan>[];
-        for (final w in verse.words) {
-          final pageNum = w.pageNumber > 0 ? w.pageNumber : pageNumber;
-          final pageStr = pageNum.toString().padLeft(3, '0');
-          final font = 'QCF_P$pageStr';
-          final text = w.codeV2.isNotEmpty ? w.codeV2 : (w.code.isNotEmpty ? w.code : w.textUthmani);
-          if (children.isNotEmpty) {
-            children.add(const TextSpan(text: ' '));
+      // Helper to build verse text span with a specified font size
+      TextSpan buildVerseSpan(double vSize) {
+        if (verse.words.isNotEmpty) {
+          final children = <InlineSpan>[];
+          final wordsToRender = isLineByLine && activeLine != null
+              ? verse.words.sublist(activeLine.startWordIndex, min(activeLine.endWordIndex + 1, verse.words.length))
+              : verse.words;
+
+          final wordColor = theme.primaryTextColor;
+
+          for (int i = 0; i < wordsToRender.length; i++) {
+            final w = wordsToRender[i];
+            final pageNum = w.pageNumber > 0 ? w.pageNumber : pageNumber;
+            final pageStr = pageNum.toString().padLeft(3, '0');
+            final font = 'QCF_P$pageStr';
+            final text = w.codeV2.isNotEmpty ? w.codeV2 : (w.code.isNotEmpty ? w.code : w.textUthmani);
+
+            if (children.isNotEmpty) {
+              children.add(const TextSpan(text: ' '));
+            }
+            children.add(
+              TextSpan(
+                text: text,
+                style: TextStyle(
+                  fontFamily: font,
+                  color: wordColor,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            );
           }
-          children.add(
-            TextSpan(
-              text: text,
-              style: TextStyle(fontFamily: font),
+
+          return TextSpan(
+            style: TextStyle(
+              color: theme.primaryTextColor,
+              fontSize: vSize,
+              height: lineHeight,
+            ),
+            children: children,
+          );
+        } else {
+          final displayText = '﴿ ${verse.textUthmani} ﴾';
+          return TextSpan(
+            text: displayText,
+            style: TextStyle(
+              color: theme.primaryTextColor,
+              fontSize: vSize,
+              height: lineHeight,
+              fontFamily: 'Amiri',
             ),
           );
         }
-        verseTextSpan = TextSpan(
-          style: TextStyle(
-            color: theme.primaryTextColor,
-            fontSize: effectiveVerseSize,
-            height: lineHeight,
-          ),
-          children: children,
-        );
-      } else {
-        final displayText = '﴿ ${verse.textUthmani} ﴾';
-        verseTextSpan = TextSpan(
-          text: displayText,
-          style: TextStyle(
-            color: theme.primaryTextColor,
-            fontSize: effectiveVerseSize,
-            height: lineHeight,
-            fontFamily: 'Amiri',
-          ),
-        );
       }
 
-      final vPainter = TextPainter(
+      var verseTextSpan = buildVerseSpan(effectiveVerseSize);
+      var vPainter = TextPainter(
         text: verseTextSpan,
         textDirection: TextDirection.rtl,
         textAlign: TextAlign.center,
       )..layout(maxWidth: maxContentWidth);
+
+      // In line-by-line mode: guarantee text fits on exactly ONE single visual line without wrapping
+      if (isLineByLine && vPainter.computeLineMetrics().length > 1) {
+        double fitScale = 0.92;
+        while (vPainter.computeLineMetrics().length > 1 && fitScale >= 0.45) {
+          effectiveVerseSize = baseVerseSize * lengthScale * optionsScale * scale * fitScale;
+          verseTextSpan = buildVerseSpan(effectiveVerseSize);
+          vPainter = TextPainter(
+            text: verseTextSpan,
+            textDirection: TextDirection.rtl,
+            textAlign: TextAlign.center,
+          )..layout(maxWidth: maxContentWidth);
+          fitScale -= 0.06;
+        }
+      }
 
       // Tafsir painter
       TextPainter? tBadgePainter;
@@ -536,7 +686,7 @@ class CanvasOverlayGenerator {
             text: 'التفسير الميسر',
             style: TextStyle(
               color: theme.accentColor,
-              fontSize: (baseScale * 0.021) * scale,
+              fontSize: (baseScale * 0.024) * scale,
               fontWeight: FontWeight.bold,
               fontFamily: 'Amiri',
             ),
@@ -553,14 +703,12 @@ class CanvasOverlayGenerator {
             style: TextStyle(
               color: theme.secondaryTextColor,
               fontSize: effectiveTafsirSize,
-              height: 1.50,
+              height: 1.55,
               fontFamily: 'Amiri',
             ),
           ),
           textDirection: TextDirection.rtl,
           textAlign: TextAlign.center,
-          maxLines: config.aspectRatio == VideoAspectRatio.landscape16x9 ? 3 : 4,
-          ellipsis: '...',
         )..layout(maxWidth: maxContentWidth);
 
         tTotalH = tBadgeH + (height * 0.008) + tTextPainter.height;
@@ -603,8 +751,6 @@ class CanvasOverlayGenerator {
           ),
           textDirection: TextDirection.ltr,
           textAlign: TextAlign.center,
-          maxLines: config.aspectRatio == VideoAspectRatio.landscape16x9 ? 3 : 4,
-          ellipsis: '...',
         )..layout(maxWidth: maxContentWidth);
 
         trTotalH = (hasTafsir ? (trBadgeH + height * 0.008) : 0) + trTextPainter.height;
@@ -639,28 +785,60 @@ class CanvasOverlayGenerator {
       );
     }
 
-    var layout = computeLayout(currentScaleMultiplier);
+    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${hasTafsir}_${hasTranslation}_${overrideLineIndex ?? activeLine?.lineNumber ?? 0}_${width.round()}_${height.round()}';
 
-    // Guaranteed Zero Overflow: if total height exceeds available height, scale down dynamically
-    if (layout.$11 > availableHeight && availableHeight > 50) {
-      final double fitRatio = (availableHeight * 0.94) / layout.$11;
-      currentScaleMultiplier = fitRatio.clamp(0.40, 1.0);
-      layout = computeLayout(currentScaleMultiplier);
+    _CachedDynamicLayout? cached = _dynamicLayoutCache[cacheKey];
+    if (cached == null) {
+      var layout = computeLayout(currentScaleMultiplier);
+
+      // Guaranteed Zero Cutoff & Zero Overflow: dynamically scale down if total content exceeds available height
+      if (layout.$11 > availableHeight && availableHeight > 50) {
+        final double fitRatio = (availableHeight * 0.95) / layout.$11;
+        currentScaleMultiplier = fitRatio.clamp(0.35, 1.0);
+        layout = computeLayout(currentScaleMultiplier);
+        if (layout.$11 > availableHeight) {
+          final double secondRatio = (availableHeight * 0.95) / layout.$11;
+          currentScaleMultiplier = (currentScaleMultiplier * secondRatio).clamp(0.30, 1.0);
+          layout = computeLayout(currentScaleMultiplier);
+        }
+      }
+
+      cached = _CachedDynamicLayout(
+        versePainter: layout.$1,
+        tafsirBadgePainter: layout.$2,
+        tafsirTextPainter: layout.$3,
+        tafsirBadgeHeight: layout.$5,
+        translationBadgePainter: layout.$6,
+        translationTextPainter: layout.$7,
+        translationBadgeHeight: layout.$9,
+        sectionGap: layout.$10,
+        totalContentHeight: layout.$11,
+      );
+      _dynamicLayoutCache[cacheKey] = cached;
     }
 
-    final versePainter = layout.$1;
-    final tafsirBadgePainter = layout.$2;
-    final tafsirTextPainter = layout.$3;
-    final tafsirBadgeHeight = layout.$5;
-    final translationBadgePainter = layout.$6;
-    final translationTextPainter = layout.$7;
-    final translationBadgeHeight = layout.$9;
-    final sectionGap = layout.$10;
-    final totalContentHeight = layout.$11;
+    final versePainter = cached.versePainter;
+    final tafsirBadgePainter = cached.tafsirBadgePainter;
+    final tafsirTextPainter = cached.tafsirTextPainter;
+    final tafsirBadgeHeight = cached.tafsirBadgeHeight;
+    final translationBadgePainter = cached.translationBadgePainter;
+    final translationTextPainter = cached.translationTextPainter;
+    final translationBadgeHeight = cached.translationBadgeHeight;
+    final sectionGap = cached.sectionGap;
+    final totalContentHeight = cached.totalContentHeight;
 
     // Center content area vertically between header and footer
     final double centerZoneY = topLimit + ((bottomLimit - topLimit) / 2);
     double currentY = (centerZoneY - (totalContentHeight / 2)).clamp(topLimit, bottomLimit);
+
+    // Apply GPU layer opacity only during active fade transition on bounded text zone
+    final bool isFading = lineCrossfadeOpacity < 0.999;
+    if (isFading) {
+      canvas.saveLayer(
+        Rect.fromLTWH(0, topLimit, width, availableHeight),
+        Paint()..color = Color.fromRGBO(0, 0, 0, lineCrossfadeOpacity),
+      );
+    }
 
     // Draw Verse Text
     versePainter.paint(canvas, Offset((width - versePainter.width) / 2, currentY));
@@ -719,6 +897,10 @@ class CanvasOverlayGenerator {
       }
 
       translationTextPainter.paint(canvas, Offset((width - translationTextPainter.width) / 2, currentY));
+    }
+
+    if (isFading) {
+      canvas.restore();
     }
   }
 

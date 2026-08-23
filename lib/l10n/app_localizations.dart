@@ -1351,6 +1351,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'فائقة'**
   String get videoQualityUltra;
+
+  /// No description provided for @videoStudioDisplayMode.
+  ///
+  /// In ar, this message translates to:
+  /// **'نمط عرض النصوص'**
+  String get videoStudioDisplayMode;
+
+  /// No description provided for @videoDisplayModeLineByLine.
+  ///
+  /// In ar, this message translates to:
+  /// **'سطر بسطر'**
+  String get videoDisplayModeLineByLine;
+
+  /// No description provided for @videoDisplayModeStaticFull.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآية كاملة'**
+  String get videoDisplayModeStaticFull;
 }
 
 class _AppLocalizationsDelegate

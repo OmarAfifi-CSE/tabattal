@@ -15,10 +15,8 @@ class ReciterLocalization {
     'محمود خليل الحصري': 'Mahmoud Khalil Al-Husary',
     'عبد الباسط عبد الصمد': 'Abdul Basit Abdul Samad',
     'محمود علي البنا': 'Mahmoud Ali Al-Banna',
-    'أحمد نعينع': 'Ahmed Neana',
 
     // 2. الجيل الحديث
-    'مشاري العفاسي': 'Mishary Al-Afasy',
     'ماهر المعيقلي': 'Maher Al-Muaiqly',
     'ياسر الدوسري': 'Yasser Al-Dosari',
     'أحمد العجمي': 'Ahmed Al-Ajmi',
@@ -26,7 +24,6 @@ class ReciterLocalization {
     'ناصر القطامي': 'Nasser Al-Qatami',
     'فارس عباد': 'Fares Abbad',
     'أبو بكر الشاطري': 'Abu Bakr Al-Shatri',
-    'عبد الرحمن السديس': 'Abdul Rahman Al-Sudais',
     'سعود الشريم': 'Saud Al-Shuraim',
     'عبدالله عواد الجهني': 'Abdullah Awad Al-Juhany',
     'خالد القحطاني': 'Khalid Al-Qahtani',
@@ -43,7 +40,6 @@ class ReciterLocalization {
 
     // 4. قراء آخرون
     'صلاح بو خاطر': 'Salah Bukhatir',
-    'صلاح البدير': 'Salah Al-Budair',
     'نبيل الرفاعي': 'Nabeel Ar-Rifai',
     'سهل ياسين': 'Sahl Yassin',
     'ياسر سلامة': 'Yasser Salamah',

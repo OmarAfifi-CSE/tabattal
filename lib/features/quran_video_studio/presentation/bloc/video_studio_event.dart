@@ -140,6 +140,10 @@ class VideoStudioPlaybackToggled extends VideoStudioEvent {
   const VideoStudioPlaybackToggled();
 }
 
+class VideoStudioPlaybackReset extends VideoStudioEvent {
+  const VideoStudioPlaybackReset();
+}
+
 class VideoStudioPlaybackStateChanged extends VideoStudioEvent {
   final bool isPlaying;
 
@@ -178,4 +182,13 @@ class VideoStudioExportStarted extends VideoStudioEvent {
 
 class VideoStudioExportCancelled extends VideoStudioEvent {
   const VideoStudioExportCancelled();
+}
+
+class VideoStudioTextDisplayModeChanged extends VideoStudioEvent {
+  final VideoTextDisplayMode mode;
+
+  const VideoStudioTextDisplayModeChanged(this.mode);
+
+  @override
+  List<Object?> get props => [mode];
 }

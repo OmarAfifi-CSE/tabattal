@@ -1110,6 +1110,7 @@ class _VerseCardGeneratorSheetContentState
             SizedBox(height: 12.h),
             VideoReciterSelector(
               selectedReciter: config.reciterName,
+              selectedCategory: config.reciterCategory,
               onReciterSelected: (name, category, path) {
                 context.read<VideoStudioBloc>().add(
                       VideoStudioReciterChanged(
@@ -1123,6 +1124,11 @@ class _VerseCardGeneratorSheetContentState
             SizedBox(height: 12.h),
             VideoOptionsSelector(
               config: config,
+              onDisplayModeChanged: (mode) {
+                context
+                    .read<VideoStudioBloc>()
+                    .add(VideoStudioTextDisplayModeChanged(mode));
+              },
               onQualityChanged: (quality) {
                 context
                     .read<VideoStudioBloc>()

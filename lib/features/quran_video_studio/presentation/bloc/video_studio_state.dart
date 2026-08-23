@@ -4,6 +4,8 @@ import '../../domain/entities/video_enums.dart';
 import '../../domain/entities/video_project_config.dart';
 import '../../domain/entities/video_render_progress.dart';
 
+import '../../domain/entities/word_timing_segment.dart';
+
 class VideoStudioState extends Equatable {
   final VideoProjectConfig config;
   final List<VerseModel> verses;
@@ -11,6 +13,7 @@ class VideoStudioState extends Equatable {
   final int currentVerseIndex;
   final List<String> audioFilePaths;
   final List<Duration> verseDurations;
+  final Map<int, List<WordTimingSegment>> wordTimingsMap;
   final bool isPreparingAudio;
   final VideoRenderProgress exportProgress;
   final VideoExportAction? pendingExportAction;
@@ -23,6 +26,7 @@ class VideoStudioState extends Equatable {
     this.currentVerseIndex = 0,
     this.audioFilePaths = const [],
     this.verseDurations = const [],
+    this.wordTimingsMap = const {},
     this.isPreparingAudio = false,
     this.exportProgress = const VideoRenderProgress(),
     this.pendingExportAction,
@@ -36,6 +40,12 @@ class VideoStudioState extends Equatable {
     return verses[currentVerseIndex];
   }
 
+  List<WordTimingSegment> get currentVerseWordTimings {
+    final v = currentVerse;
+    if (v == null) return const [];
+    return wordTimingsMap[v.verseNumber] ?? const [];
+  }
+
   VideoStudioState copyWith({
     VideoProjectConfig? config,
     List<VerseModel>? verses,
@@ -43,6 +53,7 @@ class VideoStudioState extends Equatable {
     int? currentVerseIndex,
     List<String>? audioFilePaths,
     List<Duration>? verseDurations,
+    Map<int, List<WordTimingSegment>>? wordTimingsMap,
     bool? isPreparingAudio,
     VideoRenderProgress? exportProgress,
     VideoExportAction? pendingExportAction,
@@ -56,6 +67,7 @@ class VideoStudioState extends Equatable {
       currentVerseIndex: currentVerseIndex ?? this.currentVerseIndex,
       audioFilePaths: audioFilePaths ?? this.audioFilePaths,
       verseDurations: verseDurations ?? this.verseDurations,
+      wordTimingsMap: wordTimingsMap ?? this.wordTimingsMap,
       isPreparingAudio: isPreparingAudio ?? this.isPreparingAudio,
       exportProgress: exportProgress ?? this.exportProgress,
       pendingExportAction: pendingExportAction ?? this.pendingExportAction,
@@ -71,9 +83,11 @@ class VideoStudioState extends Equatable {
         currentVerseIndex,
         audioFilePaths,
         verseDurations,
+        wordTimingsMap,
         isPreparingAudio,
         exportProgress,
         pendingExportAction,
         errorMessage,
       ];
 }
+

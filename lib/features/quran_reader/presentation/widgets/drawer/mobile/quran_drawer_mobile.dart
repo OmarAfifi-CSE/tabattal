@@ -18,7 +18,8 @@ import '../quran_translation_view.dart';
 import 'quran_bookmarks_view_mobile.dart';
 import 'quran_index_view_mobile.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
-import '../../../../../quran_video_studio/presentation/screens/quran_video_studio_screen.dart';
+import '../../../../data/models/verse_model.dart';
+import '../../verse_card_generator_sheet.dart';
 
 class QuranDrawerMobile extends StatelessWidget {
   final int currentPage;
@@ -247,13 +248,18 @@ class QuranDrawerMobile extends StatelessWidget {
                       onTap: () {
                         Navigator.pop(context);
                         final surahNum = QuranMetadata.getSurahForPage(currentPage);
-                        const startAyah = 1;
-                        showQuranVideoStudioModal(
+                        showVerseCardGeneratorModal(
                           context,
-                          surahNumber: surahNum,
-                          startAyah: startAyah,
-                          endAyah: (startAyah + 2).clamp(1, QuranMetadata.getVerseCountForSurah(surahNum)),
-                          initialVerses: const [],
+                          verse: VerseModel(
+                            id: 0,
+                            verseNumber: 1,
+                            verseKey: '$surahNum:1',
+                            textUthmani: '',
+                            juzNumber: 1,
+                            words: const [],
+                          ),
+                          pageNumber: currentPage,
+                          initialFormat: ShareFormat.video,
                         );
                       },
                     ),

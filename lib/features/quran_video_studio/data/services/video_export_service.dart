@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'package:ffmpeg_kit_flutter_new_min_gpl/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new_min_gpl/return_code.dart';
 import 'package:flutter/foundation.dart';
@@ -11,8 +12,10 @@ import '../../../quran_reader/data/models/verse_model.dart';
 import '../../domain/entities/video_enums.dart';
 import '../../domain/entities/video_project_config.dart';
 import '../../domain/entities/video_render_progress.dart';
+import '../../domain/entities/word_timing_segment.dart';
 import 'audio_timeline_service.dart';
 import 'canvas_overlay_generator.dart';
+import 'word_timing_service.dart';
 
 class VideoExportService {
   final CanvasOverlayGenerator _overlayGenerator;
@@ -97,7 +100,10 @@ class VideoExportService {
           ));
         }
 
-        // Phase 2: Generating HD Base Frame and Transparent Overlays for Each Verse (10% -> 40%)
+        final isLineByLine = config.textDisplayMode == VideoTextDisplayMode.lineByLine;
+        final wordTimingService = WordTimingService();
+
+        // Phase 2: Generating HD Base Frame and Transparent Overlays
         final baseFrameBytes = await _overlayGenerator.generateStaticBaseFramePng(
           config: config,
           verse: verses.first,
@@ -109,16 +115,92 @@ class VideoExportService {
         await baseFrameFile.writeAsBytes(baseFrameBytes);
         final baseFramePath = baseFrameFile.path.replaceAll(r'\', '/');
 
-        final overlayPaths = <String>[];
+        final surahName = QuranMetadata.getSurahName(config.surahNumber);
+        final outputMp4File = File('${tempDir.path}/Tabattal_${surahName}_${config.startAyah}-${config.endAyah}_$timestamp.mp4');
+        final outputPath = outputMp4File.path.replaceAll(r'\', '/');
+        final quality = config.videoQuality;
+        final crfArg = '-crf ${quality.crf}';
+        const presetArg = '-preset ultrafast -tune stillimage -threads 0';
+
+        final segmentPaths = <String>[];
+        int totalUnits = 0;
+
+        // Calculate total rendering units (lines or verses)
+        final unitConfigs = <Map<String, dynamic>>[];
         for (int i = 0; i < verses.length; i++) {
+          final verse = verses[i];
+          final pageNum = QuranMetadata.getPageNumberForAyah(config.surahNumber, verse.verseNumber);
+          final audioPath = i < resolvedAudioPaths.length ? resolvedAudioPaths[i].replaceAll(r'\', '/') : '';
+          final totalDur = i < verseDurations.length ? verseDurations[i] : const Duration(seconds: 4);
+
+          final timings = await wordTimingService.getWordTimings(
+            surahNumber: config.surahNumber,
+            verse: verse,
+            reciterPath: config.reciterPath,
+            totalAyahDuration: totalDur,
+          );
+
+          if (isLineByLine && verse.words.isNotEmpty) {
+            final lineSegments = WordTimingService.groupIntoLineSegments(
+              verse: verse,
+              wordTimings: timings,
+              totalAyahDurationMs: totalDur.inMilliseconds,
+            );
+            for (int k = 0; k < lineSegments.length; k++) {
+              final line = lineSegments[k];
+              final startSec = line.startMs / 1000.0;
+              final durSec = max((line.endMs - line.startMs) / 1000.0, 0.4);
+
+              unitConfigs.add({
+                'verse': verse,
+                'pageNum': pageNum,
+                'audioPath': audioPath,
+                'timings': timings,
+                'lineIndex': k,
+                'startSec': startSec,
+                'durSec': durSec,
+                'verseNumber': verse.verseNumber,
+                'lineCount': lineSegments.length,
+                'currentLine': k + 1,
+              });
+            }
+          } else {
+            final durSec = totalDur.inMilliseconds / 1000.0;
+            unitConfigs.add({
+              'verse': verse,
+              'pageNum': pageNum,
+              'audioPath': audioPath,
+              'timings': timings,
+              'lineIndex': null,
+              'startSec': 0.0,
+              'durSec': durSec,
+              'verseNumber': verse.verseNumber,
+              'lineCount': 1,
+              'currentLine': 1,
+            });
+          }
+        }
+
+        totalUnits = unitConfigs.length;
+        final totalDurationSec = unitConfigs.fold<double>(0.0, (sum, u) => sum + (u['durSec'] as double));
+        final totalDurationMs = max(totalDurationSec * 1000.0, 1000.0);
+        double completedDurationMs = 0.0;
+
+        // Render each unit (Overlay -> Video Segment)
+        for (int u = 0; u < totalUnits; u++) {
           if (_isCancelled) {
             controller.add(const VideoRenderProgress(phase: VideoRenderPhase.cancelled));
             await controller.close();
             return;
           }
 
-          final verse = verses[i];
-          final pageNum = QuranMetadata.getPageNumberForAyah(config.surahNumber, verse.verseNumber);
+          final unit = unitConfigs[u];
+          final verse = unit['verse'] as VerseModel;
+          final pageNum = unit['pageNum'] as int;
+          final timings = unit['timings'] as List<WordTimingSegment>;
+          final lineIndex = unit['lineIndex'] as int?;
+          final durSec = unit['durSec'] as double;
+          final unitDurationMs = durSec * 1000.0;
 
           final overlayBytes = await _overlayGenerator.generateVerseOverlayPng(
             verse: verse,
@@ -126,120 +208,103 @@ class VideoExportService {
             pageNumber: pageNum,
             translationText: verse.translation,
             tafsirText: verse.tafsir,
+            wordTimings: timings,
+            overrideLineIndex: lineIndex,
           );
 
           if (overlayBytes == null) {
-            throw Exception('فشل في رسم الآية ${verse.verseNumber}');
+            throw Exception('فشل في رسم نصوص الآية ${verse.verseNumber}');
           }
 
-          final overlayFile = File('${sessionDir.path}/overlay_$i.png');
+          final overlayFile = File('${sessionDir.path}/overlay_unit_$u.png');
           await overlayFile.writeAsBytes(overlayBytes);
-          overlayPaths.add(overlayFile.path.replaceAll(r'\', '/'));
+          final overlayPath = overlayFile.path.replaceAll(r'\', '/');
 
-          final overlayProgress = 0.10 + ((i + 1) / verses.length) * 0.30;
+          // Progress update for overlay generation (10% -> 20%)
+          final overlayProgress = 0.10 + ((u + 1) / totalUnits) * 0.10;
           controller.add(VideoRenderProgress(
             phase: VideoRenderPhase.generatingOverlays,
-            progress: overlayProgress.clamp(0.10, 0.40),
-            statusMessage: 'جاري إعداد الآية (${verse.verseNumber})...',
+            progress: overlayProgress.clamp(0.10, 0.20),
+            statusMessage: isLineByLine
+                ? 'جاري إعداد سطر (${unit['currentLine']}/${unit['lineCount']}) للآية (${verse.verseNumber})...'
+                : 'جاري إعداد الآية (${verse.verseNumber})...',
           ));
-        }
 
-        // Phase 3: High-FPS Hardware Accelerated Video Encoding (40% -> 98%)
-        final surahName = QuranMetadata.getSurahName(config.surahNumber);
-        final outputMp4File = File('${tempDir.path}/Tabattal_${surahName}_${config.startAyah}-${config.endAyah}_$timestamp.mp4');
-        final outputPath = outputMp4File.path.replaceAll(r'\', '/');
-        final quality = config.videoQuality;
-        final crfArg = '-crf ${quality.crf}';
-        const presetArg = '-preset fast';
+          // Video encoding per segment
+          final segmentFile = File('${sessionDir.path}/segment_$u.ts');
+          final segmentPath = segmentFile.path.replaceAll(r'\', '/');
+          segmentPaths.add(segmentPath);
 
-        if (verses.length == 1) {
-          final d = verseDurations.isNotEmpty ? (verseDurations[0].inMilliseconds / 1000.0) : 4.0;
-          final audioPath = resolvedAudioPaths.isNotEmpty ? resolvedAudioPaths[0].replaceAll(r'\', '/') : '';
-          final hasAudio = audioPath.isNotEmpty && await File(audioPath).exists();
+          const fadeDur = 0.30;
+          final safeFade = fadeDur.clamp(0.05, durSec * 0.20);
+          final fadeOutStart = (durSec - safeFade).clamp(0.08, durSec);
 
-          const fadeDur = 0.45;
-          final safeFade = fadeDur.clamp(0.08, d * 0.20);
-          final fadeOutStart = (d - safeFade).clamp(0.10, d);
+          // Video-only segment encoding (keeps audio completely intact and unbroken)
+          final segmentCmd = '-y -loop 1 -t $durSec -framerate 30 -i "$baseFramePath" -loop 1 -t $durSec -framerate 30 -i "$overlayPath" '
+              '-filter_complex "[1:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1[dyn];[0:v][dyn]overlay=0:0[v]" '
+              '-map "[v]" -c:v libx264 $presetArg $crfArg -pix_fmt yuv420p -r 30 "$segmentPath"';
 
-          String ffmpegCmd;
-          if (hasAudio) {
-            ffmpegCmd = '-y -loop 1 -t $d -framerate 30 -i "$baseFramePath" -loop 1 -t $d -framerate 30 -i "${overlayPaths[0]}" -i "$audioPath" '
-                '-filter_complex "[1:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1[dyn];[0:v][dyn]overlay=0:0[v]" '
-                '-map "[v]" -map 2:a -c:v libx264 $presetArg $crfArg -pix_fmt yuv420p -r 30 -c:a aac -b:a 192k -shortest "$outputPath"';
-          } else {
-            ffmpegCmd = '-y -loop 1 -t $d -framerate 30 -i "$baseFramePath" -loop 1 -t $d -framerate 30 -i "${overlayPaths[0]}" '
-                '-filter_complex "[1:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1[dyn];[0:v][dyn]overlay=0:0[v]" '
-                '-map "[v]" -c:v libx264 $presetArg $crfArg -pix_fmt yuv420p -r 30 "$outputPath"';
-          }
-
-          controller.add(const VideoRenderProgress(
+          final sessionCompleter = Completer<dynamic>();
+          final initialProgress = 0.20 + (completedDurationMs / totalDurationMs) * 0.74;
+          controller.add(VideoRenderProgress(
             phase: VideoRenderPhase.encodingVideo,
-            progress: 0.50,
-            statusMessage: 'جاري معالجة المقطع القرآني...',
+            progress: initialProgress.clamp(0.20, 0.94),
+            statusMessage: isLineByLine
+                ? 'جاري معالجة مقطع (${u + 1}/$totalUnits)...'
+                : 'جاري معالجة الآية (${verse.verseNumber})...',
           ));
 
-          final session = await FFmpegKit.execute(ffmpegCmd);
-          final returnCode = await session.getReturnCode();
+          await FFmpegKit.executeAsync(
+            segmentCmd,
+            (session) {
+              if (!sessionCompleter.isCompleted) {
+                sessionCompleter.complete(session);
+              }
+            },
+            (log) {},
+            (statistics) {
+              if (_isCancelled) return;
+              final currentUnitTimeMs = max(0, statistics.getTime());
+              final totalRenderedMs = completedDurationMs + min(currentUnitTimeMs.toDouble(), unitDurationMs);
+              final realProgress = (0.20 + (totalRenderedMs / totalDurationMs) * 0.74).clamp(0.20, 0.94);
+
+              controller.add(VideoRenderProgress(
+                phase: VideoRenderPhase.encodingVideo,
+                progress: realProgress,
+                statusMessage: isLineByLine
+                    ? 'جاري معالجة مقطع (${u + 1}/$totalUnits)...'
+                    : 'جاري معالجة الآية (${verse.verseNumber})...',
+              ));
+            },
+          );
+
+          final completedSession = await sessionCompleter.future;
+          final returnCode = await completedSession.getReturnCode();
           if (!ReturnCode.isSuccess(returnCode)) {
-            final allLogs = await session.getAllLogsAsString();
+            final allLogs = await completedSession.getAllLogsAsString();
             throw Exception('تعذر إعداد مقطع الفيديو: $allLogs');
           }
-        } else {
-          // Multi-verse project: render high-quality 30 FPS segment per verse, then concatenate losslessly
-          final segmentPaths = <String>[];
 
-          for (int i = 0; i < verses.length; i++) {
-            if (_isCancelled) {
-              controller.add(const VideoRenderProgress(phase: VideoRenderPhase.cancelled));
-              await controller.close();
-              return;
-            }
+          completedDurationMs += unitDurationMs;
+        }
 
-            final d = i < verseDurations.length ? (verseDurations[i].inMilliseconds / 1000.0) : 4.0;
-            final audioPath = i < resolvedAudioPaths.length ? resolvedAudioPaths[i].replaceAll(r'\', '/') : '';
-            final hasAudio = audioPath.isNotEmpty && await File(audioPath).exists();
+        // Concatenate all video segments and mux with 100% continuous audio stream
+        controller.add(const VideoRenderProgress(
+          phase: VideoRenderPhase.encodingVideo,
+          progress: 0.95,
+          statusMessage: 'جاري تجميع وحفظ الفيديو النهائي...',
+        ));
 
-            const fadeDur = 0.45;
-            final safeFade = fadeDur.clamp(0.08, d * 0.20);
-            final fadeOutStart = (d - safeFade).clamp(0.10, d);
+        final rawVideoFile = File('${sessionDir.path}/raw_video.mp4');
+        final rawVideoPath = rawVideoFile.path.replaceAll(r'\', '/');
 
-            final segmentFile = File('${sessionDir.path}/segment_$i.ts');
-            final segmentPath = segmentFile.path.replaceAll(r'\', '/');
-            segmentPaths.add(segmentPath);
-
-            String segmentCmd;
-            if (hasAudio) {
-              segmentCmd = '-y -loop 1 -t $d -framerate 30 -i "$baseFramePath" -loop 1 -t $d -framerate 30 -i "${overlayPaths[i]}" -i "$audioPath" '
-                  '-filter_complex "[1:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1[dyn];[0:v][dyn]overlay=0:0[v]" '
-                  '-map "[v]" -map 2:a -c:v libx264 $presetArg $crfArg -pix_fmt yuv420p -r 30 -c:a aac -b:a 192k -shortest "$segmentPath"';
-            } else {
-              segmentCmd = '-y -loop 1 -t $d -framerate 30 -i "$baseFramePath" -loop 1 -t $d -framerate 30 -i "${overlayPaths[i]}" '
-                  '-filter_complex "[1:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1[dyn];[0:v][dyn]overlay=0:0[v]" '
-                  '-map "[v]" -c:v libx264 $presetArg $crfArg -pix_fmt yuv420p -r 30 "$segmentPath"';
-            }
-
-            final progressVal = 0.40 + ((i + 1) / verses.length) * 0.52;
-            controller.add(VideoRenderProgress(
-              phase: VideoRenderPhase.encodingVideo,
-              progress: progressVal.clamp(0.40, 0.95),
-              statusMessage: 'جاري معالجة الآية (${verses[i].verseNumber})...',
-            ));
-
-            final session = await FFmpegKit.execute(segmentCmd);
-            final returnCode = await session.getReturnCode();
-            if (!ReturnCode.isSuccess(returnCode)) {
-              final allLogs = await session.getAllLogsAsString();
-              throw Exception('تعذر إعداد الآية ${verses[i].verseNumber}: $allLogs');
-            }
+        if (segmentPaths.length == 1) {
+          final singleSegment = File(segmentPaths.first);
+          if (await singleSegment.exists()) {
+            final copyCmd = '-y -i "${segmentPaths.first}" -c copy "$rawVideoPath"';
+            await FFmpegKit.execute(copyCmd);
           }
-
-          // Concatenate all high-fps segments
-          controller.add(const VideoRenderProgress(
-            phase: VideoRenderPhase.encodingVideo,
-            progress: 0.95,
-            statusMessage: 'جاري إتمام وحفظ الفيديو النهائي...',
-          ));
-
+        } else {
           final concatListFile = File('${sessionDir.path}/segments.txt');
           final concatBuffer = StringBuffer();
           for (final p in segmentPaths) {
@@ -248,12 +313,50 @@ class VideoExportService {
           await concatListFile.writeAsString(concatBuffer.toString());
           final concatInput = concatListFile.path.replaceAll(r'\', '/');
 
-          final concatCmd = '-y -f concat -safe 0 -i "$concatInput" -c copy -movflags +faststart "$outputPath"';
+          final concatCmd = '-y -f concat -safe 0 -i "$concatInput" -c copy "$rawVideoPath"';
           final concatSession = await FFmpegKit.execute(concatCmd);
           final concatReturnCode = await concatSession.getReturnCode();
           if (!ReturnCode.isSuccess(concatReturnCode)) {
             final allLogs = await concatSession.getAllLogsAsString();
-            throw Exception('تعذر تجميع مقاطع الآيات: $allLogs');
+            throw Exception('تعذر تجميع مقاطع الفيديو: $allLogs');
+          }
+        }
+
+        // Final Mux: Video Track + 100% Continuous Original Audio Stream (Zero AAC padding / Zero stutter)
+        final validAudioFiles = <String>[];
+        for (final p in resolvedAudioPaths) {
+          if (p.isNotEmpty && await File(p).exists()) {
+            validAudioFiles.add(p.replaceAll(r'\', '/'));
+          }
+        }
+
+        if (validAudioFiles.isEmpty) {
+          final copyCmd = '-y -i "$rawVideoPath" -c copy -movflags +faststart "$outputPath"';
+          await FFmpegKit.execute(copyCmd);
+        } else if (validAudioFiles.length == 1) {
+          final singleAudio = validAudioFiles.first;
+          final muxCmd = '-y -i "$rawVideoPath" -i "$singleAudio" -c:v copy -c:a aac -b:a 192k -movflags +faststart "$outputPath"';
+          final muxSession = await FFmpegKit.execute(muxCmd);
+          final muxReturnCode = await muxSession.getReturnCode();
+          if (!ReturnCode.isSuccess(muxReturnCode)) {
+            final allLogs = await muxSession.getAllLogsAsString();
+            throw Exception('تعذر دمج الصوت مع الفيديو: $allLogs');
+          }
+        } else {
+          final audioConcatFile = File('${sessionDir.path}/audio_segments.txt');
+          final audioBuffer = StringBuffer();
+          for (final p in validAudioFiles) {
+            audioBuffer.writeln("file '$p'");
+          }
+          await audioConcatFile.writeAsString(audioBuffer.toString());
+          final audioConcatInput = audioConcatFile.path.replaceAll(r'\', '/');
+
+          final muxCmd = '-y -i "$rawVideoPath" -f concat -safe 0 -i "$audioConcatInput" -c:v copy -c:a aac -b:a 192k -movflags +faststart "$outputPath"';
+          final muxSession = await FFmpegKit.execute(muxCmd);
+          final muxReturnCode = await muxSession.getReturnCode();
+          if (!ReturnCode.isSuccess(muxReturnCode)) {
+            final allLogs = await muxSession.getAllLogsAsString();
+            throw Exception('تعذر دمج الصوت مع الفيديو: $allLogs');
           }
         }
 

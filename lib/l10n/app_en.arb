@@ -355,5 +355,8 @@
   "videoQuality720p": "720p HD",
   "videoQualityFast": "Fast",
   "videoQualityHigh": "Full HD",
-  "videoQualityUltra": "Ultra HD"
-}
+  "videoQualityUltra": "Ultra HD",
+  "videoStudioDisplayMode": "Text Display Mode",
+  "videoDisplayModeLineByLine": "Line by Line",
+  "videoDisplayModeStaticFull": "Full Ayah"
+}

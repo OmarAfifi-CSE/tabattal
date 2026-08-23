@@ -354,5 +354,8 @@
   "videoQuality720p": "سريعة (720p)",
   "videoQualityFast": "سريعة",
   "videoQualityHigh": "عالية الدقة",
-  "videoQualityUltra": "فائقة"
-}
+  "videoQualityUltra": "فائقة",
+  "videoStudioDisplayMode": "نمط عرض النصوص",
+  "videoDisplayModeLineByLine": "سطر بسطر",
+  "videoDisplayModeStaticFull": "الآية كاملة"
+}

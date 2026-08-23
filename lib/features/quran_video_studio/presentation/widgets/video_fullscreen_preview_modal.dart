@@ -46,91 +46,11 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
         return Scaffold(
           backgroundColor: Colors.black,
           body: SafeArea(
-            child: Stack(
+            child: Column(
               children: [
-                // 1. Center Video Preview Frame (100% WYSIWYG Canvas)
-                Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                    child: AspectRatio(
-                      aspectRatio: config.aspectRatio.ratio,
-                      child: Container(
-                        clipBehavior: Clip.antiAlias,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.5),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            // 1. Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
-                            CustomPaint(
-                              painter: VideoStaticFramePainter(
-                                config: config,
-                                verse: verse,
-                              ),
-                              size: Size.infinite,
-                            ),
-
-                            // 2. Dynamic Center Content Layer (Recitation Fade: Fade-In at verse start, Fade-Out at verse end)
-                            StreamBuilder<Duration>(
-                              stream: context.read<VideoStudioBloc>().playbackPositionStream,
-                              builder: (context, snapshot) {
-                                final position = snapshot.data ?? Duration.zero;
-                                double opacity = 1.0;
-
-                                if (state.isPlaying &&
-                                    !state.isPreparingAudio &&
-                                    state.verseDurations.isNotEmpty &&
-                                    currentIndex < state.verseDurations.length) {
-                                  final totalMs = state.verseDurations[currentIndex].inMilliseconds;
-                                  final posMs = position.inMilliseconds;
-                                  const fadeMs = 450;
-
-                                  // Exclude first verse from initial fade-in to prevent initial play flicker
-                                  if (currentIndex > 0 && posMs > 0 && posMs < fadeMs) {
-                                    opacity = (posMs / fadeMs).clamp(0.0, 1.0);
-                                  } else if (posMs > totalMs - fadeMs && totalMs > fadeMs * 2) {
-                                    opacity = ((totalMs - posMs) / fadeMs).clamp(0.0, 1.0);
-                                  } else {
-                                    opacity = 1.0;
-                                  }
-                                }
-
-                                return Opacity(
-                                  opacity: opacity,
-                                  child: CustomPaint(
-                                    key: ValueKey('fullscreen_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}'),
-                                    painter: VideoDynamicContentPainter(
-                                      verse: verse,
-                                      config: config,
-                                      pageNumber: pageNumber,
-                                      tafsirText: verse?.tafsir,
-                                      translationText: verse?.translation,
-                                    ),
-                                    size: Size.infinite,
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // 2. Top Header Bar with Close Button
-                Positioned(
-                  top: 8.h,
-                  left: 16.w,
-                  right: 16.w,
+                // 1. Top Header Bar with Close Button
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -196,11 +116,73 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                   ),
                 ),
 
-                // 3. Bottom Playback Controls Bar
-                Positioned(
-                  bottom: 12.h,
-                  left: 20.w,
-                  right: 20.w,
+                // 2. Center Video Preview Frame (Guaranteed Zero Overlap from top or bottom controls)
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+                      child: AspectRatio(
+                        aspectRatio: config.aspectRatio.ratio,
+                        child: Container(
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                blurRadius: 24,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              // Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
+                              RepaintBoundary(
+                                child: CustomPaint(
+                                  painter: VideoStaticFramePainter(
+                                    config: config,
+                                    verse: verse,
+                                  ),
+                                  size: Size.infinite,
+                                ),
+                              ),
+
+                              // Dynamic Center Content Layer (100% Solid & Real-time Text Tracking)
+                              StreamBuilder<Duration>(
+                                stream: context.read<VideoStudioBloc>().playbackPositionStream,
+                                builder: (context, snapshot) {
+                                  final position = snapshot.data ?? Duration.zero;
+
+                                  return RepaintBoundary(
+                                    child: CustomPaint(
+                                      key: ValueKey('fullscreen_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}'),
+                                      painter: VideoDynamicContentPainter(
+                                        verse: verse,
+                                        config: config,
+                                        pageNumber: pageNumber,
+                                        tafsirText: verse?.tafsir,
+                                        translationText: verse?.translation,
+                                        playbackPositionMs: position.inMilliseconds,
+                                        wordTimings: state.currentVerseWordTimings,
+                                      ),
+                                      size: Size.infinite,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // 3. Bottom Playback Controls Bar (Cleanly separated below video frame)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20.w, 6.h, 20.w, 12.h),
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                     decoration: BoxDecoration(
@@ -245,6 +227,20 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              // Reset / Replay to initial Ayah Button
+                              IconButton(
+                                onPressed: () {
+                                  context
+                                      .read<VideoStudioBloc>()
+                                      .add(const VideoStudioPlaybackReset());
+                                },
+                                icon: const Icon(Icons.replay_rounded),
+                                color: AppColors.accentGold,
+                                iconSize: 24.r,
+                                tooltip: 'إعادة من البداية',
+                              ),
+                              SizedBox(width: 8.w),
+
                               // Previous Verse Button
                               IconButton(
                                 onPressed: currentIndex > 0

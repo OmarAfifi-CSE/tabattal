@@ -678,4 +678,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get videoQualityUltra => 'فائقة';
+
+  @override
+  String get videoStudioDisplayMode => 'نمط عرض النصوص';
+
+  @override
+  String get videoDisplayModeLineByLine => 'سطر بسطر';
+
+  @override
+  String get videoDisplayModeStaticFull => 'الآية كاملة';
 }

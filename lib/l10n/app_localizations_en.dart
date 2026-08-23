@@ -678,4 +678,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoQualityUltra => 'Ultra HD';
+
+  @override
+  String get videoStudioDisplayMode => 'Text Display Mode';
+
+  @override
+  String get videoDisplayModeLineByLine => 'Line by Line';
+
+  @override
+  String get videoDisplayModeStaticFull => 'Full Ayah';
 }

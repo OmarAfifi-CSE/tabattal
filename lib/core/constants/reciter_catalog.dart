@@ -13,10 +13,8 @@ class ReciterCatalog {
       'عبد الباسط عبد الصمد': 'Abdul_Basit_Murattal_192kbps',
       'محمود علي البنا': 'mahmoud_ali_al_banna_32kbps',
       'محمد محمود الطبلاوي': 'Mohammad_al_Tablaway_128kbps',
-      'أحمد نعينع': 'Ahmed_Neana_128kbps',
 
       // 2. الجيل الحديث (سريع وتلاوة معاصرة)
-      'مشاري العفاسي': 'Alafasy_128kbps',
       'ماهر المعيقلي': 'MaherAlMuaiqly128kbps',
       'ياسر الدوسري': 'Yasser_Ad-Dussary_128kbps',
       'أحمد العجمي': 'Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net',
@@ -24,7 +22,6 @@ class ReciterCatalog {
       'ناصر القطامي': 'Nasser_Alqatami_128kbps',
       'فارس عباد': 'Fares_Abbad_64kbps',
       'أبو بكر الشاطري': 'Abu_Bakr_Ash-Shaatree_128kbps',
-      'عبد الرحمن السديس': 'Abdurrahmaan_As-Sudais_192kbps',
       'سعود الشريم': 'Saood_ash-Shuraym_128kbps',
       'عبدالله عواد الجهني': 'Abdullaah_3awwaad_Al-Juhaynee_128kbps',
       'خالد القحطاني': 'Khaalid_Abdullaah_al-Qahtaanee_192kbps',
@@ -41,7 +38,6 @@ class ReciterCatalog {
 
       // 4. قراء آخرون (تلاوات متنوعة)
       'صلاح بو خاطر': 'Salaah_AbdulRahman_Bukhatir_128kbps',
-      'صلاح البدير': 'Salah_Al_Budair_128kbps',
       'نبيل الرفاعي': 'Nabil_Rifa3i_48kbps',
       'سهل ياسين': 'Sahl_Yassin_128kbps',
       'ياسر سلامة': 'Yaser_Salamah_128kbps',
