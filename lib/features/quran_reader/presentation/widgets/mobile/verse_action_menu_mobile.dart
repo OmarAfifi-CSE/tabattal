@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -215,7 +214,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                         MediaQuery.sizeOf(context).height *
                         0.7, // Max 70% of screen
                   ),
-                  padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, math.max(20.h, MediaQuery.paddingOf(context).bottom)),
+                  padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, MediaQuery.paddingOf(context).bottom),
                 child: BlocConsumer<QuranBloc, QuranState>(
                   listener: (context, state) {
                     if (state is TafsirDownloaded) {

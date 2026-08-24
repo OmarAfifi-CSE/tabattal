@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -81,7 +80,7 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                 20.w,
                 14.h,
                 20.w,
-                math.max(28.h, MediaQuery.paddingOf(context).bottom + 12.h),
+                MediaQuery.paddingOf(context).bottom,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

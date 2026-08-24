@@ -50,7 +50,12 @@ class VideoRangePicker extends StatelessWidget {
             constraints: BoxConstraints(
               maxHeight: MediaQuery.sizeOf(ctx).height * 0.65,
             ),
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            padding: EdgeInsets.only(
+              left: 16.w,
+              right: 16.w,
+              top: 12.h,
+              bottom: MediaQuery.paddingOf(ctx).bottom,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

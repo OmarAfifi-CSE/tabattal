@@ -824,7 +824,8 @@ class _VerseCardGeneratorSheetContentState
     final l10n = AppLocalizations.of(context)!;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     const isWeb = kIsWeb;
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
+    final viewInsetsBottom = MediaQuery.viewInsetsOf(context).bottom;
     final maxSheetHeight = isWeb
         ? MediaQuery.sizeOf(context).height * 0.90
         : MediaQuery.sizeOf(context).height * 0.88;
@@ -877,7 +878,7 @@ class _VerseCardGeneratorSheetContentState
                 left: isWeb ? 20 : 16.w,
                 right: isWeb ? 20 : 16.w,
                 top: isWeb ? 20 : 16.h,
-                bottom: (isWeb ? 20 : 16.h) + bottomInset,
+                bottom: bottomSafeArea + viewInsetsBottom,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

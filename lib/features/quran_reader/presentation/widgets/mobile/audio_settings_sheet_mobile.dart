@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -146,13 +145,11 @@ class _AudioSettingsSheetContentState
 
     return Padding(
       padding: EdgeInsets.only(
-        bottom: math.max(
-          MediaQuery.viewInsetsOf(context).bottom,
-          MediaQuery.paddingOf(context).bottom,
-        ),
+        bottom: MediaQuery.paddingOf(context).bottom +
+            MediaQuery.viewInsetsOf(context).bottom,
       ),
       child: Container(
-        padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 20.h),
+        padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

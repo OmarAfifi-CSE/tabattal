@@ -114,6 +114,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
   Widget build(BuildContext context) {
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
     const errorColor = Color(0xFFD32F2F);
 
     return Directionality(
@@ -123,7 +124,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
           left: 16.w,
           right: 16.w,
           top: 12.h,
-          bottom: 20.h + bottomInset,
+          bottom: bottomSafeArea + bottomInset,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

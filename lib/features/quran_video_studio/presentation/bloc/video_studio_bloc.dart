@@ -55,12 +55,12 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
 
   void _initAudioListeners() {
     _playerStateSubscription = _previewPlayer.playerStateStream.listen((playerState) {
-      if (playerState.processingState == ProcessingState.completed) {
-        add(const VideoStudioPlaybackStateChanged(false));
-      }
+      final isPlaying = _previewPlayer.playing && playerState.processingState != ProcessingState.completed;
+      add(VideoStudioPlaybackStateChanged(isPlaying));
     });
 
-    _playingSubscription = _previewPlayer.playingStream.listen((isPlaying) {
+    _playingSubscription = _previewPlayer.playingStream.listen((playing) {
+      final isPlaying = playing && _previewPlayer.processingState != ProcessingState.completed;
       add(VideoStudioPlaybackStateChanged(isPlaying));
     });
 
@@ -278,46 +278,56 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     VideoStudioPlaybackToggled event,
     Emitter<VideoStudioState> emit,
   ) async {
-    if (_previewPlayer.playing) {
+    if (state.audioFilePaths.isEmpty) {
+      await _loadAudioAndVersesForCurrentSpan(emit);
+    }
+
+    if (state.audioFilePaths.isEmpty) return;
+
+    final isAtEnd = _previewPlayer.processingState == ProcessingState.completed ||
+        (state.currentVerseIndex >= state.audioFilePaths.length - 1 &&
+            _previewPlayer.position >= (_previewPlayer.duration ?? Duration.zero) &&
+            (_previewPlayer.duration ?? Duration.zero) > Duration.zero);
+
+    if (isAtEnd) {
+      try {
+        if (_previewPlayer.sequence.isNotEmpty) {
+          await _previewPlayer.seek(Duration.zero, index: 0);
+        } else {
+          await _previewPlayer.setAudioSources(
+            state.audioFilePaths.map((path) => AudioSource.file(path)).toList(),
+            initialIndex: 0,
+            initialPosition: Duration.zero,
+          );
+        }
+        emit(state.copyWith(
+          currentVerseIndex: 0,
+          playbackResetTrigger: state.playbackResetTrigger + 1,
+          isPlaying: true,
+        ));
+        await _previewPlayer.play();
+      } catch (_) {
+        emit(state.copyWith(isPlaying: false));
+      }
+      return;
+    }
+
+    if (_previewPlayer.playing && _previewPlayer.processingState != ProcessingState.completed) {
+      emit(state.copyWith(isPlaying: false));
       await _previewPlayer.pause();
     } else {
-      if (state.audioFilePaths.isEmpty) {
-        await _loadAudioAndVersesForCurrentSpan(emit);
-      }
-
-      if (state.audioFilePaths.isNotEmpty) {
-        try {
-          final isAtEnd = _previewPlayer.processingState == ProcessingState.completed ||
-              (state.currentVerseIndex >= state.audioFilePaths.length - 1 &&
-                  _previewPlayer.position >= (_previewPlayer.duration ?? Duration.zero) &&
-                  (_previewPlayer.duration ?? Duration.zero) > Duration.zero);
-
-          if (isAtEnd) {
-            // Replay entire span from the beginning
-            if (_previewPlayer.sequence.isNotEmpty) {
-              await _previewPlayer.seek(Duration.zero, index: 0);
-            } else {
-              await _previewPlayer.setAudioSources(
-                state.audioFilePaths.map((path) => AudioSource.file(path)).toList(),
-                initialIndex: 0,
-                initialPosition: Duration.zero,
-              );
-            }
-            emit(state.copyWith(
-              currentVerseIndex: 0,
-              playbackResetTrigger: state.playbackResetTrigger + 1,
-            ));
-          } else if (_previewPlayer.sequence.isEmpty) {
-            await _previewPlayer.setAudioSources(
-              state.audioFilePaths.map((path) => AudioSource.file(path)).toList(),
-              initialIndex: state.currentVerseIndex.clamp(0, state.audioFilePaths.length - 1),
-              initialPosition: Duration.zero,
-            );
-          }
-          await _previewPlayer.play();
-        } catch (_) {
-          emit(state.copyWith(isPlaying: false));
+      try {
+        if (_previewPlayer.sequence.isEmpty) {
+          await _previewPlayer.setAudioSources(
+            state.audioFilePaths.map((path) => AudioSource.file(path)).toList(),
+            initialIndex: state.currentVerseIndex.clamp(0, state.audioFilePaths.length - 1),
+            initialPosition: Duration.zero,
+          );
         }
+        emit(state.copyWith(isPlaying: true));
+        await _previewPlayer.play();
+      } catch (_) {
+        emit(state.copyWith(isPlaying: false));
       }
     }
   }

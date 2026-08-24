@@ -61,7 +61,12 @@ class _VideoReciterSelectorState extends State<VideoReciterSelector> {
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.sizeOf(ctx).height * 0.75,
               ),
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              padding: EdgeInsets.only(
+                left: 16.w,
+                right: 16.w,
+                top: 12.h,
+                bottom: MediaQuery.paddingOf(ctx).bottom,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
