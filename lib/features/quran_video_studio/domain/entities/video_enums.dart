@@ -156,7 +156,8 @@ enum VideoBackgroundType {
   gradient,
   solid,
   ambientLoop,
-  customImage;
+  customImage,
+  customVideo;
 }
 
 enum VideoTextStyle {

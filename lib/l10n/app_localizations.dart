@@ -1411,6 +1411,78 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الآية كاملة'**
   String get videoDisplayModeStaticFull;
+
+  /// No description provided for @videoBgCustomVideo.
+  ///
+  /// In ar, this message translates to:
+  /// **'فيديو مخصص'**
+  String get videoBgCustomVideo;
+
+  /// No description provided for @videoBgChooseVideoGallery.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختيار من المعرض'**
+  String get videoBgChooseVideoGallery;
+
+  /// No description provided for @videoBgChooseVideoGallerySub.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر مقطع فيديو من جهازك ليكون خلفية متحركة'**
+  String get videoBgChooseVideoGallerySub;
+
+  /// No description provided for @videoBgVideoUrl.
+  ///
+  /// In ar, this message translates to:
+  /// **'رابط فيديو مباشر'**
+  String get videoBgVideoUrl;
+
+  /// No description provided for @videoBgVideoUrlSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'ضع رابط مقطع فيديو مباشر من الإنترنت (MP4)'**
+  String get videoBgVideoUrlSub;
+
+  /// No description provided for @videoBgRemoveVideo.
+  ///
+  /// In ar, this message translates to:
+  /// **'إزالة الفيديو المخصص'**
+  String get videoBgRemoveVideo;
+
+  /// No description provided for @videoBgCustomVideoActive.
+  ///
+  /// In ar, this message translates to:
+  /// **'فيديو مخصص نشط'**
+  String get videoBgCustomVideoActive;
+
+  /// No description provided for @videoBgLoadingVideo.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري معالجة مقطع الفيديو...'**
+  String get videoBgLoadingVideo;
+
+  /// No description provided for @videoBgInvalidVideoUrl.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى إدخال رابط فيديو صالح (MP4)'**
+  String get videoBgInvalidVideoUrl;
+
+  /// No description provided for @videoBgCardDesign.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصميم البطاقة'**
+  String get videoBgCardDesign;
+
+  /// No description provided for @videoBgCustomPhoto.
+  ///
+  /// In ar, this message translates to:
+  /// **'صورة مخصصة'**
+  String get videoBgCustomPhoto;
+
+  /// No description provided for @videoBgChangeVideo.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيير الفيديو'**
+  String get videoBgChangeVideo;
 }
 
 class _AppLocalizationsDelegate

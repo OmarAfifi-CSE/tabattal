@@ -93,6 +93,15 @@ class VideoStudioCustomImageSelected extends VideoStudioEvent {
   List<Object?> get props => [imagePath];
 }
 
+class VideoStudioCustomVideoSelected extends VideoStudioEvent {
+  final String? videoPath;
+
+  const VideoStudioCustomVideoSelected(this.videoPath);
+
+  @override
+  List<Object?> get props => [videoPath];
+}
+
 class VideoStudioDimmingChanged extends VideoStudioEvent {
   final double dimming;
 

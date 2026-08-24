@@ -2,29 +2,44 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../domain/entities/video_enums.dart';
 import '../../domain/entities/video_project_config.dart';
 import 'custom_background_modal.dart';
+import 'custom_video_modal.dart';
 
-/// Dedicated background selector that cleanly separates Background (Theme Gradient vs Custom Photo)
+/// Dedicated background selector that cleanly separates Background (Card Design vs Custom Photo vs Custom Video)
 /// from the Theme Palette styling.
 class VideoBackgroundSelector extends StatelessWidget {
   final VideoProjectConfig config;
   final ValueChanged<String?> onCustomImageChanged;
+  final ValueChanged<String?>? onCustomVideoChanged;
   final ValueChanged<double>? onDimmingChanged;
 
   const VideoBackgroundSelector({
     super.key,
     required this.config,
     required this.onCustomImageChanged,
+    this.onCustomVideoChanged,
     this.onDimmingChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final hasCustomImage = config.customImagePath != null &&
+    final l10n = AppLocalizations.of(context)!;
+
+    final hasCustomImage = config.backgroundType == VideoBackgroundType.customImage &&
+        config.customImagePath != null &&
         config.customImagePath!.isNotEmpty &&
         File(config.customImagePath!).existsSync();
+
+    final hasCustomVideo = config.backgroundType == VideoBackgroundType.customVideo &&
+        config.customVideoPath != null &&
+        config.customVideoPath!.isNotEmpty &&
+        File(config.customVideoPath!).existsSync();
+
+    final isDefaultTheme = !hasCustomImage && !hasCustomVideo;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,7 +55,16 @@ class VideoBackgroundSelector extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-            if (hasCustomImage)
+            if (hasCustomVideo)
+              Text(
+                l10n.videoBgCustomVideoActive,
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.accentGold,
+                ),
+              )
+            else if (hasCustomImage)
               Text(
                 isEn ? 'Custom Photo Active' : 'صورة مخصصة نشطة',
                 style: TextStyle(
@@ -61,47 +85,54 @@ class VideoBackgroundSelector extends StatelessWidget {
                   if (hasCustomImage) {
                     onCustomImageChanged(null);
                   }
+                  if (hasCustomVideo) {
+                    onCustomVideoChanged?.call(null);
+                  }
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: EdgeInsets.symmetric(
-                    horizontal: 10.w,
+                    horizontal: 6.w,
                     vertical: 8.h,
                   ),
                   decoration: BoxDecoration(
-                    color: !hasCustomImage
+                    color: isDefaultTheme
                         ? AppColors.accentGold.withValues(alpha: 0.12)
                         : AppColors.surfaceCream,
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
-                      color: !hasCustomImage
+                      color: isDefaultTheme
                           ? AppColors.accentGold
                           : AppColors.divider,
-                      width: !hasCustomImage ? 2.0 : 1.0,
+                      width: isDefaultTheme ? 2.0 : 1.0,
                     ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        !hasCustomImage
+                        isDefaultTheme
                             ? Icons.check_circle_rounded
                             : Icons.palette_outlined,
-                        size: 16.sp,
-                        color: !hasCustomImage
+                        size: 15.sp,
+                        color: isDefaultTheme
                             ? AppColors.accentGold
                             : AppColors.textSecondary,
                       ),
-                      SizedBox(width: 6.w),
-                      Text(
-                        isEn ? 'Card Design' : 'تصميم البطاقة',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight:
-                              !hasCustomImage ? FontWeight.bold : FontWeight.w500,
-                          color: !hasCustomImage
-                              ? AppColors.textPrimary
-                              : AppColors.textSecondary,
+                      SizedBox(width: 4.w),
+                      Flexible(
+                        child: Text(
+                          l10n.videoBgCardDesign,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.5.sp,
+                            fontWeight:
+                                isDefaultTheme ? FontWeight.bold : FontWeight.w500,
+                            color: isDefaultTheme
+                                ? AppColors.textPrimary
+                                : AppColors.textSecondary,
+                          ),
                         ),
                       ),
                     ],
@@ -109,7 +140,7 @@ class VideoBackgroundSelector extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(width: 8.w),
+            SizedBox(width: 6.w),
 
             // Option 2: Custom Photo (Gallery / URL)
             Expanded(
@@ -125,7 +156,7 @@ class VideoBackgroundSelector extends StatelessWidget {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: EdgeInsets.symmetric(
-                    horizontal: 10.w,
+                    horizontal: 6.w,
                     vertical: 8.h,
                   ),
                   decoration: BoxDecoration(
@@ -157,24 +188,93 @@ class VideoBackgroundSelector extends StatelessWidget {
                         hasCustomImage
                             ? Icons.edit_rounded
                             : Icons.add_photo_alternate_outlined,
-                        size: 16.sp,
+                        size: 15.sp,
                         color: hasCustomImage
                             ? Colors.white
                             : AppColors.accentGold,
                       ),
-                      SizedBox(width: 6.w),
-                      Text(
-                        hasCustomImage
-                            ? (isEn ? 'Change Photo' : 'تغيير الصورة')
-                            : (isEn ? 'Custom Photo' : 'صورة مخصصة'),
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: hasCustomImage
-                              ? FontWeight.bold
-                              : FontWeight.w600,
-                          color: hasCustomImage
-                              ? Colors.white
-                              : AppColors.textPrimary,
+                      SizedBox(width: 4.w),
+                      Flexible(
+                        child: Text(
+                          l10n.videoBgCustomPhoto,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.5.sp,
+                            fontWeight: hasCustomImage
+                                ? FontWeight.bold
+                                : FontWeight.w600,
+                            color: hasCustomImage
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 6.w),
+
+            // Option 3: Custom Video (Gallery / URL)
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  CustomVideoModal.show(
+                    context,
+                    currentVideoPath: config.customVideoPath,
+                    onVideoSelected: (path) => onCustomVideoChanged?.call(path),
+                    onVideoRemoved: () => onCustomVideoChanged?.call(null),
+                  );
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 6.w,
+                    vertical: 8.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: hasCustomVideo
+                        ? AppColors.accentGold.withValues(alpha: 0.15)
+                        : AppColors.surfaceCream,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: hasCustomVideo
+                          ? AppColors.accentGold
+                          : AppColors.divider,
+                      width: hasCustomVideo ? 2.0 : 1.0,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        hasCustomVideo
+                            ? Icons.videocam_rounded
+                            : Icons.videocam_outlined,
+                        size: 15.sp,
+                        color: hasCustomVideo
+                            ? AppColors.accentGold
+                            : AppColors.accentGold,
+                      ),
+                      SizedBox(width: 4.w),
+                      Flexible(
+                        child: Text(
+                          hasCustomVideo
+                              ? l10n.videoBgChangeVideo
+                              : l10n.videoBgCustomVideo,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.5.sp,
+                            fontWeight: hasCustomVideo
+                                ? FontWeight.bold
+                                : FontWeight.w600,
+                            color: hasCustomVideo
+                                ? AppColors.accentGold
+                                : AppColors.textPrimary,
+                          ),
                         ),
                       ),
                     ],

@@ -101,12 +101,16 @@ class VideoExportService {
         }
 
         final isLineByLine = config.textDisplayMode == VideoTextDisplayMode.lineByLine;
-        final wordTimingService = WordTimingService();
+        final isCustomVideo = config.backgroundType == VideoBackgroundType.customVideo &&
+            config.customVideoPath != null &&
+            config.customVideoPath!.isNotEmpty &&
+            File(config.customVideoPath!).existsSync();
 
         // Phase 2: Generating HD Base Frame and Transparent Overlays
         final baseFrameBytes = await _overlayGenerator.generateStaticBaseFramePng(
           config: config,
           verse: verses.first,
+          includeBackground: !isCustomVideo,
         );
         if (baseFrameBytes == null) {
           throw Exception('فشل في إنشاء الإطار الأساسي للبطاقة');
@@ -120,9 +124,17 @@ class VideoExportService {
         final outputPath = outputMp4File.path.replaceAll(r'\', '/');
         final quality = config.videoQuality;
         final crfArg = '-crf ${quality.crf}';
-        const presetArg = '-preset ultrafast -tune stillimage -threads 0';
+        final presetArg = isCustomVideo
+            ? '-preset ultrafast -threads 0'
+            : '-preset ultrafast -tune stillimage -threads 0';
+        final targetW = config.aspectRatio.getTargetWidth(config.videoQuality);
+        final targetH = config.aspectRatio.getTargetHeight(config.videoQuality);
+        final bgVideoPath = isCustomVideo
+            ? config.customVideoPath!.replaceAll(r'\', '/')
+            : '';
 
         final segmentPaths = <String>[];
+        final wordTimingService = WordTimingService();
         int totalUnits = 0;
 
         // Calculate total rendering units (lines or verses)
@@ -239,10 +251,23 @@ class VideoExportService {
           final safeFade = fadeDur.clamp(0.05, durSec * 0.20);
           final fadeOutStart = (durSec - safeFade).clamp(0.08, durSec);
 
-          // Video-only segment encoding (keeps audio completely intact and unbroken)
-          final segmentCmd = '-y -loop 1 -t $durSec -framerate 30 -i "$baseFramePath" -loop 1 -t $durSec -framerate 30 -i "$overlayPath" '
-              '-filter_complex "[1:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1[dyn];[0:v][dyn]overlay=0:0[v]" '
-              '-map "[v]" -c:v libx264 $presetArg $crfArg -pix_fmt yuv420p -r 30 "$segmentPath"';
+          final String segmentCmd;
+          if (isCustomVideo) {
+            final startBgSec = (completedDurationMs / 1000.0).toStringAsFixed(3);
+            final dimmingAlpha = config.backgroundDimming.clamp(0.0, 0.95).toStringAsFixed(2);
+            segmentCmd = '-y -stream_loop -1 -ss $startBgSec -t $durSec -i "$bgVideoPath" '
+                '-loop 1 -t $durSec -framerate 30 -i "$baseFramePath" '
+                '-loop 1 -t $durSec -framerate 30 -i "$overlayPath" '
+                '-filter_complex "[0:v]scale=$targetW:$targetH:force_original_aspect_ratio=increase,crop=$targetW:$targetH,setsar=1,format=yuv420p,drawbox=color=black@$dimmingAlpha:t=fill[bg_dim];'
+                '[bg_dim][1:v]overlay=0:0[bg_dec];'
+                '[2:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1[dyn];'
+                '[bg_dec][dyn]overlay=0:0[v]" '
+                '-map "[v]" -c:v libx264 $presetArg $crfArg -pix_fmt yuv420p -r 30 "$segmentPath"';
+          } else {
+            segmentCmd = '-y -loop 1 -t $durSec -framerate 30 -i "$baseFramePath" -loop 1 -t $durSec -framerate 30 -i "$overlayPath" '
+                '-filter_complex "[1:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1[dyn];[0:v][dyn]overlay=0:0[v]" '
+                '-map "[v]" -c:v libx264 $presetArg $crfArg -pix_fmt yuv420p -r 30 "$segmentPath"';
+          }
 
           final sessionCompleter = Completer<dynamic>();
           final initialProgress = 0.20 + (completedDurationMs / totalDurationMs) * 0.74;

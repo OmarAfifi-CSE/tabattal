@@ -709,4 +709,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoDisplayModeStaticFull => 'Full Ayah';
+
+  @override
+  String get videoBgCustomVideo => 'Custom Video';
+
+  @override
+  String get videoBgChooseVideoGallery => 'Choose from Gallery';
+
+  @override
+  String get videoBgChooseVideoGallerySub =>
+      'Pick a video from your device as an animated background';
+
+  @override
+  String get videoBgVideoUrl => 'Direct Video URL';
+
+  @override
+  String get videoBgVideoUrlSub =>
+      'Paste a direct video link from the web (MP4)';
+
+  @override
+  String get videoBgRemoveVideo => 'Remove Custom Video';
+
+  @override
+  String get videoBgCustomVideoActive => 'Custom Video Active';
+
+  @override
+  String get videoBgLoadingVideo => 'Processing video...';
+
+  @override
+  String get videoBgInvalidVideoUrl => 'Please enter a valid video link (MP4)';
+
+  @override
+  String get videoBgCardDesign => 'Card Design';
+
+  @override
+  String get videoBgCustomPhoto => 'Custom Photo';
+
+  @override
+  String get videoBgChangeVideo => 'Change Video';
 }

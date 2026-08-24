@@ -18,6 +18,7 @@ class VideoStudioState extends Equatable {
   final VideoRenderProgress exportProgress;
   final VideoExportAction? pendingExportAction;
   final String? errorMessage;
+  final int playbackResetTrigger;
 
   const VideoStudioState({
     required this.config,
@@ -31,6 +32,7 @@ class VideoStudioState extends Equatable {
     this.exportProgress = const VideoRenderProgress(),
     this.pendingExportAction,
     this.errorMessage,
+    this.playbackResetTrigger = 0,
   });
 
   VerseModel? get currentVerse {
@@ -59,6 +61,7 @@ class VideoStudioState extends Equatable {
     VideoExportAction? pendingExportAction,
     String? errorMessage,
     bool clearError = false,
+    int? playbackResetTrigger,
   }) {
     return VideoStudioState(
       config: config ?? this.config,
@@ -72,6 +75,7 @@ class VideoStudioState extends Equatable {
       exportProgress: exportProgress ?? this.exportProgress,
       pendingExportAction: pendingExportAction ?? this.pendingExportAction,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      playbackResetTrigger: playbackResetTrigger ?? this.playbackResetTrigger,
     );
   }
 
@@ -88,6 +92,7 @@ class VideoStudioState extends Equatable {
         exportProgress,
         pendingExportAction,
         errorMessage,
+        playbackResetTrigger,
       ];
 }
 

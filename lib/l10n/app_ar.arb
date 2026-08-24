@@ -364,5 +364,17 @@
   "videoQualityUltra": "فائقة",
   "videoStudioDisplayMode": "نمط عرض النصوص",
   "videoDisplayModeLineByLine": "سطر بسطر",
-  "videoDisplayModeStaticFull": "الآية كاملة"
+  "videoDisplayModeStaticFull": "الآية كاملة",
+  "videoBgCustomVideo": "فيديو مخصص",
+  "videoBgChooseVideoGallery": "اختيار من المعرض",
+  "videoBgChooseVideoGallerySub": "اختر مقطع فيديو من جهازك ليكون خلفية متحركة",
+  "videoBgVideoUrl": "رابط فيديو مباشر",
+  "videoBgVideoUrlSub": "ضع رابط مقطع فيديو مباشر من الإنترنت (MP4)",
+  "videoBgRemoveVideo": "إزالة الفيديو المخصص",
+  "videoBgCustomVideoActive": "فيديو مخصص نشط",
+  "videoBgLoadingVideo": "جاري معالجة مقطع الفيديو...",
+  "videoBgInvalidVideoUrl": "يرجى إدخال رابط فيديو صالح (MP4)",
+  "videoBgCardDesign": "تصميم البطاقة",
+  "videoBgCustomPhoto": "صورة مخصصة",
+  "videoBgChangeVideo": "تغيير الفيديو"
 }

@@ -14,6 +14,7 @@ class VideoProjectConfig extends Equatable {
   final VideoBackgroundType backgroundType;
   final VideoThemePreset themePreset;
   final String? customImagePath;
+  final String? customVideoPath;
   final double backgroundDimming;
   final bool showSurahBadge;
   final bool showReciterName;
@@ -37,6 +38,7 @@ class VideoProjectConfig extends Equatable {
     this.backgroundType = VideoBackgroundType.gradient,
     this.themePreset = VideoThemePreset.cream,
     this.customImagePath,
+    this.customVideoPath,
     this.backgroundDimming = 0.35,
     this.showSurahBadge = true,
     this.showReciterName = true,
@@ -64,6 +66,8 @@ class VideoProjectConfig extends Equatable {
     VideoThemePreset? themePreset,
     String? customImagePath,
     bool clearCustomImage = false,
+    String? customVideoPath,
+    bool clearCustomVideo = false,
     double? backgroundDimming,
     bool? showSurahBadge,
     bool? showReciterName,
@@ -88,6 +92,8 @@ class VideoProjectConfig extends Equatable {
       themePreset: themePreset ?? this.themePreset,
       customImagePath:
           clearCustomImage ? null : (customImagePath ?? this.customImagePath),
+      customVideoPath:
+          clearCustomVideo ? null : (customVideoPath ?? this.customVideoPath),
       backgroundDimming: backgroundDimming ?? this.backgroundDimming,
       showSurahBadge: showSurahBadge ?? this.showSurahBadge,
       showReciterName: showReciterName ?? this.showReciterName,
@@ -115,6 +121,7 @@ class VideoProjectConfig extends Equatable {
         backgroundType,
         themePreset,
         customImagePath,
+        customVideoPath,
         backgroundDimming,
         showSurahBadge,
         showReciterName,

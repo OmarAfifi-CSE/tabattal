@@ -13,6 +13,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/arabic_text_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../settings/bloc/settings_bloc.dart';
+import '../../bloc/audio/audio_bloc.dart';
+import '../../bloc/audio/audio_event.dart';
 import '../../data/models/verse_model.dart';
 
 import '../../../quran_video_studio/data/repositories/video_studio_repository_impl.dart';
@@ -58,6 +60,10 @@ void showVerseCardGeneratorModal(
   ShareFormat initialFormat = ShareFormat.video,
   List<VerseModel>? initialVerses,
 }) {
+  try {
+    context.read<AudioBloc>().add(const PauseAudio());
+  } catch (_) {}
+
   const isWeb = kIsWeb;
   final isWide = MediaQuery.sizeOf(context).width > 600;
 
@@ -1155,14 +1161,23 @@ class _VerseCardGeneratorSheetContentState
                     .read<VideoStudioBloc>()
                     .add(VideoStudioCustomImageSelected(path));
               },
+              onCustomVideoChanged: (path) {
+                context
+                    .read<VideoStudioBloc>()
+                    .add(VideoStudioCustomVideoSelected(path));
+              },
             ),
             SizedBox(height: 12.h),
             Builder(
               builder: (context) {
-                final bool hasCustomImage = config.customImagePath != null &&
-                    config.customImagePath!.isNotEmpty &&
-                    File(config.customImagePath!).existsSync();
-                final bool showThemeSelector = !hasCustomImage || config.showCardFrame;
+                final bool hasCustomMedia = (config.customImagePath != null &&
+                        config.customImagePath!.isNotEmpty &&
+                        File(config.customImagePath!).existsSync()) ||
+                    (config.customVideoPath != null &&
+                        config.customVideoPath!.isNotEmpty &&
+                        File(config.customVideoPath!).existsSync());
+                final bool showThemeSelector =
+                    !hasCustomMedia || config.showCardFrame;
 
                 return AnimatedSize(
                   duration: const Duration(milliseconds: 250),

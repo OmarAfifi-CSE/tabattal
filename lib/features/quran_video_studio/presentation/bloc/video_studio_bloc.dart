@@ -16,8 +16,12 @@ import 'video_studio_state.dart';
 class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   final IVideoStudioRepository repository;
   final WordTimingService _wordTimingService = WordTimingService();
-  final AudioPlayer _previewPlayer = AudioPlayer();
+  final AudioPlayer _previewPlayer = AudioPlayer(
+    handleInterruptions: false,
+    androidApplyAudioAttributes: false,
+  );
   StreamSubscription<PlayerState>? _playerStateSubscription;
+  StreamSubscription<bool>? _playingSubscription;
   StreamSubscription<int?>? _currentIndexSubscription;
 
   VideoStudioBloc({
@@ -31,6 +35,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     on<VideoStudioThemeChanged>(_onThemeChanged);
     on<VideoStudioBackgroundTypeChanged>(_onBackgroundTypeChanged);
     on<VideoStudioCustomImageSelected>(_onCustomImageSelected);
+    on<VideoStudioCustomVideoSelected>(_onCustomVideoSelected);
     on<VideoStudioDimmingChanged>(_onDimmingChanged);
     on<VideoStudioTextStyleChanged>(_onTextStyleChanged);
     on<VideoStudioTextDisplayModeChanged>(_onTextDisplayModeChanged);
@@ -55,7 +60,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       }
     });
 
-    _previewPlayer.playingStream.listen((isPlaying) {
+    _playingSubscription = _previewPlayer.playingStream.listen((isPlaying) {
       add(VideoStudioPlaybackStateChanged(isPlaying));
     });
 
@@ -154,7 +159,15 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     Emitter<VideoStudioState> emit,
   ) {
     CanvasOverlayGenerator.clearLayoutCache();
-    emit(state.copyWith(config: state.config.copyWith(backgroundType: event.backgroundType)));
+    emit(
+      state.copyWith(
+        config: state.config.copyWith(
+          backgroundType: event.backgroundType,
+          clearCustomImage: event.backgroundType != VideoBackgroundType.customImage,
+          clearCustomVideo: event.backgroundType != VideoBackgroundType.customVideo,
+        ),
+      ),
+    );
   }
 
   Future<void> _onCustomImageSelected(
@@ -179,6 +192,34 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           config: state.config.copyWith(
             customImagePath: event.imagePath,
             backgroundType: VideoBackgroundType.customImage,
+            clearCustomVideo: true,
+          ),
+        ),
+      );
+    }
+  }
+
+  void _onCustomVideoSelected(
+    VideoStudioCustomVideoSelected event,
+    Emitter<VideoStudioState> emit,
+  ) {
+    CanvasOverlayGenerator.clearLayoutCache();
+    if (event.videoPath == null) {
+      emit(
+        state.copyWith(
+          config: state.config.copyWith(
+            clearCustomVideo: true,
+            backgroundType: VideoBackgroundType.gradient,
+          ),
+        ),
+      );
+    } else {
+      emit(
+        state.copyWith(
+          config: state.config.copyWith(
+            customVideoPath: event.videoPath,
+            backgroundType: VideoBackgroundType.customVideo,
+            clearCustomImage: true,
           ),
         ),
       );
@@ -246,11 +287,33 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
 
       if (state.audioFilePaths.isNotEmpty) {
         try {
-          await _previewPlayer.setAudioSources(
-            state.audioFilePaths.map((path) => AudioSource.file(path)).toList(),
-            initialIndex: state.currentVerseIndex.clamp(0, state.audioFilePaths.length - 1),
-            initialPosition: Duration.zero,
-          );
+          final isAtEnd = _previewPlayer.processingState == ProcessingState.completed ||
+              (state.currentVerseIndex >= state.audioFilePaths.length - 1 &&
+                  _previewPlayer.position >= (_previewPlayer.duration ?? Duration.zero) &&
+                  (_previewPlayer.duration ?? Duration.zero) > Duration.zero);
+
+          if (isAtEnd) {
+            // Replay entire span from the beginning
+            if (_previewPlayer.sequence.isNotEmpty) {
+              await _previewPlayer.seek(Duration.zero, index: 0);
+            } else {
+              await _previewPlayer.setAudioSources(
+                state.audioFilePaths.map((path) => AudioSource.file(path)).toList(),
+                initialIndex: 0,
+                initialPosition: Duration.zero,
+              );
+            }
+            emit(state.copyWith(
+              currentVerseIndex: 0,
+              playbackResetTrigger: state.playbackResetTrigger + 1,
+            ));
+          } else if (_previewPlayer.sequence.isEmpty) {
+            await _previewPlayer.setAudioSources(
+              state.audioFilePaths.map((path) => AudioSource.file(path)).toList(),
+              initialIndex: state.currentVerseIndex.clamp(0, state.audioFilePaths.length - 1),
+              initialPosition: Duration.zero,
+            );
+          }
           await _previewPlayer.play();
         } catch (_) {
           emit(state.copyWith(isPlaying: false));
@@ -266,7 +329,11 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     if (_previewPlayer.playing) {
       await _previewPlayer.pause();
     }
-    emit(state.copyWith(currentVerseIndex: 0));
+    emit(state.copyWith(
+      currentVerseIndex: 0,
+      isPlaying: false,
+      playbackResetTrigger: state.playbackResetTrigger + 1,
+    ));
 
     if (state.audioFilePaths.isNotEmpty) {
       try {
@@ -346,6 +413,16 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       }
 
       if (!emit.isDone) {
+        if (paths.isNotEmpty) {
+          try {
+            await _previewPlayer.setAudioSources(
+              paths.map((path) => AudioSource.file(path)).toList(),
+              initialIndex: 0,
+              initialPosition: Duration.zero,
+            );
+          } catch (_) {}
+        }
+
         emit(
           state.copyWith(
             verses: effectiveVerses,
@@ -430,6 +507,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   @override
   Future<void> close() async {
     await _playerStateSubscription?.cancel();
+    await _playingSubscription?.cancel();
     await _currentIndexSubscription?.cancel();
     await _previewPlayer.dispose();
     return super.close();

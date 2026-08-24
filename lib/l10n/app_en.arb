@@ -365,5 +365,17 @@
   "videoQualityUltra": "Ultra HD",
   "videoStudioDisplayMode": "Text Display Mode",
   "videoDisplayModeLineByLine": "Line by Line",
-  "videoDisplayModeStaticFull": "Full Ayah"
+  "videoDisplayModeStaticFull": "Full Ayah",
+  "videoBgCustomVideo": "Custom Video",
+  "videoBgChooseVideoGallery": "Choose from Gallery",
+  "videoBgChooseVideoGallerySub": "Pick a video from your device as an animated background",
+  "videoBgVideoUrl": "Direct Video URL",
+  "videoBgVideoUrlSub": "Paste a direct video link from the web (MP4)",
+  "videoBgRemoveVideo": "Remove Custom Video",
+  "videoBgCustomVideoActive": "Custom Video Active",
+  "videoBgLoadingVideo": "Processing video...",
+  "videoBgInvalidVideoUrl": "Please enter a valid video link (MP4)",
+  "videoBgCardDesign": "Card Design",
+  "videoBgCustomPhoto": "Custom Photo",
+  "videoBgChangeVideo": "Change Video"
 }

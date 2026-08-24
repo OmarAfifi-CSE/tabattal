@@ -8,6 +8,7 @@ import '../../domain/entities/video_enums.dart';
 import '../bloc/video_studio_bloc.dart';
 import '../bloc/video_studio_event.dart';
 import '../bloc/video_studio_state.dart';
+import 'video_background_player_view.dart';
 import 'video_frame_painter.dart';
 
 /// Renders the 100% WYSIWYG video frame on a hardware-accelerated Canvas.
@@ -84,13 +85,27 @@ class VideoPreviewViewport extends StatelessWidget {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // 1. Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
+                      // 0. Video Background Player Layer (if custom video is active)
+                      if (config.backgroundType == VideoBackgroundType.customVideo &&
+                          config.customVideoPath != null &&
+                          config.customVideoPath!.isNotEmpty)
+                        RepaintBoundary(
+                          child: VideoBackgroundPlayerView(
+                            videoPath: config.customVideoPath!,
+                            isPlaying: state.isPlaying,
+                            dimming: config.backgroundDimming,
+                            resetSignal: state.playbackResetTrigger,
+                          ),
+                        ),
+
+                      // 1. Static Base Frame Layer (Background / Luxury Card, Badges, Watermark - 100% Solid & Fixed)
                       RepaintBoundary(
                         child: CustomPaint(
-                          key: ValueKey('static_frame_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.backgroundDimming}'),
+                          key: ValueKey('static_frame_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}'),
                           painter: VideoStaticFramePainter(
                             config: config,
                             verse: verse,
+                            includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
                           ),
                           size: Size.infinite,
                         ),
@@ -104,7 +119,7 @@ class VideoPreviewViewport extends StatelessWidget {
 
                           return RepaintBoundary(
                             child: CustomPaint(
-                              key: ValueKey('preview_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}_${config.customImagePath ?? "no_img"}_${config.backgroundDimming}'),
+                              key: ValueKey('preview_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}'),
                               painter: VideoDynamicContentPainter(
                                 verse: verse,
                                 config: config,

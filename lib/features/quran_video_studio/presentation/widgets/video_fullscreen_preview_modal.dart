@@ -4,9 +4,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/quran_metadata.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/entities/video_enums.dart';
 import '../bloc/video_studio_bloc.dart';
 import '../bloc/video_studio_event.dart';
 import '../bloc/video_studio_state.dart';
+import 'video_background_player_view.dart';
 import 'video_frame_painter.dart';
 
 class VideoFullscreenPreviewModal extends StatelessWidget {
@@ -103,7 +105,7 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                             Text(
                               l10n.videoStudioFullscreenPreview,
                               style: TextStyle(
-                                fontSize: 11.sp,
+                                fontSize: 11.5.sp,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
@@ -111,16 +113,16 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 44), // Balancer
+                      SizedBox(width: 40.w), // Balance close button spacing
                     ],
                   ),
                 ),
 
-                // 2. Center Video Preview Frame (Guaranteed Zero Overlap from top or bottom controls)
+                // 2. Center Video Frame Canvas Viewport (100% WYSIWYG Output Frame)
                 Expanded(
                   child: Center(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                       child: AspectRatio(
                         aspectRatio: config.aspectRatio.ratio,
                         child: Container(
@@ -138,19 +140,33 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
-                              // Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
+                              // 0. Video Background Player Layer (if custom video is active)
+                              if (config.backgroundType == VideoBackgroundType.customVideo &&
+                                  config.customVideoPath != null &&
+                                  config.customVideoPath!.isNotEmpty)
+                                RepaintBoundary(
+                                  child: VideoBackgroundPlayerView(
+                                    videoPath: config.customVideoPath!,
+                                    isPlaying: state.isPlaying,
+                                    dimming: config.backgroundDimming,
+                                    resetSignal: state.playbackResetTrigger,
+                                  ),
+                                ),
+
+                              // 1. Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
                               RepaintBoundary(
                                 child: CustomPaint(
-                                  key: ValueKey('fullscreen_static_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.backgroundDimming}'),
+                                  key: ValueKey('fullscreen_static_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}'),
                                   painter: VideoStaticFramePainter(
                                     config: config,
                                     verse: verse,
+                                    includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
                                   ),
                                   size: Size.infinite,
                                 ),
                               ),
 
-                              // Dynamic Center Content Layer (100% Solid & Real-time Text Tracking)
+                              // 2. Dynamic Center Content Layer (100% Solid & Real-time Text Tracking)
                               StreamBuilder<Duration>(
                                 stream: context.read<VideoStudioBloc>().playbackPositionStream,
                                 builder: (context, snapshot) {
@@ -158,7 +174,7 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
 
                                   return RepaintBoundary(
                                     child: CustomPaint(
-                                      key: ValueKey('fullscreen_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}_${config.customImagePath ?? "no_img"}_${config.backgroundDimming}'),
+                                      key: ValueKey('fullscreen_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}'),
                                       painter: VideoDynamicContentPainter(
                                         verse: verse,
                                         config: config,

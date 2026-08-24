@@ -175,6 +175,37 @@ void main() {
       expect(cleared.showCardFrame, true);
     });
 
+    test('VideoProjectConfig custom video background and dimming', () {
+      const initial = VideoProjectConfig(
+        surahNumber: 1,
+        startAyah: 1,
+        endAyah: 3,
+      );
+
+      expect(initial.customVideoPath, isNull);
+      expect(initial.backgroundType, VideoBackgroundType.gradient);
+
+      final withVideo = initial.copyWith(
+        customVideoPath: '/path/to/custom_bg.mp4',
+        backgroundType: VideoBackgroundType.customVideo,
+        backgroundDimming: 0.40,
+        showCardFrame: true,
+      );
+
+      expect(withVideo.customVideoPath, '/path/to/custom_bg.mp4');
+      expect(withVideo.backgroundType, VideoBackgroundType.customVideo);
+      expect(withVideo.backgroundDimming, 0.40);
+      expect(withVideo.showCardFrame, true);
+
+      final cleared = withVideo.copyWith(
+        clearCustomVideo: true,
+        backgroundType: VideoBackgroundType.gradient,
+      );
+
+      expect(cleared.customVideoPath, isNull);
+      expect(cleared.backgroundType, VideoBackgroundType.gradient);
+    });
+
     test('CustomImageService cache and luminance defaults', () {
       CustomImageService.clearCache();
       expect(CustomImageService.getCachedUiImage('non_existent.jpg'), isNull);

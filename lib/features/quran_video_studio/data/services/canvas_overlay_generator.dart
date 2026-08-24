@@ -211,6 +211,8 @@ class CanvasOverlayGenerator {
 
     if (includeBackground) {
       _drawBackground(canvas, width, height, config, baseScale);
+    } else {
+      _drawCardFrameAndOrnaments(canvas, width, height, config, baseScale);
     }
 
     _drawHeaderBadges(canvas, width, height, config, verse, baseScale);
@@ -317,7 +319,65 @@ class CanvasOverlayGenerator {
       canvas.drawRect(rect, paint);
     }
 
-    final bool isFramelessCustom = hasCustomImage && !config.showCardFrame;
+    _drawCardFrameAndOrnaments(canvas, width, height, config, baseScale);
+  }
+
+  /// Resolves whether the background is light or dark (based on custom image or video dimming).
+  static bool _isLightBackground(VideoProjectConfig config) {
+    final hasCustomImage = config.customImagePath != null &&
+        config.customImagePath!.isNotEmpty &&
+        File(config.customImagePath!).existsSync();
+    if (hasCustomImage) {
+      final rawLuminance = CustomImageService.getCachedLuminance(config.customImagePath!);
+      final effectiveLuminance = rawLuminance * (1.0 - config.backgroundDimming);
+      return effectiveLuminance > 0.55;
+    }
+
+    final hasCustomVideo = config.backgroundType == VideoBackgroundType.customVideo &&
+        config.customVideoPath != null &&
+        config.customVideoPath!.isNotEmpty &&
+        File(config.customVideoPath!).existsSync();
+    if (hasCustomVideo) {
+      const baseLuminance = 0.5;
+      final effectiveLuminance = baseLuminance * (1.0 - config.backgroundDimming);
+      return effectiveLuminance > 0.55;
+    }
+
+    return false;
+  }
+
+  /// Resolves whether custom media (image or video) is active.
+  static bool _hasCustomMedia(VideoProjectConfig config) {
+    return (config.customImagePath != null &&
+            config.customImagePath!.isNotEmpty &&
+            File(config.customImagePath!).existsSync()) ||
+        (config.customVideoPath != null &&
+            config.customVideoPath!.isNotEmpty &&
+            File(config.customVideoPath!).existsSync());
+  }
+
+  /// Resolves the accent / ornament / brand color.
+  /// When frameless custom media is active, it strictly adheres to pure white or dark based on luminance,
+  /// completely detached from the theme preset.
+  static Color _resolveAccentColor(VideoProjectConfig config) {
+    final hasMedia = _hasCustomMedia(config);
+    final isFrameless = hasMedia && !config.showCardFrame;
+    if (isFrameless) {
+      final isLight = _isLightBackground(config);
+      return isLight ? const Color(0xFF111418) : const Color(0xFFFFFFFF);
+    }
+    return config.themePreset.accentColor;
+  }
+
+  static void _drawCardFrameAndOrnaments(
+    Canvas canvas,
+    double width,
+    double height,
+    VideoProjectConfig config,
+    double baseScale,
+  ) {
+    final theme = config.themePreset;
+    final hasCustomMedia = _hasCustomMedia(config);
 
     // Optional Card Container Box & Border
     if (config.showCardFrame) {
@@ -340,7 +400,7 @@ class CanvasOverlayGenerator {
       final Color cardBgColor;
       final Color cardBorderColor;
 
-      if (hasCustomImage) {
+      if (hasCustomMedia) {
         cardBgColor = const Color(0xFF0B0F14).withValues(alpha: 0.60);
         cardBorderColor = theme.accentColor.withValues(alpha: 0.55);
       } else {
@@ -366,15 +426,7 @@ class CanvasOverlayGenerator {
             ? cardMarginV + (height * 0.038)
             : cardMarginV + (height * 0.030));
 
-    final Color ornamentColor;
-    if (isFramelessCustom) {
-      final rawLuminance = CustomImageService.getCachedLuminance(config.customImagePath!);
-      final effectiveLuminance = rawLuminance * (1.0 - config.backgroundDimming);
-      final isLight = effectiveLuminance > 0.55;
-      ornamentColor = isLight ? const Color(0xFF111418) : const Color(0xFFFFFFFF);
-    } else {
-      ornamentColor = theme.accentColor;
-    }
+    final Color ornamentColor = _resolveAccentColor(config);
 
     final linePaint = Paint()
       ..color = ornamentColor.withValues(alpha: 0.45)
@@ -442,20 +494,10 @@ class CanvasOverlayGenerator {
             ? cardMarginV + (height * 0.160)
             : cardMarginV + (height * 0.125));
 
-    final bool hasCustomImage = config.customImagePath != null &&
-        config.customImagePath!.isNotEmpty &&
-        File(config.customImagePath!).existsSync();
-    final bool isFramelessCustom = hasCustomImage && !config.showCardFrame;
-
-    final Color badgeAccentColor;
-    if (isFramelessCustom) {
-      final rawLuminance = CustomImageService.getCachedLuminance(config.customImagePath!);
-      final effectiveLuminance = rawLuminance * (1.0 - config.backgroundDimming);
-      final isLight = effectiveLuminance > 0.55;
-      badgeAccentColor = isLight ? const Color(0xFF111418) : const Color(0xFFFFFFFF);
-    } else {
-      badgeAccentColor = theme.accentColor;
-    }
+    final bool hasCustomMedia = _hasCustomMedia(config);
+    final bool isFramelessCustom = hasCustomMedia && !config.showCardFrame;
+    final Color badgeAccentColor = _resolveAccentColor(config);
+    final textColors = _resolveTextColors(config);
 
     if (config.showSurahBadge) {
       final bool isLineByLine = config.textDisplayMode == VideoTextDisplayMode.lineByLine;
@@ -476,37 +518,35 @@ class CanvasOverlayGenerator {
         text: TextSpan(
           text: surahText,
           style: TextStyle(
-            color: badgeAccentColor,
-            fontSize: baseScale * 0.029,
+            color: isFramelessCustom ? badgeAccentColor : textColors.primaryTextColor,
+            fontSize: baseScale * 0.024,
             fontWeight: FontWeight.bold,
-            letterSpacing: 0.2,
           ),
         ),
         textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
-        textAlign: TextAlign.center,
-      )..layout(maxWidth: width * 0.85);
+      )..layout();
 
-      final badgeWidth = textPainter.width + (baseScale * 0.06);
-      final badgeHeight = textPainter.height + (height * 0.014);
+      final badgeW = textPainter.width + (baseScale * 0.04);
+      final badgeH = textPainter.height + (baseScale * 0.016);
       final badgeRect = RRect.fromRectAndRadius(
         Rect.fromCenter(
           center: Offset(width / 2, surahCenterY),
-          width: badgeWidth,
-          height: badgeHeight,
+          width: badgeW,
+          height: badgeH,
         ),
-        Radius.circular(badgeHeight / 2),
+        Radius.circular(badgeH / 2),
       );
 
       final badgePaint = Paint()
         ..color = isFramelessCustom
             ? badgeAccentColor.withValues(alpha: 0.16)
-            : (hasCustomImage
+            : (hasCustomMedia
                 ? theme.accentColor.withValues(alpha: 0.22)
                 : theme.accentColor.withValues(alpha: 0.15));
       final borderPaint = Paint()
         ..color = isFramelessCustom
             ? badgeAccentColor.withValues(alpha: 0.45)
-            : (hasCustomImage
+            : (hasCustomMedia
                 ? theme.accentColor.withValues(alpha: 0.65)
                 : theme.accentColor.withValues(alpha: 0.40))
         ..style = PaintingStyle.stroke
@@ -561,20 +601,10 @@ class CanvasOverlayGenerator {
   }) {
     final theme = config.themePreset;
     final textColors = _resolveTextColors(config);
-    final bool hasCustomImage = config.customImagePath != null &&
-        config.customImagePath!.isNotEmpty &&
-        File(config.customImagePath!).existsSync();
-    final bool isFramelessCustom = hasCustomImage && !config.showCardFrame;
-
-    final Color badgeAccentColor;
-    if (isFramelessCustom) {
-      final rawLuminance = CustomImageService.getCachedLuminance(config.customImagePath!);
-      final effectiveLuminance = rawLuminance * (1.0 - config.backgroundDimming);
-      final isLight = effectiveLuminance > 0.55;
-      badgeAccentColor = isLight ? const Color(0xFF111418) : const Color(0xFFFFFFFF);
-    } else {
-      badgeAccentColor = theme.accentColor;
-    }
+    final bool hasCustomMedia = _hasCustomMedia(config);
+    final bool hasCustomImage = hasCustomMedia;
+    final bool isFramelessCustom = hasCustomMedia && !config.showCardFrame;
+    final Color badgeAccentColor = _resolveAccentColor(config);
 
     final timings = wordTimings ?? WordTimingService.computeProportionalTimings(
       verse: verse,
@@ -932,7 +962,7 @@ class CanvasOverlayGenerator {
       );
     }
 
-    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}_${hasTafsir}_${hasTranslation}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.backgroundDimming}_${overrideLineIndex ?? activeLine?.lineNumber ?? 0}_${width.round()}_${height.round()}';
+    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.backgroundType.name}_${config.textDisplayMode.name}_${config.isEnglish}_${hasTafsir}_${hasTranslation}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}_${overrideLineIndex ?? activeLine?.lineNumber ?? 0}_${width.round()}_${height.round()}';
 
     final cached = _dynamicLayoutCache.putIfAbsent(cacheKey, () {
       var layout = computeLayout(currentScaleMultiplier);
@@ -1076,22 +1106,10 @@ class CanvasOverlayGenerator {
     VideoProjectConfig config,
     double baseScale,
   ) {
-    final theme = config.themePreset;
     final textColors = _resolveTextColors(config);
-    final bool hasCustomImage = config.customImagePath != null &&
-        config.customImagePath!.isNotEmpty &&
-        File(config.customImagePath!).existsSync();
-    final bool isFramelessCustom = hasCustomImage && !config.showCardFrame;
-
-    final Color footerAccentColor;
-    if (isFramelessCustom) {
-      final rawLuminance = CustomImageService.getCachedLuminance(config.customImagePath!);
-      final effectiveLuminance = rawLuminance * (1.0 - config.backgroundDimming);
-      final isLight = effectiveLuminance > 0.55;
-      footerAccentColor = isLight ? const Color(0xFF111418) : const Color(0xFFFFFFFF);
-    } else {
-      footerAccentColor = theme.accentColor;
-    }
+    final bool hasCustomMedia = _hasCustomMedia(config);
+    final bool isFramelessCustom = hasCustomMedia && !config.showCardFrame;
+    final Color footerAccentColor = _resolveAccentColor(config);
 
     final double iconFontSize = baseScale * 0.026;
     final double arabicFontSize = baseScale * 0.026;
@@ -1120,7 +1138,7 @@ class CanvasOverlayGenerator {
           fontFamily: 'Amiri',
           fontSize: arabicFontSize,
           fontWeight: FontWeight.bold,
-          color: textColors.secondaryTextColor.withValues(alpha: 0.85),
+          color: textColors.secondaryTextColor.withValues(alpha: isFramelessCustom ? 0.95 : 0.85),
         ),
       ),
       textDirection: TextDirection.rtl,
@@ -1146,7 +1164,7 @@ class CanvasOverlayGenerator {
           fontSize: englishFontSize,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.8,
-          color: textColors.secondaryTextColor.withValues(alpha: 0.85),
+          color: textColors.secondaryTextColor.withValues(alpha: isFramelessCustom ? 0.95 : 0.85),
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -1190,31 +1208,35 @@ class CanvasOverlayGenerator {
     VideoProjectConfig config,
   ) {
     final theme = config.themePreset;
-    final hasCustomImage = config.customImagePath != null &&
-        config.customImagePath!.isNotEmpty &&
-        File(config.customImagePath!).existsSync();
+    final hasMedia = _hasCustomMedia(config);
 
-    if (!hasCustomImage) {
+    if (!hasMedia) {
       return (
         primaryTextColor: theme.primaryTextColor,
         secondaryTextColor: theme.secondaryTextColor,
       );
     }
 
-    final rawLuminance = CustomImageService.getCachedLuminance(config.customImagePath!);
-    final effectiveLuminance = rawLuminance * (1.0 - config.backgroundDimming);
-    final isLightBg = effectiveLuminance > 0.55;
+    // When card frame is active over custom media, card container is dark glass (0xFF0B0F14 at 60% opacity)
+    if (config.showCardFrame) {
+      return (
+        primaryTextColor: const Color(0xFFFFFFFF),
+        secondaryTextColor: const Color(0xFFFFFFFF),
+      );
+    }
 
-    if (isLightBg) {
+    // Frameless custom media (image or video): text color depends strictly on luminance (pure white on dark, pure black on light)
+    final isLight = _isLightBackground(config);
+    if (isLight) {
       return (
         primaryTextColor: const Color(0xFF111418),
-        secondaryTextColor: const Color(0xFF333842),
+        secondaryTextColor: const Color(0xFF111418),
       );
     }
 
     return (
       primaryTextColor: const Color(0xFFFFFFFF),
-      secondaryTextColor: const Color(0xFFF5EAD4),
+      secondaryTextColor: const Color(0xFFFFFFFF),
     );
   }
 

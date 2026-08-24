@@ -709,4 +709,41 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get videoDisplayModeStaticFull => 'الآية كاملة';
+
+  @override
+  String get videoBgCustomVideo => 'فيديو مخصص';
+
+  @override
+  String get videoBgChooseVideoGallery => 'اختيار من المعرض';
+
+  @override
+  String get videoBgChooseVideoGallerySub =>
+      'اختر مقطع فيديو من جهازك ليكون خلفية متحركة';
+
+  @override
+  String get videoBgVideoUrl => 'رابط فيديو مباشر';
+
+  @override
+  String get videoBgVideoUrlSub => 'ضع رابط مقطع فيديو مباشر من الإنترنت (MP4)';
+
+  @override
+  String get videoBgRemoveVideo => 'إزالة الفيديو المخصص';
+
+  @override
+  String get videoBgCustomVideoActive => 'فيديو مخصص نشط';
+
+  @override
+  String get videoBgLoadingVideo => 'جاري معالجة مقطع الفيديو...';
+
+  @override
+  String get videoBgInvalidVideoUrl => 'يرجى إدخال رابط فيديو صالح (MP4)';
+
+  @override
+  String get videoBgCardDesign => 'تصميم البطاقة';
+
+  @override
+  String get videoBgCustomPhoto => 'صورة مخصصة';
+
+  @override
+  String get videoBgChangeVideo => 'تغيير الفيديو';
 }
