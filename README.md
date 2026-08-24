@@ -1,110 +1,359 @@
 <div align="center">
 
-# 📖 تَبَتَّلْ | Tabattal
+<img src="assets/images/app_icon.png" width="130" height="130" style="border-radius: 50%;" alt="Tabattal App Icon"/>
 
-**The Purest, Most Precise Digital Mushaf Experience**
+<br/>
 
-[![Flutter](https://img.shields.io/badge/Made_with-Flutter-02569B?logo=flutter)](https://flutter.dev)
-[![Platform](https://img.shields.io/badge/Platform-Android-brightgreen)]()
-[![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-orange)]()
-[![State Management](https://img.shields.io/badge/State_Management-BLoC-blue)]()
-[![Engine](https://img.shields.io/badge/Font_Engine-QCF%20V2%20Vector-D4AF37)]()
-[![License](https://img.shields.io/badge/License-MIT-purple)]()
+<img src="https://readme-typing-svg.herokuapp.com?font=Amiri&size=50&duration=2500&pause=1000&color=D4AF37&center=true&vCenter=true&width=600&height=100&lines=%D8%AA%D9%8E%D8%A8%D9%8E%D8%AA%D9%91%D9%8E%D9%84%D9%92;Tabattal" alt="Tabattal"/>
 
-*« وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا »*
+### *The Purest, Most Precise Digital Mushaf Experience & Quran Video Studio*
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter"/>
+  <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android"/>
+  <img src="https://img.shields.io/badge/Architecture-Clean-orange?style=for-the-badge" alt="Clean Architecture"/>
+  <img src="https://img.shields.io/badge/State-BLoC-005A9C?style=for-the-badge" alt="BLoC"/>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Font_Engine-QCF_V2_Vector-D4AF37?style=flat-square" alt="QCF V2"/>
+  <img src="https://img.shields.io/badge/Video_Studio-9:16_|_1:1_|_16:9-red?style=flat-square" alt="Video Studio"/>
+  <img src="https://img.shields.io/badge/Ads-None-success?style=flat-square" alt="Ad Free"/>
+  <img src="https://img.shields.io/badge/Tracking-None-success?style=flat-square" alt="No Tracking"/>
+  <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="MIT License"/>
+</p>
+
+
+### *﴿ وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا ﴾*
+
+
+<a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank">
+  <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="65" alt="Get it on Google Play">
+</a>
+
+<br/>
+
+<img src="https://your-image-url/tabattal-banner.gif" alt="Tabattal Banner" width="100%"/>
 
 </div>
 
----
-
-## 🌟 The Vision (Why Tabattal?)
-
-The digital Quran app landscape is saturated, yet it frequently suffers from two fundamental compromises:
-1. **The "Scanned-Image" Compromise:** Apps rely on static page images of the physical Mushaf. This causes massive app bundles, slow initial loading, and pixelated text when zooming or reading on high-density displays.
-2. **The "Generic System Text" Compromise:** Apps render the Quran as standard unformatted body text. While lightweight, this completely destroys the sacred, standardized 15-line pagination and line breaks of the authentic Madani Mushaf.
-
-**Tabattal bridges both worlds without compromise.** Powered by a custom **Vector-based rendering engine** utilizing official King Fahd Complex **QCF V2 glyph fonts**, Tabattal dynamically draws every word with mathematical precision to match the exact line breaks and pagination of the physical Madani Mushaf.
-
-Infinite sharpness at any resolution, responsive page transitions, lightweight storage footprint, and zero visual compromises.
+<br/>
 
 ---
 
-## ✨ Key Features & Capabilities
+## 🌟 The Vision
 
-### 🖌️ Pixel-Perfect QCF V2 Vector Pagination & Single-Viewport Engine
-* **100% Authentic Madani Mushaf Layout:** Exactly 15 lines per page, matching the physical printed copy with genuine Quranic glyphs and stop signs.
-* **Single-Viewport Zero-Jank Architecture:** Custom physics-driven bidirectional page flip locked at 120 FPS with 0ms page switching and zero frame drops.
-* **Instant Native Typography:** All 604 page fonts declared natively and pre-warmed directly in RAM, eliminating background zip extraction and runtime layout overhead.
+<table>
+<tr>
+<td width="50%" valign="top">
 
-### 🎨 Verse Card Generator & Full-Page Export
-* **Custom Verse Sharing Cards:** Create stunning, high-resolution aesthetic cards for individual verses or selected verse ranges (up to 25 ayahs).
-* **Granular Content Controls:** Independently include or exclude authentic Tafsir and English translation in shared cards.
-* **Full-Page Snapshot Export:** Export the entire active Mushaf page framed with Islamic borders and theme styling.
-* **11 Curated Card Themes:** Perfectly matched color palettes with instantaneous gallery synchronization and Android media store indexing.
+### ⚠️ The Problem
+
+Digital Quran apps typically force compromises across reading and sharing:
+
+**📸 The "Scanned Image" Trap**
+Static page scans → massive app size, slow loading, and blurry/pixelated text on high-res screens.
+
+**📝 The "Generic Text" Trap**
+Standard unformatted body text → destroys the sacred, standardized 15-line pagination of the authentic Madani Mushaf.
+
+**🔇 The "Static Media" Trap**
+Sharing is limited to plain text or flat cards → no way to create modern, synchronized Quran video reels for social platforms without third-party editors.
+
+</td>
+<td width="50%" valign="top">
+
+### ✅ The Solution
+
+**Tabattal bridges both worlds and pioneers native video creation — with zero compromise.**
+
+- 📖 **Authentic Vector Engine:** Powered by official King Fahd Complex **QCF V2 glyph fonts**, drawing every word with mathematical precision to match the physical Madani Mushaf at 120 FPS.
+- 🎬 **First-of-its-Kind Quran Video Studio:** Create breathtaking cinema reels (9:16 / 1:1 / 16:9) with synchronized EveryAyah recitations, authentic line-by-line Madani typography, animated video backgrounds, and 1080p hardware-accelerated export.
+
+> Infinite sharpness. Zero jank. Real-time media creation. Zero compromises.
+
+</td>
+</tr>
+</table>
+
+<br/>
+
+---
+
+## 📱 Showcase
+
+<div align="center">
+
+<details open>
+<summary><b>Arabic Showcase</b></summary>
+<br>
+
+<table width="100%">
+<tr>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/arabic/01_quran_reader_actions.png" alt="تلاوة القرآن والقائمة الذكية"/>
+        <p><b>📖 تلاوة القرآن والقائمة الذكية</b><br/>رسم عثماني مطابق لمصحف المدينة وقائمة إجراءات سريعة</p>
+    </td>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/arabic/02_app_drawer_tools.png" alt="القائمة الجانبية والأدوات"/>
+        <p><b>📑 القائمة الجانبية والأدوات</b><br/>تنقل فوري وشامل لجميع خدمات وأدوات المصحف</p>
+    </td>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/arabic/03_quran_video_studio.png" alt="صانع مقاطع الفيديو والريلز"/>
+        <p><b>🎬 صانع مقاطع الفيديو والريلز</b><br/>فيديوهات قرآنية سينمائية متزامنة بدقة 1080p</p>
+    </td>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/arabic/04_verse_card_generator.png" alt="تصميم بطاقات الآيات"/>
+        <p><b>🎨 تصميم بطاقات الآيات</b><br/>بطاقات فاخرة للآيات مع التفسير والترجمة للمشاركة</p>
+    </td>
+</tr>
+<tr>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/arabic/05_hifz_memorization_mode.png" alt="وضع تثبيت واختبار الحفظ"/>
+        <p><b>🧠 وضع تثبيت واختبار الحفظ</b><br/>إخفاء ذكي للآيات والكلمات وكشفها تفاعليًا بلمسة</p>
+    </td>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/arabic/06_full_tafsir_library.png" alt="مكتبة التفسير الشاملة"/>
+        <p><b>📚 مكتبة التفسير الشاملة</b><br/>تفسير كامل متصل مع تفاسير متعددة لأشهر العلماء</p>
+    </td>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/arabic/07_audio_manager_downloads.png" alt="مدير الصوتيات والتلاوات"/>
+        <p><b>🎧 مدير الصوتيات والتلاوات</b><br/>تحميل السور والمصحف كاملًا بجودة نقية دون إنترنت</p>
+    </td>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/arabic/08_themes_appearance_language.png" alt="المظهر واللغة وثيمات المصحف"/>
+        <p><b>🎨 المظهر واللغة وثيمات المصحف</b><br/>10 لوحات ألوان ملكية ووضع ليلي حقيقي ودعم اللغتين</p>
+    </td>
+</tr>
+</table>
+</details>
+
+<details>
+<summary><b>English Showcase</b></summary>
+<br>
+
+<table width="100%">
+<tr>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/english/01_quran_reader_actions.png" alt="Authentic Mushaf & Smart Menu"/>
+        <p><b>📖 Authentic Mushaf & Smart Menu</b><br/>Flawless 15-line Madani layout with quick actions</p>
+    </td>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/english/02_app_drawer_tools.png" alt="Navigation Drawer & Tools Hub"/>
+        <p><b>📑 Navigation Drawer & Tools Hub</b><br/>Instant access to all Quranic learning utilities</p>
+    </td>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/english/03_quran_video_studio.png" alt="Quran Video Studio & Reels"/>
+        <p><b>🎬 Quran Video Studio & Reels</b><br/>Synced audio video creator in 9:16, 1:1, and 16:9</p>
+    </td>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/english/04_verse_card_generator.png" alt="Verse Card Designer & Sharing"/>
+        <p><b>🎨 Verse Card Designer & Sharing</b><br/>High-res social cards with Tafsir & Translation</p>
+    </td>
+</tr>
+<tr>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/english/05_hifz_memorization_mode.png" alt="Smart Hifz & Memorization Mode"/>
+        <p><b>🧠 Smart Hifz & Memorization Mode</b><br/>Mask verses & words with tap-to-reveal testing</p>
+    </td>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/english/06_full_tafsir_library.png" alt="Comprehensive Tafsir Library"/>
+        <p><b>📚 Comprehensive Tafsir Library</b><br/>Full surah commentaries from leading scholars</p>
+    </td>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/english/07_audio_manager_downloads.png" alt="Audio Manager & Offline Recitations"/>
+        <p><b>🎧 Audio Manager & Offline Recitations</b><br/>Download full surahs or entire Mushaf offline</p>
+    </td>
+    <td width="25%" align="center" valign="top">
+        <img src="assets/images/showcase/english/08_themes_appearance_language.png" alt="Themes, Night Mode & Language"/>
+        <p><b>🎨 Themes, Night Mode & Language</b><br/>10 curated palettes, true OLED dark mode & bilingual</p>
+    </td>
+</tr>
+</table>
+</details>
+
+</div>
+
+<br/>
+
+---
+
+## ✨ Key Features
+
+### 🖌️ Pixel-Perfect QCF V2 Vector Engine
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+**📐 Authentic Layout**
+
+Exactly 15 lines per page, matching the physical printed Mushaf — genuine glyphs, genuine stop signs.
+
+</td>
+<td width="33%" valign="top">
+
+**⚡ Zero-Jank Paging**
+
+Physics-driven bidirectional page flip locked at 120 FPS with 0ms switching and zero frame drops.
+
+**🚀 Instant Typography**
+
+All 604 page fonts pre-warmed in RAM — no zip extraction, no runtime layout overhead.
+
+</td>
+</tr>
+</table>
+
+<br/>
+
+### 🎬 Quran Video Studio & Reels Maker *(First of its kind)*
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**🎥 Multi-Aspect Studio Engine**
+- **9:16 Vertical Story/Reels** — Tailored for Instagram Reels, TikTok & Shorts
+- **1:1 Square Post** — Designed for WhatsApp Status, Feed & Posts
+- **16:9 Landscape** — Built for YouTube & widescreen displays
+- **Ayah Span Selector** — Choose up to 10 consecutive verses with seamless continuity
+
+</td>
+<td width="50%" valign="top">
+
+**✨ Authentic Typography & Dynamic Media**
+- **Synchronized Recitation** — Precise EveryAyah audio sync with authentic line-by-line Madani vector typography
+- **Dual Media Backgrounds** — Custom gallery images or **animated video backgrounds** (local or direct URL) with audio mixing
+- **Adaptive Luminance Engine** — Auto-adjusts text colors (pure white / deep black) with adjustable dimming
+- **Hardware-Accelerated FFmpeg Export** — Crisp, crystal-clear 1080p video rendering with instant gallery indexing
+
+</td>
+</tr>
+</table>
+
+<br/>
+
+### 🎨 Verse Card Generator & Page Export
+
+- **Custom Sharing Cards** — Stunning high-res cards for single verses or ranges (up to 25 ayahs)
+- **Granular Controls** — Include/exclude Tafsir and English translation independently
+- **Full-Page Snapshot** — Export the entire Mushaf page with Islamic border framing
+- **11 Curated Themes** — Instant gallery sync with Android media store indexing
+
+<br/>
 
 ### 🔍 Thematic & Deep Text Search
-* **Quran Topics Catalog:** Explore the Holy Quran categorized by themes (Aqeedah, Acts of Worship, Ethics, Stories of the Prophets, and Social Conduct).
-* **Intelligent Keyword Engine:** Instant search with prefix/suffix normalization, surah name matching, and direct in-page verse highlighting with gentle breathing animations.
+
+- **Topics Catalog** — Aqeedah, Acts of Worship, Ethics, Stories of the Prophets, Social Conduct
+- **Intelligent Engine** — Prefix/suffix normalization, surah matching, in-page highlighting with breathing animations
+
+<br/>
 
 ### 🎧 Comprehensive Audio & Offline Manager
-* **Extensive Reciter Catalog:** High-fidelity recitations across multiple categories: Murattal, Mujawwad, Warsh narration, Teacher mode, and English translations.
-* **Play-Once Mode:** Listen to a single verse and pause automatically for focused memorization, reflection, and manual repetition.
-* **Smart Sleep Timer:** Integrated timer with custom durations for relaxing bedtime listening.
-* **Robust Offline Download Manager:** Download entire Surahs for offline listening with real-time progress indicators and instant cancellation tokens.
-* **Background Media Service:** Continuous playback with system lockscreen controls, notification actions, and resilient network recovery.
 
-### 📚 Grouped Tafsir, Translation & Quran Vocabulary
-* **Offline Quran Vocabulary (Ghareeb Al-Quran):** Instant offline lookup for the meanings of unfamiliar and difficult Quranic words directly per verse.
-* **Grouped Tafsir Context:** Smart detection and display of multi-verse commentary spans, showing continuation context across grouped passages.
-* **Smart Tafsir Selector:** Fast, offline-accessible commentaries with upward-opening selectors and live progress feedback.
-* **Authentic English Translations:** Clear, dignified English translations displayed alongside Arabic text.
+<table>
+<tr>
+<td width="50%">
 
-### 🧠 Interactive Memorization Test Mode (Hifz Tool)
-* **Word-by-Word & Ayah Masking:** Conceal words or full verses directly on the Mushaf page with pixel-stable visual spacing and zero text shifting.
-* **Tap-to-Reveal & Seamless Actions:** Reveal hidden words and verses on tap, with full access to verse options and translations once revealed.
+- 🎙️ **Extensive Reciters** — Murattal, Mujawwad, Warsh, Teacher mode, English translations
+- ▶️ **Play-Once Mode** — Auto-pause after one verse for focused memorization
+- ⏰ **Smart Sleep Timer** — Custom durations for bedtime listening
 
-### 🎨 11 Handcrafted Mushaf Color Themes & Adaptive UI
-* **Curated Color Palettes:** Creamy, Parchment, Rose Gold, Mint, Olive, Ice Blue, Slate, Emerald, Burgundy, Pure White, and OLED Dark.
-* **Dedicated OLED Dark Mode:** True black backgrounds designed specifically for night reading and Qiyam, minimizing eye strain and preserving battery life.
-* **Luminance-Adaptive System Chrome:** Dynamic status bar and navigation bar contrast adapting automatically to the active theme.
-* **Custom Reading Flow:** Switch effortlessly between traditional horizontal book paging and modern vertical continuous scroll.
+</td>
+<td width="50%">
 
-### 🔒 100% Free, Private & Ad-Free (Sadaqa Jariya)
-* **Zero Advertisements & Zero Tracking:** No user tracking, no analytics telemetry, and no third-party ad SDKs.
-* **Offline-First:** All essential reading, search, and tafsir features work fully offline once downloaded.
+- 📥 **Offline Downloads** — Full Surahs with real-time progress & instant cancellation
+- 🔔 **Background Service** — Lockscreen controls, notification actions, network recovery
+
+</td>
+</tr>
+</table>
+
+<br/>
+
+### 📚 Tafsir, Translation & Quran Vocabulary
+
+- **Ghareeb Al-Quran** — Offline lookup for difficult Quranic words, per verse
+- **Grouped Tafsir Context** — Smart detection of multi-verse commentary spans
+- **Smart Selector** — Fast, offline commentaries with upward-opening picker
+- **English Translation** — Clear, dignified text displayed alongside Arabic
+
+<br/>
+
+### 🧠 Interactive Memorization Test (Hifz Tool)
+
+- **Word & Ayah Masking** — Conceal text directly on the page with zero shifting
+- **Tap-to-Reveal** — Instant reveal with full access to verse options
+
+<br/>
+
+### 🎨 11 Handcrafted Themes & Adaptive UI
+
+<div align="center">
+
+`Creamy` • `Parchment` • `Rose Gold` • `Mint` • `Olive` • `Ice Blue` • `Slate` • `Emerald` • `Burgundy` • `Pure White` • `OLED Dark`
+
+</div>
+
+- **OLED Dark Mode** — True black for Qiyam and night reading, saves battery
+- **Adaptive Chrome** — Status/nav bar contrast adapts automatically to theme
+- **Flexible Reading** — Switch between horizontal book paging and vertical scroll
+
+<br/>
+
+### 🔒 100% Free, Private & Ad-Free
+
+> Built as a **Sadaqa Jariya** — no ads, no tracking, no analytics, no third-party SDKs. Fully offline-first once content is downloaded.
+
+<br/>
 
 ---
 
-## 🛠️ Technical Stack & Architecture
+## 🛠️ Technical Stack
 
-Tabattal is crafted according to strict architectural guidelines, modern performance standards, and Uncle Bob's Clean Architecture:
+<div align="center">
 
-* **Core Framework:** [Flutter](https://flutter.dev) (Targeting Android).
-* **State Management:** [BLoC / Cubit](https://bloclibrary.dev) (Predictable, testable, and reactive state streams).
-* **Architecture Pattern:** Clean Architecture (Strictly decoupled Domain, Data, and Presentation layers).
-* **Audio Pipeline:** `just_audio` & `audio_service` with Android MediaSession background capabilities.
-* **Database & Caching:** SQLite via `sqflite` with indexed word-level spatial lookup tables and in-memory page cache.
-* **Typography:** 604 King Fahd Complex QCF V2 vector font families declared natively and managed directly by the Flutter Engine.
-* **Static Analysis:** Strict zero-lint policy with optimized frame rendering and clean architectural hygiene.
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | Flutter (Android) |
+| **State Management** | BLoC / Cubit |
+| **Architecture** | Clean Architecture (Domain / Data / Presentation) |
+| **Video & Motion Engine** | Custom 120 FPS Canvas Rasterizer + `ffmpeg_kit_flutter_new_min_gpl` |
+| **Audio Pipeline** | `just_audio` + `audio_service` with MediaSession background sync |
+| **Database & Cache** | SQLite (`sqflite`) with indexed word-level spatial lookup |
+| **Typography** | 604 QCF V2 vector font families, natively managed |
+| **Code Quality** | Strict zero-lint policy, optimized frame rendering |
 
----
+</div>
 
-## 📱 Download Now
-
-<a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank">
-  <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="60" alt="Get it on Google Play">
-</a>
+<br/>
 
 ---
 
 ## ☕ Support The Project
 
-Tabattal is an ad-free, open-source passion project built as a **Sadaqa Jariya** to provide the purest Quran reading experience. If this app benefits your daily recitation and study, consider supporting ongoing development:
+<div align="center">
 
-<a href="https://ko-fi.com/omarafifi" target="_blank"><img src="https://cdn.ko-fi.com/cdn/kofi3.png?v=3" height="50" alt="Buy Me a Coffee at ko-fi.com" /></a>
+Tabattal is an **ad-free, open-source passion project** built as a Sadaqa Jariya to provide the purest Quran reading experience. If it benefits your daily recitation and study, consider supporting its development:
+
+<a href="https://ko-fi.com/omarafifi" target="_blank">
+  <img src="https://cdn.ko-fi.com/cdn/kofi3.png?v=3" height="50" alt="Support on Ko-fi"/>
+</a>
+
+</div>
+
 
 ---
 
 <div align="center">
-  <i>Made with dedication to the Book of Allah.</i>
+
+### ⭐ Star this repo to support the project
+
+<img src="https://img.shields.io/github/stars/OmarAfifi-CSE/tabattal?style=social" alt="Stars"/>
+
+<br/>
+
+*Made with dedication to the Book of Allah* 🕌
+
 </div>

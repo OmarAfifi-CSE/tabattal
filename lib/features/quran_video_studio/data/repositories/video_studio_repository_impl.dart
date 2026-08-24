@@ -53,28 +53,52 @@ class VideoStudioRepositoryImpl implements IVideoStudioRepository {
       final tafsirMaps = await db.query(
         'tafsir',
         columns: ['verse_key', 'text'],
-        where: 'verse_key IN ($placeholders) AND resource_id = ?',
-        whereArgs: [...verseKeys, 16],
+        where: 'verse_key LIKE ? AND resource_id = ?',
+        whereArgs: ['$surahNumber:%', 16],
+        orderBy: 'rowid ASC',
       );
 
-      final Map<String, String> tafsirByVerse = {
-        for (final row in tafsirMaps)
-          (row['verse_key'] as String?) ?? '':
-              ArabicTextUtils.cleanTafsirOrHtml((row['text'] as String?) ?? ''),
-      };
+      final Map<int, String> tafsirMap = {};
+      final List<int> directTafsirAyahs = [];
+      for (final row in tafsirMaps) {
+        final vk = (row['verse_key'] as String?) ?? '';
+        final parts = vk.split(':');
+        if (parts.length == 2) {
+          final a = int.tryParse(parts[1]);
+          final text = (row['text'] as String?)?.trim() ?? '';
+          final cleanText = ArabicTextUtils.cleanTafsirOrHtml(text);
+          if (a != null && cleanText.isNotEmpty) {
+            tafsirMap[a] = cleanText;
+            directTafsirAyahs.add(a);
+          }
+        }
+      }
+      directTafsirAyahs.sort();
 
       final translationMaps = await db.query(
         'translation',
         columns: ['verse_key', 'text'],
-        where: 'verse_key IN ($placeholders) AND resource_id = ?',
-        whereArgs: [...verseKeys, 20],
+        where: 'verse_key LIKE ? AND resource_id = ?',
+        whereArgs: ['$surahNumber:%', 20],
+        orderBy: 'rowid ASC',
       );
 
-      final Map<String, String> translationByVerse = {
-        for (final row in translationMaps)
-          (row['verse_key'] as String?) ?? '':
-              ArabicTextUtils.cleanTafsirOrHtml((row['text'] as String?) ?? ''),
-      };
+      final Map<int, String> translationMap = {};
+      final List<int> directTranslationAyahs = [];
+      for (final row in translationMaps) {
+        final vk = (row['verse_key'] as String?) ?? '';
+        final parts = vk.split(':');
+        if (parts.length == 2) {
+          final a = int.tryParse(parts[1]);
+          final text = (row['text'] as String?)?.trim() ?? '';
+          final cleanText = ArabicTextUtils.cleanTafsirOrHtml(text);
+          if (a != null && cleanText.isNotEmpty) {
+            translationMap[a] = cleanText;
+            directTranslationAyahs.add(a);
+          }
+        }
+      }
+      directTranslationAyahs.sort();
 
       final Map<String, List<WordModel>> wordsByVerse = {};
       for (final row in wordMaps) {
@@ -110,6 +134,22 @@ class VideoStudioRepositoryImpl implements IVideoStudioRepository {
         final page = (searchRow['page'] as int?) ?? (words.isNotEmpty ? 1 : 1);
         final juz = QuranMetadata.getJuzNumberByPage(page);
 
+        final rootTafsirAyah = directTafsirAyahs.isNotEmpty
+            ? directTafsirAyahs.lastWhere(
+                (a) => a <= ayahNum,
+                orElse: () => ayahNum,
+              )
+            : ayahNum;
+        final resolvedTafsir = tafsirMap[rootTafsirAyah];
+
+        final rootTranslationAyah = directTranslationAyahs.isNotEmpty
+            ? directTranslationAyahs.lastWhere(
+                (a) => a <= ayahNum,
+                orElse: () => ayahNum,
+              )
+            : ayahNum;
+        final resolvedTranslation = translationMap[rootTranslationAyah];
+
         result.add(
           VerseModel(
             id: ayahNum,
@@ -118,8 +158,8 @@ class VideoStudioRepositoryImpl implements IVideoStudioRepository {
             textUthmani: textUthmani,
             words: words,
             juzNumber: juz,
-            tafsir: tafsirByVerse[vk],
-            translation: translationByVerse[vk],
+            tafsir: resolvedTafsir,
+            translation: resolvedTranslation,
           ),
         );
       }

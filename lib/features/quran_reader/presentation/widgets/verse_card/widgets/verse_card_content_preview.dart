@@ -330,17 +330,17 @@ class VerseCardContentPreview extends StatelessWidget {
                 Icon(
                   Icons.auto_stories_rounded,
                   size: isWeb ? 14 : 12.r,
-                  color: theme.accentColor.withValues(alpha: 0.8),
+                  color: theme.accentColor,
                 ),
                 SizedBox(width: isWeb ? 8 : 6.w),
                 Text(
-                  'تَـبَـتَّـلْ',
+                  'تَـبَـتَّـلْ • Tabattal',
                   style: TextStyle(
                     fontFamily: 'Amiri',
                     fontSize: isWeb ? 14 : 13.sp,
                     fontWeight: FontWeight.bold,
-                    height: 1.4,
                     color: theme.secondaryTextColor.withValues(alpha: 0.85),
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],

@@ -514,17 +514,12 @@ class _VerseCardGeneratorSheetContentState
       final safeStart = _startAyah <= _endAyah ? _startAyah : _endAyah;
       final safeEnd = _endAyah >= _startAyah ? _endAyah : _startAyah;
 
-      final verseKeys = List.generate(
-        safeEnd - safeStart + 1,
-        (i) => '$_surahNumber:${safeStart + i}',
-      );
-      final placeholders = List.filled(verseKeys.length, '?').join(',');
-
       final List<Map<String, dynamic>> maps = await db.query(
         'tafsir',
         columns: ['verse_key', 'text'],
-        where: 'verse_key IN ($placeholders) AND resource_id = ?',
-        whereArgs: [...verseKeys, 16],
+        where: 'verse_key LIKE ? AND resource_id = ?',
+        whereArgs: ['$_surahNumber:%', 16],
+        orderBy: 'rowid ASC',
       );
 
       if (maps.isEmpty) {
@@ -540,8 +535,9 @@ class _VerseCardGeneratorSheetContentState
       }
 
       final Map<int, String> tafsirMap = {};
+      final List<int> directAyahs = [];
       for (final row in maps) {
-        final vk = row['verse_key'] as String;
+        final vk = (row['verse_key'] as String?) ?? '';
         final parts = vk.split(':');
         if (parts.length == 2) {
           final ayahNum = int.tryParse(parts[1]);
@@ -549,22 +545,29 @@ class _VerseCardGeneratorSheetContentState
           final cleanText = ArabicTextUtils.cleanTafsirOrHtml(rawText);
           if (ayahNum != null && cleanText.isNotEmpty) {
             tafsirMap[ayahNum] = cleanText;
+            directAyahs.add(ayahNum);
           }
         }
       }
+      directAyahs.sort();
 
       final List<String> resultSegments = [];
       String lastGroupText = '';
 
       for (int ayah = safeStart; ayah <= safeEnd; ayah++) {
-        String verseTafsir = '';
-        if (tafsirMap.containsKey(ayah)) {
-          verseTafsir = tafsirMap[ayah]!;
-        }
+        final rootAyah = directAyahs.isNotEmpty
+            ? directAyahs.lastWhere(
+                (a) => a <= ayah,
+                orElse: () => ayah,
+              )
+            : ayah;
 
-        if (verseTafsir.isNotEmpty && verseTafsir != lastGroupText) {
-          resultSegments.add(verseTafsir);
-          lastGroupText = verseTafsir;
+        final verseTafsir = tafsirMap[rootAyah] ?? '';
+
+        if (verseTafsir.trim().isNotEmpty &&
+            verseTafsir.trim() != lastGroupText.trim()) {
+          resultSegments.add(verseTafsir.trim());
+          lastGroupText = verseTafsir.trim();
         }
       }
 
@@ -595,17 +598,12 @@ class _VerseCardGeneratorSheetContentState
       final safeStart = _startAyah <= _endAyah ? _startAyah : _endAyah;
       final safeEnd = _endAyah >= _startAyah ? _endAyah : _startAyah;
 
-      final verseKeys = List.generate(
-        safeEnd - safeStart + 1,
-        (i) => '$_surahNumber:${safeStart + i}',
-      );
-      final placeholders = List.filled(verseKeys.length, '?').join(',');
-
       final List<Map<String, dynamic>> maps = await db.query(
         'translation',
         columns: ['verse_key', 'text'],
-        where: 'verse_key IN ($placeholders) AND resource_id = ?',
-        whereArgs: [...verseKeys, 20],
+        where: 'verse_key LIKE ? AND resource_id = ?',
+        whereArgs: ['$_surahNumber:%', 20],
+        orderBy: 'rowid ASC',
       );
 
       if (maps.isEmpty) {
@@ -621,8 +619,9 @@ class _VerseCardGeneratorSheetContentState
       }
 
       final Map<int, String> translationMap = {};
+      final List<int> directAyahs = [];
       for (final row in maps) {
-        final vk = row['verse_key'] as String;
+        final vk = (row['verse_key'] as String?) ?? '';
         final parts = vk.split(':');
         if (parts.length == 2) {
           final ayahNum = int.tryParse(parts[1]);
@@ -630,14 +629,29 @@ class _VerseCardGeneratorSheetContentState
           final cleanText = ArabicTextUtils.cleanTafsirOrHtml(rawText);
           if (ayahNum != null && cleanText.isNotEmpty) {
             translationMap[ayahNum] = cleanText;
+            directAyahs.add(ayahNum);
           }
         }
       }
+      directAyahs.sort();
 
       final List<String> resultSegments = [];
+      String lastGroupText = '';
+
       for (int ayah = safeStart; ayah <= safeEnd; ayah++) {
-        if (translationMap.containsKey(ayah)) {
-          resultSegments.add(translationMap[ayah]!);
+        final rootAyah = directAyahs.isNotEmpty
+            ? directAyahs.lastWhere(
+                (a) => a <= ayah,
+                orElse: () => ayah,
+              )
+            : ayah;
+
+        final verseTranslation = translationMap[rootAyah] ?? '';
+
+        if (verseTranslation.trim().isNotEmpty &&
+            verseTranslation.trim() != lastGroupText.trim()) {
+          resultSegments.add(verseTranslation.trim());
+          lastGroupText = verseTranslation.trim();
         }
       }
 

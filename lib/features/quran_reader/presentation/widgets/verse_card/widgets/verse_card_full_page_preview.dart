@@ -102,7 +102,7 @@ class VerseCardFullPagePreview extends StatelessWidget {
                   fontFamily: 'Amiri',
                   fontSize: 13.sp,
                   fontWeight: FontWeight.bold,
-                  color: theme.primaryTextColor,
+                  color: theme.secondaryTextColor.withValues(alpha: 0.85),
                   letterSpacing: 0.5,
                 ),
               ),

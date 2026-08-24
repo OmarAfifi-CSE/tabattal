@@ -497,7 +497,6 @@ class CanvasOverlayGenerator {
     final bool hasCustomMedia = _hasCustomMedia(config);
     final bool isFramelessCustom = hasCustomMedia && !config.showCardFrame;
     final Color badgeAccentColor = _resolveAccentColor(config);
-    final textColors = _resolveTextColors(config);
 
     if (config.showSurahBadge) {
       final bool isLineByLine = config.textDisplayMode == VideoTextDisplayMode.lineByLine;
@@ -511,23 +510,40 @@ class CanvasOverlayGenerator {
           surahText = 'سورة $surahName • الآية $arabicAyahNum';
         }
       } else {
-        surahText = isEn ? 'Surah $surahName' : 'سورة $surahName';
+        if (config.startAyah == config.endAyah) {
+          if (isEn) {
+            surahText = 'Surah $surahName • Ayah ${config.startAyah}';
+          } else {
+            final arabicAyahNum = VerseCardTextUtils.toArabicDigits(config.startAyah);
+            surahText = 'سورة $surahName • الآية $arabicAyahNum';
+          }
+        } else {
+          if (isEn) {
+            surahText = 'Surah $surahName • Ayahs ${config.startAyah}-${config.endAyah}';
+          } else {
+            final startArabic = VerseCardTextUtils.toArabicDigits(config.startAyah);
+            final endArabic = VerseCardTextUtils.toArabicDigits(config.endAyah);
+            surahText = 'سورة $surahName • الآيات ($startArabic - $endArabic)';
+          }
+        }
       }
 
       final textPainter = TextPainter(
         text: TextSpan(
           text: surahText,
           style: TextStyle(
-            color: isFramelessCustom ? badgeAccentColor : textColors.primaryTextColor,
-            fontSize: baseScale * 0.024,
+            color: isFramelessCustom ? badgeAccentColor : theme.accentColor,
+            fontSize: baseScale * 0.026,
             fontWeight: FontWeight.bold,
           ),
         ),
         textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+        textAlign: TextAlign.center,
       )..layout();
 
-      final badgeW = textPainter.width + (baseScale * 0.04);
-      final badgeH = textPainter.height + (baseScale * 0.016);
+      // Proportions matching VerseCard generator (generous padding & rounded pill border)
+      final badgeW = textPainter.width + (baseScale * 0.08);
+      final badgeH = textPainter.height + (baseScale * 0.024);
       final badgeRect = RRect.fromRectAndRadius(
         Rect.fromCenter(
           center: Offset(width / 2, surahCenterY),
@@ -540,15 +556,11 @@ class CanvasOverlayGenerator {
       final badgePaint = Paint()
         ..color = isFramelessCustom
             ? badgeAccentColor.withValues(alpha: 0.16)
-            : (hasCustomMedia
-                ? theme.accentColor.withValues(alpha: 0.22)
-                : theme.accentColor.withValues(alpha: 0.15));
+            : theme.accentColor.withValues(alpha: 0.15);
       final borderPaint = Paint()
         ..color = isFramelessCustom
             ? badgeAccentColor.withValues(alpha: 0.45)
-            : (hasCustomMedia
-                ? theme.accentColor.withValues(alpha: 0.65)
-                : theme.accentColor.withValues(alpha: 0.40))
+            : theme.accentColor.withValues(alpha: 0.40)
         ..style = PaintingStyle.stroke
         ..strokeWidth = baseScale * 0.002;
 
@@ -1112,9 +1124,7 @@ class CanvasOverlayGenerator {
     final Color footerAccentColor = _resolveAccentColor(config);
 
     final double iconFontSize = baseScale * 0.026;
-    final double arabicFontSize = baseScale * 0.026;
-    final double dotFontSize = baseScale * 0.024;
-    final double englishFontSize = baseScale * 0.022;
+    final double textFontSize = baseScale * 0.024;
     final double spacing = baseScale * 0.016;
 
     // 1. Icon Painter
@@ -1130,54 +1140,25 @@ class CanvasOverlayGenerator {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    // 2. Arabic Name Painter
-    final arabicPainter = TextPainter(
+    // 2. Text Painter ('تَـبَـتَّـلْ • Tabattal')
+    final textPainter = TextPainter(
       text: TextSpan(
-        text: 'تَـبَـتَّـلْ',
+        text: 'تَـبَـتَّـلْ • Tabattal',
         style: TextStyle(
           fontFamily: 'Amiri',
-          fontSize: arabicFontSize,
+          fontSize: textFontSize,
           fontWeight: FontWeight.bold,
-          color: textColors.secondaryTextColor.withValues(alpha: isFramelessCustom ? 0.95 : 0.85),
+          letterSpacing: 0.5,
+          color: isFramelessCustom
+              ? textColors.primaryTextColor
+              : textColors.secondaryTextColor.withValues(alpha: 0.85),
         ),
       ),
       textDirection: TextDirection.rtl,
     )..layout();
 
-    // 3. Dot Painter
-    final dotPainter = TextPainter(
-      text: TextSpan(
-        text: '•',
-        style: TextStyle(
-          fontSize: dotFontSize,
-          color: footerAccentColor.withValues(alpha: isFramelessCustom ? 0.70 : 0.60),
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    // 4. English Name Painter
-    final englishPainter = TextPainter(
-      text: TextSpan(
-        text: 'Tabattal',
-        style: TextStyle(
-          fontSize: englishFontSize,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.8,
-          color: textColors.secondaryTextColor.withValues(alpha: isFramelessCustom ? 0.95 : 0.85),
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    // Total width of all items + spacings
-    final double totalFooterWidth = iconPainter.width +
-        spacing +
-        arabicPainter.width +
-        spacing +
-        dotPainter.width +
-        spacing +
-        englishPainter.width;
+    // Total width of items + spacing
+    final double totalFooterWidth = iconPainter.width + spacing + textPainter.width;
 
     // Center Y position inside card
     final double cardMarginV = height * 0.05;
@@ -1187,18 +1168,12 @@ class CanvasOverlayGenerator {
             ? height - cardMarginV - (height * 0.038)
             : height - cardMarginV - (height * 0.028));
 
-    // Visual RTL order: [Icon] -> [تَـبَـتَّـلْ] -> [•] -> [Tabattal]
-    // Painted from left to right on canvas: Tabattal (left) -> Dot -> Arabic -> Icon (right)
+    // Visual RTL order: [Icon] -> [تَـبَـتَّـلْ • Tabattal]
+    // Painted from left to right on canvas: Text (left) -> Icon (right)
     double startX = (width - totalFooterWidth) / 2;
 
-    englishPainter.paint(canvas, Offset(startX, bottomCenterY - (englishPainter.height / 2)));
-    startX += englishPainter.width + spacing;
-
-    dotPainter.paint(canvas, Offset(startX, bottomCenterY - (dotPainter.height / 2)));
-    startX += dotPainter.width + spacing;
-
-    arabicPainter.paint(canvas, Offset(startX, bottomCenterY - (arabicPainter.height / 2)));
-    startX += arabicPainter.width + spacing;
+    textPainter.paint(canvas, Offset(startX, bottomCenterY - (textPainter.height / 2)));
+    startX += textPainter.width + spacing;
 
     iconPainter.paint(canvas, Offset(startX, bottomCenterY - (iconPainter.height / 2)));
   }
