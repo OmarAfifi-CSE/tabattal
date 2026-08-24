@@ -563,7 +563,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       }
     }
 
-    final wordMargin = hifzState.isHifzModeActive
+    final wordMargin = (hifzState.isHifzModeActive &&
+            hifzState.maskingType != HifzMaskingType.fullVerse)
         ? EdgeInsets.symmetric(horizontal: 1.5.w)
         : EdgeInsets.zero;
 

@@ -25,7 +25,7 @@ void showAudioSettingsSheetTablet(BuildContext context, {int? verseId}) {
   showModalBottomSheet(
     context: context,
     backgroundColor: AppColors.cardCream,
-    constraints: const BoxConstraints(maxWidth: 450),
+    constraints: const BoxConstraints(maxWidth: 480),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
     ),
@@ -150,7 +150,7 @@ class _AudioSettingsSheetContentState
         ),
       ),
       child: Container(
-        padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 20.h),
+        padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 16.h),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -172,13 +172,13 @@ class _AudioSettingsSheetContentState
               child: Text(
                 AppLocalizations.of(context)!.audioSettingsTitle,
                 style: TextStyle(
-                  fontSize: 19.sp,
+                  fontSize: 24.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
             ),
-            SizedBox(height: 14.h),
+            SizedBox(height: 16.h),
 
             // ── Category Selector
             AudioSelectorButton<String>(
@@ -186,16 +186,17 @@ class _AudioSettingsSheetContentState
               label: AppLocalizations.of(context)!.audioTypeLabel,
               value: _selectedCategory,
               items: categories,
-              height: 48.h,
-              itemHeight: 42.h,
-              labelFontSize: 10.sp,
-              valueFontSize: 14.sp,
-              itemFontSize: 14.5.sp,
-              iconSize: 18.sp,
+              height: 56.h,
+              itemHeight: 44.h,
+              maxHeight: 176.h,
+              labelFontSize: 14.sp,
+              valueFontSize: 18.5.sp,
+              itemFontSize: 18.sp,
+              iconSize: 24.sp,
               onChanged: (val) => _onCategoryChanged(val),
               labelBuilder: (item) => ReciterLocalization.localizeByLang(isEn, item),
             ),
-            SizedBox(height: 10.h),
+            SizedBox(height: 12.h),
 
             // ── Reciter Selector
             AudioSelectorButton<String>(
@@ -203,17 +204,17 @@ class _AudioSettingsSheetContentState
               label: AppLocalizations.of(context)!.audioReciterLabel,
               value: _selectedReciter,
               items: reciters,
-              height: 48.h,
-              itemHeight: 42.h,
-              maxHeight: 210.h,
-              labelFontSize: 10.sp,
-              valueFontSize: 14.sp,
-              itemFontSize: 14.5.sp,
-              iconSize: 18.sp,
+              height: 56.h,
+              itemHeight: 44.h,
+              maxHeight: 176.h,
+              labelFontSize: 14.sp,
+              valueFontSize: 18.5.sp,
+              itemFontSize: 18.sp,
+              iconSize: 24.sp,
               onChanged: (val) => _onReciterChanged(val),
               labelBuilder: (item) => ReciterLocalization.localizeByLang(isEn, item),
             ),
-            SizedBox(height: 10.h),
+            SizedBox(height: 12.h),
 
             // ── Repeat Selector
             AudioSelectorButton<int>(
@@ -221,22 +222,22 @@ class _AudioSettingsSheetContentState
               label: AppLocalizations.of(context)!.audioRepeatLabel,
               value: _selectedRepeatCount,
               items: _repeatOptions,
-              height: 48.h,
-              itemHeight: 34.h,
-              maxHeight: 136.h,
-              labelFontSize: 10.sp,
-              valueFontSize: 14.sp,
-              itemFontSize: 14.5.sp,
-              iconSize: 18.sp,
+              height: 56.h,
+              itemHeight: 30.h,
+              maxHeight: 110.h,
+              labelFontSize: 14.sp,
+              valueFontSize: 18.5.sp,
+              itemFontSize: 15.sp,
+              iconSize: 24.sp,
               onChanged: _onRepeatChanged,
               labelBuilder: (item) => _getRepeatLabel(context, item),
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 14.h),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 2.h),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
               decoration: BoxDecoration(
                 color: AppColors.surfaceCream,
-                borderRadius: BorderRadius.circular(10.r),
+                borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(
                   color: AppColors.accentGold.withValues(alpha: 0.4),
                 ),
@@ -248,15 +249,15 @@ class _AudioSettingsSheetContentState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.looks_one_rounded,
+                        Icons.play_circle_outline_rounded,
                         color: AppColors.accentGold,
-                        size: 20.sp,
+                        size: 26.sp,
                       ),
-                      SizedBox(width: 8.w),
+                      SizedBox(width: 10.w),
                       Text(
                         AppLocalizations.of(context)!.menuListenOnce,
                         style: TextStyle(
-                          fontSize: 14.sp,
+                          fontSize: 18.5.sp,
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
@@ -272,16 +273,16 @@ class _AudioSettingsSheetContentState
                 ],
               ),
             ),
-            SizedBox(height: 18.h),
+            SizedBox(height: 20.h),
 
             // ── Play / Apply button
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accentGold,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 13.h),
+                padding: EdgeInsets.symmetric(vertical: 14.h),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(14.r),
                 ),
                 elevation: 0,
               ),
@@ -289,13 +290,13 @@ class _AudioSettingsSheetContentState
                 widget.verseId != null
                     ? Icons.play_arrow_rounded
                     : Icons.check_rounded,
-                size: 22.sp,
+                size: 26.sp,
               ),
               label: Text(
                 widget.verseId != null
                     ? AppLocalizations.of(context)!.audioStartListening
                     : AppLocalizations.of(context)!.audioSaveSettings,
-                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 19.5.sp, fontWeight: FontWeight.bold),
               ),
               onPressed: _applyAndPlay,
             ),

@@ -19,6 +19,7 @@ void showThemeAndLanguageModal(BuildContext context) {
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
+    constraints: const BoxConstraints(maxWidth: 620),
     elevation: 0,
     builder: (ctx) => MultiBlocProvider(
       providers: [
@@ -77,10 +78,10 @@ class ThemeAndLanguageSheet extends StatelessWidget {
             ),
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
-                20.w,
-                14.h,
-                20.w,
-                MediaQuery.paddingOf(context).bottom,
+                22.w,
+                16.h,
+                22.w,
+                MediaQuery.paddingOf(context).bottom + 10.h,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -89,12 +90,12 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                   // 1. Drag Handle
                   Center(
                     child: Container(
-                      width: 40.w,
-                      height: 4.h,
-                      margin: EdgeInsets.only(bottom: 16.h),
+                      width: 50.w,
+                      height: 5.h,
+                      margin: EdgeInsets.only(bottom: 18.h),
                       decoration: BoxDecoration(
                         color: AppColors.accentGold.withValues(alpha: 0.7),
-                        borderRadius: BorderRadius.circular(2.r),
+                        borderRadius: BorderRadius.circular(3.r),
                       ),
                     ),
                   ),
@@ -105,58 +106,58 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.palette_rounded,
-                        size: 20.sp,
+                        size: 24.sp,
                         color: AppColors.accentGold,
                       ),
-                      SizedBox(width: 4.w),
+                      SizedBox(width: 6.w),
                       Icon(
                         Icons.translate_rounded,
-                        size: 18.sp,
+                        size: 22.sp,
                         color: AppColors.accentGold,
                       ),
-                      SizedBox(width: 8.w),
+                      SizedBox(width: 10.w),
                       Text(
                         l10n.drawerThemeAndLanguage,
                         style: TextStyle(
-                          fontSize: 18.sp,
+                          fontSize: 21.sp,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 22.h),
 
                   // 3. Language Selector Section
                   Row(
                     children: [
                       Icon(
                         Icons.translate_rounded,
-                        size: 16.sp,
+                        size: 20.sp,
                         color: AppColors.accentGold,
                       ),
-                      SizedBox(width: 6.w),
+                      SizedBox(width: 8.w),
                       Text(
                         l10n.drawerLanguage,
                         style: TextStyle(
-                          fontSize: 14.sp,
+                          fontSize: 17.sp,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 8.h),
+                  SizedBox(height: 10.h),
                   Directionality(
                     textDirection: TextDirection.rtl,
                     child: BlocBuilder<LocaleCubit, Locale>(
                       builder: (context, locale) {
                         final isCurrentArabic = locale.languageCode == 'ar';
                         return Container(
-                          padding: EdgeInsets.all(4.r),
+                          padding: EdgeInsets.all(5.r),
                           decoration: BoxDecoration(
                             color: AppColors.surfaceCream,
-                            borderRadius: BorderRadius.circular(14.r),
+                            borderRadius: BorderRadius.circular(16.r),
                             border: Border.all(
                               color: AppColors.borderLight,
                               width: 1,
@@ -176,7 +177,7 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                                   },
                                 ),
                               ),
-                              SizedBox(width: 6.w),
+                              SizedBox(width: 8.w),
                               Expanded(
                                 child: _LanguagePill(
                                   label: 'English',
@@ -195,17 +196,17 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                       },
                     ),
                   ),
-                  SizedBox(height: 18.h),
+                  SizedBox(height: 20.h),
 
                   // 4. Dark Mode Switch Section
                   Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 8.h,
+                      horizontal: 18.w,
+                      vertical: 10.h,
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.surfaceCream,
-                      borderRadius: BorderRadius.circular(14.r),
+                      borderRadius: BorderRadius.circular(16.r),
                       border: Border.all(color: AppColors.borderLight),
                     ),
                     child: Row(
@@ -214,7 +215,7 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                         Row(
                           children: [
                             Container(
-                              padding: EdgeInsets.all(6.r),
+                              padding: EdgeInsets.all(8.r),
                               decoration: BoxDecoration(
                                 color: activeTheme.goldColor.withValues(alpha: 0.12),
                                 shape: BoxShape.circle,
@@ -223,15 +224,15 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                                 isDark
                                     ? Icons.dark_mode_rounded
                                     : Icons.light_mode_rounded,
-                                size: 18.sp,
+                                size: 22.sp,
                                 color: activeTheme.goldColor,
                               ),
                             ),
-                            SizedBox(width: 12.w),
+                            SizedBox(width: 14.w),
                             Text(
                               l10n.themeDarkMode,
                               style: TextStyle(
-                                fontSize: 15.sp,
+                                fontSize: 17.sp,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
                               ),
@@ -266,26 +267,26 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 22.h),
 
                   // 5. Mushaf Color Grid Section
                   Text(
                     l10n.themeMushafColor,
                     style: TextStyle(
-                      fontSize: 14.sp,
+                      fontSize: 17.sp,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 14.h),
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 5,
-                      mainAxisSpacing: 12.h,
-                      crossAxisSpacing: 6.w,
-                      childAspectRatio: 0.81,
+                      mainAxisSpacing: 14.h,
+                      crossAxisSpacing: 8.w,
+                      childAspectRatio: 0.85,
                     ),
                     itemCount: MushafTheme.values.length,
                     itemBuilder: (context, index) {
@@ -301,8 +302,8 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
-                              width: 52.w,
-                              height: 52.w,
+                              width: 58.w,
+                              height: 58.w,
                               decoration: BoxDecoration(
                                 color: theme.backgroundColor,
                                 shape: BoxShape.circle,
@@ -326,7 +327,7 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                                   ? Icon(
                                       Icons.check_rounded,
                                       color: theme.goldColor,
-                                      size: 20.sp,
+                                      size: 24.sp,
                                     )
                                   : null,
                             ),
@@ -337,7 +338,7 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                                 _getThemeName(context, theme.id),
                                 maxLines: 1,
                                 style: TextStyle(
-                                  fontSize: 11.sp,
+                                  fontSize: 13.5.sp,
                                   color: isSelected
                                       ? theme.goldColor
                                       : AppColors.textPrimary,
@@ -382,12 +383,12 @@ class _LanguagePill extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(vertical: 9.h),
+        padding: EdgeInsets.symmetric(vertical: 12.h),
         decoration: BoxDecoration(
           color: isSelected
               ? activeGold.withValues(alpha: 0.15)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(10.r),
+          borderRadius: BorderRadius.circular(12.r),
           border: isSelected
               ? Border.all(color: activeGold.withValues(alpha: 0.4), width: 1)
               : null,
@@ -398,7 +399,7 @@ class _LanguagePill extends StatelessWidget {
             if (isSelected) ...[
               Icon(
                 Icons.check_circle_rounded,
-                size: 15.sp,
+                size: 18.sp,
                 color: activeGold,
               ),
               SizedBox(width: 6.w),
@@ -406,7 +407,7 @@ class _LanguagePill extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 13.5.sp,
+                fontSize: 16.5.sp,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 color: isSelected ? activeGold : AppColors.textPrimary.withValues(alpha: 0.7),
               ),
@@ -421,29 +422,31 @@ class _LanguagePill extends StatelessWidget {
 /// Dual icon for Drawer entry representing both Mushaf Appearance and Language.
 class ThemeAndLanguageDrawerIcon extends StatelessWidget {
   final bool isWeb;
-  const ThemeAndLanguageDrawerIcon({super.key, this.isWeb = false});
+  final double? size;
+  const ThemeAndLanguageDrawerIcon({super.key, this.isWeb = false, this.size});
 
   @override
   Widget build(BuildContext context) {
     if (isWeb) {
+      final webS = size ?? 44.0;
       return SizedBox(
-        width: 44,
-        height: 44,
+        width: webS,
+        height: webS,
         child: Stack(
           alignment: Alignment.center,
           children: [
             Positioned(
-              top: 7,
-              left: 7,
+              top: webS * 0.16,
+              left: webS * 0.16,
               child: Icon(
                 Icons.palette_rounded,
                 color: AppColors.accentGold,
-                size: 19,
+                size: webS * 0.44,
               ),
             ),
             Positioned(
-              bottom: 5,
-              right: 5,
+              bottom: webS * 0.11,
+              right: webS * 0.11,
               child: Container(
                 padding: const EdgeInsets.all(1.5),
                 decoration: BoxDecoration(
@@ -453,7 +456,7 @@ class ThemeAndLanguageDrawerIcon extends StatelessWidget {
                 child: Icon(
                   Icons.translate_rounded,
                   color: AppColors.accentGold,
-                  size: 14,
+                  size: webS * 0.32,
                 ),
               ),
             ),
@@ -462,24 +465,25 @@ class ThemeAndLanguageDrawerIcon extends StatelessWidget {
       );
     }
 
+    final s = size ?? 44.w;
     return SizedBox(
-      width: 44.w,
-      height: 44.w,
+      width: s,
+      height: s,
       child: Stack(
         alignment: Alignment.center,
         children: [
           Positioned(
-            top: 7.h,
-            left: 7.w,
+            top: s * 0.16,
+            left: s * 0.16,
             child: Icon(
               Icons.palette_rounded,
               color: AppColors.accentGold,
-              size: 19.sp,
+              size: s * 0.44,
             ),
           ),
           Positioned(
-            bottom: 5.h,
-            right: 5.w,
+            bottom: s * 0.11,
+            right: s * 0.11,
             child: Container(
               padding: EdgeInsets.all(1.5.r),
               decoration: BoxDecoration(
@@ -489,7 +493,7 @@ class ThemeAndLanguageDrawerIcon extends StatelessWidget {
               child: Icon(
                 Icons.translate_rounded,
                 color: AppColors.accentGold,
-                size: 14.sp,
+                size: s * 0.32,
               ),
             ),
           ),

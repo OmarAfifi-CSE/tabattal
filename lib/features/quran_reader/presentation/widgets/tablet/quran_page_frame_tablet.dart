@@ -33,7 +33,7 @@ List<TextSpan> _buildHizbLabelTextSpans(String text, TextStyle baseStyle) {
         TextSpan(
           text: '\n${match.group(0)}',
           style: baseStyle.copyWith(
-            fontSize: baseStyle.fontSize! * 1.25,
+            fontSize: baseStyle.fontSize! * 1.3,
             fontWeight: FontWeight.w900,
             fontFamily: 'Amiri',
           ),
@@ -59,6 +59,7 @@ class QuranPageFrameTablet extends StatelessWidget {
   final String surahName;
   final String juzName;
   final VoidCallback? onHeaderTap;
+  final bool showHeaderMenu;
 
   const QuranPageFrameTablet({
     super.key,
@@ -68,6 +69,7 @@ class QuranPageFrameTablet extends StatelessWidget {
     required this.surahName,
     required this.juzName,
     this.onHeaderTap,
+    this.showHeaderMenu = true,
   });
 
   @override
@@ -165,7 +167,7 @@ class QuranPageFrameTablet extends StatelessWidget {
                       theme: mushafTheme,
                       child: Text(
                         juzName,
-                        style: headerStyle.copyWith(fontSize: 10.sp),
+                        style: headerStyle.copyWith(fontSize: 16.5.sp),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -209,7 +211,7 @@ class QuranPageFrameTablet extends StatelessWidget {
                         fit: BoxFit.scaleDown,
                         child: Text(
                           surahName,
-                          style: headerStyle.copyWith(fontSize: 10.sp),
+                          style: headerStyle.copyWith(fontSize: 16.5.sp),
                           textAlign: TextAlign.center,
                           maxLines: 1,
                         ),
@@ -220,32 +222,34 @@ class QuranPageFrameTablet extends StatelessWidget {
               ),
 
               // Hamburger Menu
-              Positioned(
-                top: pageHeight * 0.02,
-                right: pageWidth * 0.07,
-                child: FractionalTranslation(
-                  translation: const Offset(0, -0.5),
-                  child: GestureDetector(
-                    onTap: () {
-                      onHeaderTap?.call();
-                      Scaffold.of(context).openDrawer();
-                    },
-                    child: _TabletFrameInfoBox(
-                      theme: mushafTheme,
-                      margin: EdgeInsets.symmetric(horizontal: 6.w),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 4.w,
-                        vertical: 0.h,
-                      ),
-                      child: Icon(
-                        Icons.segment_rounded,
-                        color: mushafTheme.goldColor,
-                        size: 24.sp,
+              if (showHeaderMenu)
+                Positioned(
+                  top: pageHeight * 0.02,
+                  left: pageWidth * 0.82,
+                  width: pageWidth * 0.11,
+                  child: FractionalTranslation(
+                    translation: const Offset(0, -0.5),
+                    child: GestureDetector(
+                      onTap: () {
+                        onHeaderTap?.call();
+                        Scaffold.of(context).openDrawer();
+                      },
+                      child: _TabletFrameInfoBox(
+                        theme: mushafTheme,
+                        margin: EdgeInsets.symmetric(horizontal: 4.w),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 2.w,
+                          vertical: 2.h,
+                        ),
+                        child: Icon(
+                          Icons.segment_rounded,
+                          color: mushafTheme.goldColor,
+                          size: 28.sp,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
 
               // ── LAYER 4: Page Number (bottom cut) ──────────────────────
               Positioned(
@@ -265,7 +269,7 @@ class QuranPageFrameTablet extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'Amiri',
                           color: mushafTheme.textColor,
-                          fontSize: 15.sp,
+                          fontSize: 18.sp,
                           fontWeight: FontWeight.w900,
                           height: 1.1.h,
                         ),
@@ -309,14 +313,14 @@ class _TabletFrameInfoBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: margin ?? (EdgeInsets.symmetric(horizontal: 6.w)),
+      margin: margin ?? (EdgeInsets.symmetric(horizontal: 4.w)),
       padding:
-          padding ?? (EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h)),
+          padding ?? (EdgeInsets.symmetric(horizontal: 4.w, vertical: 3.h)),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         border: Border.all(
           color: theme.goldColor.withValues(alpha: 0.6),
-          width: 1.0,
+          width: 1.0.w,
         ),
         borderRadius: BorderRadius.circular(12.r),
         color: theme.backgroundColor,
@@ -348,9 +352,9 @@ class _TabletHizbMarker extends StatelessWidget {
         marker['line'] as int,
         pageHeight,
       ),
-      left: isLeftPage ? (pageWidth * 0.057) : null,
-      right: !isLeftPage ? (pageWidth * 0.043) : null,
-      width: pageWidth * 0.12,
+      left: isLeftPage ? (pageWidth * 0.056) : null,
+      right: !isLeftPage ? (pageWidth * 0.044) : null,
+      width: pageWidth * 0.085,
       child: FractionalTranslation(
         translation: Offset(isLeftPage ? -0.5 : 0.5, -0.5),
         child: Stack(
@@ -358,13 +362,13 @@ class _TabletHizbMarker extends StatelessWidget {
           children: [
             // Ornament glyph from QCF_BSML
             Transform.scale(
-              scaleX: 0.55,
+              scaleX: 0.58,
               scaleY: 1.0,
               child: Text(
                 '\u00F5',
                 style: TextStyle(
                   fontFamily: 'QCF_BSML',
-                  fontSize: 65.sp,
+                  fontSize: 88.sp,
                   color: mushafTheme.goldColor,
                   height: 1.0.h,
                 ),
@@ -372,17 +376,17 @@ class _TabletHizbMarker extends StatelessWidget {
             ),
             // Label text centred inside the ornament
             Transform.translate(
-              offset: Offset(-3.2.w, 12.h),
+              offset: Offset(-4.w, 12.h),
               child: SizedBox(
-                width: pageWidth * 0.06,
+                width: pageWidth * 0.060,
                 child: Text.rich(
                   TextSpan(
                     children: _buildHizbLabelTextSpans(
                       (marker['text'] as String).toArabicDigits,
                       TextStyle(
                         fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
-                        fontSize: 6.sp,
-                        height: 1.2.h,
+                        fontSize: 8.sp,
+                        height: 1.h,
                         color: mushafTheme.textColor,
                         fontWeight: FontWeight.bold,
                       ),

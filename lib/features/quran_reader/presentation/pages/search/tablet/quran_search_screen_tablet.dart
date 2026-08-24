@@ -386,42 +386,42 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
     final backButton = GestureDetector(
       onTap: () => Navigator.pop(context),
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: EdgeInsets.all(12.r),
         decoration: BoxDecoration(
           color: AppColors.borderLight,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderMedium, width: 1),
+          borderRadius: BorderRadius.circular(14.r),
+          border: Border.all(color: AppColors.borderMedium, width: 1.w),
         ),
         child: Icon(
           Icons.arrow_forward_rounded,
           color: AppColors.textPrimary,
-          size: 24,
+          size: 26.sp,
         ),
       ),
     );
 
     final searchField = Expanded(
       child: Container(
-        height: 50,
+        height: 56.h,
         decoration: BoxDecoration(
           color: AppColors.cardCream,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderMedium, width: 1),
+          borderRadius: BorderRadius.circular(14.r),
+          border: Border.all(color: AppColors.borderMedium, width: 1.w),
         ),
         child: Row(
           children: [
-            const SizedBox(width: 12),
+            SizedBox(width: 14.w),
             Icon(
               Icons.search_rounded,
               color: AppColors.textPrimary,
-              size: 24,
+              size: 26.sp,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 10.w),
             Expanded(
               child: TextField(
                 controller: _searchController,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18.sp,
                   color: AppColors.textPrimary,
                 ),
                 onChanged: _onSearchChanged,
@@ -432,10 +432,10 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                   hintText: l10n.searchHint,
                   hintStyle: TextStyle(
                     color: AppColors.textPrimary.withValues(alpha: 0.38),
-                    fontSize: 16,
+                    fontSize: 18.sp,
                   ),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.only(bottom: 8),
+                  contentPadding: EdgeInsets.only(bottom: 8.h),
                 ),
               ),
             ),
@@ -445,17 +445,17 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
     );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: EdgeInsets.symmetric(horizontal: 16.0.w, vertical: 8.0.h),
       child: Row(
         children: isAr
             ? [
                 backButton,
-                const SizedBox(width: 12),
+                SizedBox(width: 12.w),
                 searchField,
               ]
             : [
                 searchField,
-                const SizedBox(width: 12),
+                SizedBox(width: 12.w),
                 backButton,
               ],
       ),
@@ -482,25 +482,26 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
               l10n.searchByHint,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 18.sp,
+                fontSize: 20.sp,
+                fontWeight: FontWeight.bold,
                 height: 1.6.h,
                 color: AppColors.textPrimary.withValues(alpha: 0.6),
               ),
             ),
           ),
-          SizedBox(height: 90.h),
+          SizedBox(height: 32.h),
           Row(
             children: [
               Icon(
-                Icons.grid_view_rounded,
-                size: 26.r,
+                Icons.auto_stories_rounded,
+                size: 24.sp,
                 color: AppColors.accentGold,
               ),
               SizedBox(width: 8.w),
               Text(
                 l10n.topicSectionsTitle,
                 style: TextStyle(
-                  fontSize: 20.sp,
+                  fontSize: 22.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
@@ -513,9 +514,9 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 12.w,
-              mainAxisSpacing: 12.h,
-              mainAxisExtent: 52.h,
+              crossAxisSpacing: 14.w,
+              mainAxisSpacing: 14.h,
+              mainAxisExtent: 60.h,
             ),
             itemCount: QuranTopics.topics.length,
             itemBuilder: (context, index) {
@@ -524,10 +525,10 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
               return GestureDetector(
                 onTap: () => _selectTopic(topic),
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
                   decoration: BoxDecoration(
                     color: AppColors.cardCream,
-                    borderRadius: BorderRadius.circular(12.r),
+                    borderRadius: BorderRadius.circular(14.r),
                     border: Border.all(
                       color: AppColors.accentGold.withValues(alpha: 0.3),
                       width: 1.w,
@@ -538,7 +539,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                     children: [
                       Icon(
                         topic.icon,
-                        size: 20.r,
+                        size: 24.sp,
                         color: AppColors.accentGold,
                       ),
                       SizedBox(width: 10.w),
@@ -549,7 +550,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                             title,
                             maxLines: 1,
                             style: TextStyle(
-                              fontSize: 16.sp,
+                              fontSize: 18.sp,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textPrimary,
                             ),
@@ -585,14 +586,14 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                 children: [
                   Icon(
                     _selectedTopic!.icon,
-                    size: 22.r,
+                    size: 24.sp,
                     color: AppColors.accentGold,
                   ),
                   SizedBox(width: 10.w),
                   Text(
                     topicTitle,
                     style: TextStyle(
-                      fontSize: 18.sp,
+                      fontSize: 20.sp,
                       fontWeight: FontWeight.bold,
                       color: AppColors.accentGold,
                     ),
@@ -602,7 +603,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
               IconButton(
                 icon: Icon(
                   Icons.close_rounded,
-                  size: 24.r,
+                  size: 26.sp,
                   color: AppColors.textPrimary,
                 ),
                 onPressed: _clearSelectedTopic,
@@ -620,8 +621,8 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                     onTap: () => _selectSubTopic(null),
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: 14.w,
-                        vertical: 8.h,
+                        horizontal: 16.w,
+                        vertical: 10.h,
                       ),
                       margin: EdgeInsets.only(left: 6.w, right: 6.w),
                       decoration: BoxDecoration(
@@ -637,7 +638,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                       child: Text(
                         isAr ? 'الكل' : 'All',
                         style: TextStyle(
-                          fontSize: 13.sp,
+                          fontSize: 15.sp,
                           fontWeight: FontWeight.bold,
                           color: _selectedSubTopic == null
                               ? Colors.white
@@ -652,8 +653,8 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                       onTap: () => _selectSubTopic(sub),
                       child: Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: 14.w,
-                          vertical: 8.h,
+                          horizontal: 16.w,
+                          vertical: 10.h,
                         ),
                         margin: EdgeInsets.only(left: 6.w, right: 6.w),
                         decoration: BoxDecoration(
@@ -669,7 +670,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                         child: Text(
                           sub.getName(isAr),
                           style: TextStyle(
-                            fontSize: 13.sp,
+                            fontSize: 15.sp,
                             fontWeight: FontWeight.bold,
                             color: isSelected
                                 ? Colors.white
@@ -713,14 +714,14 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                   children: [
                     Icon(
                       Icons.search_off_rounded,
-                      size: 52.r,
+                      size: 56.r,
                       color: AppColors.textPrimary.withValues(alpha: 0.3),
                     ),
                     SizedBox(height: 12.h),
                     Text(
                       l10n.noResults,
                       style: TextStyle(
-                        fontSize: 18.sp,
+                        fontSize: 20.sp,
                         color: AppColors.textPrimary.withValues(alpha: 0.6),
                       ),
                     ),
@@ -740,7 +741,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                   return GestureDetector(
                     onTap: () => _navigateToPage(verse.page, verseKey: verse.verseKey),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12.0.h),
+                      padding: EdgeInsets.symmetric(vertical: 14.0.h),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -750,7 +751,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                               Text(
                                 l10n.pageListItem(verse.page.toArabicDigits),
                                 style: TextStyle(
-                                  fontSize: 12.sp,
+                                  fontSize: 15.sp,
                                   color: AppColors.textPrimary.withValues(alpha: 0.6),
                                 ),
                               ),
@@ -760,7 +761,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                                   verse.ayah.toArabicDigits,
                                 ),
                                 style: TextStyle(
-                                  fontSize: 14.sp,
+                                  fontSize: 17.sp,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.accentGold,
                                 ),
@@ -773,8 +774,8 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                             textDirection: TextDirection.rtl,
                             text: TextSpan(
                               style: AppTextStyles.quranText.copyWith(
-                                fontSize: 22.sp,
-                                height: 1.5.h,
+                                fontSize: 26.sp,
+                                height: 1.6.h,
                                 color: AppColors.textPrimary,
                               ),
                               children: [
@@ -823,14 +824,14 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
           children: [
             Icon(
               Icons.search_off_rounded,
-              size: 52.r,
+              size: 56.r,
               color: AppColors.textPrimary.withValues(alpha: 0.3),
             ),
             SizedBox(height: 12.h),
             Text(
               l10n.noResults,
               style: TextStyle(
-                fontSize: 18.sp,
+                fontSize: 20.sp,
                 color: AppColors.textPrimary.withValues(alpha: 0.6),
               ),
             ),
@@ -852,9 +853,9 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
     final totalCount = surahCards.length + _results.length;
 
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.r),
       itemCount: totalCount,
-      separatorBuilder: (_, _) => Divider(color: AppColors.divider, height: 1),
+      separatorBuilder: (_, _) => Divider(color: AppColors.divider, height: 1.h),
       itemBuilder: (context, index) {
         if (index < surahCards.length) {
           return surahCards[index];
@@ -864,7 +865,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
         return GestureDetector(
           onTap: () => _navigateToPage(verse.page, verseKey: verse.verseKey),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            padding: EdgeInsets.symmetric(vertical: 14.0.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -874,7 +875,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                     Text(
                       l10n.pageListItem(verse.page.toArabicDigits),
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 15.sp,
                         color: AppColors.textPrimary.withValues(alpha: 0.6),
                       ),
                     ),
@@ -884,21 +885,21 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                         verse.ayah.toArabicDigits,
                       ),
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 17.sp,
                         fontWeight: FontWeight.bold,
                         color: AppColors.accentGold,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
                 RichText(
                   textAlign: TextAlign.right,
                   textDirection: TextDirection.rtl,
                   text: TextSpan(
                     style: AppTextStyles.quranText.copyWith(
-                      fontSize: 22,
-                      height: 1.5,
+                      fontSize: 26.sp,
+                      height: 1.6.h,
                       color: AppColors.textPrimary,
                     ),
                     children: _getHighlightedUthmani(
@@ -978,7 +979,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
         child: Text(
           l10n.outOfRange(number.toArabicDigits),
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 18.sp,
             color: AppColors.textPrimary.withValues(alpha: 0.6),
           ),
         ),
@@ -986,7 +987,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
     }
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       children: cards,
     );
   }
@@ -997,35 +998,35 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
     required VoidCallback onTap,
   }) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      margin: EdgeInsets.only(bottom: 12.h),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       color: AppColors.cardCream,
       elevation: 0,
       child: ListTile(
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
         leading: Container(
-          width: 44,
-          height: 44,
+          width: 52.w,
+          height: 52.w,
           decoration: BoxDecoration(
             color: AppColors.accentGold.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(14.r),
           ),
-          child: Icon(icon, color: AppColors.accentGold, size: 22),
+          child: Icon(icon, color: AppColors.accentGold, size: 26.sp),
         ),
         title: Text(
           title,
           textAlign: TextAlign.right,
           textDirection: TextDirection.rtl,
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 18.5.sp,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
         trailing: Icon(
           Icons.arrow_back_ios_rounded,
-          size: 16,
+          size: 18.sp,
           color: AppColors.textPrimary.withValues(alpha: 0.4),
         ),
       ),

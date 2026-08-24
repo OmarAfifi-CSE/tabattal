@@ -56,14 +56,14 @@ class _QuranIndexViewTabletState extends State<QuranIndexViewTablet>
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
-            fontSize: 22.sp,
+            fontSize: 24.sp,
           ),
         ),
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_rounded,
             color: AppColors.textPrimary,
-            size: 24.sp,
+            size: 26.sp,
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -72,7 +72,7 @@ class _QuranIndexViewTabletState extends State<QuranIndexViewTablet>
           labelColor: AppColors.accentGold,
           unselectedLabelColor: AppColors.textPrimary.withValues(alpha: 0.54),
           indicatorColor: AppColors.accentGold,
-          labelStyle: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+          labelStyle: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
           tabs: [
             Tab(text: l10n.indexSurahsTab),
             Tab(text: l10n.indexJuzsTab),
@@ -163,14 +163,14 @@ class _IndexSurahTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       contentPadding: EdgeInsets.symmetric(
-        horizontal: 12.w,
-        vertical: 4.h,
+        horizontal: 16.w,
+        vertical: 8.h,
       ),
       leading: _IndexNumberBadge(label: '$surahNum', filled: true),
       title: Text(
         l10n.surahListItem(surahName),
         style: TextStyle(
-          fontSize: 18.sp,
+          fontSize: 21.sp,
           fontWeight: FontWeight.bold,
           color: AppColors.textPrimary,
         ),
@@ -180,7 +180,7 @@ class _IndexSurahTile extends StatelessWidget {
           isEn ? startPage.toString() : startPage.toArabicDigits,
         ),
         style: TextStyle(
-          fontSize: 14.sp,
+          fontSize: 16.5.sp,
           color: AppColors.textPrimary.withValues(alpha: 0.6),
         ),
       ),
@@ -255,13 +255,17 @@ class _IndexJuzTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       onTap: onTap,
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: 16.w,
+        vertical: 8.h,
+      ),
       leading: _IndexNumberBadge(label: '$juzNum', filled: false),
       title: Text(
         l10n.juzListItem(
           isEn ? juzNum.toString() : QuranMetadata.getJuzName(juzNum),
         ),
         style: TextStyle(
-          fontSize: 18.sp,
+          fontSize: 21.sp,
           fontWeight: FontWeight.bold,
           color: AppColors.textPrimary,
         ),
@@ -271,7 +275,7 @@ class _IndexJuzTile extends StatelessWidget {
           isEn ? startPage.toString() : startPage.toArabicDigits,
         ),
         style: TextStyle(
-          fontSize: 14.sp,
+          fontSize: 16.5.sp,
           color: AppColors.textPrimary.withValues(alpha: 0.6),
         ),
       ),
@@ -288,8 +292,8 @@ class _IndexNumberBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 40.r,
-      height: 40.r,
+      width: 46.r,
+      height: 46.r,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.accentGold.withValues(alpha: filled ? 0.12 : 0.1),
@@ -304,7 +308,7 @@ class _IndexNumberBadge extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 14.sp,
+          fontSize: 16.sp,
           fontWeight: FontWeight.bold,
           color: AppColors.accentGold,
         ),

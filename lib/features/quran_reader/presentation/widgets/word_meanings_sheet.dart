@@ -132,12 +132,12 @@ class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
             // Drag Handle
             Center(
               child: Container(
-                width: 48.w,
-                height: 4.h,
-                margin: EdgeInsets.only(top: 12.h, bottom: 12.h),
+                width: 56.w,
+                height: 4.5.h,
+                margin: EdgeInsets.only(top: 12.h, bottom: 14.h),
                 decoration: BoxDecoration(
                   color: AppColors.verseMarkerGold.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(2.r),
+                  borderRadius: BorderRadius.circular(3.r),
                 ),
               ),
             ),
@@ -170,7 +170,7 @@ class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
+                    horizontal: 18.w,
                     vertical: 14.h,
                   ),
                   itemCount: _meanings!.length,
@@ -215,13 +215,13 @@ class _WordMeaningsHeader extends StatelessWidget {
               Icon(
                 Icons.translate_rounded,
                 color: AppColors.verseMarkerGold,
-                size: 22.sp,
+                size: 26.sp,
               ),
-              SizedBox(width: 8.w),
+              SizedBox(width: 10.w),
               Text(
                 l10n.wordMeaningsTitle,
                 style: AppTextStyles.headerText.copyWith(
-                  fontSize: 18.sp,
+                  fontSize: 21.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.verseMarkerGold,
                 ),
@@ -229,7 +229,7 @@ class _WordMeaningsHeader extends StatelessWidget {
             ],
           ),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
             decoration: BoxDecoration(
               color: AppColors.verseMarkerGold.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12.r),
@@ -243,7 +243,7 @@ class _WordMeaningsHeader extends StatelessWidget {
                   : 'Surah $surahName : $ayahNumber',
               style: TextStyle(
                 fontFamily: isArabic ? 'Amiri' : null,
-                fontSize: 14.sp,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
                 color: AppColors.verseMarkerGold,
               ),
@@ -270,9 +270,9 @@ class _WordMeaningsEmptyState extends StatelessWidget {
           Icon(
             Icons.check_circle_outline_rounded,
             color: AppColors.verseMarkerGold.withValues(alpha: 0.8),
-            size: 36.sp,
+            size: 42.sp,
           ),
-          SizedBox(height: 10.h),
+          SizedBox(height: 12.h),
           Text(
             isArabic
                 ? 'جميع مفردات الآية الكريمة واضحة وجلية المعنى'
@@ -281,7 +281,7 @@ class _WordMeaningsEmptyState extends StatelessWidget {
             style: TextStyle(
               fontFamily: isArabic ? 'Amiri' : null,
               color: AppColors.textSecondary,
-              fontSize: 15.sp,
+              fontSize: 17.5.sp,
             ),
           ),
         ],
@@ -303,8 +303,8 @@ class _WordMeaningCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: 16.w,
-        vertical: 12.h,
+        horizontal: 18.w,
+        vertical: 14.h,
       ),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -319,8 +319,8 @@ class _WordMeaningCard extends StatelessWidget {
         children: [
           // Index Badge
           Container(
-            width: 26.r,
-            height: 26.r,
+            width: 30.r,
+            height: 30.r,
             margin: EdgeInsets.only(top: 2.h),
             alignment: Alignment.center,
             decoration: BoxDecoration(
@@ -330,7 +330,7 @@ class _WordMeaningCard extends StatelessWidget {
             child: Text(
               (index + 1).toString().toArabicDigits,
               style: TextStyle(
-                fontSize: 12.sp,
+                fontSize: 14.sp,
                 fontWeight: FontWeight.bold,
                 color: AppColors.verseMarkerGold,
               ),
@@ -350,7 +350,7 @@ class _WordMeaningCard extends StatelessWidget {
                     textDirection: TextDirection.rtl,
                     style: TextStyle(
                       fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
-                      fontSize: 20.sp,
+                      fontSize: 23.sp,
                       fontWeight: FontWeight.bold,
                       color: AppColors.verseMarkerGold,
                       height: 1.4,
@@ -363,7 +363,7 @@ class _WordMeaningCard extends StatelessWidget {
                   textDirection: TextDirection.rtl,
                   style: TextStyle(
                     fontFamily: 'Amiri',
-                    fontSize: 16.sp,
+                    fontSize: 18.5.sp,
                     height: 1.6,
                     color: AppColors.textPrimary,
                   ),

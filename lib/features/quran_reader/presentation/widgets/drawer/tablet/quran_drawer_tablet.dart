@@ -10,11 +10,11 @@ import '../../../../bloc/bookmark/bookmark_bloc.dart';
 import '../../../../bloc/bookmark/bookmark_state.dart';
 import '../../../pages/search/tablet/quran_search_screen_tablet.dart';
 import '../quran_audio_manager_view.dart';
-import '../quran_full_tafsir_view.dart';
-import '../quran_translation_view.dart';
 import '../theme_and_language_sheet.dart';
 import 'quran_bookmarks_view_tablet.dart';
+import 'quran_full_tafsir_view_tablet.dart';
 import 'quran_index_view_tablet.dart';
+import 'quran_translation_view_tablet.dart';
 
 class QuranDrawerTablet extends StatelessWidget {
   final int currentPage;
@@ -32,7 +32,7 @@ class QuranDrawerTablet extends StatelessWidget {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     final drawer = Drawer(
-      width: 300.w,
+      width: 380.w,
       backgroundColor: AppColors.surfaceCream,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
@@ -49,7 +49,7 @@ class QuranDrawerTablet extends StatelessWidget {
                 children: [
                   const _TabletDrawerHeader(),
                   Padding(
-                    padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
+                    padding: EdgeInsets.fromLTRB(22.w, 18.h, 22.w, 10.h),
                     child: BlocBuilder<SettingsBloc, SettingsState>(
                       builder: (context, state) {
                         return Column(
@@ -60,7 +60,7 @@ class QuranDrawerTablet extends StatelessWidget {
                               child: Text(
                                 l10n.themeScrollDirection,
                                 style: TextStyle(
-                                  fontSize: 14.sp,
+                                  fontSize: 16.5.sp,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textPrimary,
                                 ),
@@ -160,7 +160,7 @@ class QuranDrawerTablet extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) =>
-                              QuranFullTafsirView(pageNumber: currentPage),
+                              QuranFullTafsirViewTablet(pageNumber: currentPage),
                         ),
                       );
                       if (result is Map<String, dynamic>) {
@@ -183,7 +183,7 @@ class QuranDrawerTablet extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) =>
-                              QuranTranslationView(pageNumber: currentPage),
+                              QuranTranslationViewTablet(pageNumber: currentPage),
                         ),
                       );
                       if (result is Map<String, dynamic>) {
@@ -211,7 +211,7 @@ class QuranDrawerTablet extends StatelessWidget {
                     },
                   ),
                   _TabletDrawerItem(
-                    iconWidget: const ThemeAndLanguageDrawerIcon(),
+                    iconWidget: ThemeAndLanguageDrawerIcon(size: 52.w),
                     title: l10n.drawerThemeAndLanguage,
                     subtitle: l10n.drawerThemeAndLanguageSubtitle,
                     onTap: () {
@@ -228,7 +228,7 @@ class QuranDrawerTablet extends StatelessWidget {
     );
 
     return Padding(
-      padding: EdgeInsets.only(top: 50.h, bottom: 50.h),
+      padding: EdgeInsets.only(top: 40.h, bottom: 40.h),
       child: drawer,
     );
   }
@@ -241,7 +241,7 @@ class _TabletDrawerHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: MediaQuery.sizeOf(context).width,
-      padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 14.h),
+      padding: EdgeInsets.fromLTRB(18.w, 20.h, 18.w, 16.h),
       decoration: BoxDecoration(
         color: AppColors.accentGold.withValues(alpha: 0.08),
         border: Border(
@@ -253,7 +253,7 @@ class _TabletDrawerHeader extends StatelessWidget {
           Icon(
             Icons.auto_stories_rounded,
             color: AppColors.accentGold.withValues(alpha: 0.8),
-            size: 32.sp,
+            size: 36.sp,
           ),
           SizedBox(height: 10.h),
           Text(
@@ -262,7 +262,7 @@ class _TabletDrawerHeader extends StatelessWidget {
             textDirection: TextDirection.rtl,
             style: TextStyle(
               fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
-              fontSize: 20.sp,
+              fontSize: 23.sp,
               height: 1.8.h,
               fontWeight: FontWeight.normal,
               color: AppColors.textPrimary.withValues(alpha: 0.9),
@@ -283,7 +283,7 @@ class _TabletBookmarkBadge extends StatelessWidget {
       builder: (context, state) {
         if (state.bookmarkedVerseKeys.isEmpty) return const SizedBox.shrink();
         return Container(
-          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
           decoration: BoxDecoration(
             color: AppColors.accentGold,
             borderRadius: BorderRadius.circular(10.r),
@@ -292,7 +292,7 @@ class _TabletBookmarkBadge extends StatelessWidget {
             '${state.bookmarkedVerseKeys.length}',
             style: TextStyle(
               color: AppColors.cardCream,
-              fontSize: 12.sp,
+              fontSize: 13.5.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -325,19 +325,19 @@ class _TabletDrawerItem extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+        padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 13.h),
         child: Row(
           children: [
             Container(
-              width: 44.w,
-              height: 44.w,
+              width: 52.w,
+              height: 52.w,
               decoration: BoxDecoration(
                 color: AppColors.accentGold.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: BorderRadius.circular(14.r),
               ),
               child: iconWidget ??
                   (icon != null
-                      ? Icon(icon, color: AppColors.accentGold, size: 22.sp)
+                      ? Icon(icon, color: AppColors.accentGold, size: 26.sp)
                       : const SizedBox.shrink()),
             ),
             SizedBox(width: 14.w),
@@ -351,8 +351,8 @@ class _TabletDrawerItem extends StatelessWidget {
                         child: Text(
                           title,
                           style: TextStyle(
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 18.5.sp,
+                            fontWeight: FontWeight.bold,
                             color: AppColors.textPrimary,
                           ),
                         ),
@@ -360,11 +360,13 @@ class _TabletDrawerItem extends StatelessWidget {
                       if (badge != null) ...[SizedBox(width: 8.w), badge!],
                     ],
                   ),
+                  SizedBox(height: 2.h),
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 12.sp,
-                      color: AppColors.textPrimary.withValues(alpha: 0.45),
+                      fontSize: 14.sp,
+                      color: AppColors.textPrimary.withValues(alpha: 0.55),
+                      height: 1.3,
                     ),
                   ),
                 ],
@@ -375,7 +377,7 @@ class _TabletDrawerItem extends StatelessWidget {
                   ? Icons.chevron_left_rounded
                   : Icons.chevron_right_rounded,
               color: AppColors.textPrimary.withValues(alpha: 0.25),
-              size: 20.sp,
+              size: 24.sp,
             ),
           ],
         ),
@@ -412,10 +414,10 @@ class ScrollDirectionToggle extends StatelessWidget {
         : Alignment.centerRight;
 
     return Container(
-      height: 44.h,
+      height: 52.h,
       decoration: BoxDecoration(
         color: AppColors.divider.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(14.r),
       ),
       child: Stack(
         children: [
@@ -429,7 +431,7 @@ class ScrollDirectionToggle extends StatelessWidget {
                 margin: EdgeInsets.all(4.r),
                 decoration: BoxDecoration(
                   color: activeTheme.backgroundColor,
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius: BorderRadius.circular(10.r),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
@@ -455,16 +457,16 @@ class ScrollDirectionToggle extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.swap_horiz_rounded,
-                            size: 18.sp,
+                            size: 22.sp,
                             color: isHorizontal
                                 ? activeTheme.goldColor
                                 : AppColors.textPrimary.withValues(alpha: 0.6),
                           ),
-                          SizedBox(width: 6.w),
+                          SizedBox(width: 8.w),
                           Text(
                             l10n.themeScrollHorizontal,
                             style: TextStyle(
-                              fontSize: 14.sp,
+                              fontSize: 16.sp,
                               fontWeight: isHorizontal
                                   ? FontWeight.bold
                                   : FontWeight.w500,
@@ -490,16 +492,16 @@ class ScrollDirectionToggle extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.swap_vert_rounded,
-                            size: 18.sp,
+                            size: 22.sp,
                             color: !isHorizontal
                                 ? activeTheme.goldColor
                                 : AppColors.textPrimary.withValues(alpha: 0.6),
                           ),
-                          SizedBox(width: 6.w),
+                          SizedBox(width: 8.w),
                           Text(
                             l10n.themeScrollVertical,
                             style: TextStyle(
-                              fontSize: 14.sp,
+                              fontSize: 16.sp,
                               fontWeight: !isHorizontal
                                   ? FontWeight.bold
                                   : FontWeight.w500,

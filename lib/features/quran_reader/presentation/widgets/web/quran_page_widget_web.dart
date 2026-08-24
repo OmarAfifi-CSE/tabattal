@@ -545,7 +545,10 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
     }
 
     const wordMarginHifz = EdgeInsets.symmetric(horizontal: 2.0);
-    final wordMargin = hifzState.isHifzModeActive ? wordMarginHifz : EdgeInsets.zero;
+    final wordMargin = (hifzState.isHifzModeActive &&
+            hifzState.maskingType != HifzMaskingType.fullVerse)
+        ? wordMarginHifz
+        : EdgeInsets.zero;
 
     if (isWordMasked) {
       return GestureDetector(

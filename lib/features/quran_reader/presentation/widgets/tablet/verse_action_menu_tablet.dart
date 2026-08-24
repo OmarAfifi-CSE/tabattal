@@ -22,7 +22,7 @@ import '../../../bloc/audio/audio_event.dart';
 import '../../../bloc/hifz/hifz_bloc.dart';
 import '../../../bloc/hifz/hifz_event.dart';
 import '../../../bloc/hifz/hifz_state.dart';
-import '../verse_card_generator_sheet.dart';
+import 'verse_card_generator_sheet_tablet.dart';
 import '../tafsir_selector_menu.dart';
 import '../word_meanings_sheet.dart';
 import '../overlay_position_delegate.dart';
@@ -192,7 +192,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.background, // Soft cream background
-      constraints: null,
+      constraints: const BoxConstraints(maxWidth: 620),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -212,7 +212,12 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                         MediaQuery.sizeOf(context).height *
                         0.7, // Max 70% of screen
                   ),
-                  padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, math.max(20.h, MediaQuery.paddingOf(context).bottom)),
+                  padding: EdgeInsets.fromLTRB(
+                    24.w,
+                    14.h,
+                    24.w,
+                    math.max(24.h, MediaQuery.paddingOf(context).bottom),
+                  ),
                 child: BlocConsumer<QuranBloc, QuranState>(
                   listener: (context, state) {
                     if (state is TafsirDownloaded) {
@@ -247,12 +252,12 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                         // Gold Drag Handle
                         Center(
                           child: Container(
-                            width: 48.w,
-                            height: 4.h,
+                            width: 56.w,
+                            height: 4.5.h,
                             margin: EdgeInsets.only(bottom: 16.h),
                             decoration: BoxDecoration(
                               color: AppColors.accentGold,
-                              borderRadius: BorderRadius.circular(2.r),
+                              borderRadius: BorderRadius.circular(3.r),
                             ),
                           ),
                         ),
@@ -272,6 +277,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                 child: Text(
                                   AppLocalizations.of(context)!.menuTafsir,
                                   style: AppTextStyles.headerText.copyWith(
+                                    fontSize: 22.sp,
                                     color: AppColors.accentGold,
                                   ),
                                 ),
@@ -339,19 +345,19 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                                 context,
                                               ).languageCode ==
                                               'en'
-                                          ? 180.w
-                                          : 140.w,
-                                      itemHeight: 38.h,
-                                      itemFontSize: 14.sp,
+                                          ? 210.w
+                                          : 160.w,
+                                      itemHeight: 42.h,
+                                      itemFontSize: 15.5.sp,
                                       trigger: Container(
-                                        height: 40.h,
+                                        height: 42.h,
                                         width:
                                             Localizations.localeOf(
                                                   context,
                                                 ).languageCode ==
                                                 'en'
-                                            ? 130.w
-                                            : 100.w,
+                                            ? 145.w
+                                            : 115.w,
                                         padding: EdgeInsets.symmetric(
                                           horizontal: 10.w,
                                         ),
@@ -369,28 +375,24 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Icon(
-                                              Icons.keyboard_arrow_down_rounded,
-                                              color: AppColors.accentGold,
-                                              size: 20.sp,
-                                            ),
                                             Expanded(
                                               child: Text(
                                                 _getTafsirName(
                                                   context,
                                                   displayResourceId,
                                                 ),
-                                                textAlign: TextAlign.center,
-                                                style: AppTextStyles
-                                                    .menuItemText
-                                                    .copyWith(
-                                                      fontSize: 12.sp,
-                                                      color:
-                                                          AppColors.accentGold,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
+                                                style: TextStyle(
+                                                  fontSize: 14.sp,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.accentGold,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
                                               ),
+                                            ),
+                                            Icon(
+                                              Icons.arrow_drop_up_rounded,
+                                              color: AppColors.accentGold,
+                                              size: 24.sp,
                                             ),
                                           ],
                                         ),
@@ -684,7 +686,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                                             ? 'تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(currentState.tafsir.groupVerseRange!)})'
                                                             : 'Tafsir of Verses (${currentState.tafsir.groupVerseRange})'),
                                                     style: TextStyle(
-                                                      fontSize: 12.sp,
+                                                      fontSize: 14.5.sp,
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       color:
@@ -700,11 +702,11 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                           text: _stripHtml(
                                             currentState.tafsir.text,
                                           ),
-                                          style: AppTextStyles.menuItemText
-                                              .copyWith(
-                                                height: 1.8.h,
-                                                color: AppColors.textPrimary,
-                                              ),
+                                          style: TextStyle(
+                                            fontSize: 19.5.sp,
+                                            height: 1.85.h,
+                                            color: AppColors.textPrimary,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -726,11 +728,11 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                     width: MediaQuery.sizeOf(context).width,
                                     child: MixedDirectionText(
                                       text: strippedText,
-                                      style: AppTextStyles.menuItemText
-                                          .copyWith(
-                                            height: 1.8.h,
-                                            color: AppColors.textPrimary,
-                                          ),
+                                      style: TextStyle(
+                                        fontSize: 19.5.sp,
+                                        height: 1.85.h,
+                                        color: AppColors.textPrimary,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -789,7 +791,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final menuSize = Size(240.w, 280.h);
+    final menuSize = Size(310.w, 360.h);
 
     return Stack(
       children: [
@@ -817,7 +819,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
               borderRadius: BorderRadius.circular(16.r),
               color: Colors.transparent,
               child: Container(
-                width: 250.w,
+                width: 310.w,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceCream,
                   borderRadius: BorderRadius.circular(16.r),
@@ -983,7 +985,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                           } else if (qState is TranslationLoaded) {
                             translationText = qState.translation.text;
                           }
-                          showVerseCardGeneratorModal(
+                          showVerseCardGeneratorModalTablet(
                             context,
                             verse: widget.verse,
                             tafsirText: tafsirText,
@@ -1052,15 +1054,16 @@ class _VerseActionMenuItemTablet extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 14.h),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? AppColors.bronzeIcon, size: 22.sp),
-            SizedBox(width: 12.w),
+            Icon(icon, color: iconColor ?? AppColors.bronzeIcon, size: 26.sp),
+            SizedBox(width: 14.w),
             Expanded(
               child: Text(
                 text,
-                style: AppTextStyles.menuItemText.copyWith(
+                style: TextStyle(
+                  fontSize: 18.sp,
                   color: AppColors.inkBrown,
                   fontWeight: FontWeight.w600,
                 ),

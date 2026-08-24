@@ -119,10 +119,10 @@ class _TabletExpandedPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: AppColors.cardCream,
-        borderRadius: BorderRadius.circular(24.r),
+        borderRadius: BorderRadius.circular(18.r),
         border: Border.all(color: AppColors.bronzeIcon, width: 1.2.w),
       ),
       child: Column(
@@ -137,7 +137,7 @@ class _TabletExpandedPlayer extends StatelessWidget {
                 icon: Icon(
                   Icons.keyboard_arrow_down_rounded,
                   color: AppColors.inkBrown,
-                  size: 28.sp,
+                  size: 24.sp,
                 ),
                 onPressed: onToggleExpanded,
               ),
@@ -149,7 +149,6 @@ class _TabletExpandedPlayer extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 12.h),
           const _TabletPlaybackRow(),
         ],
       ),
@@ -167,10 +166,10 @@ class _TabletMiniPlayer extends StatelessWidget {
     return GestureDetector(
       onTap: onToggleExpanded,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
         decoration: BoxDecoration(
           color: AppColors.cardCream,
-          borderRadius: BorderRadius.circular(30.r),
+          borderRadius: BorderRadius.circular(24.r),
           border: Border.all(color: AppColors.bronzeIcon, width: 1.2.w),
         ),
         child: BlocBuilder<AudioBloc, AudioState>(
@@ -198,9 +197,9 @@ class _TabletMiniPlayer extends StatelessWidget {
                       Icon(
                         Icons.multitrack_audio_rounded,
                         color: AppColors.bronzeIcon,
-                        size: 24.sp,
+                        size: 20.sp,
                       ),
-                      SizedBox(width: 8.w),
+                      SizedBox(width: 6.w),
                       Flexible(
                         child: Text(
                           '$reciterName ($categoryName)',
@@ -209,7 +208,7 @@ class _TabletMiniPlayer extends StatelessWidget {
                               isEn ? TextDirection.ltr : TextDirection.rtl,
                           style: AppTextStyles.menuItemText.copyWith(
                             color: AppColors.inkBrown,
-                            fontSize: 12.sp,
+                            fontSize: 14.sp,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -217,21 +216,21 @@ class _TabletMiniPlayer extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: 8.w),
+                SizedBox(width: 6.w),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _TabletPlayPauseButton(
                       isPlaying: isPlaying,
                       isLoading: isLoading,
-                      size: 40.r,
-                      iconSize: 24.sp,
+                      size: 34.r,
+                      iconSize: 20.sp,
                     ),
-                    SizedBox(width: 8.w),
+                    SizedBox(width: 6.w),
                     Icon(
                       Icons.keyboard_arrow_up_rounded,
                       color: AppColors.inkBrown,
-                      size: 28.sp,
+                      size: 22.sp,
                     ),
                   ],
                 ),
@@ -252,13 +251,13 @@ class _TabletReciterButton extends StatelessWidget {
     return GestureDetector(
       onTap: () => showAudioSettingsSheetTablet(context),
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 8.w),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        margin: EdgeInsets.symmetric(horizontal: 14.w),
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
         decoration: BoxDecoration(
           border: Border.all(
             color: AppColors.bronzeIcon.withValues(alpha: 0.5),
           ),
-          borderRadius: BorderRadius.circular(20.r),
+          borderRadius: BorderRadius.circular(14.r),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -266,9 +265,9 @@ class _TabletReciterButton extends StatelessWidget {
             Icon(
               Icons.keyboard_arrow_up_rounded,
               color: AppColors.bronzeIcon,
-              size: 24.sp,
+              size: 20.sp,
             ),
-            SizedBox(width: 8.w),
+            SizedBox(width: 4.w),
             Expanded(
               child: BlocBuilder<AudioBloc, AudioState>(
                 builder: (context, state) {
@@ -326,10 +325,10 @@ class _TabletSleepTimerAndClose extends StatelessWidget {
         SleepTimerSelectorMenu(
           selectedMinutes: sleepTimerMinutes,
           onSelected: onSleepTimerSelected,
-          itemHeight: 42.h,
+          itemHeight: 38.h,
           maxHeight: 180.h,
-          itemFontSize: 14.sp,
-          menuWidth: 160.w,
+          itemFontSize: 13.sp,
+          menuWidth: 150.w,
           trigger: Padding(
             padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
             child: Column(
@@ -340,13 +339,13 @@ class _TabletSleepTimerAndClose extends StatelessWidget {
                   color: sleepTimerMinutes != null
                       ? AppColors.bronzeDark
                       : AppColors.inkBrown,
-                  size: 24.sp,
+                  size: 20.sp,
                 ),
                 if (timerEndTime != null)
                   Text(
                     _formatRemainingTime(timerEndTime!.difference(DateTime.now())),
                     style: TextStyle(
-                      fontSize: 10.sp,
+                      fontSize: 9.sp,
                       color: AppColors.bronzeDark,
                       fontWeight: FontWeight.bold,
                     ),
@@ -355,7 +354,7 @@ class _TabletSleepTimerAndClose extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(width: 8.w),
+        SizedBox(width: 6.w),
         GestureDetector(
           onTap: () => context.read<AudioBloc>().add(const StopAudio()),
           child: Container(
@@ -364,7 +363,7 @@ class _TabletSleepTimerAndClose extends StatelessWidget {
               color: AppColors.textPrimary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.close, color: AppColors.inkBrown, size: 24.sp),
+            child: Icon(Icons.close, color: AppColors.inkBrown, size: 20.sp),
           ),
         ),
       ],
@@ -395,44 +394,44 @@ class _TabletPlaybackRow extends StatelessWidget {
                     icon: Icon(
                       Icons.fast_rewind_rounded,
                       color: AppColors.inkBrown,
-                      size: 30.sp,
+                      size: 26.sp,
                     ),
                     onPressed: () =>
                         context.read<AudioBloc>().add(const PreviousSurah()),
                   ),
-                  SizedBox(width: 4.w),
+                  SizedBox(width: 2.w),
                   IconButton(
                     icon: Icon(
                       Icons.skip_previous_rounded,
                       color: AppColors.inkBrown,
-                      size: 32.sp,
+                      size: 28.sp,
                     ),
                     onPressed: () =>
                         context.read<AudioBloc>().add(const PreviousAyah()),
                   ),
-                  SizedBox(width: 8.w),
+                  SizedBox(width: 6.w),
                   _TabletPlayPauseButton(
                     isPlaying: isPlaying,
                     isLoading: isLoading,
-                    size: 56.r,
-                    iconSize: 32.sp,
+                    size: 48.r,
+                    iconSize: 28.sp,
                   ),
-                  SizedBox(width: 8.w),
+                  SizedBox(width: 6.w),
                   IconButton(
                     icon: Icon(
                       Icons.skip_next_rounded,
                       color: AppColors.inkBrown,
-                      size: 32.sp,
+                      size: 28.sp,
                     ),
                     onPressed: () =>
                         context.read<AudioBloc>().add(const NextAyah()),
                   ),
-                  SizedBox(width: 4.w),
+                  SizedBox(width: 2.w),
                   IconButton(
                     icon: Icon(
                       Icons.fast_forward_rounded,
                       color: AppColors.inkBrown,
-                      size: 30.sp,
+                      size: 26.sp,
                     ),
                     onPressed: () =>
                         context.read<AudioBloc>().add(const NextSurah()),

@@ -72,6 +72,10 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
   int? _bookmarkHighlightVerseId;
   final GlobalKey _pageRepaintKey = GlobalKey();
 
+  // Prevents the page-level GestureDetector.onTap from dismissing a menu that
+  // was just opened by a word in the same pointer-up event cycle.
+  bool _tapHandledByWord = false;
+
   double? _precomputedCanvasWidth;
   double? _cachedMaxLineWidth;
   double _lastComputedAvailH = 0;
@@ -294,8 +298,10 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
     Offset tapPosition,
     int verseId,
   ) {
+    _tapHandledByWord = true;
     if (_activeOverlayEntry != null) _removeVerseMenu();
 
+    QuranPageWidgetDesktop._activeMenuDismissCallback = () => _removeVerseMenu();
     setState(() => _activeVerseId = verseId);
 
     final verseKey = ArabicTextUtils.verseIdToVerseKey(verseId);
@@ -356,6 +362,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
   }
 
   void _removeVerseMenu({bool keepHighlight = false}) {
+    QuranPageWidgetDesktop._activeMenuDismissCallback = null;
     _activeOverlayEntry?.remove();
     _activeOverlayEntry?.dispose();
     _activeOverlayEntry = null;
@@ -539,6 +546,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
         return;
       }
 
+      _tapHandledByWord = true;
       if (_activeVerseId == verseId) {
         _removeVerseMenu();
       } else {
@@ -547,7 +555,10 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
     }
 
     const wordMarginHifz = EdgeInsets.symmetric(horizontal: 2.0);
-    final wordMargin = hifzState.isHifzModeActive ? wordMarginHifz : EdgeInsets.zero;
+    final wordMargin = (hifzState.isHifzModeActive &&
+            hifzState.maskingType != HifzMaskingType.fullVerse)
+        ? wordMarginHifz
+        : EdgeInsets.zero;
 
     if (isWordMasked) {
       return Listener(
@@ -752,6 +763,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
           wordWidgets.add(
             GestureDetector(
               onTapUp: (details) {
+                _tapHandledByWord = true;
                 if (_activeVerseId == verseId) {
                   _removeVerseMenu();
                 } else {
@@ -793,14 +805,19 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
           }
 
           wordWidgets.add(
-            GestureDetector(
-              onTapUp: (_) {
-                context
-                    .read<HifzBloc>()
-                    .add(ToggleVerseReveal(currentVerseKey));
+            Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (e) => _wordTapStart = e.position,
+              onPointerUp: (e) {
+                if (_isWordTap(e.position)) {
+                  _tapHandledByWord = true;
+                  context.read<HifzBloc>().add(
+                        ToggleVerseReveal(currentVerseKey),
+                      );
+                }
+                _wordTapStart = null;
               },
-              onTap: () {},
-              onLongPress: () {},
+              onPointerCancel: (_) => _wordTapStart = null,
               child: Container(
                 margin: EdgeInsets.zero,
                 padding: EdgeInsets.zero,
@@ -912,11 +929,15 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {
+          if (_tapHandledByWord) {
+            _tapHandledByWord = false;
+            return;
+          }
           if (_activeOverlayEntry != null) {
             _removeVerseMenu();
           }
         },
-      child: Center(
+        child: Center(
         child: QuranPageFrameDesktop(
           pageNumber: widget.pageNumber,
           onNavigateToPage: widget.onNavigateToPage,
