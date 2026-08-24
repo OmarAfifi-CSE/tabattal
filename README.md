@@ -20,7 +20,7 @@
   <img src="https://img.shields.io/badge/Video_Studio-9:16_|_1:1_|_16:9-red?style=flat-square" alt="Video Studio"/>
   <img src="https://img.shields.io/badge/Ads-None-success?style=flat-square" alt="Ad Free"/>
   <img src="https://img.shields.io/badge/Tracking-None-success?style=flat-square" alt="No Tracking"/>
-  <img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="MIT License"/>
+  <img src="https://img.shields.io/badge/License-GPL--3.0-purple?style=flat-square" alt="GPL-3.0 License"/>
 </p>
 
 
@@ -356,4 +356,4 @@ Tabattal is an **ad-free, open-source passion project** built as a Sadaqa Jariya
 
 *Made with dedication to the Book of Allah* 🕌
 
-</div>
+</div>
