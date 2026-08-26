@@ -1,6 +1,5 @@
 .agents
 skills-lock.json
-build_and_export.ps1
 # Miscellaneous
 *.class
 *.log

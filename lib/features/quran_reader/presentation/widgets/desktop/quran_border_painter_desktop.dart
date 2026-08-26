@@ -58,11 +58,11 @@ class QuranBorderPainterDesktop extends CustomPainter {
       // 2. Constants for positioning
       final double left = W * 0.05;
       final double right = W * 0.95;
-      final double top = H * 0.02;
-      final double bottom = H * 0.97;
+      final double top = H * 0.035;
+      final double bottom = H * 0.965;
 
-      final double cutTop = isLandscape ? 100.0.h : 95.0.h;
-      final double cutBottom = isLandscape ? 135.0.h : 125.0.h;
+      final double cutTop = isLandscape ? 118.0.h : 112.0.h;
+      final double cutBottom = isLandscape ? 156.0.h : 146.0.h;
 
       final double diamondRadius = isLandscape ? 5.5.r : 4.5.r;
       final double diamondStep = isLandscape ? 16.0.r : 14.0.r;

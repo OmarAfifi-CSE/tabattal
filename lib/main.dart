@@ -113,8 +113,7 @@ class TabattalApp extends StatelessWidget {
                     minTextAdapt: true,
                     splitScreenMode: false,
                     child: MaterialApp(
-                      onGenerateTitle: (ctx) =>
-                          AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
+                      title: 'Tabattal - تبتل',
                       debugShowCheckedModeBanner: false,
                       locale: locale,
                       supportedLocales: AppLocalizations.supportedLocales,
@@ -136,8 +135,7 @@ class TabattalApp extends StatelessWidget {
                     minTextAdapt: true,
                     splitScreenMode: false,
                     child: MaterialApp(
-                      onGenerateTitle: (ctx) =>
-                          AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
+                      title: 'Tabattal - تبتل',
                       debugShowCheckedModeBanner: false,
                       locale: locale,
                       supportedLocales: AppLocalizations.supportedLocales,
@@ -165,8 +163,7 @@ class TabattalApp extends StatelessWidget {
                         minTextAdapt: true,
                         splitScreenMode: false,
                         child: MaterialApp(
-                          onGenerateTitle: (ctx) =>
-                              AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
+                          title: 'Tabattal - تبتل',
                           debugShowCheckedModeBanner: false,
                           locale: locale,
                           supportedLocales: AppLocalizations.supportedLocales,
@@ -191,8 +188,7 @@ class TabattalApp extends StatelessWidget {
                     minTextAdapt: true,
                     splitScreenMode: true,
                     child: MaterialApp(
-                      onGenerateTitle: (ctx) =>
-                          AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
+                      title: 'Tabattal - تبتل',
                       debugShowCheckedModeBanner: false,
                       locale: locale,
                       supportedLocales: AppLocalizations.supportedLocales,

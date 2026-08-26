@@ -2,12 +2,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build Android (APK/AAB)",
+            "label": "Build & Export (APK / AAB / Web)",
             "type": "shell",
             "command": "powershell",
             "args": [
                 "-ExecutionPolicy", "Bypass",
-                "-File", "${workspaceFolder}/build_and_export_android.ps1"
+                "-File", "${workspaceFolder}/build_and_export.ps1"
             ],
             "group": {
                 "kind": "build",

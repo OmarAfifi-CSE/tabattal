@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'dart:html' as html;
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/quran_metadata.dart';
 import '../../../quran_reader/data/models/verse_model.dart';
 import '../../domain/entities/video_enums.dart';
@@ -20,6 +22,10 @@ class VideoExportService implements IVideoExportService {
   final AudioTimelineService _audioService;
   bool _isCancelled = false;
   html.HttpRequest? _activeRequest;
+
+  static html.Blob? _lastBlob;
+  static Uint8List? _lastExportedBytes;
+  static String? _lastExportedFileName;
 
   static const String serverApiUrl = String.fromEnvironment(
     'VIDEO_EXPORT_API_URL',
@@ -291,31 +297,33 @@ class VideoExportService implements IVideoExportService {
 
         final mp4Blob = await requestCompleter.future;
 
-        // Phase 4: Download MP4 file to client machine
-        controller.add(const VideoRenderProgress(
-          phase: VideoRenderPhase.encodingVideo,
-          progress: 0.95,
-          statusMessage: 'جاري تنزيل مقطع الـ MP4...',
-        ));
-
         final surahName = QuranMetadata.getSurahName(config.surahNumber);
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final outputFileName = 'Tabattal_${surahName}_${config.startAyah}-${config.endAyah}_$timestamp.mp4';
 
-        final downloadUrl = html.Url.createObjectUrlFromBlob(mp4Blob);
-        final anchor = html.AnchorElement(href: downloadUrl)
-          ..setAttribute('download', outputFileName)
-          ..style.display = 'none';
+        _lastBlob = mp4Blob;
+        _lastExportedFileName = outputFileName;
 
-        html.document.body?.append(anchor);
-        anchor.click();
-        anchor.remove();
-        html.Url.revokeObjectUrl(downloadUrl);
+        try {
+          final reader = html.FileReader();
+          reader.readAsArrayBuffer(mp4Blob);
+          await reader.onLoadEnd.first;
+          final result = reader.result;
+          if (result is Uint8List) {
+            _lastExportedBytes = result;
+          } else if (result is ByteBuffer) {
+            _lastExportedBytes = result.asUint8List();
+          } else if (result is List<int>) {
+            _lastExportedBytes = Uint8List.fromList(result);
+          }
+        } catch (e) {
+          debugPrint('Failed to convert video blob to bytes: $e');
+        }
 
         controller.add(VideoRenderProgress(
           phase: VideoRenderPhase.completed,
           progress: 1.0,
-          statusMessage: 'تم إنشاء وتنزيل مقطع الفيديو بنجاح!',
+          statusMessage: 'تم إنشاء مقطع الفيديو بنجاح!',
           outputPath: outputFileName,
         ));
       } catch (e) {
@@ -344,7 +352,24 @@ class VideoExportService implements IVideoExportService {
     required String filePath,
     String? album,
   }) async {
-    return true;
+    try {
+      if (_lastBlob != null) {
+        final downloadUrl = html.Url.createObjectUrlFromBlob(_lastBlob!);
+        final anchor = html.AnchorElement(href: downloadUrl)
+          ..setAttribute('download', _lastExportedFileName ?? filePath)
+          ..style.display = 'none';
+
+        html.document.body?.append(anchor);
+        anchor.click();
+        anchor.remove();
+        html.Url.revokeObjectUrl(downloadUrl);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Web saveToGallery error: $e');
+      return false;
+    }
   }
 
   /// Web implementation for sharing output.
@@ -352,7 +377,29 @@ class VideoExportService implements IVideoExportService {
     required String filePath,
     required String title,
   }) async {
-    // Web downloads file directly via browser
+    final fileName = _lastExportedFileName ?? filePath;
+    if (_lastExportedBytes != null) {
+      try {
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [
+              XFile.fromData(
+                _lastExportedBytes!,
+                mimeType: 'video/mp4',
+                name: fileName,
+              ),
+            ],
+            title: title,
+          ),
+        );
+      } catch (e) {
+        debugPrint('Web share video error: $e');
+        // Fallback to downloading if browser sharing fails
+        await saveToGallery(filePath: filePath);
+      }
+    } else if (_lastBlob != null) {
+      await saveToGallery(filePath: filePath);
+    }
   }
 }
 

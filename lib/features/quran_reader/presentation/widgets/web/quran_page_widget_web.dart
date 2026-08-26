@@ -985,8 +985,8 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
                                 height: canvasH,
                                 child: Padding(
                                   padding: EdgeInsets.only(
-                                    top: canvasH * 0.042,
-                                    bottom: canvasH * 0.048,
+                                    top: canvasH * 0.057,
+                                    bottom: canvasH * 0.053,
                                   ),
                                   child: Column(
                                     key: _pageColumnKey,

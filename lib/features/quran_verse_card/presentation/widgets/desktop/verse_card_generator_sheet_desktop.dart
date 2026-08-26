@@ -39,10 +39,7 @@ import '../shared/models/verse_card_theme.dart';
 import '../shared/services/verse_card_image_exporter.dart';
 import '../shared/widgets/verse_card_content_preview.dart';
 import '../shared/widgets/verse_card_full_page_preview.dart';
-import '../shared/widgets/verse_card_options_bar.dart';
-import '../shared/widgets/verse_card_range_picker.dart';
 import '../shared/widgets/verse_card_text_preview.dart';
-import '../shared/widgets/verse_card_theme_selector.dart';
 
 // Re-export models for external consumers
 export '../shared/models/verse_card_theme.dart';
@@ -869,10 +866,10 @@ class _VerseCardGeneratorSheetDesktopContentState
                 borderRadius: BorderRadius.circular(isLandscape ? 16.0 : 20.r),
               ),
               padding: EdgeInsets.fromLTRB(
-                isLandscape ? 16.0 : 22.w,
-                isLandscape ? 10.0 : 14.h,
-                isLandscape ? 16.0 : 22.w,
-                isLandscape ? 10.0 : 22.h,
+                isLandscape ? 18.0 : 22.w,
+                isLandscape ? 12.0 : 14.h,
+                isLandscape ? 18.0 : 22.w,
+                isLandscape ? 16.0 : 22.h,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -923,7 +920,7 @@ class _VerseCardGeneratorSheetDesktopContentState
                     ],
                   ),
                   const Divider(height: 1),
-                  SizedBox(height: isLandscape ? 6.0 : 10.h),
+                  SizedBox(height: isLandscape ? 8.0 : 12.h),
 
                   if (isLandscape)
                     Expanded(
@@ -940,19 +937,19 @@ class _VerseCardGeneratorSheetDesktopContentState
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12.0),
+                          const SizedBox(width: 14.0),
                           Container(
                             width: 1,
                             color: AppColors.divider,
                             margin: const EdgeInsets.symmetric(vertical: 4),
                           ),
-                          const SizedBox(width: 12.0),
+                          const SizedBox(width: 14.0),
                           // Right Column: Format Selector + Dynamic Options + Action Buttons
                           Expanded(
                             flex: 5,
                             child: Column(
                               children: [
-                                Flexible(
+                                Expanded(
                                   child: SingleChildScrollView(
                                     controller: _scrollController,
                                     physics: const BouncingScrollPhysics(),
@@ -993,7 +990,7 @@ class _VerseCardGeneratorSheetDesktopContentState
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: 10.h),
+                                SizedBox(height: isLandscape ? 16.0 : 20.0),
                                 _VerseCardActionButtonsDesktop(
                                   selectedFormat: _selectedFormat,
                                   isSharing: _isSharing,
@@ -1120,7 +1117,7 @@ class _VerseCardGeneratorSheetDesktopContentState
                           ),
                         ),
                       ),
-                      SizedBox(height: 16.h),
+                      const SizedBox(height: 20.0),
 
                       // ---------------- ACTION BUTTONS TABLET ----------------
                       _VerseCardActionButtonsDesktop(
@@ -1189,12 +1186,44 @@ class _VerseCardGeneratorSheetDesktopContentState
       case ShareFormat.image:
         return RepaintBoundary(
           key: _repaintKey,
-          child: Container(
-            key: const ValueKey('image_card_preview_desktop'),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16.r),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isLandscape ? 12.0 : 16.0,
+              vertical: isLandscape ? 8.0 : 12.0,
             ),
-            child: VerseCardContentPreview(
+            child: Container(
+              key: const ValueKey('image_card_preview_desktop'),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              child: VerseCardContentPreview(
+                theme: _activeTheme,
+                surahNumber: _surahNumber,
+                startAyah: _startAyah,
+                endAyah: _endAyah,
+                verseTextUthmani: _verseTextUthmani,
+                qcfSpans: _qcfSpans,
+                isLoadingText: _isLoadingText,
+                includeTafsir: _includeTafsir,
+                tafsirText: _tafsirText,
+                isLoadingTafsir: _isLoadingTafsir,
+                includeTranslation: _includeTranslation,
+                translationText: _translationText,
+                isLoadingTranslation: _isLoadingTranslation,
+              ),
+            ),
+          ),
+        );
+
+      case ShareFormat.text:
+        return KeyedSubtree(
+          key: const ValueKey('text_preview_desktop'),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isLandscape ? 12.0 : 16.0,
+              vertical: isLandscape ? 8.0 : 12.0,
+            ),
+            child: VerseCardTextPreview(
               theme: _activeTheme,
               surahNumber: _surahNumber,
               startAyah: _startAyah,
@@ -1212,34 +1241,20 @@ class _VerseCardGeneratorSheetDesktopContentState
           ),
         );
 
-      case ShareFormat.text:
-        return KeyedSubtree(
-          key: const ValueKey('text_preview_desktop'),
-          child: VerseCardTextPreview(
-            theme: _activeTheme,
-            surahNumber: _surahNumber,
-            startAyah: _startAyah,
-            endAyah: _endAyah,
-            verseTextUthmani: _verseTextUthmani,
-            qcfSpans: _qcfSpans,
-            isLoadingText: _isLoadingText,
-            includeTafsir: _includeTafsir,
-            tafsirText: _tafsirText,
-            isLoadingTafsir: _isLoadingTafsir,
-            includeTranslation: _includeTranslation,
-            translationText: _translationText,
-            isLoadingTranslation: _isLoadingTranslation,
-          ),
-        );
-
       case ShareFormat.fullPage:
         return KeyedSubtree(
           key: const ValueKey('full_page_preview_desktop'),
-          child: VerseCardFullPagePreview(
-            theme: _activeTheme,
-            isCapturingSnapshot: _isCapturingSnapshot,
-            pageSnapshot: _pageSnapshot,
-            onRetryCapture: _loadFullPageData,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isLandscape ? 12.0 : 16.0,
+              vertical: isLandscape ? 8.0 : 12.0,
+            ),
+            child: VerseCardFullPagePreview(
+              theme: _activeTheme,
+              isCapturingSnapshot: _isCapturingSnapshot,
+              pageSnapshot: _pageSnapshot,
+              onRetryCapture: _loadFullPageData,
+            ),
           ),
         );
     }
@@ -1279,7 +1294,7 @@ class _VerseCardGeneratorSheetDesktopContentState
                     .add(VideoStudioCustomVideoSelected(path));
               },
             ),
-            SizedBox(height: isLandscape ? 6.0 : 12.h),
+            SizedBox(height: isLandscape ? 12.0 : 14.0),
             Builder(
               builder: (context) {
                 final bool hasCustomMedia = config.hasCustomMedia;
@@ -1292,7 +1307,7 @@ class _VerseCardGeneratorSheetDesktopContentState
                   child: showThemeSelector
                       ? Padding(
                           padding: EdgeInsets.only(
-                            bottom: isLandscape ? 6.0 : 12.h,
+                            bottom: isLandscape ? 12.0 : 14.0,
                           ),
                           child: VideoThemeSelectorDesktop(
                             selectedPreset: config.themePreset,
@@ -1354,7 +1369,7 @@ class _VerseCardGeneratorSheetDesktopContentState
                 _loadAllVerseData();
               },
             ),
-            SizedBox(height: isLandscape ? 6.0 : 12.h),
+            SizedBox(height: isLandscape ? 12.0 : 14.0),
             VideoReciterSelectorDesktop(
               selectedReciter: config.reciterName,
               selectedCategory: config.reciterCategory,
@@ -1369,7 +1384,7 @@ class _VerseCardGeneratorSheetDesktopContentState
                     );
               },
             ),
-            SizedBox(height: isLandscape ? 6.0 : 12.h),
+            SizedBox(height: isLandscape ? 12.0 : 14.0),
             VideoOptionsSelectorDesktop(
               config: config,
               onDisplayModeChanged: (mode) {
@@ -1412,21 +1427,21 @@ class _VerseCardGeneratorSheetDesktopContentState
         return Column(
           key: const ValueKey('image_options_group_desktop'),
           children: [
-            VerseCardThemeSelector(
+            _VerseCardThemeSelectorDesktop(
               selectedThemeIndex: _selectedThemeIndex,
               onThemeSelected: (index) {
                 setState(() => _selectedThemeIndex = index);
               },
             ),
-            SizedBox(height: isLandscape ? 6.0 : 12.h),
-            VerseCardRangePicker(
+            SizedBox(height: isLandscape ? 14.0 : 16.0),
+            _VerseCardRangePickerDesktop(
               surahNumber: _surahNumber,
               startAyah: _startAyah,
               endAyah: _endAyah,
               totalAyahsInSurah: _totalAyahsInSurah,
               onStartAyahChanged: (start) {
                 if (start == _startAyah) return;
-                final maxEnd = (start + 9).clamp(1, _totalAyahsInSurah);
+                final maxEnd = (start + 24).clamp(1, _totalAyahsInSurah);
                 int newEnd = _endAyah;
                 if (newEnd < start) {
                   newEnd = start;
@@ -1452,8 +1467,8 @@ class _VerseCardGeneratorSheetDesktopContentState
                 _loadAllVerseData();
               },
             ),
-            SizedBox(height: isLandscape ? 6.0 : 12.h),
-            VerseCardOptionsBar(
+            SizedBox(height: isLandscape ? 14.0 : 16.0),
+            _VerseCardOptionsBarDesktop(
               includeTafsir: _includeTafsir,
               onToggleTafsir: (val) {
                 setState(() {
@@ -1482,14 +1497,14 @@ class _VerseCardGeneratorSheetDesktopContentState
         return Column(
           key: const ValueKey('text_options_group_desktop'),
           children: [
-            VerseCardRangePicker(
+            _VerseCardRangePickerDesktop(
               surahNumber: _surahNumber,
               startAyah: _startAyah,
               endAyah: _endAyah,
               totalAyahsInSurah: _totalAyahsInSurah,
               onStartAyahChanged: (start) {
                 if (start == _startAyah) return;
-                final maxEnd = (start + 9).clamp(1, _totalAyahsInSurah);
+                final maxEnd = (start + 24).clamp(1, _totalAyahsInSurah);
                 int newEnd = _endAyah;
                 if (newEnd < start) {
                   newEnd = start;
@@ -1515,8 +1530,8 @@ class _VerseCardGeneratorSheetDesktopContentState
                 _loadAllVerseData();
               },
             ),
-            SizedBox(height: isLandscape ? 6.0 : 12.h),
-            VerseCardOptionsBar(
+            SizedBox(height: isLandscape ? 14.0 : 16.0),
+            _VerseCardOptionsBarDesktop(
               includeTafsir: _includeTafsir,
               onToggleTafsir: (val) {
                 setState(() {
@@ -1542,11 +1557,14 @@ class _VerseCardGeneratorSheetDesktopContentState
         );
 
       case ShareFormat.fullPage:
-        return VerseCardThemeSelector(
-          selectedThemeIndex: _selectedThemeIndex,
-          onThemeSelected: (index) {
-            setState(() => _selectedThemeIndex = index);
-          },
+        return Padding(
+          padding: EdgeInsets.symmetric(vertical: isLandscape ? 8.0 : 12.0),
+          child: _VerseCardThemeSelectorDesktop(
+            selectedThemeIndex: _selectedThemeIndex,
+            onThemeSelected: (index) {
+              setState(() => _selectedThemeIndex = index);
+            },
+          ),
         );
     }
   }
@@ -1572,7 +1590,7 @@ class _VerseCardFormatSelectorDesktop extends StatelessWidget {
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: isLandscape ? 8.0 : 14.h),
+      padding: EdgeInsets.only(bottom: isLandscape ? 14.0 : 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1584,18 +1602,18 @@ class _VerseCardFormatSelectorDesktop extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: isLandscape ? 6.0.h : 10.0.h),
+          SizedBox(height: isLandscape ? 8.0 : 10.0),
           Container(
             width: MediaQuery.sizeOf(context).width,
             decoration: BoxDecoration(
               color: AppColors.surfaceCream,
-              borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
+              borderRadius: BorderRadius.circular(isLandscape ? 12.0 : 16.0),
               border: Border.all(
                 color: AppColors.accentGold.withValues(alpha: 0.4),
-                width: 1.w,
+                width: 1,
               ),
             ),
-            padding: EdgeInsets.all(isLandscape ? 4.0.r : 6.0.r),
+            padding: EdgeInsets.all(isLandscape ? 5.0 : 6.0),
             child: Row(
               children: [
                 Expanded(
@@ -1606,7 +1624,7 @@ class _VerseCardFormatSelectorDesktop extends StatelessWidget {
                     onTap: () => onFormatChanged(ShareFormat.video),
                   ),
                 ),
-                SizedBox(width: isLandscape ? 4.0.w : 6.0.w),
+                SizedBox(width: isLandscape ? 6.0 : 6.0),
                 Expanded(
                   child: _FormatTileDesktop(
                     label: l10n.verseCardFormatImage,
@@ -1615,7 +1633,7 @@ class _VerseCardFormatSelectorDesktop extends StatelessWidget {
                     onTap: () => onFormatChanged(ShareFormat.image),
                   ),
                 ),
-                SizedBox(width: isLandscape ? 4.0.w : 6.0.w),
+                SizedBox(width: isLandscape ? 6.0 : 6.0),
                 Expanded(
                   child: _FormatTileDesktop(
                     label: l10n.verseCardFormatText,
@@ -1624,7 +1642,7 @@ class _VerseCardFormatSelectorDesktop extends StatelessWidget {
                     onTap: () => onFormatChanged(ShareFormat.text),
                   ),
                 ),
-                SizedBox(width: isLandscape ? 4.0.w : 6.0.w),
+                SizedBox(width: isLandscape ? 6.0 : 6.0),
                 Expanded(
                   child: _FormatTileDesktop(
                     label: l10n.verseCardFormatFullPage,
@@ -1666,12 +1684,12 @@ class _FormatTileDesktop extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(
-          horizontal: isLandscape ? 6.0.w : 10.0.w,
-          vertical: isLandscape ? 8.0.h : 12.0.h,
+          horizontal: isLandscape ? 8.0 : 10.0,
+          vertical: isLandscape ? 10.0 : 12.0,
         ),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.accentGold : Colors.transparent,
-          borderRadius: BorderRadius.circular(isLandscape ? 10.0.r : 12.0.r),
+          borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 12.0),
           boxShadow: isSelected
               ? [
                   BoxShadow(
@@ -1686,10 +1704,10 @@ class _FormatTileDesktop extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: isLandscape ? 18.0.sp : 22.0.sp,
+              size: isLandscape ? 20.0 : 22.0,
               color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
-            SizedBox(width: isLandscape ? 6.0.w : 8.0.w),
+            SizedBox(width: isLandscape ? 6.0 : 8.0),
             Flexible(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
@@ -1697,7 +1715,7 @@ class _FormatTileDesktop extends StatelessWidget {
                   label,
                   maxLines: 1,
                   style: TextStyle(
-                    fontSize: isLandscape ? 14.0.sp : 16.0.sp,
+                    fontSize: isLandscape ? 14.5 : 16.0,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                     color: isSelected ? Colors.white : AppColors.textPrimary,
                   ),
@@ -1706,6 +1724,527 @@ class _FormatTileDesktop extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _VerseCardThemeSelectorDesktop extends StatelessWidget {
+  final int selectedThemeIndex;
+  final ValueChanged<int> onThemeSelected;
+
+  const _VerseCardThemeSelectorDesktop({
+    required this.selectedThemeIndex,
+    required this.onThemeSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.videoStudioThemeAndColors,
+          style: TextStyle(
+            fontSize: isLandscape ? 15.0.sp : 16.0.sp,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        SizedBox(height: isLandscape ? 6.0 : 8.0),
+        SizedBox(
+          height: isLandscape ? 44.0 : 46.0,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: VerseCardTheme.themes.length,
+            separatorBuilder: (_, _) => SizedBox(width: isLandscape ? 8.0 : 10.0),
+            itemBuilder: (context, index) {
+              final t = VerseCardTheme.themes[index];
+              final isSelected = index == selectedThemeIndex;
+
+              return GestureDetector(
+                onTap: () => onThemeSelected(index),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isLandscape ? 14.0 : 16.0,
+                    vertical: isLandscape ? 6.0 : 8.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: t.backgroundColor,
+                    borderRadius: BorderRadius.circular(12.0),
+                    border: Border.all(
+                      color: isSelected ? AppColors.accentGold : t.borderColor,
+                      width: isSelected ? 2.0 : 1.0,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: AppColors.accentGold.withValues(alpha: 0.3),
+                              blurRadius: 6,
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 14.0,
+                        height: 14.0,
+                        decoration: BoxDecoration(
+                          color: t.accentColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      SizedBox(width: isLandscape ? 8.0 : 10.0),
+                      Text(
+                        t.getLocalizedName(context),
+                        style: TextStyle(
+                          fontSize: isLandscape ? 14.0.sp : 15.0.sp,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                          color: t.primaryTextColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _VerseCardRangePickerDesktop extends StatelessWidget {
+  final int? surahNumber;
+  final int startAyah;
+  final int endAyah;
+  final int totalAyahsInSurah;
+  final ValueChanged<int> onStartAyahChanged;
+  final ValueChanged<int> onEndAyahChanged;
+
+  const _VerseCardRangePickerDesktop({
+    this.surahNumber,
+    required this.startAyah,
+    required this.endAyah,
+    required this.totalAyahsInSurah,
+    required this.onStartAyahChanged,
+    required this.onEndAyahChanged,
+  });
+
+  int _getMaxEndAyah(int start) {
+    return (start + 24).clamp(1, totalAyahsInSurah);
+  }
+
+  void _showAyahPickerDialog({
+    required BuildContext context,
+    required String title,
+    required int currentValue,
+    required List<int> options,
+    required ValueChanged<int> onSelected,
+  }) {
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: AppColors.cardCream,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420.0, maxHeight: 480.0),
+            child: Directionality(
+              textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 17.0.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          icon: Icon(Icons.close_rounded, size: 24.sp),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 1),
+                    const SizedBox(height: 10.0),
+                    Expanded(
+                      child: GridView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        physics: const BouncingScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 5,
+                          childAspectRatio: 1.3,
+                          crossAxisSpacing: 10.0,
+                          mainAxisSpacing: 10.0,
+                        ),
+                        itemCount: options.length,
+                        itemBuilder: (context, index) {
+                          final ayah = options[index];
+                          final isSelected = ayah == currentValue;
+
+                          return InkWell(
+                            onTap: () {
+                              onSelected(ayah);
+                              Navigator.pop(ctx);
+                            },
+                            borderRadius: BorderRadius.circular(12.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.accentGold
+                                    : AppColors.accentGold
+                                        .withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(12.0),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.accentGold
+                                      : AppColors.accentGold
+                                          .withValues(alpha: 0.25),
+                                  width: 1,
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                Localizations.localeOf(context).languageCode ==
+                                        'en'
+                                    ? '$ayah'
+                                    : VerseCardTextUtils.toArabicDigits(ayah),
+                                style: TextStyle(
+                                  fontSize: 15.0.sp,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.w600,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+
+    final startOptions = List.generate(totalAyahsInSurah, (i) => i + 1);
+    final maxEnd = _getMaxEndAyah(startAyah);
+    final endOptions = List.generate(
+      maxEnd - startAyah + 1,
+      (i) => startAyah + i,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.videoStudioVerseRange,
+              style: TextStyle(
+                fontSize: isLandscape ? 15.0.sp : 16.0.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            if (surahNumber != null) ...[
+              SizedBox(width: isLandscape ? 8.0 : 10.0),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isLandscape ? 10.0 : 12.0,
+                  vertical: isLandscape ? 3.0 : 4.0,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.accentGold.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20.0),
+                  border: Border.all(
+                    color: AppColors.accentGold.withValues(alpha: 0.28),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  l10n.verseCardSurah(
+                    isEn
+                        ? QuranMetadata.getSurahNameEnglish(surahNumber!)
+                        : QuranMetadata.getSurahName(surahNumber!),
+                  ),
+                  style: TextStyle(
+                    fontSize: isLandscape ? 13.0.sp : 14.0.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.accentGold,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        SizedBox(height: isLandscape ? 6.0 : 8.0),
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  _showAyahPickerDialog(
+                    context: context,
+                    title: l10n.verseCardStartAyah,
+                    currentValue: startAyah,
+                    options: startOptions,
+                    onSelected: onStartAyahChanged,
+                  );
+                },
+                borderRadius: BorderRadius.circular(12.0),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: isLandscape ? 10.0 : 12.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentGold.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(12.0),
+                    border: Border.all(
+                      color: AppColors.accentGold.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          l10n.verseCardFromAyah(
+                            isEn
+                                ? '$startAyah'
+                                : VerseCardTextUtils.toArabicDigits(startAyah),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: isLandscape ? 14.5 : 15.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: isLandscape ? 20.0 : 22.0,
+                        color: AppColors.accentGold,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: isLandscape ? 8.0 : 10.0),
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  _showAyahPickerDialog(
+                    context: context,
+                    title: l10n.verseCardEndAyah,
+                    currentValue: endAyah,
+                    options: endOptions,
+                    onSelected: onEndAyahChanged,
+                  );
+                },
+                borderRadius: BorderRadius.circular(12.0),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: isLandscape ? 10.0 : 12.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentGold.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(12.0),
+                    border: Border.all(
+                      color: AppColors.accentGold.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          l10n.verseCardToAyah(
+                            isEn
+                                ? '$endAyah'
+                                : VerseCardTextUtils.toArabicDigits(endAyah),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: isLandscape ? 14.5 : 15.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: isLandscape ? 20.0 : 22.0,
+                        color: AppColors.accentGold,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _VerseCardOptionsBarDesktop extends StatelessWidget {
+  final bool includeTafsir;
+  final ValueChanged<bool> onToggleTafsir;
+  final bool includeTranslation;
+  final ValueChanged<bool> onToggleTranslation;
+
+  const _VerseCardOptionsBarDesktop({
+    required this.includeTafsir,
+    required this.onToggleTafsir,
+    required this.includeTranslation,
+    required this.onToggleTranslation,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.videoStudioDisplayOptions,
+          style: TextStyle(
+            fontSize: isLandscape ? 15.0.sp : 16.0.sp,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        SizedBox(height: isLandscape ? 6.0 : 8.0),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.accentGold.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(isLandscape ? 12.0 : 14.0),
+            border: Border.all(
+              color: AppColors.accentGold.withValues(alpha: 0.15),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              _buildSwitchRow(
+                icon: Icons.menu_book_outlined,
+                title: l10n.verseCardIncludeTafsir,
+                value: includeTafsir,
+                onChanged: onToggleTafsir,
+                isLandscape: isLandscape,
+              ),
+              Divider(
+                height: 1,
+                indent: isLandscape ? 14.0 : 16.0,
+                endIndent: isLandscape ? 14.0 : 16.0,
+                color: AppColors.accentGold.withValues(alpha: 0.15),
+              ),
+              _buildSwitchRow(
+                icon: Icons.g_translate_outlined,
+                title: l10n.verseCardIncludeTranslation,
+                value: includeTranslation,
+                onChanged: onToggleTranslation,
+                isLandscape: isLandscape,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSwitchRow({
+    required IconData icon,
+    required String title,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required bool isLandscape,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: isLandscape ? 14.0 : 16.0,
+        vertical: isLandscape ? 6.0 : 8.0,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                size: isLandscape ? 20.0 : 22.0,
+                color: AppColors.accentGold,
+              ),
+              SizedBox(width: isLandscape ? 10.0 : 12.0),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: isLandscape ? 14.5 : 15.5,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: AppColors.accentGold,
+            activeTrackColor: AppColors.accentGold.withValues(alpha: 0.4),
+          ),
+        ],
       ),
     );
   }
@@ -1744,6 +2283,21 @@ class _VerseCardActionButtonsDesktop extends StatelessWidget {
     final isLandscape =
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
+    final buttonPadding = EdgeInsets.symmetric(
+      vertical: isLandscape ? 16.0 : 18.0,
+      horizontal: isLandscape ? 16.0 : 20.0,
+    );
+    final buttonShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(isLandscape ? 14.0 : 16.0),
+    );
+    final buttonMinSize = Size(0, isLandscape ? 52.0 : 54.0);
+    final iconSize = isLandscape ? 22.0 : 24.0;
+    final labelStyle = TextStyle(
+      fontSize: isLandscape ? 16.5 : 18.0,
+      fontWeight: FontWeight.bold,
+    );
+    final buttonSpacing = isLandscape ? 14.0 : 16.0;
+
     Widget buildButtons() {
       switch (selectedFormat) {
         case ShareFormat.video:
@@ -1760,30 +2314,24 @@ class _VerseCardActionButtonsDesktop extends StatelessWidget {
                         AppColors.accentGold.withValues(alpha: 0.85),
                     disabledForegroundColor:
                         Colors.white.withValues(alpha: 0.9),
-                    padding: EdgeInsets.symmetric(
-                      vertical: isLandscape ? 12.0.h : 16.0.h,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
-                    ),
+                    minimumSize: buttonMinSize,
+                    padding: buttonPadding,
+                    shape: buttonShape,
                     elevation: 2,
                   ),
                   icon: isExportingVideo
                       ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 8.0 : 10.r,
+                          radius: isLandscape ? 9.0 : 11.0,
                           color: Colors.white,
                         )
-                      : Icon(Icons.share_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
+                      : Icon(Icons.share_rounded, size: iconSize),
                   label: Text(
                     l10n.videoStudioShare,
-                    style: TextStyle(
-                      fontSize: isLandscape ? 15.0.sp : 18.0.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: labelStyle,
                   ),
                 ),
               ),
-              SizedBox(width: isLandscape ? 10.0.w : 14.0.w),
+              SizedBox(width: buttonSpacing),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: isExportingVideo ? null : onSaveVideo,
@@ -1797,25 +2345,19 @@ class _VerseCardActionButtonsDesktop extends StatelessWidget {
                       ),
                       width: 1.5,
                     ),
-                    padding: EdgeInsets.symmetric(
-                      vertical: isLandscape ? 12.0.h : 16.0.h,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
-                    ),
+                    minimumSize: buttonMinSize,
+                    padding: buttonPadding,
+                    shape: buttonShape,
                   ),
                   icon: isExportingVideo
                       ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 8.0 : 10.r,
+                          radius: isLandscape ? 9.0 : 11.0,
                           color: AppColors.accentGold,
                         )
-                      : Icon(Icons.download_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
+                      : Icon(Icons.download_rounded, size: iconSize),
                   label: Text(
-                    l10n.videoStudioSave,
-                    style: TextStyle(
-                      fontSize: isLandscape ? 15.0.sp : 18.0.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    l10n.videoStudioDownloadVideo,
+                    style: labelStyle,
                   ),
                 ),
               ),
@@ -1836,30 +2378,24 @@ class _VerseCardActionButtonsDesktop extends StatelessWidget {
                         AppColors.accentGold.withValues(alpha: 0.85),
                     disabledForegroundColor:
                         Colors.white.withValues(alpha: 0.9),
-                    padding: EdgeInsets.symmetric(
-                      vertical: isLandscape ? 12.0.h : 16.0.h,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
-                    ),
+                    minimumSize: buttonMinSize,
+                    padding: buttonPadding,
+                    shape: buttonShape,
                     elevation: 2,
                   ),
                   icon: isSharing
                       ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 8.0 : 10.r,
+                          radius: isLandscape ? 9.0 : 11.0,
                           color: Colors.white,
                         )
-                      : Icon(Icons.share_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
+                      : Icon(Icons.share_rounded, size: iconSize),
                   label: Text(
                     l10n.verseCardShareImage,
-                    style: TextStyle(
-                      fontSize: isLandscape ? 15.0.sp : 18.0.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: labelStyle,
                   ),
                 ),
               ),
-              SizedBox(width: isLandscape ? 10.0.w : 14.0.w),
+              SizedBox(width: buttonSpacing),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: (isSaving || isSharing) ? null : onSave,
@@ -1873,25 +2409,19 @@ class _VerseCardActionButtonsDesktop extends StatelessWidget {
                       ),
                       width: 1.5,
                     ),
-                    padding: EdgeInsets.symmetric(
-                      vertical: isLandscape ? 12.0.h : 16.0.h,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
-                    ),
+                    minimumSize: buttonMinSize,
+                    padding: buttonPadding,
+                    shape: buttonShape,
                   ),
                   icon: isSaving
                       ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 8.0 : 10.r,
+                          radius: isLandscape ? 9.0 : 11.0,
                           color: AppColors.accentGold,
                         )
-                      : Icon(Icons.download_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
+                      : Icon(Icons.download_rounded, size: iconSize),
                   label: Text(
                     l10n.verseCardSaveImage,
-                    style: TextStyle(
-                      fontSize: isLandscape ? 15.0.sp : 18.0.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: labelStyle,
                   ),
                 ),
               ),
@@ -1906,21 +2436,15 @@ class _VerseCardActionButtonsDesktop extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accentGold,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(
-                  vertical: isLandscape ? 12.0.h : 16.0.h,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
-                ),
+                minimumSize: buttonMinSize,
+                padding: buttonPadding,
+                shape: buttonShape,
                 elevation: 2,
               ),
-              icon: Icon(Icons.copy_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
+              icon: Icon(Icons.copy_rounded, size: iconSize),
               label: Text(
                 l10n.verseCardCopyText,
-                style: TextStyle(
-                  fontSize: isLandscape ? 15.0.sp : 18.0.sp,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: labelStyle,
               ),
             ),
           );
@@ -1942,10 +2466,10 @@ class _VerseCardActionButtonsDesktop extends StatelessWidget {
               ? const SizedBox.shrink()
               : Container(
                   key: ValueKey(statusMessage),
-                  margin: EdgeInsets.only(bottom: 12.h),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 10.h,
+                  margin: const EdgeInsets.only(bottom: 14.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 12.0,
                   ),
                   decoration: BoxDecoration(
                     color: isSuccessStatus
