@@ -29,14 +29,14 @@ class QuranBookmarksViewDesktop extends StatelessWidget {
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
-            fontSize: 22.sp,
+            fontSize: 24.sp,
           ),
         ),
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_rounded,
             color: AppColors.textPrimary,
-            size: 24.sp,
+            size: 26.sp,
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -47,8 +47,44 @@ class QuranBookmarksViewDesktop extends StatelessWidget {
             return const _EmptyBookmarksViewDesktop();
           }
 
+          final isLandscape =
+              MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+
+          if (isLandscape) {
+            return GridView.builder(
+              padding: EdgeInsets.all(16.r),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 2.2,
+                mainAxisSpacing: 12.h,
+                crossAxisSpacing: 16.w,
+              ),
+              itemCount: state.bookmarkedVerseKeys.length,
+              itemBuilder: (context, index) {
+                final verseKey = state.bookmarkedVerseKeys[index];
+                final verseRef = VerseRef.fromKey(verseKey);
+
+                return _BookmarkCard(
+                  verseKey: verseKey,
+                  surahName: QuranMetadata.getSurahName(verseRef.surah),
+                  surahNum: verseRef.surah,
+                  ayahNum: verseRef.ayah,
+                  onNavigate: (page) => Navigator.pop(context, {
+                    'page': page,
+                    'verseKey': verseKey,
+                  }),
+                );
+              },
+            );
+          }
+
           return ListView.separated(
-            padding: EdgeInsets.all(16.r),
+            padding: EdgeInsets.fromLTRB(
+              16.w,
+              16.h,
+              16.w,
+              16.h + MediaQuery.paddingOf(context).bottom,
+            ),
             itemCount: state.bookmarkedVerseKeys.length,
             separatorBuilder: (context, index) => SizedBox(height: 12.h),
             itemBuilder: (context, index) {
@@ -85,14 +121,14 @@ class _EmptyBookmarksViewDesktop extends StatelessWidget {
         children: [
           Icon(
             Icons.bookmark_border_rounded,
-            size: 72.sp,
+            size: 84.sp,
             color: AppColors.accentGold.withValues(alpha: 0.4),
           ),
           SizedBox(height: 16.h),
           Text(
             l10n.noBookmarks,
             style: TextStyle(
-              fontSize: 20.sp,
+              fontSize: 22.sp,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
@@ -101,7 +137,7 @@ class _EmptyBookmarksViewDesktop extends StatelessWidget {
           Text(
             l10n.noBookmarksHint,
             style: TextStyle(
-              fontSize: 15.sp,
+              fontSize: 16.5.sp,
               color: AppColors.textPrimary.withValues(alpha: 0.4),
             ),
           ),
@@ -152,7 +188,11 @@ class _BookmarkCardState extends State<_BookmarkCard>
       _surahStartPage = _versePageCache[widget.verseKey]!;
       _isLoadingPage = false;
     } else {
-      _loadVersePage();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _loadVersePage();
+        }
+      });
     }
   }
 
@@ -192,8 +232,8 @@ class _BookmarkCardState extends State<_BookmarkCard>
         boxShadow: [
           BoxShadow(
             color: AppColors.textPrimary.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            blurRadius: 8.r,
+            offset: Offset(0, 2.h),
           ),
         ],
       ),
@@ -202,13 +242,13 @@ class _BookmarkCardState extends State<_BookmarkCard>
         borderRadius: BorderRadius.circular(16.r),
         clipBehavior: Clip.antiAlias,
         child: ListTile(
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+          contentPadding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
           onTap: (_isLoadingPage || _hasError)
               ? null
               : () => widget.onNavigate(_surahStartPage),
           leading: Container(
-            width: 48.r,
-            height: 48.r,
+            width: 52.r,
+            height: 52.r,
             decoration: BoxDecoration(
               color: AppColors.accentGold.withValues(alpha: 0.1),
               shape: BoxShape.circle,
@@ -216,26 +256,26 @@ class _BookmarkCardState extends State<_BookmarkCard>
             child: Icon(
               Icons.bookmark_rounded,
               color: AppColors.accentGold,
-              size: 24.sp,
+              size: 28.sp,
             ),
           ),
           title: Text(
             l10n.surahBookmarkTitle(widget.surahName),
             style: TextStyle(
-              fontSize: 17.sp,
+              fontSize: 20.sp,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
           ),
           subtitle: Padding(
-            padding: EdgeInsets.only(top: 2.h),
+            padding: EdgeInsets.only(top: 3.h),
             child: Text(
               l10n.verseBookmarkSubtitle(
                 widget.ayahNum.toArabicDigits,
                 _hasError ? '—' : _surahStartPage.toArabicDigits,
               ),
               style: TextStyle(
-                fontSize: 13.sp,
+                fontSize: 16.sp,
                 color: AppColors.textPrimary.withValues(alpha: 0.55),
               ),
             ),
@@ -245,23 +285,23 @@ class _BookmarkCardState extends State<_BookmarkCard>
             children: [
               if (_isLoadingPage)
                 CupertinoActivityIndicator(
-                  radius: 9.r,
+                  radius: 10.r,
                   color: AppColors.accentGold,
                 )
               else
                 Icon(
                   _hasError ? Icons.error_outline : Icons.arrow_back_ios_rounded,
-                  size: 16.sp,
+                  size: 20.sp,
                   color: _hasError
                       ? Colors.red.withValues(alpha: 0.6)
                       : AppColors.textPrimary.withValues(alpha: 0.3),
                 ),
-              SizedBox(width: 4.w),
+              SizedBox(width: 8.w),
               IconButton(
                 icon: Icon(
                   Icons.delete_outline_rounded,
                   color: Colors.red.withValues(alpha: 0.65),
-                  size: 22.sp,
+                  size: 26.sp,
                 ),
                 onPressed: () => context.read<BookmarkBloc>().add(
                   ToggleBookmark(widget.verseKey),

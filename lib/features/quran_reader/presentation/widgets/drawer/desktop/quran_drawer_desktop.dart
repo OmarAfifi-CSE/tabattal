@@ -9,12 +9,12 @@ import '../../../../../settings/bloc/settings_state.dart';
 import '../../../../bloc/bookmark/bookmark_bloc.dart';
 import '../../../../bloc/bookmark/bookmark_state.dart';
 import '../../../pages/search/desktop/quran_search_screen_desktop.dart';
-import '../tablet/quran_audio_manager_view_tablet.dart';
-import '../tablet/quran_full_tafsir_view_tablet.dart';
-import '../tablet/quran_translation_view_tablet.dart';
-import '../tablet/theme_and_language_sheet_tablet.dart';
+import 'quran_audio_manager_view_desktop.dart';
+import 'theme_and_language_sheet_desktop.dart';
 import 'quran_bookmarks_view_desktop.dart';
+import 'quran_full_tafsir_view_desktop.dart';
 import 'quran_index_view_desktop.dart';
+import 'quran_translation_view_desktop.dart';
 
 class QuranDrawerDesktop extends StatelessWidget {
   final int currentPage;
@@ -30,9 +30,11 @@ class QuranDrawerDesktop extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     final drawer = Drawer(
-      width: 300.w,
+      width: isLandscape ? 360.0.w : 380.w,
       backgroundColor: AppColors.surfaceCream,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
@@ -49,7 +51,7 @@ class QuranDrawerDesktop extends StatelessWidget {
                 children: [
                   const _DesktopDrawerHeader(),
                   Padding(
-                    padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
+                    padding: EdgeInsets.fromLTRB(22.w, 18.h, 22.w, 10.h),
                     child: BlocBuilder<SettingsBloc, SettingsState>(
                       builder: (context, state) {
                         return Column(
@@ -60,13 +62,13 @@ class QuranDrawerDesktop extends StatelessWidget {
                               child: Text(
                                 l10n.themeScrollDirection,
                                 style: TextStyle(
-                                  fontSize: 14.sp,
+                                  fontSize: (isLandscape ? 13.5 : 14.5).sp,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textPrimary,
                                 ),
                               ),
                             ),
-                            SizedBox(height: 12.h),
+                            SizedBox(height: (isLandscape ? 8.0 : 10.0).h),
                             ScrollDirectionToggle(
                               scrollDirection: state.scrollDirection,
                               onChanged: (val) => context
@@ -160,7 +162,7 @@ class QuranDrawerDesktop extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) =>
-                              QuranFullTafsirViewTablet(pageNumber: currentPage),
+                              QuranFullTafsirViewDesktop(pageNumber: currentPage),
                         ),
                       );
                       if (result is Map<String, dynamic>) {
@@ -183,7 +185,7 @@ class QuranDrawerDesktop extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) =>
-                              QuranTranslationViewTablet(pageNumber: currentPage),
+                              QuranTranslationViewDesktop(pageNumber: currentPage),
                         ),
                       );
                       if (result is Map<String, dynamic>) {
@@ -205,18 +207,20 @@ class QuranDrawerDesktop extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const QuranAudioManagerViewTablet(),
+                          builder: (_) => const QuranAudioManagerViewDesktop(),
                         ),
                       );
                     },
                   ),
                   _DesktopDrawerItem(
-                    iconWidget: const _DesktopThemeAndLanguageIcon(),
+                    iconWidget: ThemeAndLanguageDrawerIconDesktop(
+                      size: (isLandscape ? 46.0 : 50.0).r,
+                    ),
                     title: l10n.drawerThemeAndLanguage,
                     subtitle: l10n.drawerThemeAndLanguageSubtitle,
                     onTap: () {
                       Navigator.pop(context);
-                      showThemeAndLanguageModalTablet(context);
+                      showThemeAndLanguageModalDesktop(context);
                     },
                   ),
                 ],
@@ -228,7 +232,7 @@ class QuranDrawerDesktop extends StatelessWidget {
     );
 
     return Padding(
-      padding: EdgeInsets.only(top: 50.h, bottom: 50.h),
+      padding: EdgeInsets.only(top: 40.h, bottom: 40.h),
       child: drawer,
     );
   }
@@ -239,13 +243,21 @@ class _DesktopDrawerHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+
     return Container(
       width: MediaQuery.sizeOf(context).width,
-      padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 14.h),
+      padding: isLandscape
+          ? EdgeInsets.symmetric(horizontal: 16.0.w, vertical: 16.0.h)
+          : EdgeInsets.fromLTRB(18.w, 20.h, 18.w, 16.h),
       decoration: BoxDecoration(
         color: AppColors.accentGold.withValues(alpha: 0.08),
         border: Border(
-          bottom: BorderSide(color: AppColors.divider, width: 1.w),
+          bottom: BorderSide(
+            color: AppColors.divider,
+            width: isLandscape ? 1.0 : 1.w,
+          ),
         ),
       ),
       child: Column(
@@ -253,17 +265,17 @@ class _DesktopDrawerHeader extends StatelessWidget {
           Icon(
             Icons.auto_stories_rounded,
             color: AppColors.accentGold.withValues(alpha: 0.8),
-            size: 32.sp,
+            size: (isLandscape ? 36.0 : 36.0).sp,
           ),
-          SizedBox(height: 10.h),
+          SizedBox(height: (isLandscape ? 6.0 : 10.0).h),
           Text(
             '\uFD71 وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا \uFD70',
             textAlign: TextAlign.center,
             textDirection: TextDirection.rtl,
             style: TextStyle(
               fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
-              fontSize: 20.sp,
-              height: 1.8.h,
+              fontSize: (isLandscape ? 23.0 : 23.0).sp,
+              height: isLandscape ? 1.45 : 1.8.h,
               fontWeight: FontWeight.normal,
               color: AppColors.textPrimary.withValues(alpha: 0.9),
             ),
@@ -283,16 +295,16 @@ class _DesktopBookmarkBadge extends StatelessWidget {
       builder: (context, state) {
         if (state.bookmarkedVerseKeys.isEmpty) return const SizedBox.shrink();
         return Container(
-          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+          padding: EdgeInsets.symmetric(horizontal: 9.0.w, vertical: 3.0.h),
           decoration: BoxDecoration(
             color: AppColors.accentGold,
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(10.0.r),
           ),
           child: Text(
             '${state.bookmarkedVerseKeys.length}',
             style: TextStyle(
               color: AppColors.cardCream,
-              fontSize: 12.sp,
+              fontSize: 12.5.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -321,26 +333,36 @@ class _DesktopDrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+        padding: EdgeInsets.symmetric(
+          horizontal: (isLandscape ? 18.0 : 20.0).w,
+          vertical: (isLandscape ? 10.0 : 13.0).h,
+        ),
         child: Row(
           children: [
             Container(
-              width: 44.w,
-              height: 44.w,
+              width: (isLandscape ? 46.0 : 50.0).r,
+              height: (isLandscape ? 46.0 : 50.0).r,
               decoration: BoxDecoration(
                 color: AppColors.accentGold.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: BorderRadius.circular(12.0.r),
               ),
               child: iconWidget ??
                   (icon != null
-                      ? Icon(icon, color: AppColors.accentGold, size: 22.sp)
+                      ? Icon(
+                          icon,
+                          color: AppColors.accentGold,
+                          size: (isLandscape ? 22.0 : 25.0).r,
+                        )
                       : const SizedBox.shrink()),
             ),
-            SizedBox(width: 14.w),
+            SizedBox(width: (isLandscape ? 12.0 : 14.0).w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,20 +373,25 @@ class _DesktopDrawerItem extends StatelessWidget {
                         child: Text(
                           title,
                           style: TextStyle(
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w700,
+                            fontSize: (isLandscape ? 16.0 : 17.5).sp,
+                            fontWeight: FontWeight.bold,
                             color: AppColors.textPrimary,
                           ),
                         ),
                       ),
-                      if (badge != null) ...[SizedBox(width: 8.w), badge!],
+                      if (badge != null) ...[
+                        SizedBox(width: 8.0.w),
+                        badge!,
+                      ],
                     ],
                   ),
+                  SizedBox(height: 2.0.h),
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 12.sp,
-                      color: AppColors.textPrimary.withValues(alpha: 0.45),
+                      fontSize: (isLandscape ? 12.5 : 13.5).sp,
+                      color: AppColors.textPrimary.withValues(alpha: 0.55),
+                      height: 1.3,
                     ),
                   ),
                 ],
@@ -375,7 +402,7 @@ class _DesktopDrawerItem extends StatelessWidget {
                   ? Icons.chevron_left_rounded
                   : Icons.chevron_right_rounded,
               color: AppColors.textPrimary.withValues(alpha: 0.25),
-              size: 20.sp,
+              size: (isLandscape ? 20.0 : 22.0).r,
             ),
           ],
         ),
@@ -401,6 +428,8 @@ class ScrollDirectionToggle extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final isHorizontal = scrollDirection == Axis.horizontal;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     final activeTheme = context.watch<SettingsBloc>().state.effectiveMushafTheme;
 
@@ -412,10 +441,10 @@ class ScrollDirectionToggle extends StatelessWidget {
         : Alignment.centerRight;
 
     return Container(
-      height: 44.h,
+      height: (isLandscape ? 42.0 : 46.0).h,
       decoration: BoxDecoration(
         color: AppColors.divider.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular((isLandscape ? 12.0 : 14.0).r),
       ),
       child: Stack(
         children: [
@@ -426,10 +455,11 @@ class ScrollDirectionToggle extends StatelessWidget {
             child: FractionallySizedBox(
               widthFactor: 0.5,
               child: Container(
-                margin: EdgeInsets.all(4.r),
+                margin: EdgeInsets.all(3.0.r),
                 decoration: BoxDecoration(
                   color: activeTheme.backgroundColor,
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius:
+                      BorderRadius.circular((isLandscape ? 10.0 : 12.0).r),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
@@ -455,24 +485,27 @@ class ScrollDirectionToggle extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.swap_horiz_rounded,
-                            size: 18.sp,
+                            size: (isLandscape ? 18.0 : 20.0).r,
                             color: isHorizontal
                                 ? activeTheme.goldColor
                                 : AppColors.textPrimary.withValues(alpha: 0.6),
                           ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            l10n.themeScrollHorizontal,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: isHorizontal
-                                  ? FontWeight.bold
-                                  : FontWeight.w500,
-                              color: isHorizontal
-                                  ? activeTheme.goldColor
-                                  : AppColors.textPrimary.withValues(
-                                      alpha: 0.6,
-                                    ),
+                          SizedBox(width: 6.0.w),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              l10n.themeScrollHorizontal,
+                              style: TextStyle(
+                                fontSize: (isLandscape ? 13.5 : 15.0).sp,
+                                fontWeight: isHorizontal
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                color: isHorizontal
+                                    ? activeTheme.goldColor
+                                    : AppColors.textPrimary.withValues(
+                                        alpha: 0.6,
+                                      ),
+                              ),
                             ),
                           ),
                         ],
@@ -490,24 +523,27 @@ class ScrollDirectionToggle extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.swap_vert_rounded,
-                            size: 18.sp,
+                            size: (isLandscape ? 18.0 : 20.0).r,
                             color: !isHorizontal
                                 ? activeTheme.goldColor
                                 : AppColors.textPrimary.withValues(alpha: 0.6),
                           ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            l10n.themeScrollVertical,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: !isHorizontal
-                                  ? FontWeight.bold
-                                  : FontWeight.w500,
-                              color: !isHorizontal
-                                  ? activeTheme.goldColor
-                                  : AppColors.textPrimary.withValues(
-                                      alpha: 0.6,
-                                    ),
+                          SizedBox(width: 6.0.w),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              l10n.themeScrollVertical,
+                              style: TextStyle(
+                                fontSize: (isLandscape ? 13.5 : 15.0).sp,
+                                fontWeight: !isHorizontal
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                color: !isHorizontal
+                                    ? activeTheme.goldColor
+                                    : AppColors.textPrimary.withValues(
+                                        alpha: 0.6,
+                                      ),
+                              ),
                             ),
                           ),
                         ],
@@ -516,49 +552,6 @@ class ScrollDirectionToggle extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DesktopThemeAndLanguageIcon extends StatelessWidget {
-  const _DesktopThemeAndLanguageIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    const double deskS = 44.0;
-    return SizedBox(
-      width: deskS,
-      height: deskS,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(
-            top: deskS * 0.16,
-            left: deskS * 0.16,
-            child: Icon(
-              Icons.palette_rounded,
-              color: AppColors.accentGold,
-              size: deskS * 0.44,
-            ),
-          ),
-          Positioned(
-            bottom: deskS * 0.11,
-            right: deskS * 0.11,
-            child: Container(
-              padding: const EdgeInsets.all(1.5),
-              decoration: BoxDecoration(
-                color: AppColors.cardCream,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.translate_rounded,
-                color: AppColors.accentGold,
-                size: deskS * 0.32,
-              ),
             ),
           ),
         ],

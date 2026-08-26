@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/network/audio_download_manager.dart';
 import '../../../../../core/services/audio_preferences_service.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -20,26 +21,54 @@ void showAudioSettingsSheetWeb(BuildContext context, {int? verseId}) {
   final audioBloc = context.read<AudioBloc>();
   final audioPrefs = context.read<AudioPreferencesService>();
   final isEn = Localizations.localeOf(context).languageCode == 'en';
+  final isLandscape =
+      MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: AppColors.cardCream,
-    constraints: const BoxConstraints(maxWidth: 450),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
-    isScrollControlled: true,
-    builder: (_) => Directionality(
-      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
-      child: MultiBlocProvider(
-        providers: [BlocProvider.value(value: audioBloc)],
-        child: _AudioSettingsSheetContent(
-          verseId: verseId,
-          audioPrefs: audioPrefs,
+  if (isLandscape) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: AppColors.cardCream,
+        insetPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 440.w, maxHeight: 520.h),
+          child: Directionality(
+            textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+            child: MultiBlocProvider(
+              providers: [BlocProvider.value(value: audioBloc)],
+              child: _AudioSettingsSheetContent(
+                verseId: verseId,
+                audioPrefs: audioPrefs,
+              ),
+            ),
+          ),
         ),
       ),
-    ),
-  );
+    );
+  } else {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cardCream,
+      constraints: BoxConstraints(maxWidth: 480.w),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      isScrollControlled: true,
+      builder: (_) => Directionality(
+        textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+        child: MultiBlocProvider(
+          providers: [BlocProvider.value(value: audioBloc)],
+          child: _AudioSettingsSheetContent(
+            verseId: verseId,
+            audioPrefs: audioPrefs,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ─── Sheet Content ──────────────────────────────────────────────────────────
@@ -140,6 +169,8 @@ class _AudioSettingsSheetContentState
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     final categories = AudioDownloadManager.reciterCategories.keys.toList();
     final reciters = _recitersForCategory;
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -148,142 +179,209 @@ class _AudioSettingsSheetContentState
           MediaQuery.paddingOf(context).bottom,
         ),
       ),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ── Drag handle
-            Center(
-              child: Container(
-                width: 48,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.accentGold,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: isLandscape ? 420.h : MediaQuery.sizeOf(context).height * 0.88,
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Container(
+            padding: EdgeInsets.fromLTRB(
+              (isLandscape ? 16.0 : 20.0).w,
+              (isLandscape ? 12.0 : 8.0).h,
+              (isLandscape ? 16.0 : 20.0).w,
+              math.max(
+                (isLandscape ? 14.0 : 16.0).h,
+                MediaQuery.paddingOf(context).bottom,
               ),
             ),
-            // ── Title
-            Center(
-              child: Text(
-                AppLocalizations.of(context)!.audioSettingsTitle,
-                style: TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // ── Category Selector
-            AudioSelectorButton<String>(
-              icon: Icons.category_rounded,
-              label: AppLocalizations.of(context)!.audioTypeLabel,
-              value: _selectedCategory,
-              items: categories,
-              itemHeight: 42,
-              onChanged: (val) => _onCategoryChanged(val),
-              labelBuilder: (item) => ReciterLocalization.localizeByLang(isEn, item),
-            ),
-            const SizedBox(height: 10),
-
-            // ── Reciter Selector
-            AudioSelectorButton<String>(
-              icon: Icons.mic_rounded,
-              label: AppLocalizations.of(context)!.audioReciterLabel,
-              value: _selectedReciter,
-              items: reciters,
-              itemHeight: 42,
-              maxHeight: 210,
-              onChanged: (val) => _onReciterChanged(val),
-              labelBuilder: (item) => ReciterLocalization.localizeByLang(isEn, item),
-            ),
-            const SizedBox(height: 10),
-
-            // ── Repeat Selector
-            AudioSelectorButton<int>(
-              icon: Icons.repeat_rounded,
-              label: AppLocalizations.of(context)!.audioRepeatLabel,
-              value: _selectedRepeatCount,
-              items: _repeatOptions,
-              itemHeight: 34,
-              maxHeight: 136,
-              onChanged: _onRepeatChanged,
-              labelBuilder: (item) => _getRepeatLabel(context, item),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCream,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: AppColors.accentGold.withValues(alpha: 0.4),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.play_circle_outline_rounded,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── Drag handle or Dialog Header ──
+                if (!isLandscape)
+                  Center(
+                    child: Container(
+                      width: 48.w,
+                      height: 4.h,
+                      margin: EdgeInsets.only(bottom: 12.h),
+                      decoration: BoxDecoration(
                         color: AppColors.accentGold,
-                        size: 20,
+                        borderRadius: BorderRadius.circular(2.r),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        AppLocalizations.of(context)!.menuListenOnce,
+                    ),
+                  ),
+                // ── Title
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (isLandscape) SizedBox(width: 24.w),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.audioSettingsTitle,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
+                          fontSize: (isLandscape ? 17.0 : 24.0).sp,
                           fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
                         ),
+                      ),
+                    ),
+                    if (isLandscape)
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          padding: EdgeInsets.all(4.r),
+                          decoration: BoxDecoration(
+                            color: AppColors.textPrimary.withValues(alpha: 0.06),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.close,
+                            color: AppColors.inkBrown,
+                            size: 16.sp,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                SizedBox(height: (isLandscape ? 10.0 : 16.0).h),
+
+                // ── Category Selector
+                AudioSelectorButton<String>(
+                  icon: Icons.category_rounded,
+                  label: AppLocalizations.of(context)!.audioTypeLabel,
+                  value: _selectedCategory,
+                  items: categories,
+                  height: (isLandscape ? 48.0 : 58.0).h,
+                  itemHeight: (isLandscape ? 38.0 : 46.0).h,
+                  maxHeight: 180.h,
+                  labelFontSize: (isLandscape ? 13.0 : 15.5).sp,
+                  valueFontSize: (isLandscape ? 15.5 : 19.0).sp,
+                  itemFontSize: (isLandscape ? 15.0 : 18.5).sp,
+                  iconSize: (isLandscape ? 20.0 : 26.0).sp,
+                  onChanged: (val) => _onCategoryChanged(val),
+                  labelBuilder: (item) =>
+                      ReciterLocalization.localizeByLang(isEn, item),
+                ),
+                SizedBox(height: (isLandscape ? 10.0 : 14.0).h),
+
+                // ── Reciter Selector
+                AudioSelectorButton<String>(
+                  icon: Icons.mic_rounded,
+                  label: AppLocalizations.of(context)!.audioReciterLabel,
+                  value: _selectedReciter,
+                  items: reciters,
+                  height: (isLandscape ? 48.0 : 58.0).h,
+                  itemHeight: (isLandscape ? 38.0 : 46.0).h,
+                  maxHeight: 180.h,
+                  labelFontSize: (isLandscape ? 13.0 : 15.5).sp,
+                  valueFontSize: (isLandscape ? 15.5 : 19.0).sp,
+                  itemFontSize: (isLandscape ? 15.0 : 18.5).sp,
+                  iconSize: (isLandscape ? 20.0 : 26.0).sp,
+                  onChanged: (val) => _onReciterChanged(val),
+                  labelBuilder: (item) =>
+                      ReciterLocalization.localizeByLang(isEn, item),
+                ),
+                SizedBox(height: (isLandscape ? 10.0 : 14.0).h),
+
+                // ── Repeat Selector
+                AudioSelectorButton<int>(
+                  icon: Icons.repeat_rounded,
+                  label: AppLocalizations.of(context)!.audioRepeatLabel,
+                  value: _selectedRepeatCount,
+                  items: _repeatOptions,
+                  height: (isLandscape ? 48.0 : 58.0).h,
+                  itemHeight: (isLandscape ? 32.0 : 38.0).h,
+                  maxHeight: 140.h,
+                  labelFontSize: (isLandscape ? 13.0 : 15.5).sp,
+                  valueFontSize: (isLandscape ? 15.5 : 19.0).sp,
+                  itemFontSize: (isLandscape ? 14.5 : 17.0).sp,
+                  iconSize: (isLandscape ? 20.0 : 26.0).sp,
+                  onChanged: _onRepeatChanged,
+                  labelBuilder: (item) => _getRepeatLabel(context, item),
+                ),
+                SizedBox(height: (isLandscape ? 10.0 : 16.0).h),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: (isLandscape ? 14.0 : 18.0).w,
+                    vertical: (isLandscape ? 6.0 : 10.0).h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceCream,
+                    borderRadius: BorderRadius.circular(14.r),
+                    border: Border.all(
+                      color: AppColors.accentGold.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.play_circle_outline_rounded,
+                            color: AppColors.accentGold,
+                            size: (isLandscape ? 22.0 : 28.0).sp,
+                          ),
+                          SizedBox(width: (isLandscape ? 10.0 : 12.0).w),
+                          Text(
+                            AppLocalizations.of(context)!.menuListenOnce,
+                            style: TextStyle(
+                              fontSize: (isLandscape ? 15.0 : 19.0).sp,
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Switch(
+                        value: _playOnce,
+                        activeTrackColor:
+                            AppColors.accentGold.withValues(alpha: 0.5),
+                        activeThumbColor: AppColors.accentGold,
+                        onChanged: _onPlayOnceChanged,
                       ),
                     ],
                   ),
-                  Switch(
-                    value: _playOnce,
-                    activeTrackColor: AppColors.accentGold.withValues(alpha: 0.5),
-                    activeThumbColor: AppColors.accentGold,
-                    onChanged: _onPlayOnceChanged,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
-
-            // ── Play / Apply button
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accentGold,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
                 ),
-                elevation: 0,
-              ),
-              icon: Icon(
-                widget.verseId != null
-                    ? Icons.play_arrow_rounded
-                    : Icons.check_rounded,
-                size: 22,
-              ),
-              label: Text(
-                widget.verseId != null
-                    ? AppLocalizations.of(context)!.audioStartListening
-                    : AppLocalizations.of(context)!.audioSaveSettings,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              onPressed: _applyAndPlay,
+                SizedBox(height: (isLandscape ? 14.0 : 22.0).h),
+
+                // ── Play / Apply button
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accentGold,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(
+                      vertical: (isLandscape ? 12.0 : 16.0).h,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                    elevation: 0,
+                  ),
+                  icon: Icon(
+                    widget.verseId != null
+                        ? Icons.play_arrow_rounded
+                        : Icons.check_rounded,
+                    size: (isLandscape ? 22.0 : 28.0).sp,
+                  ),
+                  label: Text(
+                    widget.verseId != null
+                        ? AppLocalizations.of(context)!.audioStartListening
+                        : AppLocalizations.of(context)!.audioSaveSettings,
+                    style: TextStyle(
+                      fontSize: (isLandscape ? 16.0 : 20.0).sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onPressed: _applyAndPlay,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

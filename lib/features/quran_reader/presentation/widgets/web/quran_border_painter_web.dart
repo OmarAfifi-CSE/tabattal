@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:ui';
 
 class _BorderPathDataWeb {
@@ -15,6 +17,7 @@ class QuranBorderPainterWeb extends CustomPainter {
   final Color goldColor;
   final Color innerColor;
   final Color backgroundColor;
+  final bool isLandscape;
 
   const QuranBorderPainterWeb({
     required this.pageNumber,
@@ -22,17 +25,16 @@ class QuranBorderPainterWeb extends CustomPainter {
     required this.goldColor,
     required this.innerColor,
     required this.backgroundColor,
+    this.isLandscape = false,
   });
 
   static final Paint _bgPaint = Paint();
   static final Paint _outerBoundPaint = Paint()
     ..style = PaintingStyle.stroke
-    ..strokeWidth = 12.0
     ..strokeJoin = StrokeJoin.miter
     ..strokeCap = StrokeCap.round;
   static final Paint _innerFillPaint = Paint()
     ..style = PaintingStyle.stroke
-    ..strokeWidth = 10.0
     ..strokeJoin = StrokeJoin.miter
     ..strokeCap = StrokeCap.round;
   static final Paint _diamondFillPaint = Paint()..style = PaintingStyle.fill;
@@ -48,8 +50,9 @@ class QuranBorderPainterWeb extends CustomPainter {
     _drawBackground(canvas, size);
 
     final String cacheKey =
-        '${W.toStringAsFixed(1)}_${H.toStringAsFixed(1)}_${isLeftPage}_${hizbCutCenters.join(',')}';
-    _BorderPathDataWeb? data = _borderCacheWeb[cacheKey];
+        '${W.toStringAsFixed(1)}_${H.toStringAsFixed(1)}_${isLeftPage}_${isLandscape}_${hizbCutCenters.map((c) => c.toStringAsFixed(1)).join(',')}';
+    _BorderPathDataWeb? data =
+        kDebugMode ? null : _borderCacheWeb[cacheKey];
 
     if (data == null) {
       // 2. Constants for positioning
@@ -58,6 +61,12 @@ class QuranBorderPainterWeb extends CustomPainter {
       final double top = H * 0.02;
       final double bottom = H * 0.97;
 
+      final double cutTop = isLandscape ? 100.0.h : 95.0.h;
+      final double cutBottom = isLandscape ? 135.0.h : 125.0.h;
+
+      final double diamondRadius = isLandscape ? 5.5.r : 4.5.r;
+      final double diamondStep = isLandscape ? 16.0.r : 14.0.r;
+
       // 3. Build the exact continuous wireframe of the border with cuts
       final Path framePath = Path();
 
@@ -65,13 +74,13 @@ class QuranBorderPainterWeb extends CustomPainter {
       framePath.moveTo(W * 0.08, top); // Juz Left Cut
       framePath.lineTo(left, top); // Top Left Corner
 
-      // Left Edge
+      // Left Edge Hizb Cuts (Even Pages)
       if (isLeftPage && hizbCutCenters.isNotEmpty) {
         final sortedCenters = List<double>.from(hizbCutCenters)
           ..sort((a, b) => a.compareTo(b));
         for (final cy in sortedCenters) {
-          framePath.lineTo(left, cy - H * 0.083);
-          framePath.moveTo(left, cy + H * 0.112);
+          framePath.lineTo(left, cy - cutTop);
+          framePath.moveTo(left, cy + cutBottom);
         }
       }
 
@@ -82,13 +91,13 @@ class QuranBorderPainterWeb extends CustomPainter {
       framePath.moveTo(W * 0.58, bottom); // Page Number Right Cut
       framePath.lineTo(right, bottom); // Bottom Right Corner
 
-      // Right Edge
+      // Right Edge Hizb Cuts (Odd Pages)
       if (!isLeftPage && hizbCutCenters.isNotEmpty) {
         final sortedCenters = List<double>.from(hizbCutCenters)
           ..sort((a, b) => b.compareTo(a));
         for (final cy in sortedCenters) {
-          framePath.lineTo(right, cy + H * 0.112);
-          framePath.moveTo(right, cy - H * 0.083);
+          framePath.lineTo(right, cy + cutBottom);
+          framePath.moveTo(right, cy - cutTop);
         }
       }
 
@@ -106,7 +115,7 @@ class QuranBorderPainterWeb extends CustomPainter {
       final Path allDiamondsPath = Path();
       for (final metric in framePath.computeMetrics()) {
         final double length = metric.length;
-        int nSegments = (length / 14.0).round();
+        int nSegments = (length / diamondStep).round();
         if (nSegments == 0) nSegments = 1;
         double exactStep = length / nSegments;
 
@@ -119,10 +128,10 @@ class QuranBorderPainterWeb extends CustomPainter {
           final Offset dir = tangent.vector;
           final Offset normal = Offset(-dir.dy, dir.dx);
 
-          allDiamondsPath.moveTo(pos.dx + dir.dx * 4.5, pos.dy + dir.dy * 4.5);
-          allDiamondsPath.lineTo(pos.dx + normal.dx * 4.5, pos.dy + normal.dy * 4.5);
-          allDiamondsPath.lineTo(pos.dx - dir.dx * 4.5, pos.dy - dir.dy * 4.5);
-          allDiamondsPath.lineTo(pos.dx - normal.dx * 4.5, pos.dy - normal.dy * 4.5);
+          allDiamondsPath.moveTo(pos.dx + dir.dx * diamondRadius, pos.dy + dir.dy * diamondRadius);
+          allDiamondsPath.lineTo(pos.dx + normal.dx * diamondRadius, pos.dy + normal.dy * diamondRadius);
+          allDiamondsPath.lineTo(pos.dx - dir.dx * diamondRadius, pos.dy - dir.dy * diamondRadius);
+          allDiamondsPath.lineTo(pos.dx - normal.dx * diamondRadius, pos.dy - normal.dy * diamondRadius);
           allDiamondsPath.close();
         }
       }
@@ -131,9 +140,11 @@ class QuranBorderPainterWeb extends CustomPainter {
       _borderCacheWeb[cacheKey] = data;
     }
 
+    _outerBoundPaint.strokeWidth = isLandscape ? 15.0.r : 12.0.r;
     _outerBoundPaint.color = goldColor;
     canvas.drawPath(data.framePath, _outerBoundPaint);
 
+    _innerFillPaint.strokeWidth = isLandscape ? 12.5.r : 10.0.r;
     _innerFillPaint.color = innerColor;
     canvas.drawPath(data.framePath, _innerFillPaint);
 
@@ -149,6 +160,7 @@ class QuranBorderPainterWeb extends CustomPainter {
   @override
   bool shouldRepaint(covariant QuranBorderPainterWeb oldDelegate) {
     if (oldDelegate.pageNumber != pageNumber ||
+        oldDelegate.isLandscape != isLandscape ||
         oldDelegate.backgroundColor != backgroundColor ||
         oldDelegate.goldColor != goldColor ||
         oldDelegate.innerColor != innerColor ||

@@ -609,7 +609,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
     final wordTextStyle = AppTextStyles.quranText.copyWith(
       fontFamily: customFontFamily,
       fontSize: _kCanvasFontSize,
-      height: 1.5,
+      height: 1.45,
     );
     final transparentWordStyle = wordTextStyle.copyWith(
       color: Colors.transparent,

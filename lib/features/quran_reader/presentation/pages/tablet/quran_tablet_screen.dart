@@ -9,6 +9,7 @@ import '../../widgets/tablet/quran_page_widget_tablet.dart';
 import '../../widgets/page_navigation/quran_page_navigator.dart';
 import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_state.dart';
+import '../../../bloc/quran/quran_page_cache.dart';
 import '../../widgets/tablet/media_control_bar_tablet.dart';
 import '../../../../../core/services/audio_preferences_service.dart';
 import '../../../domain/repositories/quran_repository.dart';
@@ -41,6 +42,9 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
   int _highlightToken = 0;
   bool _isAudioExpanded = true;
 
+  DateTime _lastPageTurnTime = DateTime.fromMillisecondsSinceEpoch(0);
+  double _wheelAccumulator = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -53,16 +57,18 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
       _highlightToken = 1;
     }
 
+    _prewarmAdjacentPages(_currentPage);
+  }
+
+  void _prewarmAdjacentPages(int page) {
     final repo = context.read<QuranRepository>();
-    repo.getLinesByPage(_currentPage);
-    if (_currentPage + 1 <= QuranConstants.totalPages) {
-      repo.getLinesByPage(_currentPage + 1);
-    }
-    if (_currentPage + 2 <= QuranConstants.totalPages) {
-      repo.getLinesByPage(_currentPage + 2);
-    }
-    if (_currentPage - 1 >= 1) {
-      repo.getLinesByPage(_currentPage - 1);
+    for (int offset = -4; offset <= 5; offset++) {
+      final p = page + offset;
+      if (p >= 1 && p <= QuranConstants.totalPages) {
+        if (QuranPageCache.get(p) == null) {
+          repo.getLinesByPage(p);
+        }
+      }
     }
   }
 
@@ -84,19 +90,7 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
       setState(() => _currentPage = newPage);
       context.read<AudioPreferencesService>().saveLastReadPage(newPage);
 
-      // Prewarm adjacent neighbor pages in RAM cache
-      if (newPage + 1 <= QuranConstants.totalPages) {
-        repo.getLinesByPage(newPage + 1);
-      }
-      if (newPage + 2 <= QuranConstants.totalPages) {
-        repo.getLinesByPage(newPage + 2);
-      }
-      if (newPage - 1 >= 1) {
-        repo.getLinesByPage(newPage - 1);
-      }
-      if (newPage - 2 >= 1) {
-        repo.getLinesByPage(newPage - 2);
-      }
+      _prewarmAdjacentPages(newPage);
     });
   }
 
@@ -114,6 +108,38 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
       _navigatorKey.currentState!.navigateToPage(targetPage);
     } else {
       _onPageChanged(targetPage);
+    }
+  }
+
+  void _handlePointerScroll(PointerSignalEvent event, int pageStep) {
+    if (event is! PointerScrollEvent) return;
+
+    final now = DateTime.now();
+    final elapsed = now.difference(_lastPageTurnTime).inMilliseconds;
+    if (elapsed < 220) {
+      _wheelAccumulator = 0.0;
+      return;
+    }
+
+    final dy = event.scrollDelta.dy;
+    final dx = event.scrollDelta.dx;
+    final delta = dy.abs() > dx.abs() ? dy : dx;
+    if (delta == 0) return;
+
+    _wheelAccumulator += delta;
+
+    if (_wheelAccumulator.abs() >= 12.0) {
+      final isNext = _wheelAccumulator > 0;
+      _wheelAccumulator = 0.0;
+      _lastPageTurnTime = now;
+
+      final targetPage = isNext
+          ? (_currentPage + pageStep).clamp(1, QuranConstants.totalPages)
+          : (_currentPage - pageStep).clamp(1, QuranConstants.totalPages);
+
+      if (targetPage != _currentPage) {
+        _navigateToPage(targetPage);
+      }
     }
   }
 
@@ -233,99 +259,47 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeOutCubic,
                           padding: EdgeInsets.only(bottom: paddingBottom),
-                          child: Listener(
-                            onPointerSignal: (pointerSignal) {
-                              if (pointerSignal is PointerScrollEvent) {
-                                if (pointerSignal.scrollDelta.dy > 0) {
-                                  _navigateToPage(_currentPage + pageStep);
-                                } else if (pointerSignal.scrollDelta.dy < 0) {
-                                  _navigateToPage(_currentPage - pageStep);
-                                }
+                          child: Focus(
+                            autofocus: true,
+                            onKeyEvent: (node, event) {
+                              if (event is! KeyDownEvent) return KeyEventResult.ignored;
+                              if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
+                                  event.logicalKey == LogicalKeyboardKey.pageDown ||
+                                  event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                                _navigateToPage(_currentPage + pageStep);
+                                return KeyEventResult.handled;
+                              } else if (event.logicalKey == LogicalKeyboardKey.arrowRight ||
+                                  event.logicalKey == LogicalKeyboardKey.pageUp ||
+                                  event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                                _navigateToPage(_currentPage - pageStep);
+                                return KeyEventResult.handled;
                               }
+                              return KeyEventResult.ignored;
                             },
-                            child: QuranPageNavigator(
-                              key: _navigatorKey,
-                              currentPage: _currentPage,
-                              pageStep: pageStep,
-                              scrollDirection: settingsState.scrollDirection,
-                              onInteractionStart: () {
-                                QuranPageWidgetTablet.dismissActiveMenu();
-                              },
-                              onPageChanged: _onPageChanged,
-                              pageBuilder: (context, page) {
-                                if (isTwoPageMode) {
-                                  final rightPage = (page % 2 == 1)
-                                      ? page
-                                      : page - 1;
-                                  final leftPage = rightPage + 1;
+                            child: Listener(
+                              behavior: HitTestBehavior.translucent,
+                              onPointerSignal: (pointerSignal) =>
+                                  _handlePointerScroll(pointerSignal, pageStep),
+                              child: QuranPageNavigator(
+                                key: _navigatorKey,
+                                currentPage: _currentPage,
+                                pageStep: pageStep,
+                                scrollDirection: settingsState.scrollDirection,
+                                onInteractionStart: () {
+                                  QuranPageWidgetTablet.dismissActiveMenu();
+                                },
+                                onPageChanged: _onPageChanged,
+                                pageBuilder: (context, page) {
+                                  if (isTwoPageMode) {
+                                    final rightPage = (page % 2 == 1)
+                                        ? page
+                                        : page - 1;
+                                    final leftPage = rightPage + 1;
 
-                                  return Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                    children: [
-                                      Expanded(
-                                        child: Center(
-                                          child: FittedBox(
-                                            fit: BoxFit.contain,
-                                            child: SizedBox(
-                                              width: 800,
-                                              height: 1200,
-                                              child: RepaintBoundary(
-                                                child: QuranPageWidgetTablet(
-                                                  key: ValueKey(
-                                                    'page_$rightPage',
-                                                  ),
-                                                  pageNumber: rightPage,
-                                                  onNavigateToPage:
-                                                      (p, {verseKey}) =>
-                                                          _navigateToPage(
-                                                            p,
-                                                            verseKey: verseKey,
-                                                          ),
-                                                  highlightVerseKey:
-                                                      (rightPage ==
-                                                              _currentPage ||
-                                                          leftPage ==
-                                                              _currentPage)
-                                                      ? _highlightVerseKey
-                                                      : null,
-                                                  highlightToken:
-                                                      (rightPage ==
-                                                              _currentPage ||
-                                                          leftPage ==
-                                                              _currentPage)
-                                                      ? _highlightToken
-                                                      : 0,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      if (leftPage <=
-                                          QuranConstants.totalPages)
-                                        Container(
-                                          width: 1.5.w,
-                                          margin: EdgeInsets.symmetric(
-                                            vertical: (isLandscape ? 28.0 : 36.0).h,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Colors.transparent,
-                                                settingsState
-                                                    .effectiveMushafTheme
-                                                    .goldColor
-                                                    .withValues(alpha: 0.35),
-                                                Colors.transparent,
-                                              ],
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                            ),
-                                          ),
-                                        ),
-                                      if (leftPage <=
-                                          QuranConstants.totalPages)
+                                    return Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
                                         Expanded(
                                           child: Center(
                                             child: FittedBox(
@@ -336,15 +310,14 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                                                 child: RepaintBoundary(
                                                   child: QuranPageWidgetTablet(
                                                     key: ValueKey(
-                                                      'page_$leftPage',
+                                                      'page_$rightPage',
                                                     ),
-                                                    pageNumber: leftPage,
+                                                    pageNumber: rightPage,
                                                     onNavigateToPage:
                                                         (p, {verseKey}) =>
                                                             _navigateToPage(
                                                               p,
-                                                              verseKey:
-                                                                  verseKey,
+                                                              verseKey: verseKey,
                                                             ),
                                                     highlightVerseKey:
                                                         (rightPage ==
@@ -365,38 +338,113 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                                               ),
                                             ),
                                           ),
-                                        )
-                                      else
-                                        const Expanded(child: SizedBox()),
-                                    ],
-                                  );
-                                } else {
-                                  return QuranPageWidgetTablet(
-                                    key: ValueKey('page_$page'),
-                                    pageNumber: page,
-                                    onNavigateToPage:
-                                        (p, {verseKey}) =>
-                                            _navigateToPage(
-                                              p,
-                                              verseKey: verseKey,
+                                        ),
+                                        if (leftPage <=
+                                            QuranConstants.totalPages)
+                                          Container(
+                                            width: 1.5.w,
+                                            margin: EdgeInsets.symmetric(
+                                              vertical: (isLandscape ? 28.0 : 36.0).h,
                                             ),
-                                    highlightVerseKey:
-                                        page == _currentPage
-                                        ? _highlightVerseKey
-                                        : null,
-                                    highlightToken:
-                                        page == _currentPage
-                                        ? _highlightToken
-                                        : 0,
-                                  );
-                                }
-                              },
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  Colors.transparent,
+                                                  settingsState
+                                                      .effectiveMushafTheme
+                                                      .goldColor
+                                                      .withValues(alpha: 0.35),
+                                                  Colors.transparent,
+                                                ],
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                              ),
+                                            ),
+                                          ),
+                                        if (leftPage <=
+                                            QuranConstants.totalPages)
+                                          Expanded(
+                                            child: Center(
+                                              child: FittedBox(
+                                                fit: BoxFit.contain,
+                                                child: SizedBox(
+                                                  width: 800,
+                                                  height: 1200,
+                                                  child: RepaintBoundary(
+                                                    child: QuranPageWidgetTablet(
+                                                      key: ValueKey(
+                                                        'page_$leftPage',
+                                                      ),
+                                                      pageNumber: leftPage,
+                                                      onNavigateToPage:
+                                                          (p, {verseKey}) =>
+                                                              _navigateToPage(
+                                                                p,
+                                                                verseKey:
+                                                                    verseKey,
+                                                              ),
+                                                      highlightVerseKey:
+                                                          (rightPage ==
+                                                                  _currentPage ||
+                                                              leftPage ==
+                                                                  _currentPage)
+                                                          ? _highlightVerseKey
+                                                          : null,
+                                                      highlightToken:
+                                                          (rightPage ==
+                                                                  _currentPage ||
+                                                              leftPage ==
+                                                                  _currentPage)
+                                                          ? _highlightToken
+                                                          : 0,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        else
+                                          const Expanded(child: SizedBox()),
+                                      ],
+                                    );
+                                  } else {
+                                    return Center(
+                                      child: FittedBox(
+                                        fit: BoxFit.contain,
+                                        child: SizedBox(
+                                          width: 800,
+                                          height: 1200,
+                                          child: QuranPageWidgetTablet(
+                                            key: ValueKey('page_$page'),
+                                            pageNumber: page,
+                                            onNavigateToPage:
+                                                (p, {verseKey}) =>
+                                                    _navigateToPage(
+                                                      p,
+                                                      verseKey: verseKey,
+                                                    ),
+                                            highlightVerseKey:
+                                                page == _currentPage
+                                                ? _highlightVerseKey
+                                                : null,
+                                            highlightToken:
+                                                page == _currentPage
+                                                ? _highlightToken
+                                                : 0,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
                             ),
                           ),
                         );
                       },
                     ),
                     const HifzToolbarWidgetTablet(),
+                    
                     BlocBuilder<AudioBloc, AudioState>(
                       builder: (context, state) {
                         final isVisible =

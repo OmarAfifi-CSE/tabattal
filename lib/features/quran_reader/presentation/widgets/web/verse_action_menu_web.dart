@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/widgets/mixed_direction_text.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
 import '../../../../../l10n/app_localizations.dart';
@@ -21,9 +22,9 @@ import '../../../bloc/audio/audio_event.dart';
 import '../../../bloc/hifz/hifz_bloc.dart';
 import '../../../bloc/hifz/hifz_event.dart';
 import '../../../bloc/hifz/hifz_state.dart';
-import '../tablet/verse_card_generator_sheet_tablet.dart';
+import 'verse_card_generator_sheet_web.dart';
 import '../tafsir_selector_menu.dart';
-import '../tablet/word_meanings_sheet_tablet.dart';
+import 'word_meanings_sheet_web.dart';
 import '../overlay_position_delegate.dart';
 
 class VerseActionMenuWeb extends StatefulWidget {
@@ -187,13 +188,17 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
     VoidCallback onRetry,
   ) {
     final quranBloc = context.read<QuranBloc>();
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.background, // Soft cream background
-      constraints: null,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      constraints: BoxConstraints(maxWidth: isLandscape ? 520.0.w : 620.0.w),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular((isLandscape ? 18.0 : 24.0).r),
+        ),
       ),
       isScrollControlled: true, // Allow it to expand nicely
       builder: (bottomSheetContext) {
@@ -207,11 +212,19 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                 textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
                 child: Container(
                   constraints: BoxConstraints(
-                    maxHeight:
-                        MediaQuery.sizeOf(context).height *
-                        0.7, // Max 70% of screen
+                    maxHeight: isLandscape
+                        ? 480.0.h
+                        : MediaQuery.sizeOf(context).height * 0.7,
                   ),
-                  padding: EdgeInsets.fromLTRB(20.0, 12.0, 20.0, math.max(20.0, MediaQuery.paddingOf(context).bottom)),
+                    padding: EdgeInsets.fromLTRB(
+                      (isLandscape ? 16.0 : 24.0).w,
+                      (isLandscape ? 10.0 : 14.0).h,
+                      (isLandscape ? 16.0 : 24.0).w,
+                      math.max(
+                        (isLandscape ? 16.0 : 20.0).h,
+                        MediaQuery.paddingOf(context).bottom,
+                      ),
+                    ),
                 child: BlocConsumer<QuranBloc, QuranState>(
                   listener: (context, state) {
                     if (state is TafsirDownloaded) {
@@ -246,12 +259,16 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                         // Gold Drag Handle
                         Center(
                           child: Container(
-                            width: 48,
-                            height: 4,
-                            margin: const EdgeInsets.only(bottom: 16),
+                            width: (isLandscape ? 40.0 : 56.0).w,
+                            height: (isLandscape ? 3.5 : 4.5).h,
+                            margin: EdgeInsets.only(
+                              bottom: (isLandscape ? 10.0 : 16.0).h,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.accentGold,
-                              borderRadius: BorderRadius.circular(2),
+                              borderRadius: BorderRadius.circular(
+                                (isLandscape ? 2.0 : 3.0).r,
+                              ),
                             ),
                           ),
                         ),
@@ -271,6 +288,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                 child: Text(
                                   AppLocalizations.of(context)!.menuTafsir,
                                   style: AppTextStyles.headerText.copyWith(
+                                    fontSize: (isLandscape ? 17.0 : 22.0).sp,
                                     color: AppColors.accentGold,
                                   ),
                                 ),
@@ -333,31 +351,23 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                         );
                                       },
                                       openUpwards: true,
-                                      menuWidth:
-                                          Localizations.localeOf(
-                                                context,
-                                              ).languageCode ==
-                                              'en'
-                                          ? 180
-                                          : 145,
-                                      itemHeight: 38,
-                                      itemFontSize: 14,
+                                      menuWidth: isLandscape
+                                          ? (Localizations.localeOf(context).languageCode == 'en' ? 160.0.w : 120.0.w)
+                                          : (Localizations.localeOf(context).languageCode == 'en' ? 210.w : 160.w),
+                                      itemHeight: (isLandscape ? 32.0 : 42.0).h,
+                                      itemFontSize: (isLandscape ? 12.5 : 15.5).sp,
                                       trigger: Container(
-                                        height: 40,
-                                        width:
-                                            Localizations.localeOf(
-                                                  context,
-                                                ).languageCode ==
-                                                'en'
-                                            ? 130
-                                            : 100,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
+                                        height: (isLandscape ? 32.0 : 42.0).h,
+                                        width: isLandscape
+                                            ? (Localizations.localeOf(context).languageCode == 'en' ? 120.0.w : 90.0.w)
+                                            : (Localizations.localeOf(context).languageCode == 'en' ? 145.w : 115.w),
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: (isLandscape ? 8.0 : 10.0).w,
                                         ),
                                         decoration: BoxDecoration(
                                           color: AppColors.background,
                                           borderRadius: BorderRadius.circular(
-                                            16,
+                                            (isLandscape ? 10.0 : 16.0).r,
                                           ),
                                           border: Border.all(
                                             color: AppColors.accentGold
@@ -368,28 +378,24 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Icon(
-                                              Icons.keyboard_arrow_down_rounded,
-                                              color: AppColors.accentGold,
-                                              size: 20,
-                                            ),
                                             Expanded(
                                               child: Text(
                                                 _getTafsirName(
                                                   context,
                                                   displayResourceId,
                                                 ),
-                                                textAlign: TextAlign.center,
-                                                style: AppTextStyles
-                                                    .menuItemText
-                                                    .copyWith(
-                                                      fontSize: 12,
-                                                      color:
-                                                          AppColors.accentGold,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
+                                                style: TextStyle(
+                                                  fontSize: (isLandscape ? 12.0 : 14.0).sp,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.accentGold,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
                                               ),
+                                            ),
+                                            Icon(
+                                              Icons.arrow_drop_up_rounded,
+                                              color: AppColors.accentGold,
+                                              size: (isLandscape ? 18.0 : 24.0).sp,
                                             ),
                                           ],
                                         ),
@@ -408,14 +414,14 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                               color: AppColors.accentGold,
                             ),
                           ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16.h),
                         if (currentState is QuranOverlayLoading)
                           Center(
                             child: Padding(
-                              padding: const EdgeInsets.all(32.0),
+                              padding: EdgeInsets.all(32.0.r),
                               child: CupertinoActivityIndicator(
                                 color: AppColors.accentGold,
-                                radius: 14,
+                                radius: 14.r,
                               ),
                             ),
                           )
@@ -434,10 +440,10 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     CupertinoActivityIndicator(
-                                      radius: 10,
+                                      radius: 10.r,
                                       color: AppColors.bronzeIcon,
                                     ),
-                                    const SizedBox(width: 12),
+                                    SizedBox(width: 12.w),
                                     Text(
                                       l10n.downloadingTafsir(
                                         (value * 100).toStringAsFixed(1) ==
@@ -447,7 +453,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                       ),
                                       style: AppTextStyles.menuItemText
                                           .copyWith(
-                                            fontSize: 14,
+                                            fontSize: 14.sp,
                                             color: AppColors.accentGold,
                                           ),
                                       textAlign: TextAlign.center,
@@ -460,23 +466,21 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                         else if (currentState is TafsirDownloadError)
                           Center(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 16.0,
-                              ),
+                              padding: EdgeInsets.symmetric(vertical: 16.0.h),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.error_outline,
                                     color: Colors.red,
-                                    size: 40,
+                                    size: 40.sp,
                                   ),
-                                  const SizedBox(height: 12),
+                                  SizedBox(height: 12.h),
                                   Text(
                                     currentState.message,
                                     style: const TextStyle(color: Colors.red),
                                   ),
-                                  const SizedBox(height: 12),
+                                  SizedBox(height: 12.h),
                                   ElevatedButton(
                                     onPressed: () {
                                       quranBloc.add(
@@ -496,9 +500,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                         else if (currentState is TafsirPartialDownloadError)
                           Center(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 24.0,
-                              ),
+                              padding: EdgeInsets.symmetric(vertical: 24.0.h),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -507,9 +509,9 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                     color: AppColors.accentGold.withValues(
                                       alpha: 0.8,
                                     ),
-                                    size: 48,
+                                    size: 48.sp,
                                   ),
-                                  const SizedBox(height: 16),
+                                  SizedBox(height: 16.h),
                                   Text(
                                     l10n.tafsirNotAvailableLocally,
                                     style: AppTextStyles.menuItemText.copyWith(
@@ -517,7 +519,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
-                                  const SizedBox(height: 8),
+                                  SizedBox(height: 8.h),
                                   Text(
                                     l10n.tafsirPartialDownloadHint(
                                       ((_tafsirProgress[currentState
@@ -527,12 +529,12 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                           .toInt(),
                                     ),
                                     style: AppTextStyles.menuItemText.copyWith(
-                                      fontSize: 14,
+                                      fontSize: 14.sp,
                                       color: Colors.grey[700],
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
-                                  const SizedBox(height: 24),
+                                  SizedBox(height: 24.h),
                                   ElevatedButton.icon(
                                     onPressed: () {
                                       quranBloc.add(
@@ -542,9 +544,9 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.accentGold,
                                       foregroundColor: AppColors.background,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 24,
-                                        vertical: 12,
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 24.w,
+                                        vertical: 12.h,
                                       ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(24),
@@ -553,8 +555,8 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                     icon: const Icon(Icons.play_arrow_rounded),
                                     label: Text(
                                       l10n.continueDownload,
-                                      style: const TextStyle(
-                                        fontSize: 16,
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -571,9 +573,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                               children: [
                                 if (currentState.isDownloading)
                                   Padding(
-                                    padding: const EdgeInsets.only(
-                                      bottom: 16.0,
-                                    ),
+                                    padding: EdgeInsets.only(bottom: 16.0.h),
                                     child: TweenAnimationBuilder<double>(
                                       tween: Tween<double>(
                                         begin: 0.0,
@@ -590,15 +590,15 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                               : TextDirection.rtl,
                                           children: [
                                             CupertinoActivityIndicator(
-                                              radius: 9,
+                                              radius: 9.r,
                                               color: AppColors.accentGold,
                                             ),
-                                            const SizedBox(width: 8),
+                                            SizedBox(width: 8.w),
                                             Text(
                                               l10n.downloadingTafsirBackground,
                                               style: AppTextStyles.menuItemText
                                                   .copyWith(
-                                                    fontSize: 12,
+                                                    fontSize: 12.sp,
                                                     color: AppColors.accentGold,
                                                   ),
                                             ),
@@ -607,7 +607,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                               '${(value * 100).toStringAsFixed(1)}%',
                                               style: AppTextStyles.menuItemText
                                                   .copyWith(
-                                                    fontSize: 12,
+                                                    fontSize: 12.sp,
                                                     color: AppColors.accentGold,
                                                   ),
                                               textDirection: TextDirection.ltr,
@@ -617,103 +617,104 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                       },
                                     ),
                                   ),
-                                 Flexible(
-                                   child: SingleChildScrollView(
-                                     physics: const BouncingScrollPhysics(),
-                                     child: Column(
-                                       crossAxisAlignment:
-                                           CrossAxisAlignment.stretch,
-                                       children: [
-                                         if (currentState
-                                                 .tafsir
-                                                 .groupVerseRange !=
-                                             null) ...[
-                                           Align(
-                                             alignment:
-                                                 Localizations.localeOf(
-                                                           context,
-                                                         ).languageCode ==
-                                                         'ar'
-                                                     ? Alignment.centerRight
-                                                     : Alignment.centerLeft,
-                                             child: Container(
-                                               margin: const EdgeInsets.only(
-                                                 bottom: 12,
-                                               ),
-                                               padding:
-                                                   const EdgeInsets.symmetric(
-                                                     horizontal: 10,
-                                                     vertical: 5,
-                                                   ),
-                                               decoration: BoxDecoration(
-                                                 color: AppColors.accentGold
-                                                     .withValues(alpha: 0.12),
-                                                 borderRadius:
-                                                     BorderRadius.circular(20),
-                                                 border: Border.all(
-                                                   color: AppColors.accentGold
-                                                       .withValues(alpha: 0.3),
-                                                   width: 1,
-                                                 ),
-                                               ),
-                                               child: Row(
-                                                 mainAxisSize: MainAxisSize.min,
-                                                 children: [
-                                                   Icon(
-                                                     currentState
-                                                             .tafsir
-                                                             .isGroupContinuation
-                                                         ? Icons.link_rounded
-                                                         : Icons
-                                                             .collections_bookmark_rounded,
-                                                     size: 14,
-                                                     color:
-                                                         AppColors.accentGold,
-                                                   ),
-                                                   const SizedBox(width: 6),
-                                                   Text(
-                                                     currentState
-                                                             .tafsir
-                                                             .isGroupContinuation
-                                                         ? (Localizations.localeOf(
-                                                                   context,
-                                                                 ).languageCode ==
-                                                                 'ar'
-                                                             ? 'تابع تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(currentState.tafsir.groupVerseRange!)})'
-                                                             : 'Continuation of Tafsir for Verses (${currentState.tafsir.groupVerseRange})')
-                                                         : (Localizations.localeOf(
-                                                                   context,
-                                                                 ).languageCode ==
-                                                                 'ar'
-                                                             ? 'تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(currentState.tafsir.groupVerseRange!)})'
-                                                             : 'Tafsir of Verses (${currentState.tafsir.groupVerseRange})'),
-                                                     style: TextStyle(
-                                                       fontSize: 12,
-                                                       fontWeight:
-                                                           FontWeight.bold,
-                                                       color:
-                                                           AppColors.accentGold,
-                                                     ),
-                                                   ),
-                                                 ],
-                                               ),
-                                             ),
-                                           ),
-                                         ],
-                                         MixedDirectionText(
-                                           text: _stripHtml(
-                                             currentState.tafsir.text,
-                                           ),
-                                           style: AppTextStyles.menuItemText
-                                               .copyWith(
-                                                 height: 1.8,
-                                                 color: AppColors.textPrimary,
-                                               ),
-                                         ),
-                                       ],
-                                     ),
-                                   ),
-                                 ),
+                                Flexible(
+                                  child: SingleChildScrollView(
+                                    physics: const BouncingScrollPhysics(),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        if (currentState
+                                                .tafsir
+                                                .groupVerseRange !=
+                                            null) ...[
+                                          Align(
+                                            alignment:
+                                                Localizations.localeOf(
+                                                          context,
+                                                        ).languageCode ==
+                                                        'ar'
+                                                    ? Alignment.centerRight
+                                                    : Alignment.centerLeft,
+                                            child: Container(
+                                              margin: EdgeInsets.only(
+                                                bottom: 12.h,
+                                              ),
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 10.w,
+                                                vertical: 5.h,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.accentGold
+                                                    .withValues(alpha: 0.12),
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      20.r,
+                                                    ),
+                                                border: Border.all(
+                                                  color: AppColors.accentGold
+                                                      .withValues(alpha: 0.3),
+                                                  width: 1.w,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    currentState
+                                                            .tafsir
+                                                            .isGroupContinuation
+                                                        ? Icons.link_rounded
+                                                        : Icons
+                                                            .collections_bookmark_rounded,
+                                                    size: 14.r,
+                                                    color:
+                                                        AppColors.accentGold,
+                                                  ),
+                                                  SizedBox(width: 6.w),
+                                                  Text(
+                                                    currentState
+                                                            .tafsir
+                                                            .isGroupContinuation
+                                                        ? (Localizations.localeOf(
+                                                                  context,
+                                                                ).languageCode ==
+                                                                'ar'
+                                                            ? 'تابع تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(currentState.tafsir.groupVerseRange!)})'
+                                                            : 'Continuation of Tafsir for Verses (${currentState.tafsir.groupVerseRange})')
+                                                        : (Localizations.localeOf(
+                                                                  context,
+                                                                ).languageCode ==
+                                                                'ar'
+                                                            ? 'تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(currentState.tafsir.groupVerseRange!)})'
+                                                            : 'Tafsir of Verses (${currentState.tafsir.groupVerseRange})'),
+                                                    style: TextStyle(
+                                                      fontSize: 14.5.sp,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color:
+                                                          AppColors.accentGold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                        MixedDirectionText(
+                                          text: _stripHtml(
+                                            currentState.tafsir.text,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: (isLandscape ? 15.0 : 19.5).sp,
+                                            height: isLandscape ? 1.6 : 1.85.h,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           )
@@ -730,11 +731,11 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                                     width: MediaQuery.sizeOf(context).width,
                                     child: MixedDirectionText(
                                       text: strippedText,
-                                      style: AppTextStyles.menuItemText
-                                          .copyWith(
-                                            height: 1.8,
-                                            color: AppColors.textPrimary,
-                                          ),
+                                      style: TextStyle(
+                                        fontSize: (isLandscape ? 15.0 : 19.5).sp,
+                                        height: isLandscape ? 1.6 : 1.85.h,
+                                        color: AppColors.textPrimary,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -746,17 +747,17 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.error_outline,
                                   color: Colors.red,
-                                  size: 40,
+                                  size: 40.r,
                                 ),
-                                const SizedBox(height: 12),
+                                SizedBox(height: 12.h),
                                 Text(
                                   currentState.message,
                                   style: const TextStyle(color: Colors.red),
                                 ),
-                                const SizedBox(height: 12),
+                                SizedBox(height: 12.h),
                                 ElevatedButton(
                                   onPressed: () {
                                     Navigator.pop(
@@ -793,7 +794,11 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    const menuSize = Size(240, 280);
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+    final menuWidth = isLandscape ? 190.0.w : 250.w;
+    final menuHeight = isLandscape ? 260.0.h : 330.h;
+    final menuSize = Size(menuWidth, menuHeight);
 
     return Stack(
       children: [
@@ -818,23 +823,23 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
               scale: _scaleAnimation,
               alignment: Alignment.topRight,
               child: Material(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular((isLandscape ? 12.0 : 16.0).r),
               color: Colors.transparent,
               child: Container(
-                width: 250,
+                width: menuWidth,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceCream,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular((isLandscape ? 12.0 : 16.0).r),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.textPrimary.withValues(alpha: 0.15),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+                      blurRadius: (isLandscape ? 14.0 : 20.0).r,
+                      offset: Offset(0, (isLandscape ? 4.0 : 8.0).h),
                     ),
                   ],
                   border: Border.all(
                     color: AppColors.verseMarkerGold,
-                    width: 1.5,
+                    width: (isLandscape ? 1.0 : 1.5).w,
                   ),
                 ),
                 child: Directionality(
@@ -877,7 +882,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                         closeMenu: false,
                       ),
                       Divider(
-                        height: 1,
+                        height: 1.h,
                         thickness: 1,
                         color: AppColors.divider,
                       ),
@@ -887,7 +892,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                           l10n.menuWordMeanings,
                           () {
                             _close(keepHighlight: true);
-                            WordMeaningsSheetTablet.show(
+                            WordMeaningsSheetWeb.show(
                               context,
                               verse: widget.verse,
                             ).then((_) {
@@ -918,7 +923,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                           closeMenu: false,
                         ),
                       Divider(
-                        height: 1,
+                        height: 1.h,
                         thickness: 1,
                         color: AppColors.divider,
                       ),
@@ -948,7 +953,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                         },
                       ),
                       Divider(
-                        height: 1,
+                        height: 1.h,
                         thickness: 1,
                         color: AppColors.divider,
                       ),
@@ -971,7 +976,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                         },
                       ),
                       Divider(
-                        height: 1,
+                        height: 1.h,
                         thickness: 1,
                         color: AppColors.divider,
                       ),
@@ -987,7 +992,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                           } else if (qState is TranslationLoaded) {
                             translationText = qState.translation.text;
                           }
-                          showVerseCardGeneratorModalTablet(
+                          showVerseCardGeneratorModalWeb(
                             context,
                             verse: widget.verse,
                             tafsirText: tafsirText,
@@ -1000,7 +1005,7 @@ class _VerseActionMenuWebState extends State<VerseActionMenuWeb>
                         },
                       ),
                       Divider(
-                        height: 1,
+                        height: 1.h,
                         thickness: 1,
                         color: AppColors.divider,
                       ),
@@ -1052,19 +1057,30 @@ class _VerseActionMenuItemWeb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(
+          horizontal: (isLandscape ? 14.0 : 18.0).w,
+          vertical: (isLandscape ? 8.0 : 12.0).h,
+        ),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? AppColors.bronzeIcon, size: 22),
-            const SizedBox(width: 12),
+            Icon(
+              icon,
+              color: iconColor ?? AppColors.bronzeIcon,
+              size: (isLandscape ? 20.0 : 24.0).sp,
+            ),
+            SizedBox(width: (isLandscape ? 10.0 : 14.0).w),
             Expanded(
               child: Text(
                 text,
-                style: AppTextStyles.menuItemText.copyWith(
+                style: TextStyle(
+                  fontSize: (isLandscape ? 14.5 : 16.5).sp,
                   color: AppColors.inkBrown,
                   fontWeight: FontWeight.w600,
                 ),

@@ -108,26 +108,31 @@ class TabattalApp extends StatelessWidget {
                 return ResponsiveLayout(
                   // Web: calibrated to 800×900 so .sp/.w/.h render at reasonable scale
                   // for a typical browser viewport (900–1400px wide).
-                  webBody: MaterialApp(
-                    onGenerateTitle: (ctx) =>
-                        AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
-                    debugShowCheckedModeBanner: false,
-                    locale: locale,
-                    supportedLocales: AppLocalizations.supportedLocales,
-                    localizationsDelegates: const [
-                      AppLocalizations.delegate,
-                      GlobalMaterialLocalizations.delegate,
-                      GlobalWidgetsLocalizations.delegate,
-                      GlobalCupertinoLocalizations.delegate,
-                    ],
-                    theme: appTheme(),
-                    darkTheme: appThemeDark(),
-                    themeMode: settingsState.themeMode,
-                    builder: appDirectionalityBuilder,
-                    home: const QuranWebScreen(),
+                  webBody: ScreenUtilInit(
+                    designSize: const Size(1536, 864),
+                    minTextAdapt: true,
+                    splitScreenMode: false,
+                    child: MaterialApp(
+                      onGenerateTitle: (ctx) =>
+                          AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
+                      debugShowCheckedModeBanner: false,
+                      locale: locale,
+                      supportedLocales: AppLocalizations.supportedLocales,
+                      localizationsDelegates: const [
+                        AppLocalizations.delegate,
+                        GlobalMaterialLocalizations.delegate,
+                        GlobalWidgetsLocalizations.delegate,
+                        GlobalCupertinoLocalizations.delegate,
+                      ],
+                      theme: appTheme(),
+                      darkTheme: appThemeDark(),
+                      themeMode: settingsState.themeMode,
+                      builder: appDirectionalityBuilder,
+                      home: const QuranWebScreen(),
+                    ),
                   ),
                   desktopBody: ScreenUtilInit(
-                    designSize: const Size(800, 900),
+                    designSize: const Size(1536, 864),
                     minTextAdapt: true,
                     splitScreenMode: false,
                     child: MaterialApp(

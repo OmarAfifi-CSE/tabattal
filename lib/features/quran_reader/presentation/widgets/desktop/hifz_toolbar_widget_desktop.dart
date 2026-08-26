@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../bloc/hifz/hifz_bloc.dart';
@@ -21,6 +22,8 @@ class _HifzToolbarWidgetDesktopState extends State<HifzToolbarWidgetDesktop> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     return BlocBuilder<HifzBloc, HifzState>(
       buildWhen: (prev, curr) =>
@@ -30,17 +33,19 @@ class _HifzToolbarWidgetDesktopState extends State<HifzToolbarWidgetDesktop> {
         if (!state.isHifzModeActive) return const SizedBox.shrink();
 
         final screenSize = MediaQuery.sizeOf(context);
-        const double bubbleSize = 46.0;
-        const double toolbarHeight = 46.0;
-        const double minMargin = 10.0;
-        final double maxTop = (screenSize.height - toolbarHeight - 70.0).clamp(4.0, screenSize.height);
+        final double bubbleSize = (isLandscape ? 52.0 : 56.0).r;
+        final double toolbarHeight = (isLandscape ? 52.0 : 54.0).r;
+        final double minMargin = (isLandscape ? 12.0 : 10.0).w;
+        final double maxTop = (screenSize.height - toolbarHeight - (isLandscape ? 70.0.h : 90.0.h)).clamp(4.0, screenSize.height);
 
-        _top ??= 6.0.clamp(4.0, maxTop);
+        // Default position at TOP LEFT
+        _top ??= (isLandscape ? 12.0.h : 10.0.h).clamp(4.0, maxTop);
         _left ??= minMargin;
 
         return Builder(
           builder: (builderContext) {
-            final double maxLeft = (screenSize.width - (_isMinimized ? bubbleSize : 340.0) - minMargin).clamp(minMargin, screenSize.width);
+            final double expandedWidth = (isLandscape ? 440.0 : 420.0).w;
+            final double maxLeft = (screenSize.width - (_isMinimized ? bubbleSize : expandedWidth) - minMargin).clamp(minMargin, screenSize.width);
             final bool isOnRightHalf = (_left! + bubbleSize / 2) > (screenSize.width / 2);
             final Alignment transitionAlignment = isOnRightHalf ? Alignment.centerRight : Alignment.centerLeft;
 
@@ -78,7 +83,7 @@ class _HifzToolbarWidgetDesktopState extends State<HifzToolbarWidgetDesktop> {
                   ),
                   child: _isMinimized
                       ? InkWell(
-                          key: const ValueKey('minimized_bubble'),
+                          key: const ValueKey('desktop_minimized_bubble'),
                           onTap: () => setState(() => _isMinimized = false),
                           borderRadius: BorderRadius.circular(bubbleSize / 2),
                           child: Material(
@@ -93,14 +98,14 @@ class _HifzToolbarWidgetDesktopState extends State<HifzToolbarWidgetDesktop> {
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: AppColors.accentGold,
-                                  width: 1.8,
+                                  width: 2.0.r,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: AppColors.accentGold.withValues(alpha: 0.3),
-                                    blurRadius: 9,
-                                    spreadRadius: 1,
-                                    offset: const Offset(0, 2),
+                                    blurRadius: 9.r,
+                                    spreadRadius: 1.r,
+                                    offset: Offset(0, 2.h),
                                   ),
                                 ],
                               ),
@@ -108,35 +113,35 @@ class _HifzToolbarWidgetDesktopState extends State<HifzToolbarWidgetDesktop> {
                                 child: Icon(
                                   Icons.auto_stories_rounded,
                                   color: AppColors.accentGold,
-                                  size: 22,
+                                  size: (isLandscape ? 26.0 : 28.0).sp,
                                 ),
                               ),
                             ),
                           ),
                         )
                       : Material(
-                          key: const ValueKey('expanded_toolbar'),
+                          key: const ValueKey('desktop_expanded_toolbar'),
                           color: Colors.transparent,
                           elevation: 6,
                           borderRadius: BorderRadius.circular(toolbarHeight / 2),
                           child: Container(
                             height: toolbarHeight,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: (isLandscape ? 14.0 : 14.0).w,
+                              vertical: (isLandscape ? 4.0 : 4.0).h,
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.background.withValues(alpha: 0.95),
                               borderRadius: BorderRadius.circular(toolbarHeight / 2),
                               border: Border.all(
                                 color: AppColors.accentGold.withValues(alpha: 0.6),
-                                width: 1.5,
+                                width: 1.5.r,
                               ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withValues(alpha: 0.18),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
+                                  blurRadius: 12.r,
+                                  offset: Offset(0, 4.h),
                                 ),
                               ],
                             ),
@@ -147,40 +152,45 @@ class _HifzToolbarWidgetDesktopState extends State<HifzToolbarWidgetDesktop> {
                                 Icon(
                                   Icons.drag_indicator_rounded,
                                   color: AppColors.textSecondary.withValues(alpha: 0.8),
-                                  size: 22,
+                                  size: (isLandscape ? 22.0 : 24.0).sp,
                                 ),
-                                const SizedBox(width: 8),
+                                SizedBox(width: (isLandscape ? 8.0 : 8.0).w),
                                 _DesktopHifzTypeChip(
                                   type: HifzMaskingType.fullVerse,
                                   label: l10n.hifzMaskFull,
                                   isSelected: state.maskingType == HifzMaskingType.fullVerse,
+                                  isLandscape: isLandscape,
                                 ),
-                                const SizedBox(width: 6),
+                                SizedBox(width: (isLandscape ? 8.0 : 8.0).w),
                                 _DesktopHifzTypeChip(
                                   type: HifzMaskingType.wordByWord,
                                   label: l10n.hifzMaskWord,
                                   isSelected: state.maskingType == HifzMaskingType.wordByWord,
+                                  isLandscape: isLandscape,
                                 ),
-                                const SizedBox(width: 12),
+                                SizedBox(width: (isLandscape ? 12.0 : 12.0).w),
                                 _DesktopHifzActionIcon(
                                   icon: Icons.refresh_rounded,
                                   color: AppColors.accentGold,
+                                  isLandscape: isLandscape,
                                   onTap: () {
                                     context.read<HifzBloc>().add(const ClearRevealedItems());
                                   },
                                 ),
-                                const SizedBox(width: 4),
+                                SizedBox(width: (isLandscape ? 6.0 : 6.0).w),
                                 _DesktopHifzActionIcon(
                                   icon: Icons.unfold_less_rounded,
                                   color: AppColors.textSecondary,
+                                  isLandscape: isLandscape,
                                   onTap: () {
                                     setState(() => _isMinimized = true);
                                   },
                                 ),
-                                const SizedBox(width: 4),
+                                SizedBox(width: (isLandscape ? 6.0 : 6.0).w),
                                 _DesktopHifzActionIcon(
                                   icon: Icons.close_rounded,
                                   color: Colors.redAccent,
+                                  isLandscape: isLandscape,
                                   onTap: () {
                                     context
                                         .read<HifzBloc>()
@@ -205,27 +215,29 @@ class _DesktopHifzActionIcon extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+  final bool isLandscape;
 
   const _DesktopHifzActionIcon({
     required this.icon,
     required this.color,
     required this.onTap,
+    required this.isLandscape,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(16.r),
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 6,
-          vertical: 5,
+        padding: EdgeInsets.symmetric(
+          horizontal: (isLandscape ? 6.0 : 6.0).w,
+          vertical: (isLandscape ? 5.0 : 5.0).h,
         ),
         child: Icon(
           icon,
           color: color,
-          size: 19,
+          size: (isLandscape ? 22.0 : 22.0).sp,
         ),
       ),
     );
@@ -236,11 +248,13 @@ class _DesktopHifzTypeChip extends StatelessWidget {
   final HifzMaskingType type;
   final String label;
   final bool isSelected;
+  final bool isLandscape;
 
   const _DesktopHifzTypeChip({
     required this.type,
     required this.label,
     required this.isSelected,
+    required this.isLandscape,
   });
 
   @override
@@ -249,23 +263,23 @@ class _DesktopHifzTypeChip extends StatelessWidget {
       onTap: () {
         context.read<HifzBloc>().add(SetHifzMaskingType(type));
       },
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(20.r),
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 11,
-          vertical: 4.5,
+        padding: EdgeInsets.symmetric(
+          horizontal: (isLandscape ? 12.0 : 12.0).w,
+          vertical: (isLandscape ? 6.0 : 6.0).h,
         ),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.accentGold
               : AppColors.cardBackground.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: (isLandscape ? 14.0 : 15.0).sp,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             color: isSelected ? Colors.white : AppColors.textSecondary,
           ),
         ),

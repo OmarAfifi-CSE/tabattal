@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/constants/hizb_data.dart';
 import '../../../../../core/theme/mushaf_theme.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
@@ -32,7 +33,7 @@ List<TextSpan> _buildHizbLabelTextSpans(String text, TextStyle baseStyle) {
         TextSpan(
           text: '\n${match.group(0)}',
           style: baseStyle.copyWith(
-            fontSize: baseStyle.fontSize! * 1.25,
+            fontSize: baseStyle.fontSize! * 1.3,
             fontWeight: FontWeight.w900,
             fontFamily: 'Amiri',
           ),
@@ -58,6 +59,7 @@ class QuranPageFrameWeb extends StatelessWidget {
   final String surahName;
   final String juzName;
   final VoidCallback? onHeaderTap;
+  final bool showHeaderMenu;
 
   const QuranPageFrameWeb({
     super.key,
@@ -67,6 +69,7 @@ class QuranPageFrameWeb extends StatelessWidget {
     required this.surahName,
     required this.juzName,
     this.onHeaderTap,
+    this.showHeaderMenu = true,
   });
 
   @override
@@ -85,6 +88,9 @@ class QuranPageFrameWeb extends StatelessWidget {
       color: mushafTheme.textColor,
       fontWeight: FontWeight.bold,
     );
+
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     return Material(
       color: Colors.transparent,
@@ -116,6 +122,7 @@ class QuranPageFrameWeb extends StatelessWidget {
                     goldColor: mushafTheme.goldColor,
                     innerColor: mushafTheme.innerBorderColor,
                     backgroundColor: mushafTheme.backgroundColor,
+                    isLandscape: isLandscape,
                   ),
                   size: Size.infinite,
                 ),
@@ -135,8 +142,8 @@ class QuranPageFrameWeb extends StatelessWidget {
               // Juz Name
               Positioned(
                 top: pageHeight * 0.02,
-                left: pageWidth * 0.08,
-                width: pageWidth * 0.35,
+                left: pageWidth * (isLandscape ? 0.088 : 0.088),
+                width: pageWidth * (isLandscape ? 0.334 : 0.334),
                 child: FractionalTranslation(
                   translation: const Offset(0.0, -0.5),
                   child: GestureDetector(
@@ -162,12 +169,21 @@ class QuranPageFrameWeb extends StatelessWidget {
                     },
                     child: _WebFrameInfoBox(
                       theme: mushafTheme,
-                      child: Text(
-                        juzName,
-                        style: headerStyle.copyWith(fontSize: 10),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      isLandscape: isLandscape,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: (isLandscape ? 5.0 : 5.0).w,
+                        vertical: (isLandscape ? 3.0 : 2.5).h,
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          juzName,
+                          style: headerStyle.copyWith(
+                            fontSize: (isLandscape ? 16.5 : 17.0).sp,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -177,8 +193,8 @@ class QuranPageFrameWeb extends StatelessWidget {
               // Surah Name
               Positioned(
                 top: pageHeight * 0.02,
-                left: pageWidth * 0.46,
-                width: pageWidth * 0.33,
+                left: pageWidth * (isLandscape ? 0.468 : 0.468),
+                width: pageWidth * (isLandscape ? 0.314 : 0.314),
                 child: FractionalTranslation(
                   translation: const Offset(0.0, -0.5),
                   child: GestureDetector(
@@ -204,11 +220,18 @@ class QuranPageFrameWeb extends StatelessWidget {
                     },
                     child: _WebFrameInfoBox(
                       theme: mushafTheme,
+                      isLandscape: isLandscape,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: (isLandscape ? 5.0 : 5.0).w,
+                        vertical: (isLandscape ? 3.0 : 2.5).h,
+                      ),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
                           surahName,
-                          style: headerStyle.copyWith(fontSize: 10),
+                          style: headerStyle.copyWith(
+                            fontSize: (isLandscape ? 16.5 : 17.0).sp,
+                          ),
                           textAlign: TextAlign.center,
                           maxLines: 1,
                         ),
@@ -219,42 +242,55 @@ class QuranPageFrameWeb extends StatelessWidget {
               ),
 
               // Hamburger Menu
-              Positioned(
-                top: pageHeight * 0.02,
-                right: pageWidth * 0.07,
-                child: FractionalTranslation(
-                  translation: const Offset(0, -0.5),
-                  child: GestureDetector(
-                    onTap: () {
-                      onHeaderTap?.call();
-                      Scaffold.of(context).openDrawer();
-                    },
-                    child: _WebFrameInfoBox(
-                      theme: mushafTheme,
-                      margin: const EdgeInsets.symmetric(horizontal: 6),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 0,
-                      ),
-                      child: Icon(
-                        Icons.segment_rounded,
-                        color: mushafTheme.goldColor,
-                        size: 24,
+              if (showHeaderMenu)
+                Positioned(
+                  top: pageHeight * 0.02,
+                  left: pageWidth * (isLandscape ? 0.828 : 0.83),
+                  width: pageWidth * (isLandscape ? 0.094 : 0.09),
+                  child: FractionalTranslation(
+                    translation: const Offset(0, -0.5),
+                    child: GestureDetector(
+                      onTap: () {
+                        onHeaderTap?.call();
+                        Scaffold.of(context).openDrawer();
+                      },
+                      child: _WebFrameInfoBox(
+                        theme: mushafTheme,
+                        isLandscape: isLandscape,
+                        margin: EdgeInsets.symmetric(
+                          horizontal: (isLandscape ? 1.0 : 2.0).w,
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: (isLandscape ? 3.5 : 3.0).w,
+                          vertical: (isLandscape ? 2.0 : 1.5).h,
+                        ),
+                        child: Icon(
+                          Icons.segment_rounded,
+                          color: mushafTheme.goldColor,
+                          size: (isLandscape ? 22.0 : 22.0).r,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
 
               // ── LAYER 4: Page Number (bottom cut) ──────────────────────
               Positioned(
                 bottom: pageHeight * 0.03,
-                left: pageWidth * 0.42,
-                width: pageWidth * 0.16,
+                left: pageWidth * (isLandscape ? 0.43 : 0.43),
+                width: pageWidth * (isLandscape ? 0.14 : 0.14),
                 child: FractionalTranslation(
                   translation: const Offset(0.0, 0.5),
                   child: _WebFrameInfoBox(
                     theme: mushafTheme,
+                    isLandscape: isLandscape,
+                    margin: EdgeInsets.symmetric(
+                      horizontal: (isLandscape ? 1.0 : 2.0).w,
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: (isLandscape ? 5.0 : 5.0).w,
+                      vertical: (isLandscape ? 2.5 : 2.0).h,
+                    ),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
@@ -264,7 +300,7 @@ class QuranPageFrameWeb extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'Amiri',
                           color: mushafTheme.textColor,
-                          fontSize: 15,
+                          fontSize: (isLandscape ? 17.5 : 17.5).sp,
                           fontWeight: FontWeight.w900,
                           height: 1.1,
                         ),
@@ -282,6 +318,7 @@ class QuranPageFrameWeb extends StatelessWidget {
                     pageWidth: pageWidth,
                     pageHeight: pageHeight,
                     isLeftPage: isLeftPage,
+                    isLandscape: isLandscape,
                     mushafTheme: mushafTheme,
                   ),
             ],
@@ -297,27 +334,33 @@ class _WebFrameInfoBox extends StatelessWidget {
   final MushafTheme theme;
   final EdgeInsetsGeometry? margin;
   final EdgeInsetsGeometry? padding;
+  final bool isLandscape;
 
   const _WebFrameInfoBox({
     required this.child,
     required this.theme,
     this.margin,
     this.padding,
+    this.isLandscape = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: margin ?? (const EdgeInsets.symmetric(horizontal: 6)),
-      padding:
-          padding ?? (const EdgeInsets.symmetric(horizontal: 4, vertical: 4)),
+      margin: margin ??
+          EdgeInsets.symmetric(horizontal: (isLandscape ? 1.0 : 3.0).w),
+      padding: padding ??
+          EdgeInsets.symmetric(
+            horizontal: (isLandscape ? 4.0 : 5.0).w,
+            vertical: (isLandscape ? 2.0 : 2.5).h,
+          ),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         border: Border.all(
-          color: theme.goldColor.withValues(alpha: 0.6),
-          width: 1.0,
+          color: theme.goldColor.withValues(alpha: 0.65),
+          width: (isLandscape ? 1.1 : 1.0).r,
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular((isLandscape ? 9.0 : 10.0).r),
         color: theme.backgroundColor,
       ),
       child: child,
@@ -330,6 +373,7 @@ class _WebHizbMarker extends StatelessWidget {
   final double pageWidth;
   final double pageHeight;
   final bool isLeftPage;
+  final bool isLandscape;
   final MushafTheme mushafTheme;
 
   const _WebHizbMarker({
@@ -337,6 +381,7 @@ class _WebHizbMarker extends StatelessWidget {
     required this.pageWidth,
     required this.pageHeight,
     required this.isLeftPage,
+    this.isLandscape = false,
     required this.mushafTheme,
   });
 
@@ -347,9 +392,9 @@ class _WebHizbMarker extends StatelessWidget {
         marker['line'] as int,
         pageHeight,
       ),
-      left: isLeftPage ? (pageWidth * 0.057) : null,
-      right: !isLeftPage ? (pageWidth * 0.043) : null,
-      width: pageWidth * 0.12,
+      left: isLeftPage ? (pageWidth * (isLandscape ? 0.058 : 0.056)) : null,
+      right: !isLeftPage ? (pageWidth * (isLandscape ? 0.042 : 0.044)) : null,
+      width: isLandscape ? 80.0.w : (pageWidth * 0.085),
       child: FractionalTranslation(
         translation: Offset(isLeftPage ? -0.5 : 0.5, -0.5),
         child: Stack(
@@ -357,13 +402,13 @@ class _WebHizbMarker extends StatelessWidget {
           children: [
             // Ornament glyph from QCF_BSML
             Transform.scale(
-              scaleX: 0.55,
+              scaleX: isLandscape ? 0.55 : 0.58,
               scaleY: 1.0,
               child: Text(
                 '\u00F5',
                 style: TextStyle(
                   fontFamily: 'QCF_BSML',
-                  fontSize: 65,
+                  fontSize: (isLandscape ? 94.0 : 88.0).sp,
                   color: mushafTheme.goldColor,
                   height: 1.0,
                 ),
@@ -371,17 +416,19 @@ class _WebHizbMarker extends StatelessWidget {
             ),
             // Label text centred inside the ornament
             Transform.translate(
-              offset: const Offset(-3.2, 12),
+              offset: isLandscape
+                  ? Offset(-6.2.w, 17.0.h)
+                  : Offset(-4.0.w, 12.0.h),
               child: SizedBox(
-                width: pageWidth * 0.06,
+                width: isLandscape ? 40.0.w : (pageWidth * 0.060),
                 child: Text.rich(
                   TextSpan(
                     children: _buildHizbLabelTextSpans(
                       (marker['text'] as String).toArabicDigits,
                       TextStyle(
                         fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
-                        fontSize: 6,
-                        height: 1.2,
+                        fontSize: (isLandscape ? 9.5 : 8.0).sp,
+                        height: 1.18,
                         color: mushafTheme.textColor,
                         fontWeight: FontWeight.bold,
                       ),

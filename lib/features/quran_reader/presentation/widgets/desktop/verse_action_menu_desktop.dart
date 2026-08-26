@@ -22,9 +22,9 @@ import '../../../bloc/audio/audio_event.dart';
 import '../../../bloc/hifz/hifz_bloc.dart';
 import '../../../bloc/hifz/hifz_event.dart';
 import '../../../bloc/hifz/hifz_state.dart';
-import '../tablet/verse_card_generator_sheet_tablet.dart';
+import 'verse_card_generator_sheet_desktop.dart';
 import '../tafsir_selector_menu.dart';
-import '../tablet/word_meanings_sheet_tablet.dart';
+import 'word_meanings_sheet_desktop.dart';
 import '../overlay_position_delegate.dart';
 
 class VerseActionMenuDesktop extends StatefulWidget {
@@ -188,13 +188,17 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
     VoidCallback onRetry,
   ) {
     final quranBloc = context.read<QuranBloc>();
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.background, // Soft cream background
-      constraints: null,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      constraints: BoxConstraints(maxWidth: isLandscape ? 520.0.w : 620.0.w),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular((isLandscape ? 18.0 : 24.0).r),
+        ),
       ),
       isScrollControlled: true, // Allow it to expand nicely
       builder: (bottomSheetContext) {
@@ -208,11 +212,19 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                 textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
                 child: Container(
                   constraints: BoxConstraints(
-                    maxHeight:
-                        MediaQuery.sizeOf(context).height *
-                        0.7, // Max 70% of screen
+                    maxHeight: isLandscape
+                        ? 480.0.h
+                        : MediaQuery.sizeOf(context).height * 0.7,
                   ),
-                  padding: EdgeInsets.fromLTRB(20.0, 12.0, 20.0, math.max(20.0, MediaQuery.paddingOf(context).bottom)),
+                    padding: EdgeInsets.fromLTRB(
+                      (isLandscape ? 16.0 : 24.0).w,
+                      (isLandscape ? 10.0 : 14.0).h,
+                      (isLandscape ? 16.0 : 24.0).w,
+                      math.max(
+                        (isLandscape ? 16.0 : 20.0).h,
+                        MediaQuery.paddingOf(context).bottom,
+                      ),
+                    ),
                 child: BlocConsumer<QuranBloc, QuranState>(
                   listener: (context, state) {
                     if (state is TafsirDownloaded) {
@@ -247,12 +259,16 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                         // Gold Drag Handle
                         Center(
                           child: Container(
-                            width: 48.w,
-                            height: 4.h,
-                            margin: EdgeInsets.only(bottom: 16.h),
+                            width: (isLandscape ? 40.0 : 56.0).w,
+                            height: (isLandscape ? 3.5 : 4.5).h,
+                            margin: EdgeInsets.only(
+                              bottom: (isLandscape ? 10.0 : 16.0).h,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.accentGold,
-                              borderRadius: BorderRadius.circular(2.r),
+                              borderRadius: BorderRadius.circular(
+                                (isLandscape ? 2.0 : 3.0).r,
+                              ),
                             ),
                           ),
                         ),
@@ -272,6 +288,7 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                 child: Text(
                                   AppLocalizations.of(context)!.menuTafsir,
                                   style: AppTextStyles.headerText.copyWith(
+                                    fontSize: (isLandscape ? 17.0 : 22.0).sp,
                                     color: AppColors.accentGold,
                                   ),
                                 ),
@@ -334,31 +351,23 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                         );
                                       },
                                       openUpwards: true,
-                                      menuWidth:
-                                          Localizations.localeOf(
-                                                context,
-                                              ).languageCode ==
-                                              'en'
-                                          ? 180
-                                          : 145,
-                                      itemHeight: 38,
-                                      itemFontSize: 14,
+                                      menuWidth: isLandscape
+                                          ? (Localizations.localeOf(context).languageCode == 'en' ? 160.0.w : 120.0.w)
+                                          : (Localizations.localeOf(context).languageCode == 'en' ? 210.w : 160.w),
+                                      itemHeight: (isLandscape ? 32.0 : 42.0).h,
+                                      itemFontSize: (isLandscape ? 12.5 : 15.5).sp,
                                       trigger: Container(
-                                        height: 40,
-                                        width:
-                                            Localizations.localeOf(
-                                                  context,
-                                                ).languageCode ==
-                                                'en'
-                                            ? 130
-                                            : 100,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
+                                        height: (isLandscape ? 32.0 : 42.0).h,
+                                        width: isLandscape
+                                            ? (Localizations.localeOf(context).languageCode == 'en' ? 120.0.w : 90.0.w)
+                                            : (Localizations.localeOf(context).languageCode == 'en' ? 145.w : 115.w),
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: (isLandscape ? 8.0 : 10.0).w,
                                         ),
                                         decoration: BoxDecoration(
                                           color: AppColors.background,
                                           borderRadius: BorderRadius.circular(
-                                            16,
+                                            (isLandscape ? 10.0 : 16.0).r,
                                           ),
                                           border: Border.all(
                                             color: AppColors.accentGold
@@ -369,28 +378,24 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Icon(
-                                              Icons.keyboard_arrow_down_rounded,
-                                              color: AppColors.accentGold,
-                                              size: 20,
-                                            ),
                                             Expanded(
                                               child: Text(
                                                 _getTafsirName(
                                                   context,
                                                   displayResourceId,
                                                 ),
-                                                textAlign: TextAlign.center,
-                                                style: AppTextStyles
-                                                    .menuItemText
-                                                    .copyWith(
-                                                      fontSize: 12,
-                                                      color:
-                                                          AppColors.accentGold,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
+                                                style: TextStyle(
+                                                  fontSize: (isLandscape ? 12.0 : 14.0).sp,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.accentGold,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
                                               ),
+                                            ),
+                                            Icon(
+                                              Icons.arrow_drop_up_rounded,
+                                              color: AppColors.accentGold,
+                                              size: (isLandscape ? 18.0 : 24.0).sp,
                                             ),
                                           ],
                                         ),
@@ -619,15 +624,18 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                       crossAxisAlignment:
                                           CrossAxisAlignment.stretch,
                                       children: [
-                                        if (currentState.tafsir.groupVerseRange !=
+                                        if (currentState
+                                                .tafsir
+                                                .groupVerseRange !=
                                             null) ...[
                                           Align(
-                                            alignment: Localizations.localeOf(
-                                                      context,
-                                                    ).languageCode ==
-                                                    'ar'
-                                                ? Alignment.centerRight
-                                                : Alignment.centerLeft,
+                                            alignment:
+                                                Localizations.localeOf(
+                                                          context,
+                                                        ).languageCode ==
+                                                        'ar'
+                                                    ? Alignment.centerRight
+                                                    : Alignment.centerLeft,
                                             child: Container(
                                               margin: EdgeInsets.only(
                                                 bottom: 12.h,
@@ -641,8 +649,8 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                                     .withValues(alpha: 0.12),
                                                 borderRadius:
                                                     BorderRadius.circular(
-                                                  20.r,
-                                                ),
+                                                      20.r,
+                                                    ),
                                                 border: Border.all(
                                                   color: AppColors.accentGold
                                                       .withValues(alpha: 0.3),
@@ -660,7 +668,8 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                                         : Icons
                                                             .collections_bookmark_rounded,
                                                     size: 14.r,
-                                                    color: AppColors.accentGold,
+                                                    color:
+                                                        AppColors.accentGold,
                                                   ),
                                                   SizedBox(width: 6.w),
                                                   Text(
@@ -680,7 +689,7 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                                             ? 'تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(currentState.tafsir.groupVerseRange!)})'
                                                             : 'Tafsir of Verses (${currentState.tafsir.groupVerseRange})'),
                                                     style: TextStyle(
-                                                      fontSize: 12.sp,
+                                                      fontSize: 14.5.sp,
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       color:
@@ -696,9 +705,9 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                           text: _stripHtml(
                                             currentState.tafsir.text,
                                           ),
-                                          style: AppTextStyles.menuItemText
-                                              .copyWith(
-                                            height: 1.8.h,
+                                          style: TextStyle(
+                                            fontSize: (isLandscape ? 15.0 : 19.5).sp,
+                                            height: isLandscape ? 1.6 : 1.85.h,
                                             color: AppColors.textPrimary,
                                           ),
                                         ),
@@ -722,11 +731,11 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                     width: MediaQuery.sizeOf(context).width,
                                     child: MixedDirectionText(
                                       text: strippedText,
-                                      style: AppTextStyles.menuItemText
-                                          .copyWith(
-                                            height: 1.8.h,
-                                            color: AppColors.textPrimary,
-                                          ),
+                                      style: TextStyle(
+                                        fontSize: (isLandscape ? 15.0 : 19.5).sp,
+                                        height: isLandscape ? 1.6 : 1.85.h,
+                                        color: AppColors.textPrimary,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -785,7 +794,11 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final menuSize = Size(240.w, 280.h);
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+    final menuWidth = isLandscape ? 190.0.w : 250.w;
+    final menuHeight = isLandscape ? 260.0.h : 330.h;
+    final menuSize = Size(menuWidth, menuHeight);
 
     return Stack(
       children: [
@@ -810,23 +823,23 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
               scale: _scaleAnimation,
               alignment: Alignment.topRight,
               child: Material(
-              borderRadius: BorderRadius.circular(16.r),
+              borderRadius: BorderRadius.circular((isLandscape ? 12.0 : 16.0).r),
               color: Colors.transparent,
               child: Container(
-                width: 250.w,
+                width: menuWidth,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceCream,
-                  borderRadius: BorderRadius.circular(16.r),
+                  borderRadius: BorderRadius.circular((isLandscape ? 12.0 : 16.0).r),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.textPrimary.withValues(alpha: 0.15),
-                      blurRadius: 20,
-                      offset: Offset(0, 8.h),
+                      blurRadius: (isLandscape ? 14.0 : 20.0).r,
+                      offset: Offset(0, (isLandscape ? 4.0 : 8.0).h),
                     ),
                   ],
                   border: Border.all(
                     color: AppColors.verseMarkerGold,
-                    width: 1.5.w,
+                    width: (isLandscape ? 1.0 : 1.5).w,
                   ),
                 ),
                 child: Directionality(
@@ -879,7 +892,7 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                           l10n.menuWordMeanings,
                           () {
                             _close(keepHighlight: true);
-                            WordMeaningsSheetTablet.show(
+                            WordMeaningsSheetDesktop.show(
                               context,
                               verse: widget.verse,
                             ).then((_) {
@@ -979,7 +992,7 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                           } else if (qState is TranslationLoaded) {
                             translationText = qState.translation.text;
                           }
-                          showVerseCardGeneratorModalTablet(
+                          showVerseCardGeneratorModalDesktop(
                             context,
                             verse: widget.verse,
                             tafsirText: tafsirText,
@@ -992,7 +1005,7 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                         },
                       ),
                       Divider(
-                        height: 1,
+                        height: 1.h,
                         thickness: 1,
                         color: AppColors.divider,
                       ),
@@ -1044,19 +1057,30 @@ class _VerseActionMenuItemDesktop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(
+          horizontal: (isLandscape ? 14.0 : 18.0).w,
+          vertical: (isLandscape ? 8.0 : 12.0).h,
+        ),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? AppColors.bronzeIcon, size: 22),
-            const SizedBox(width: 12),
+            Icon(
+              icon,
+              color: iconColor ?? AppColors.bronzeIcon,
+              size: (isLandscape ? 20.0 : 24.0).sp,
+            ),
+            SizedBox(width: (isLandscape ? 10.0 : 14.0).w),
             Expanded(
               child: Text(
                 text,
-                style: AppTextStyles.menuItemText.copyWith(
+                style: TextStyle(
+                  fontSize: (isLandscape ? 14.5 : 16.5).sp,
                   color: AppColors.inkBrown,
                   fontWeight: FontWeight.w600,
                 ),
