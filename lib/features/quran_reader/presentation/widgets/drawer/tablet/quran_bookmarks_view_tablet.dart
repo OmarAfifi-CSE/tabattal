@@ -47,6 +47,37 @@ class QuranBookmarksViewTablet extends StatelessWidget {
             return const _EmptyBookmarksViewTablet();
           }
 
+          final isLandscape =
+              MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+
+          if (isLandscape) {
+            return GridView.builder(
+              padding: EdgeInsets.all(16.r),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 2.2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 16,
+              ),
+              itemCount: state.bookmarkedVerseKeys.length,
+              itemBuilder: (context, index) {
+                final verseKey = state.bookmarkedVerseKeys[index];
+                final verseRef = VerseRef.fromKey(verseKey);
+
+                return _BookmarkCard(
+                  verseKey: verseKey,
+                  surahName: QuranMetadata.getSurahName(verseRef.surah),
+                  surahNum: verseRef.surah,
+                  ayahNum: verseRef.ayah,
+                  onNavigate: (page) => Navigator.pop(context, {
+                    'page': page,
+                    'verseKey': verseKey,
+                  }),
+                );
+              },
+            );
+          }
+
           return ListView.separated(
             padding: EdgeInsets.all(16.r),
             itemCount: state.bookmarkedVerseKeys.length,

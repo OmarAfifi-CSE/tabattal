@@ -24,7 +24,7 @@ import '../../../bloc/hifz/hifz_event.dart';
 import '../../../bloc/hifz/hifz_state.dart';
 import 'verse_card_generator_sheet_tablet.dart';
 import '../tafsir_selector_menu.dart';
-import '../word_meanings_sheet.dart';
+import 'word_meanings_sheet_tablet.dart';
 import '../overlay_position_delegate.dart';
 
 class VerseActionMenuTablet extends StatefulWidget {
@@ -188,13 +188,17 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
     VoidCallback onRetry,
   ) {
     final quranBloc = context.read<QuranBloc>();
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.background, // Soft cream background
-      constraints: const BoxConstraints(maxWidth: 620),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      constraints: BoxConstraints(maxWidth: isLandscape ? 520.0 : 620.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(isLandscape ? 18.0 : 24.0),
+        ),
       ),
       isScrollControlled: true, // Allow it to expand nicely
       builder: (bottomSheetContext) {
@@ -208,15 +212,17 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                 textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
                 child: Container(
                   constraints: BoxConstraints(
-                    maxHeight:
-                        MediaQuery.sizeOf(context).height *
-                        0.7, // Max 70% of screen
+                    maxHeight: isLandscape
+                        ? 480.0
+                        : MediaQuery.sizeOf(context).height * 0.7,
                   ),
                   padding: EdgeInsets.fromLTRB(
-                    24.w,
-                    14.h,
-                    24.w,
-                    math.max(24.h, MediaQuery.paddingOf(context).bottom),
+                    isLandscape ? 16.0 : 24.w,
+                    isLandscape ? 10.0 : 14.h,
+                    isLandscape ? 16.0 : 24.w,
+                    isLandscape
+                        ? 16.0
+                        : math.max(24.h, MediaQuery.paddingOf(context).bottom),
                   ),
                 child: BlocConsumer<QuranBloc, QuranState>(
                   listener: (context, state) {
@@ -252,12 +258,16 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                         // Gold Drag Handle
                         Center(
                           child: Container(
-                            width: 56.w,
-                            height: 4.5.h,
-                            margin: EdgeInsets.only(bottom: 16.h),
+                            width: isLandscape ? 40.0 : 56.w,
+                            height: isLandscape ? 3.5 : 4.5.h,
+                            margin: EdgeInsets.only(
+                              bottom: isLandscape ? 10.0 : 16.h,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.accentGold,
-                              borderRadius: BorderRadius.circular(3.r),
+                              borderRadius: BorderRadius.circular(
+                                isLandscape ? 2.0 : 3.r,
+                              ),
                             ),
                           ),
                         ),
@@ -277,7 +287,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                 child: Text(
                                   AppLocalizations.of(context)!.menuTafsir,
                                   style: AppTextStyles.headerText.copyWith(
-                                    fontSize: 22.sp,
+                                    fontSize: isLandscape ? 17.0 : 22.sp,
                                     color: AppColors.accentGold,
                                   ),
                                 ),
@@ -340,31 +350,23 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                         );
                                       },
                                       openUpwards: true,
-                                      menuWidth:
-                                          Localizations.localeOf(
-                                                context,
-                                              ).languageCode ==
-                                              'en'
-                                          ? 210.w
-                                          : 160.w,
-                                      itemHeight: 42.h,
-                                      itemFontSize: 15.5.sp,
+                                      menuWidth: isLandscape
+                                          ? (Localizations.localeOf(context).languageCode == 'en' ? 160.0 : 120.0)
+                                          : (Localizations.localeOf(context).languageCode == 'en' ? 210.w : 160.w),
+                                      itemHeight: isLandscape ? 32.0 : 42.h,
+                                      itemFontSize: isLandscape ? 12.5 : 15.5.sp,
                                       trigger: Container(
-                                        height: 42.h,
-                                        width:
-                                            Localizations.localeOf(
-                                                  context,
-                                                ).languageCode ==
-                                                'en'
-                                            ? 145.w
-                                            : 115.w,
+                                        height: isLandscape ? 32.0 : 42.h,
+                                        width: isLandscape
+                                            ? (Localizations.localeOf(context).languageCode == 'en' ? 120.0 : 90.0)
+                                            : (Localizations.localeOf(context).languageCode == 'en' ? 145.w : 115.w),
                                         padding: EdgeInsets.symmetric(
-                                          horizontal: 10.w,
+                                          horizontal: isLandscape ? 8.0 : 10.w,
                                         ),
                                         decoration: BoxDecoration(
                                           color: AppColors.background,
                                           borderRadius: BorderRadius.circular(
-                                            16.r,
+                                            isLandscape ? 10.0 : 16.r,
                                           ),
                                           border: Border.all(
                                             color: AppColors.accentGold
@@ -382,7 +384,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                                   displayResourceId,
                                                 ),
                                                 style: TextStyle(
-                                                  fontSize: 14.sp,
+                                                  fontSize: isLandscape ? 12.0 : 14.sp,
                                                   fontWeight: FontWeight.bold,
                                                   color: AppColors.accentGold,
                                                 ),
@@ -392,7 +394,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                             Icon(
                                               Icons.arrow_drop_up_rounded,
                                               color: AppColors.accentGold,
-                                              size: 24.sp,
+                                              size: isLandscape ? 18.0 : 24.sp,
                                             ),
                                           ],
                                         ),
@@ -703,8 +705,10 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                             currentState.tafsir.text,
                                           ),
                                           style: TextStyle(
-                                            fontSize: 19.5.sp,
-                                            height: 1.85.h,
+                                            fontSize: isLandscape
+                                                ? 15.0
+                                                : 19.5.sp,
+                                            height: isLandscape ? 1.6 : 1.85.h,
                                             color: AppColors.textPrimary,
                                           ),
                                         ),
@@ -729,8 +733,10 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                     child: MixedDirectionText(
                                       text: strippedText,
                                       style: TextStyle(
-                                        fontSize: 19.5.sp,
-                                        height: 1.85.h,
+                                        fontSize: isLandscape
+                                            ? 15.0
+                                            : 19.5.sp,
+                                        height: isLandscape ? 1.6 : 1.85.h,
                                         color: AppColors.textPrimary,
                                       ),
                                     ),
@@ -791,7 +797,11 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final menuSize = Size(310.w, 360.h);
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+    final menuWidth = isLandscape ? 190.0 : 250.w;
+    final menuHeight = isLandscape ? 260.0 : 330.h;
+    final menuSize = Size(menuWidth, menuHeight);
 
     return Stack(
       children: [
@@ -816,23 +826,23 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
               scale: _scaleAnimation,
               alignment: Alignment.topRight,
               child: Material(
-              borderRadius: BorderRadius.circular(16.r),
+              borderRadius: BorderRadius.circular(isLandscape ? 12.0 : 16.r),
               color: Colors.transparent,
               child: Container(
-                width: 310.w,
+                width: menuWidth,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceCream,
-                  borderRadius: BorderRadius.circular(16.r),
+                  borderRadius: BorderRadius.circular(isLandscape ? 12.0 : 16.r),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.textPrimary.withValues(alpha: 0.15),
-                      blurRadius: 20,
-                      offset: Offset(0, 8.h),
+                      blurRadius: isLandscape ? 14 : 20,
+                      offset: Offset(0, isLandscape ? 4.0 : 8.h),
                     ),
                   ],
                   border: Border.all(
                     color: AppColors.verseMarkerGold,
-                    width: 1.5.w,
+                    width: isLandscape ? 1.0 : 1.5.w,
                   ),
                 ),
                 child: Directionality(
@@ -885,7 +895,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                           l10n.menuWordMeanings,
                           () {
                             _close(keepHighlight: true);
-                            WordMeaningsSheet.show(
+                            WordMeaningsSheetTablet.show(
                               context,
                               verse: widget.verse,
                             ).then((_) {
@@ -1050,20 +1060,30 @@ class _VerseActionMenuItemTablet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 14.h),
+        padding: EdgeInsets.symmetric(
+          horizontal: isLandscape ? 12.0 : 16.w,
+          vertical: isLandscape ? 7.0 : 10.h,
+        ),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? AppColors.bronzeIcon, size: 26.sp),
-            SizedBox(width: 14.w),
+            Icon(
+              icon,
+              color: iconColor ?? AppColors.bronzeIcon,
+              size: isLandscape ? 18.0 : 22.sp,
+            ),
+            SizedBox(width: isLandscape ? 8.0 : 12.w),
             Expanded(
               child: Text(
                 text,
                 style: TextStyle(
-                  fontSize: 18.sp,
+                  fontSize: isLandscape ? 13.5 : 15.5.sp,
                   color: AppColors.inkBrown,
                   fontWeight: FontWeight.w600,
                 ),

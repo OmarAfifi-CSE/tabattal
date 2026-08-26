@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 
@@ -15,6 +16,7 @@ class QuranBorderPainterTablet extends CustomPainter {
   final Color goldColor;
   final Color innerColor;
   final Color backgroundColor;
+  final bool isLandscape;
 
   const QuranBorderPainterTablet({
     required this.pageNumber,
@@ -22,6 +24,7 @@ class QuranBorderPainterTablet extends CustomPainter {
     required this.goldColor,
     required this.innerColor,
     required this.backgroundColor,
+    this.isLandscape = false,
   });
 
   static final Paint _bgPaint = Paint();
@@ -48,8 +51,9 @@ class QuranBorderPainterTablet extends CustomPainter {
     _drawBackground(canvas, size);
 
     final String cacheKey =
-        '${W.toStringAsFixed(1)}_${H.toStringAsFixed(1)}_${isLeftPage}_${hizbCutCenters.join(',')}';
-    _BorderPathDataTablet? data = _borderCacheTablet[cacheKey];
+        '${W.toStringAsFixed(1)}_${H.toStringAsFixed(1)}_${isLeftPage}_${isLandscape}_${hizbCutCenters.map((c) => c.toStringAsFixed(1)).join(',')}';
+    _BorderPathDataTablet? data =
+        kDebugMode ? null : _borderCacheTablet[cacheKey];
 
     if (data == null) {
       // 2. Constants for positioning
@@ -58,6 +62,9 @@ class QuranBorderPainterTablet extends CustomPainter {
       final double top = H * 0.02;
       final double bottom = H * 0.97;
 
+      final double cutTop = isLandscape ? 70.0 : 95.0;
+      final double cutBottom = isLandscape ? 95.0 : 125.0;
+
       // 3. Build the exact continuous wireframe of the border with cuts
       final Path framePath = Path();
 
@@ -65,13 +72,13 @@ class QuranBorderPainterTablet extends CustomPainter {
       framePath.moveTo(W * 0.08, top); // Juz Left Cut
       framePath.lineTo(left, top); // Top Left Corner
 
-      // Left Edge
+      // Left Edge Hizb Cuts (Even Pages)
       if (isLeftPage && hizbCutCenters.isNotEmpty) {
         final sortedCenters = List<double>.from(hizbCutCenters)
           ..sort((a, b) => a.compareTo(b));
         for (final cy in sortedCenters) {
-          framePath.lineTo(left, cy - H * 0.083);
-          framePath.moveTo(left, cy + H * 0.112);
+          framePath.lineTo(left, cy - cutTop);
+          framePath.moveTo(left, cy + cutBottom);
         }
       }
 
@@ -82,13 +89,13 @@ class QuranBorderPainterTablet extends CustomPainter {
       framePath.moveTo(W * 0.58, bottom); // Page Number Right Cut
       framePath.lineTo(right, bottom); // Bottom Right Corner
 
-      // Right Edge
+      // Right Edge Hizb Cuts (Odd Pages)
       if (!isLeftPage && hizbCutCenters.isNotEmpty) {
         final sortedCenters = List<double>.from(hizbCutCenters)
           ..sort((a, b) => b.compareTo(a));
         for (final cy in sortedCenters) {
-          framePath.lineTo(right, cy + H * 0.112);
-          framePath.moveTo(right, cy - H * 0.083);
+          framePath.lineTo(right, cy + cutBottom);
+          framePath.moveTo(right, cy - cutTop);
         }
       }
 
@@ -149,6 +156,7 @@ class QuranBorderPainterTablet extends CustomPainter {
   @override
   bool shouldRepaint(covariant QuranBorderPainterTablet oldDelegate) {
     if (oldDelegate.pageNumber != pageNumber ||
+        oldDelegate.isLandscape != isLandscape ||
         oldDelegate.backgroundColor != backgroundColor ||
         oldDelegate.goldColor != goldColor ||
         oldDelegate.innerColor != innerColor ||

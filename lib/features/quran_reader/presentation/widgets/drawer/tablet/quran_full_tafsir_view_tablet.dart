@@ -14,7 +14,7 @@ import '../../../../bloc/audio/audio_bloc.dart';
 import '../../../../bloc/audio/audio_event.dart';
 import '../../../../bloc/audio/audio_state.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
-import '../../audio_settings_sheet.dart';
+import '../../tablet/audio_settings_sheet_tablet.dart';
 import '../../tafsir_selector_menu.dart';
 import '../../../../domain/entities/download_state.dart';
 import '../../../../../../core/error/failures.dart';
@@ -446,6 +446,12 @@ class _QuranFullTafsirViewTabletState extends State<QuranFullTafsirViewTablet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+    final horizontalPadding = isLandscape
+        ? ((MediaQuery.sizeOf(context).width - 920) / 2).clamp(24.0, 400.0)
+        : 18.w;
+
     return BlocListener<AudioBloc, AudioState>(
       listenWhen: (prev, curr) {
         if (curr is! AudioPlaying) return false;
@@ -666,7 +672,10 @@ class _QuranFullTafsirViewTabletState extends State<QuranFullTafsirViewTablet> {
                         itemPositionsListener: _itemPositionsListener,
                         initialScrollIndex: _initialScrollIndex,
                         initialAlignment: 0.01,
-                        padding: EdgeInsets.all(18.r),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                          vertical: 18.h,
+                        ),
                         itemCount: _tafsirList.length + 1,
                         separatorBuilder: (context, index) =>
                             SizedBox(height: 20.h),
@@ -808,7 +817,7 @@ class _QuranFullTafsirViewTabletState extends State<QuranFullTafsirViewTablet> {
                                                   const ResumeAudio(),
                                                 );
                                               } else {
-                                                showAudioSettingsSheet(
+                                                showAudioSettingsSheetTablet(
                                                   context,
                                                   verseId: item.verseId,
                                                 );
@@ -935,11 +944,11 @@ class _QuranFullTafsirViewTabletState extends State<QuranFullTafsirViewTablet> {
                           );
                         },
                       ),
+                    ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
+        );
   }
 }

@@ -87,6 +87,27 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+
+    if (isLandscape) {
+      return AnimatedCrossFade(
+        duration: const Duration(milliseconds: 250),
+        crossFadeState: widget.isExpanded
+            ? CrossFadeState.showFirst
+            : CrossFadeState.showSecond,
+        firstChild: _TabletLandscapeHorizonBar(
+          onToggleExpanded: widget.onToggleExpanded,
+          sleepTimerMinutes: _sleepTimerMinutes,
+          timerEndTime: _timerEndTime,
+          onSleepTimerSelected: _handleSleepTimerSelection,
+        ),
+        secondChild: _TabletLandscapeWhisperingPill(
+          onToggleExpanded: widget.onToggleExpanded,
+        ),
+      );
+    }
+
     return AnimatedCrossFade(
       duration: const Duration(milliseconds: 300),
       crossFadeState: widget.isExpanded
@@ -102,6 +123,375 @@ class _MediaControlBarTabletState extends State<MediaControlBarTablet> {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LANDSCAPE: The 1-Row Luxury Horizon Bar (44dp Height)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _TabletLandscapeHorizonBar extends StatelessWidget {
+  final VoidCallback onToggleExpanded;
+  final int? sleepTimerMinutes;
+  final DateTime? timerEndTime;
+  final ValueChanged<int> onSleepTimerSelected;
+
+  const _TabletLandscapeHorizonBar({
+    required this.onToggleExpanded,
+    required this.sleepTimerMinutes,
+    required this.timerEndTime,
+    required this.onSleepTimerSelected,
+  });
+
+  static String _formatRemainingTime(Duration duration) {
+    if (duration.isNegative) return '00:00';
+    final m = duration.inMinutes.toString().padLeft(2, '0');
+    final s = (duration.inSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.cardCream.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: AppColors.accentGold.withValues(alpha: 0.45),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.10),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // ── Right/Start: Reciter Capsule ──
+          GestureDetector(
+            onTap: () => showAudioSettingsSheetTablet(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceCream.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.bronzeIcon.withValues(alpha: 0.3),
+                  width: 0.8,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.multitrack_audio_rounded,
+                    color: AppColors.bronzeDark,
+                    size: 15,
+                  ),
+                  const SizedBox(width: 4),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 120),
+                    child: BlocBuilder<AudioBloc, AudioState>(
+                      builder: (context, state) {
+                        final audioBloc = context.read<AudioBloc>();
+                        final reciterName = ReciterLocalization.localize(
+                          context,
+                          audioBloc.currentReciter,
+                        );
+                        return Text(
+                          reciterName,
+                          style: AppTextStyles.menuItemText.copyWith(
+                            color: AppColors.inkBrown,
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          textDirection:
+                              isEn ? TextDirection.ltr : TextDirection.rtl,
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: AppColors.bronzeIcon,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 6),
+          Container(
+            width: 1,
+            height: 16,
+            color: AppColors.bronzeIcon.withValues(alpha: 0.25),
+          ),
+          const SizedBox(width: 6),
+
+          // ── Center: Playback Engine (LTR) ──
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                  icon: Icon(
+                    Icons.fast_rewind_rounded,
+                    color: AppColors.inkBrown,
+                    size: 17,
+                  ),
+                  onPressed: () =>
+                      context.read<AudioBloc>().add(const PreviousSurah()),
+                ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                  icon: Icon(
+                    Icons.skip_previous_rounded,
+                    color: AppColors.inkBrown,
+                    size: 19,
+                  ),
+                  onPressed: () =>
+                      context.read<AudioBloc>().add(const PreviousAyah()),
+                ),
+                const SizedBox(width: 2),
+                BlocBuilder<AudioBloc, AudioState>(
+                  builder: (context, state) {
+                    final isPlaying = state is AudioPlaying;
+                    final isLoading = state is AudioLoading;
+                    return _TabletPlayPauseButton(
+                      isPlaying: isPlaying,
+                      isLoading: isLoading,
+                      size: 32,
+                      iconSize: 18,
+                    );
+                  },
+                ),
+                const SizedBox(width: 2),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                  icon: Icon(
+                    Icons.skip_next_rounded,
+                    color: AppColors.inkBrown,
+                    size: 19,
+                  ),
+                  onPressed: () =>
+                      context.read<AudioBloc>().add(const NextAyah()),
+                ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                  icon: Icon(
+                    Icons.fast_forward_rounded,
+                    color: AppColors.inkBrown,
+                    size: 17,
+                  ),
+                  onPressed: () =>
+                      context.read<AudioBloc>().add(const NextSurah()),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 6),
+          Container(
+            width: 1,
+            height: 16,
+            color: AppColors.bronzeIcon.withValues(alpha: 0.25),
+          ),
+          const SizedBox(width: 6),
+
+          // ── Left/End: Timer, Minimize, Close ──
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SleepTimerSelectorMenu(
+                selectedMinutes: sleepTimerMinutes,
+                onSelected: onSleepTimerSelected,
+                itemHeight: 32,
+                maxHeight: 160,
+                itemFontSize: 11.5,
+                menuWidth: 120,
+                trigger: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.timer_outlined,
+                        color: sleepTimerMinutes != null
+                            ? AppColors.bronzeDark
+                            : AppColors.inkBrown,
+                        size: 15,
+                      ),
+                      if (timerEndTime != null) ...[
+                        const SizedBox(width: 2),
+                        Text(
+                          _formatRemainingTime(
+                            timerEndTime!.difference(DateTime.now()),
+                          ),
+                          style: TextStyle(
+                            fontSize: 8.5,
+                            color: AppColors.bronzeDark,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                icon: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.inkBrown,
+                  size: 18,
+                ),
+                onPressed: onToggleExpanded,
+              ),
+              const SizedBox(width: 2),
+              GestureDetector(
+                onTap: () => context.read<AudioBloc>().add(const StopAudio()),
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: AppColors.textPrimary.withValues(alpha: 0.06),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.close,
+                    color: AppColors.inkBrown,
+                    size: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LANDSCAPE: The Whispering Pill (32dp Height)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _TabletLandscapeWhisperingPill extends StatelessWidget {
+  final VoidCallback onToggleExpanded;
+
+  const _TabletLandscapeWhisperingPill({required this.onToggleExpanded});
+
+  @override
+  Widget build(BuildContext context) {
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+
+    return GestureDetector(
+      onTap: onToggleExpanded,
+      child: Container(
+        height: 32,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+        decoration: BoxDecoration(
+          color: AppColors.cardCream.withValues(alpha: 0.96),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.accentGold.withValues(alpha: 0.45),
+            width: 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            BlocBuilder<AudioBloc, AudioState>(
+              builder: (context, state) {
+                final isPlaying = state is AudioPlaying;
+                final isLoading = state is AudioLoading;
+                return _TabletPlayPauseButton(
+                  isPlaying: isPlaying,
+                  isLoading: isLoading,
+                  size: 22,
+                  iconSize: 13,
+                );
+              },
+            ),
+            const SizedBox(width: 6),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 110),
+              child: BlocBuilder<AudioBloc, AudioState>(
+                builder: (context, state) {
+                  final audioBloc = context.read<AudioBloc>();
+                  final reciterName = ReciterLocalization.localize(
+                    context,
+                    audioBloc.currentReciter,
+                  );
+                  return Text(
+                    reciterName,
+                    style: AppTextStyles.menuItemText.copyWith(
+                      color: AppColors.inkBrown,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    textDirection:
+                        isEn ? TextDirection.ltr : TextDirection.rtl,
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.keyboard_arrow_up_rounded,
+              color: AppColors.inkBrown,
+              size: 16,
+            ),
+            const SizedBox(width: 4),
+            GestureDetector(
+              onTap: () => context.read<AudioBloc>().add(const StopAudio()),
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: AppColors.textPrimary.withValues(alpha: 0.06),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.close,
+                  color: AppColors.inkBrown,
+                  size: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTRAIT: Expanded Player
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _TabletExpandedPlayer extends StatelessWidget {
   final VoidCallback onToggleExpanded;
@@ -119,7 +509,7 @@ class _TabletExpandedPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: AppColors.cardCream,
         borderRadius: BorderRadius.circular(18.r),
@@ -129,15 +519,14 @@ class _TabletExpandedPlayer extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+                constraints: BoxConstraints(minWidth: 32.w, minHeight: 32.h),
                 icon: Icon(
                   Icons.keyboard_arrow_down_rounded,
                   color: AppColors.inkBrown,
-                  size: 24.sp,
+                  size: 22.sp,
                 ),
                 onPressed: onToggleExpanded,
               ),
@@ -149,12 +538,17 @@ class _TabletExpandedPlayer extends StatelessWidget {
               ),
             ],
           ),
+          SizedBox(height: 4.h),
           const _TabletPlaybackRow(),
         ],
       ),
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PORTRAIT: Mini Player
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _TabletMiniPlayer extends StatelessWidget {
   final VoidCallback onToggleExpanded;
@@ -188,27 +582,25 @@ class _TabletMiniPlayer extends StatelessWidget {
             );
 
             return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.multitrack_audio_rounded,
                         color: AppColors.bronzeIcon,
-                        size: 20.sp,
+                        size: 18.sp,
                       ),
                       SizedBox(width: 6.w),
-                      Flexible(
+                      Expanded(
                         child: Text(
-                          '$reciterName ($categoryName)',
+                          '$reciterName • $categoryName',
                           overflow: TextOverflow.ellipsis,
                           textDirection:
                               isEn ? TextDirection.ltr : TextDirection.rtl,
                           style: AppTextStyles.menuItemText.copyWith(
                             color: AppColors.inkBrown,
-                            fontSize: 14.sp,
+                            fontSize: 13.5.sp,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -223,14 +615,14 @@ class _TabletMiniPlayer extends StatelessWidget {
                     _TabletPlayPauseButton(
                       isPlaying: isPlaying,
                       isLoading: isLoading,
-                      size: 34.r,
-                      iconSize: 20.sp,
+                      size: 32.r,
+                      iconSize: 18.sp,
                     ),
-                    SizedBox(width: 6.w),
+                    SizedBox(width: 4.w),
                     Icon(
                       Icons.keyboard_arrow_up_rounded,
                       color: AppColors.inkBrown,
-                      size: 22.sp,
+                      size: 20.sp,
                     ),
                   ],
                 ),
@@ -251,13 +643,13 @@ class _TabletReciterButton extends StatelessWidget {
     return GestureDetector(
       onTap: () => showAudioSettingsSheetTablet(context),
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 14.w),
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+        margin: EdgeInsets.symmetric(horizontal: 6.w),
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
         decoration: BoxDecoration(
           border: Border.all(
             color: AppColors.bronzeIcon.withValues(alpha: 0.5),
           ),
-          borderRadius: BorderRadius.circular(14.r),
+          borderRadius: BorderRadius.circular(12.r),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -265,7 +657,7 @@ class _TabletReciterButton extends StatelessWidget {
             Icon(
               Icons.keyboard_arrow_up_rounded,
               color: AppColors.bronzeIcon,
-              size: 20.sp,
+              size: 18.sp,
             ),
             SizedBox(width: 4.w),
             Expanded(
@@ -283,7 +675,7 @@ class _TabletReciterButton extends StatelessWidget {
                     textAlign: isEn ? TextAlign.left : TextAlign.right,
                     style: AppTextStyles.menuItemText.copyWith(
                       color: AppColors.inkBrown,
-                      fontSize: 14.sp,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w600,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -325,12 +717,12 @@ class _TabletSleepTimerAndClose extends StatelessWidget {
         SleepTimerSelectorMenu(
           selectedMinutes: sleepTimerMinutes,
           onSelected: onSleepTimerSelected,
-          itemHeight: 38.h,
-          maxHeight: 180.h,
-          itemFontSize: 13.sp,
-          menuWidth: 150.w,
+          itemHeight: 34.h,
+          maxHeight: 160.h,
+          itemFontSize: 12.sp,
+          menuWidth: 120.w,
           trigger: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -339,13 +731,13 @@ class _TabletSleepTimerAndClose extends StatelessWidget {
                   color: sleepTimerMinutes != null
                       ? AppColors.bronzeDark
                       : AppColors.inkBrown,
-                  size: 20.sp,
+                  size: 18.sp,
                 ),
                 if (timerEndTime != null)
                   Text(
                     _formatRemainingTime(timerEndTime!.difference(DateTime.now())),
                     style: TextStyle(
-                      fontSize: 9.sp,
+                      fontSize: 8.5.sp,
                       color: AppColors.bronzeDark,
                       fontWeight: FontWeight.bold,
                     ),
@@ -354,16 +746,16 @@ class _TabletSleepTimerAndClose extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(width: 6.w),
+        SizedBox(width: 4.w),
         GestureDetector(
           onTap: () => context.read<AudioBloc>().add(const StopAudio()),
           child: Container(
-            padding: EdgeInsets.all(4.r),
+            padding: EdgeInsets.all(3.r),
             decoration: BoxDecoration(
               color: AppColors.textPrimary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.close, color: AppColors.inkBrown, size: 20.sp),
+            child: Icon(Icons.close, color: AppColors.inkBrown, size: 18.sp),
           ),
         ),
       ],
@@ -381,66 +773,67 @@ class _TabletPlaybackRow extends StatelessWidget {
         final isPlaying = state is AudioPlaying;
         final isLoading = state is AudioLoading;
 
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(width: 8.w),
-            Directionality(
-              textDirection: TextDirection.ltr,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.fast_rewind_rounded,
-                      color: AppColors.inkBrown,
-                      size: 26.sp,
-                    ),
-                    onPressed: () =>
-                        context.read<AudioBloc>().add(const PreviousSurah()),
-                  ),
-                  SizedBox(width: 2.w),
-                  IconButton(
-                    icon: Icon(
-                      Icons.skip_previous_rounded,
-                      color: AppColors.inkBrown,
-                      size: 28.sp,
-                    ),
-                    onPressed: () =>
-                        context.read<AudioBloc>().add(const PreviousAyah()),
-                  ),
-                  SizedBox(width: 6.w),
-                  _TabletPlayPauseButton(
-                    isPlaying: isPlaying,
-                    isLoading: isLoading,
-                    size: 48.r,
-                    iconSize: 28.sp,
-                  ),
-                  SizedBox(width: 6.w),
-                  IconButton(
-                    icon: Icon(
-                      Icons.skip_next_rounded,
-                      color: AppColors.inkBrown,
-                      size: 28.sp,
-                    ),
-                    onPressed: () =>
-                        context.read<AudioBloc>().add(const NextAyah()),
-                  ),
-                  SizedBox(width: 2.w),
-                  IconButton(
-                    icon: Icon(
-                      Icons.fast_forward_rounded,
-                      color: AppColors.inkBrown,
-                      size: 26.sp,
-                    ),
-                    onPressed: () =>
-                        context.read<AudioBloc>().add(const NextSurah()),
-                  ),
-                ],
+        return Directionality(
+          textDirection: TextDirection.ltr,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(minWidth: 32.w, minHeight: 32.h),
+                icon: Icon(
+                  Icons.fast_rewind_rounded,
+                  color: AppColors.inkBrown,
+                  size: 22.sp,
+                ),
+                onPressed: () =>
+                    context.read<AudioBloc>().add(const PreviousSurah()),
               ),
-            ),
-            SizedBox(width: 8.w),
-          ],
+              SizedBox(width: 2.w),
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(minWidth: 32.w, minHeight: 32.h),
+                icon: Icon(
+                  Icons.skip_previous_rounded,
+                  color: AppColors.inkBrown,
+                  size: 24.sp,
+                ),
+                onPressed: () =>
+                    context.read<AudioBloc>().add(const PreviousAyah()),
+              ),
+              SizedBox(width: 6.w),
+              _TabletPlayPauseButton(
+                isPlaying: isPlaying,
+                isLoading: isLoading,
+                size: 42.r,
+                iconSize: 24.sp,
+              ),
+              SizedBox(width: 6.w),
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(minWidth: 32.w, minHeight: 32.h),
+                icon: Icon(
+                  Icons.skip_next_rounded,
+                  color: AppColors.inkBrown,
+                  size: 24.sp,
+                ),
+                onPressed: () =>
+                    context.read<AudioBloc>().add(const NextAyah()),
+              ),
+              SizedBox(width: 2.w),
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(minWidth: 32.w, minHeight: 32.h),
+                icon: Icon(
+                  Icons.fast_forward_rounded,
+                  color: AppColors.inkBrown,
+                  size: 22.sp,
+                ),
+                onPressed: () =>
+                    context.read<AudioBloc>().add(const NextSurah()),
+              ),
+            ],
+          ),
         );
       },
     );

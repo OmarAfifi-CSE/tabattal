@@ -360,12 +360,17 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
     final content = Scaffold(
       backgroundColor: AppColors.surfaceCream,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context),
-            const SizedBox(height: 10),
-            Expanded(child: _buildBody()),
-          ],
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: Column(
+              children: [
+                _buildHeader(context),
+                const SizedBox(height: 10),
+                Expanded(child: _buildBody()),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -513,7 +518,11 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
+              crossAxisCount:
+                  MediaQuery.sizeOf(context).width >
+                          MediaQuery.sizeOf(context).height
+                      ? 4
+                      : 2,
               crossAxisSpacing: 14.w,
               mainAxisSpacing: 14.h,
               mainAxisExtent: 60.h,

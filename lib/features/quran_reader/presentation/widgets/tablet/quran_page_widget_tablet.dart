@@ -11,7 +11,6 @@ import '../../../../../core/utils/arabic_text_utils.dart';
 import '../../../data/models/verse_model.dart';
 import '../../../bloc/quran/quran_bloc.dart';
 import '../../../bloc/quran/quran_page_cache.dart';
-import '../../../bloc/quran/quran_event.dart';
 import '../../../bloc/quran/quran_state.dart';
 import '../../../bloc/audio/audio_bloc.dart';
 import '../../../bloc/audio/audio_state.dart';
@@ -27,12 +26,6 @@ import '../../../../../core/constants/quran_metadata.dart';
 import 'surah_header_widget_tablet.dart';
 import '../../../../settings/bloc/settings_bloc.dart';
 import '../../../../../core/theme/mushaf_theme.dart';
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-// Removed _kBasmalaWidget constant. It is now a method in _QuranPageWidgetTabletState.
 
 // ---------------------------------------------------------------------------
 // Widget
@@ -78,9 +71,8 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
   // was just opened by a word in the same pointer-up event cycle.
   bool _tapHandledByWord = false;
 
-  double? _precomputedCanvasWidth;
-  double? _cachedMaxLineWidth;
-  double _lastComputedAvailH = 0;
+  static const double _kCanvasWidth = 480.0;
+  static const double _kCanvasFontSize = 32.0;
 
   // Cached data for O(1) lookups and avoiding re-parsing per frame
   List<LineData>? _cachedLines;
@@ -99,13 +91,9 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
   // Lifecycle
   // ---------------------------------------------------------------------------
 
-  late final QuranBloc _quranBloc;
-
   @override
   void initState() {
     super.initState();
-    _quranBloc = QuranBloc(repository: context.read<QuranRepository>())
-      ..add(LoadPage(widget.pageNumber));
     _bookmarkFadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -116,18 +104,38 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
         curve: Curves.easeInOut,
       ),
     );
+    final cached = QuranPageCache.get(widget.pageNumber);
+    if (cached == null) {
+      _loadPageDataFallback();
+    }
     if (widget.highlightVerseKey != null && widget.highlightToken > 0) {
       _lastConsumedToken = widget.highlightToken;
       _activateBookmarkHighlight(widget.highlightVerseKey!);
     }
   }
 
+  Future<void> _loadPageDataFallback() async {
+    try {
+      final result = await context.read<QuranRepository>().getLinesByPage(
+        widget.pageNumber,
+      );
+      result.fold((_) {}, (lines) {
+        final loaded = QuranLoaded(
+          lines: lines,
+          currentPage: widget.pageNumber,
+        );
+        QuranPageCache.put(widget.pageNumber, loaded);
+        if (mounted) setState(() {});
+      });
+    } catch (_) {}
+  }
+
   @override
   void didUpdateWidget(QuranPageWidgetTablet oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.pageNumber != oldWidget.pageNumber) {
-      _quranBloc.add(LoadPage(widget.pageNumber));
-      _precomputedCanvasWidth = null;
+      final cached = QuranPageCache.get(widget.pageNumber);
+      if (cached == null) _loadPageDataFallback();
     }
     if (widget.highlightVerseKey != null &&
         widget.highlightToken > 0 &&
@@ -143,7 +151,6 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
 
   @override
   void dispose() {
-    _quranBloc.close();
     _bookmarkFadeController.dispose();
     _activeOverlayEntry?.remove();
     _activeOverlayEntry?.dispose();
@@ -170,72 +177,6 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
         setState(() => _bookmarkHighlightVerseId = null);
       }
     });
-  }
-
-  double _computeCanvasWidth(double availW, double availH) {
-    final fontSize = 32.sp;
-    if (_cachedMaxLineWidth == null) {
-      _cachedMaxLineWidth = QuranPageCache.getCachedLineWidth(widget.pageNumber);
-      if (_cachedMaxLineWidth == null) {
-        final pageStr = widget.pageNumber.toString().padLeft(3, '0');
-        final fontFamily = 'QCF_P$pageStr';
-        final style = TextStyle(fontFamily: fontFamily, fontSize: fontSize);
-        final tp = TextPainter(textDirection: TextDirection.rtl);
-        var maxLW = 0.0;
-
-        for (final lineData in _lineMap.values) {
-          if (lineData.words.isEmpty) continue;
-          final lineText = lineData.words
-              .map((w) => w.code)
-              .where((t) => t.isNotEmpty)
-              .join();
-          if (lineText.isEmpty) continue;
-          tp.text = TextSpan(text: lineText, style: style);
-          tp.layout();
-          if (tp.width > maxLW) maxLW = tp.width;
-        }
-        tp.dispose();
-        maxLW = maxLW + 2.0;
-        _cachedMaxLineWidth = maxLW;
-        QuranPageCache.cacheLineWidth(widget.pageNumber, maxLW);
-      }
-    }
-    final maxLineWidth = _cachedMaxLineWidth!;
-
-    int textLineCount = 0;
-    int surahHeaderCount = 0;
-    int spacerCount = 0;
-
-    for (int lineNumber = 1; lineNumber <= 15; lineNumber++) {
-      final lineData = _lineMap[lineNumber];
-      if (lineData != null && lineData.words.isNotEmpty) {
-        textLineCount++;
-      } else {
-        final nextSurah = _findNextSurahStartOnPage(lineNumber);
-        if (nextSurah != null && lineNumber == nextSurah.ayah1Line - 1) {
-          surahHeaderCount++;
-        } else {
-          spacerCount++;
-        }
-      }
-    }
-
-    final textLineH = fontSize * 1.5 + 4.0.h;
-    final totalChildrenH =
-        textLineCount * textLineH +
-        surahHeaderCount * 85.0.h +
-        spacerCount * ((widget.pageNumber == 1 || widget.pageNumber == 2) ? 0.0 : 45.0.h);
-
-    const paddingFactor = 1.0 / (1.0 - 0.027 - 0.032);
-    final minCanvasWForHeight =
-        availW > 0 && availH > 0
-            ? totalChildrenH * paddingFactor * availW / availH
-            : 0.0;
-
-    final textMeasuredW = maxLineWidth > 0 ? maxLineWidth : 490.w;
-    return textMeasuredW > minCanvasWForHeight
-        ? textMeasuredW
-        : minCanvasWForHeight;
   }
 
   /// Computes the screen rect occupied by [verseKey] using the page column layout.
@@ -434,7 +375,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
     if (nextSurah != null) {
       final (:ayah1Line, :surahId) = nextSurah;
       final header = Padding(
-        padding: EdgeInsets.symmetric(vertical: 2.h),
+        padding: const EdgeInsets.symmetric(vertical: 2.0),
         child: SurahHeaderWidgetTablet(surahNumber: surahId),
       );
       final basmala = Center(
@@ -442,7 +383,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
           '1 2 3',
           style: TextStyle(
             fontFamily: 'QCF_BSML',
-            fontSize: 26,
+            fontSize: 26.0,
             color: mushafTheme.textColor,
             height: 1.0,
           ),
@@ -451,13 +392,17 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
 
       // Surah 9 (At-Tawbah) has no Basmala
       if (surahId == 9 || surahId == 1) {
-        return lineNumber == ayah1Line - 1 ? header : SizedBox(height: 45.h);
+        return lineNumber == ayah1Line - 1
+            ? header
+            : const SizedBox(height: 45.0);
       }
 
       // Determine whether the header should appear on this line or one earlier
       final prevPrevLineData = _lineMap[ayah1Line - 2];
       final bool mustSquashBothOnLineMinus1 =
-          ayah1Line > 2 && prevPrevLineData != null && prevPrevLineData.words.isNotEmpty ||
+          ayah1Line > 2 &&
+              prevPrevLineData != null &&
+              prevPrevLineData.words.isNotEmpty ||
           ayah1Line == 2 && widget.pageNumber == 1;
 
       if (lineNumber == ayah1Line - 1) {
@@ -474,7 +419,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
       } else if (lineNumber == ayah1Line - 2 && !mustSquashBothOnLineMinus1) {
         return header;
       }
-      return SizedBox(height: 45.h);
+      return const SizedBox(height: 45.0);
     }
 
     // ── Case B: Trailing empty lines at end of page ────────────────────────
@@ -488,7 +433,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
       if (upcomingSurahId <= 114) {
         final emptyLinesBefore = _countEmptyLinesBefore(lineNumber);
         final header = Padding(
-          padding: EdgeInsets.symmetric(vertical: 2.h),
+          padding: const EdgeInsets.symmetric(vertical: 2.0),
           child: SurahHeaderWidgetTablet(surahNumber: upcomingSurahId),
         );
         final basmala = Center(
@@ -496,7 +441,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
             '1 2 3',
             style: TextStyle(
               fontFamily: 'QCF_BSML',
-              fontSize: 26,
+              fontSize: 26.0,
               color: mushafTheme.textColor,
               height: 1.0,
             ),
@@ -508,7 +453,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
       }
     }
 
-    return SizedBox(height: 45.h);
+    return const SizedBox(height: 45.0);
   }
 
   // ---------------------------------------------------------------------------
@@ -663,15 +608,15 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
     final customFontFamily = 'QCF_P$pageStr';
     final wordTextStyle = AppTextStyles.quranText.copyWith(
       fontFamily: customFontFamily,
-      fontSize: 42,
-      height: 1.2,
+      fontSize: _kCanvasFontSize,
+      height: 1.5,
     );
     final transparentWordStyle = wordTextStyle.copyWith(
       color: Colors.transparent,
     );
     final maskDecoration = BoxDecoration(
       color: mushafTheme.textColor.withValues(alpha: 0.18),
-      borderRadius: BorderRadius.circular(4.r),
+      borderRadius: BorderRadius.circular(4.0),
     );
 
     int i = 0;
@@ -703,7 +648,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
                       '1 2 3',
                       style: TextStyle(
                         fontFamily: 'QCF_BSML',
-                        fontSize: 26,
+                        fontSize: 26.0,
                         color: Colors.transparent,
                         height: 1.0,
                       ),
@@ -741,9 +686,9 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
                   '1 2 3',
                   style: TextStyle(
                     fontFamily: 'QCF_BSML',
-                    fontSize: 26.sp,
+                    fontSize: 26.0,
                     color: textColor,
-                    height: 1.0.h,
+                    height: 1.0,
                   ),
                 ),
               ),
@@ -759,9 +704,9 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
                 '1 2 3',
                 style: TextStyle(
                   fontFamily: 'QCF_BSML',
-                  fontSize: 26.sp,
+                  fontSize: 26.0,
                   color: textColor,
-                  height: 1.0.h,
+                  height: 1.0,
                 ),
               ),
             );
@@ -888,13 +833,12 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
 
 
   /// Builds the full loaded page content with all 15 line slots.
-  Widget _buildLoadedPage(QuranLoaded state) {
+  Widget _buildLoadedPage(QuranLoaded state, MushafTheme mushafTheme) {
     final lines = state.lines;
     if (lines.isEmpty) return const SizedBox();
 
     if (_cachedLines != lines) {
       _cachedLines = lines;
-      _cachedMaxLineWidth = null;
       _lineMap = {for (final line in lines) line.lineNumber: line};
 
       _verseKeyToIntIdMap.clear();
@@ -1025,16 +969,11 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
                             final availW = constraints.maxWidth;
                             final availH = constraints.maxHeight;
 
-                            if (_lineMap.isNotEmpty &&
-                                (_precomputedCanvasWidth == null ||
-                                    (availH - _lastComputedAvailH).abs() > 1.0)) {
-                              _lastComputedAvailH = availH;
-                              _precomputedCanvasWidth =
-                                  _computeCanvasWidth(availW, availH);
-                            }
+                            const canvasW = _kCanvasWidth;
+                            final canvasH = availW > 0
+                                ? (availH * canvasW / availW)
+                                : 800.0;
 
-                            final canvasW = _precomputedCanvasWidth ?? 490.w;
-                            final canvasH = availH * canvasW / availW;
                             return FittedBox(
                               fit: BoxFit.contain,
                               alignment: Alignment.center,
@@ -1043,19 +982,22 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
                                 height: canvasH,
                                 child: Padding(
                                   padding: EdgeInsets.only(
-                                    top: canvasH * 0.027,
-                                    bottom: canvasH * 0.032,
+                                    top: canvasH * 0.042,
+                                    bottom: canvasH * 0.048,
                                   ),
                                   child: Column(
                                     key: _pageColumnKey,
                                     mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
                                     children: List.generate(15, (index) {
                                       final lineNumber = index + 1;
                                       final lineData = _lineMap[lineNumber];
 
-                                      if (lineData == null || lineData.words.isEmpty) {
+                                      if (lineData == null ||
+                                          lineData.words.isEmpty) {
                                         return _buildEmptyLineWidget(
                                           lineNumber,
                                           mushafTheme,
@@ -1094,61 +1036,30 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
   // Build
   // ---------------------------------------------------------------------------
 
-  Widget _buildEmptyFrame() => QuranPageFrameTablet(
-    pageNumber: widget.pageNumber,
-    onNavigateToPage: widget.onNavigateToPage,
-    surahName: '',
-    juzName: '',
-    child: const SizedBox(),
-  );
-
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _quranBloc,
-      child: BlocBuilder<QuranBloc, QuranState>(
-        buildWhen: (_, current) =>
-            current is QuranLoading ||
-            current is QuranLoaded ||
-            current is QuranError ||
-            current is QuranInitial,
-        builder: (context, state) {
-          final mushafTheme = context
-              .watch<SettingsBloc>()
-              .state
-              .effectiveMushafTheme;
-          if (state is QuranLoading) {
-            return QuranPageFrameTablet(
-              pageNumber: widget.pageNumber,
-              onNavigateToPage: widget.onNavigateToPage,
-              surahName: '',
-              juzName: '',
-              child: Center(
-                child: CupertinoActivityIndicator(
-                  color: mushafTheme.goldColor,
-                  radius: 14.r,
-                ),
-              ),
-            );
-          }
-          if (state is QuranError) {
-            return QuranPageFrameTablet(
-              pageNumber: widget.pageNumber,
-              onNavigateToPage: widget.onNavigateToPage,
-              surahName: '',
-              juzName: '',
-              child: Center(
-                child: Text(
-                  state.message,
-                  style: TextStyle(color: Colors.red, fontSize: 14.sp),
-                ),
-              ),
-            );
-          }
-          if (state is QuranLoaded) return _buildLoadedPage(state);
-          return _buildEmptyFrame();
-        },
-      ),
-    );
+    final mushafTheme = context
+        .watch<SettingsBloc>()
+        .state
+        .effectiveMushafTheme;
+
+    final displayState = QuranPageCache.get(widget.pageNumber);
+
+    if (displayState == null) {
+      return QuranPageFrameTablet(
+        pageNumber: widget.pageNumber,
+        onNavigateToPage: widget.onNavigateToPage,
+        surahName: '',
+        juzName: '',
+        child: Center(
+          child: CupertinoActivityIndicator(
+            color: mushafTheme.goldColor,
+            radius: 14.r,
+          ),
+        ),
+      );
+    }
+
+    return _buildLoadedPage(displayState, mushafTheme);
   }
 }

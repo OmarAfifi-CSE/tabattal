@@ -24,16 +24,16 @@ import '../../../../quran_video_studio/domain/entities/video_project_config.dart
 import '../../../../quran_video_studio/presentation/bloc/video_studio_bloc.dart';
 import '../../../../quran_video_studio/presentation/bloc/video_studio_event.dart';
 import '../../../../quran_video_studio/presentation/bloc/video_studio_state.dart';
-import '../../../../quran_video_studio/presentation/widgets/video_aspect_ratio_bar.dart';
+import 'video_studio/video_aspect_ratio_bar_tablet.dart';
 import '../../../../quran_video_studio/presentation/widgets/video_background_player_view.dart';
-import '../../../../quran_video_studio/presentation/widgets/video_background_selector.dart';
+import 'video_studio/video_background_selector_tablet.dart';
 import '../../../../quran_video_studio/presentation/widgets/video_export_progress_dialog.dart';
 import '../../../../quran_video_studio/presentation/widgets/video_frame_painter.dart';
 import '../../../../quran_video_studio/presentation/widgets/video_fullscreen_preview_modal.dart';
-import '../../../../quran_video_studio/presentation/widgets/video_options_selector.dart';
-import '../../../../quran_video_studio/presentation/widgets/video_range_picker.dart';
-import '../../../../quran_video_studio/presentation/widgets/video_reciter_selector.dart';
-import '../../../../quran_video_studio/presentation/widgets/video_theme_selector.dart';
+import 'video_studio/video_options_selector_tablet.dart';
+import 'video_studio/video_range_picker_tablet.dart';
+import 'video_studio/video_reciter_selector_tablet.dart';
+import 'video_studio/video_theme_selector_tablet.dart';
 
 import '../verse_card/helpers/verse_card_text_utils.dart';
 import '../verse_card/models/verse_card_theme.dart';
@@ -65,16 +65,21 @@ void showVerseCardGeneratorModalTablet(
 
   final screenW = MediaQuery.sizeOf(context).width;
   final screenH = MediaQuery.sizeOf(context).height;
-  final maxDialogW = (screenW * 0.88).clamp(600.0, 720.0);
-  final maxDialogH = (screenH * 0.92).clamp(720.0, 940.0);
+  final isLandscape = screenW > screenH;
+  final maxDialogW = isLandscape
+      ? (screenW * 0.96).clamp(880.0, 1180.0)
+      : (screenW * 0.88).clamp(600.0, 720.0);
+  final maxDialogH = isLandscape
+      ? (screenH * 0.95).clamp(600.0, 820.0)
+      : (screenH * 0.92).clamp(720.0, 940.0);
 
   showDialog(
     context: context,
     builder: (ctx) => Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: EdgeInsets.symmetric(
-        horizontal: 20.w,
-        vertical: 18.h,
+        horizontal: isLandscape ? 12.0 : 20.w,
+        vertical: isLandscape ? 10.0 : 18.h,
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxDialogW, maxHeight: maxDialogH),
@@ -818,7 +823,10 @@ class _VerseCardGeneratorSheetTabletContentState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.92;
+    final size = MediaQuery.sizeOf(context);
+    final screenW = size.width;
+    final screenH = size.height;
+    final maxSheetHeight = screenH * 0.92;
 
     return BlocConsumer<VideoStudioBloc, VideoStudioState>(
       listener: (context, videoState) async {
@@ -853,6 +861,8 @@ class _VerseCardGeneratorSheetTabletContentState
         }
       },
       builder: (context, videoState) {
+        final isLandscape = screenW > screenH;
+
         return Directionality(
           textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
           child: ConstrainedBox(
@@ -860,9 +870,14 @@ class _VerseCardGeneratorSheetTabletContentState
             child: Container(
               decoration: BoxDecoration(
                 color: AppColors.cardCream,
-                borderRadius: BorderRadius.circular(20.r),
+                borderRadius: BorderRadius.circular(isLandscape ? 16.0 : 20.r),
               ),
-              padding: EdgeInsets.fromLTRB(22.w, 18.h, 22.w, 22.h),
+              padding: EdgeInsets.fromLTRB(
+                isLandscape ? 16.0 : 22.w,
+                isLandscape ? 10.0 : 14.h,
+                isLandscape ? 16.0 : 22.w,
+                isLandscape ? 10.0 : 22.h,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -896,7 +911,7 @@ class _VerseCardGeneratorSheetTabletContentState
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: 22.sp,
+                                fontSize: isLandscape ? 18.0 : 22.sp,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.textPrimary,
                               ),
@@ -906,130 +921,234 @@ class _VerseCardGeneratorSheetTabletContentState
                       ),
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: Icon(Icons.close_rounded, size: 26.sp),
+                        icon: Icon(Icons.close_rounded, size: isLandscape ? 22.0 : 26.sp),
                         splashRadius: 20,
                       ),
                     ],
                   ),
                   const Divider(height: 1),
-                  SizedBox(height: 12.h),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      controller: _scrollController,
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
+                  SizedBox(height: isLandscape ? 6.0 : 10.h),
+
+                  if (isLandscape)
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // ---------------- PREVIEW AREA ----------------
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 280),
-                            curve: Curves.easeInOutCubic,
-                            alignment: Alignment.topCenter,
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 240),
-                              reverseDuration: const Duration(milliseconds: 160),
-                              switchInCurve: Curves.easeOutCubic,
-                              switchOutCurve: Curves.easeInCubic,
-                              layoutBuilder: (currentChild, previousChildren) {
-                                return Stack(
-                                  alignment: Alignment.topCenter,
-                                  children: <Widget>[
-                                    ...previousChildren,
-                                    ?currentChild,
-                                  ],
-                                );
-                              },
-                              transitionBuilder: (child, animation) {
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: child,
-                                );
-                              },
-                              child: _buildPreviewArea(videoState),
+                          // Left Column: Preview area + Video Player Controls
+                          Expanded(
+                            flex: 6,
+                            child: Center(
+                              child: SingleChildScrollView(
+                                physics: const BouncingScrollPhysics(),
+                                child: _buildPreviewArea(videoState, isLandscape: true),
+                              ),
                             ),
                           ),
-                          SizedBox(height: 16.h),
-
-                          // ---------------- FORMAT SELECTOR TABLET ----------------
-                          _VerseCardFormatSelectorTablet(
-                            selectedFormat: _selectedFormat,
-                            onFormatChanged: (newFormat) {
-                              if (_selectedFormat != newFormat) {
-                                if (_selectedFormat == ShareFormat.video) {
-                                  context
-                                      .read<VideoStudioBloc>()
-                                      .add(const VideoStudioPlaybackReset());
-                                }
-                                setState(() {
-                                  _selectedFormat = newFormat;
-                                  _statusMessage = null;
-                                });
-                                if (newFormat == ShareFormat.fullPage) {
-                                  _loadFullPageData();
-                                }
-                              }
-                            },
+                          const SizedBox(width: 12.0),
+                          Container(
+                            width: 1,
+                            color: AppColors.divider,
+                            margin: const EdgeInsets.symmetric(vertical: 4),
                           ),
-
-                          // ---------------- DYNAMIC OPTIONS PER FORMAT ----------------
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 280),
-                            curve: Curves.easeInOutCubic,
-                            alignment: Alignment.topCenter,
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 240),
-                              reverseDuration: const Duration(milliseconds: 160),
-                              switchInCurve: Curves.easeOutCubic,
-                              switchOutCurve: Curves.easeInCubic,
-                              layoutBuilder: (currentChild, previousChildren) {
-                                return Stack(
-                                  alignment: Alignment.topCenter,
-                                  children: <Widget>[
-                                    ...previousChildren,
-                                    ?currentChild,
-                                  ],
-                                );
-                              },
-                              transitionBuilder: (child, animation) {
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: child,
-                                );
-                              },
-                              child: _buildOptionsArea(videoState),
+                          const SizedBox(width: 12.0),
+                          // Right Column: Format Selector + Dynamic Options + Action Buttons
+                          Expanded(
+                            flex: 5,
+                            child: Column(
+                              children: [
+                                Flexible(
+                                  child: SingleChildScrollView(
+                                    controller: _scrollController,
+                                    physics: const BouncingScrollPhysics(),
+                                    child: Column(
+                                      children: [
+                                        _VerseCardFormatSelectorTablet(
+                                          selectedFormat: _selectedFormat,
+                                          onFormatChanged: (newFormat) {
+                                            if (_selectedFormat != newFormat) {
+                                              if (_selectedFormat == ShareFormat.video) {
+                                                context
+                                                    .read<VideoStudioBloc>()
+                                                    .add(const VideoStudioPlaybackReset());
+                                              }
+                                              setState(() {
+                                                _selectedFormat = newFormat;
+                                                _statusMessage = null;
+                                              });
+                                              if (newFormat == ShareFormat.fullPage) {
+                                                _loadFullPageData();
+                                              }
+                                            }
+                                          },
+                                        ),
+                                        AnimatedSize(
+                                          duration: const Duration(milliseconds: 280),
+                                          curve: Curves.easeInOutCubic,
+                                          alignment: Alignment.topCenter,
+                                          child: AnimatedSwitcher(
+                                            duration: const Duration(milliseconds: 240),
+                                            reverseDuration: const Duration(milliseconds: 160),
+                                            switchInCurve: Curves.easeOutCubic,
+                                            switchOutCurve: Curves.easeInCubic,
+                                            child: _buildOptionsArea(videoState),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 10.h),
+                                _VerseCardActionButtonsTablet(
+                                  selectedFormat: _selectedFormat,
+                                  isSharing: _isSharing,
+                                  isSaving: _isSaving,
+                                  isExportingVideo: videoState.exportProgress.isRendering,
+                                  onShare: _shareCard,
+                                  onSave: _saveCardImage,
+                                  onCopyText: () => _copyTextToClipboard(context),
+                                  onShareVideo: () {
+                                    context.read<VideoStudioBloc>().add(
+                                          const VideoStudioExportStarted(
+                                            action: VideoExportAction.share,
+                                          ),
+                                        );
+                                  },
+                                  onSaveVideo: () {
+                                    context.read<VideoStudioBloc>().add(
+                                          const VideoStudioExportStarted(
+                                            action: VideoExportAction.saveToGallery,
+                                          ),
+                                        );
+                                  },
+                                  statusMessage: _statusMessage,
+                                  isSuccessStatus: _isSuccessStatus,
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
+                    )
+                  else
+                    ...[
+                      Flexible(
+                        child: SingleChildScrollView(
+                          controller: _scrollController,
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            children: [
+                              // ---------------- PREVIEW AREA ----------------
+                              AnimatedSize(
+                                duration: const Duration(milliseconds: 280),
+                                curve: Curves.easeInOutCubic,
+                                alignment: Alignment.topCenter,
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 240),
+                                  reverseDuration: const Duration(milliseconds: 160),
+                                  switchInCurve: Curves.easeOutCubic,
+                                  switchOutCurve: Curves.easeInCubic,
+                                  layoutBuilder: (currentChild, previousChildren) {
+                                    return Stack(
+                                      alignment: Alignment.topCenter,
+                                      children: <Widget>[
+                                        ...previousChildren,
+                                        ?currentChild,
+                                      ],
+                                    );
+                                  },
+                                  transitionBuilder: (child, animation) {
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: child,
+                                    );
+                                  },
+                                  child: _buildPreviewArea(videoState, isLandscape: false),
+                                ),
+                              ),
+                              SizedBox(height: 16.h),
 
-                  // ---------------- ACTION BUTTONS TABLET ----------------
-                  _VerseCardActionButtonsTablet(
-                    selectedFormat: _selectedFormat,
-                    isSharing: _isSharing,
-                    isSaving: _isSaving,
-                    isExportingVideo: videoState.exportProgress.isRendering,
-                    onShare: _shareCard,
-                    onSave: _saveCardImage,
-                    onCopyText: () => _copyTextToClipboard(context),
-                    onShareVideo: () {
-                      context.read<VideoStudioBloc>().add(
-                            const VideoStudioExportStarted(
-                              action: VideoExportAction.share,
-                            ),
-                          );
-                    },
-                    onSaveVideo: () {
-                      context.read<VideoStudioBloc>().add(
-                            const VideoStudioExportStarted(
-                              action: VideoExportAction.saveToGallery,
-                            ),
-                          );
-                    },
-                    statusMessage: _statusMessage,
-                    isSuccessStatus: _isSuccessStatus,
-                  ),
+                              // ---------------- FORMAT SELECTOR TABLET ----------------
+                              _VerseCardFormatSelectorTablet(
+                                selectedFormat: _selectedFormat,
+                                onFormatChanged: (newFormat) {
+                                  if (_selectedFormat != newFormat) {
+                                    if (_selectedFormat == ShareFormat.video) {
+                                      context
+                                          .read<VideoStudioBloc>()
+                                          .add(const VideoStudioPlaybackReset());
+                                    }
+                                    setState(() {
+                                      _selectedFormat = newFormat;
+                                      _statusMessage = null;
+                                    });
+                                    if (newFormat == ShareFormat.fullPage) {
+                                      _loadFullPageData();
+                                    }
+                                  }
+                                },
+                              ),
+
+                              // ---------------- DYNAMIC OPTIONS PER FORMAT ----------------
+                              AnimatedSize(
+                                duration: const Duration(milliseconds: 280),
+                                curve: Curves.easeInOutCubic,
+                                alignment: Alignment.topCenter,
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 240),
+                                  reverseDuration: const Duration(milliseconds: 160),
+                                  switchInCurve: Curves.easeOutCubic,
+                                  switchOutCurve: Curves.easeInCubic,
+                                  layoutBuilder: (currentChild, previousChildren) {
+                                    return Stack(
+                                      alignment: Alignment.topCenter,
+                                      children: <Widget>[
+                                        ...previousChildren,
+                                        ?currentChild,
+                                      ],
+                                    );
+                                  },
+                                  transitionBuilder: (child, animation) {
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: child,
+                                    );
+                                  },
+                                  child: _buildOptionsArea(videoState),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+
+                      // ---------------- ACTION BUTTONS TABLET ----------------
+                      _VerseCardActionButtonsTablet(
+                        selectedFormat: _selectedFormat,
+                        isSharing: _isSharing,
+                        isSaving: _isSaving,
+                        isExportingVideo: videoState.exportProgress.isRendering,
+                        onShare: _shareCard,
+                        onSave: _saveCardImage,
+                        onCopyText: () => _copyTextToClipboard(context),
+                        onShareVideo: () {
+                          context.read<VideoStudioBloc>().add(
+                                const VideoStudioExportStarted(
+                                  action: VideoExportAction.share,
+                                ),
+                              );
+                        },
+                        onSaveVideo: () {
+                          context.read<VideoStudioBloc>().add(
+                                const VideoStudioExportStarted(
+                                  action: VideoExportAction.saveToGallery,
+                                ),
+                              );
+                        },
+                        statusMessage: _statusMessage,
+                        isSuccessStatus: _isSuccessStatus,
+                      ),
+                    ],
                 ],
               ),
             ),
@@ -1039,13 +1158,14 @@ class _VerseCardGeneratorSheetTabletContentState
     );
   }
 
-  Widget _buildPreviewArea(VideoStudioState videoState) {
+  Widget _buildPreviewArea(VideoStudioState videoState, {bool isLandscape = false}) {
     switch (_selectedFormat) {
       case ShareFormat.video:
         return KeyedSubtree(
           key: const ValueKey('video_studio_preview_tablet'),
           child: _VideoPreviewViewportTablet(
             state: videoState,
+            isLandscape: isLandscape,
             onTogglePlay: () {
               context
                   .read<VideoStudioBloc>()
@@ -1123,13 +1243,15 @@ class _VerseCardGeneratorSheetTabletContentState
 
   Widget _buildOptionsArea(VideoStudioState videoState) {
     final config = videoState.config;
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     switch (_selectedFormat) {
       case ShareFormat.video:
         return Column(
           key: const ValueKey('video_options_group_tablet'),
           children: [
-            VideoAspectRatioBar(
+            VideoAspectRatioBarTablet(
               selectedRatio: config.aspectRatio,
               onRatioSelected: (ratio) {
                 context
@@ -1137,7 +1259,7 @@ class _VerseCardGeneratorSheetTabletContentState
                     .add(VideoStudioAspectRatioChanged(ratio));
               },
             ),
-            VideoBackgroundSelector(
+            VideoBackgroundSelectorTablet(
               config: config,
               onCustomImageChanged: (path) {
                 context
@@ -1150,7 +1272,7 @@ class _VerseCardGeneratorSheetTabletContentState
                     .add(VideoStudioCustomVideoSelected(path));
               },
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: isLandscape ? 6.0 : 12.h),
             Builder(
               builder: (context) {
                 final bool hasCustomMedia = (config.customImagePath != null &&
@@ -1167,8 +1289,10 @@ class _VerseCardGeneratorSheetTabletContentState
                   curve: Curves.easeInOut,
                   child: showThemeSelector
                       ? Padding(
-                          padding: EdgeInsets.only(bottom: 12.h),
-                          child: VideoThemeSelector(
+                          padding: EdgeInsets.only(
+                            bottom: isLandscape ? 6.0 : 12.h,
+                          ),
+                          child: VideoThemeSelectorTablet(
                             selectedPreset: config.themePreset,
                             onThemeSelected: (theme) {
                               context
@@ -1181,7 +1305,7 @@ class _VerseCardGeneratorSheetTabletContentState
                 );
               },
             ),
-            VideoRangePicker(
+            VideoRangePickerTablet(
               surahNumber: config.surahNumber,
               startAyah: _startAyah,
               endAyah: _endAyah,
@@ -1225,8 +1349,8 @@ class _VerseCardGeneratorSheetTabletContentState
                 _loadAllVerseData();
               },
             ),
-            SizedBox(height: 12.h),
-            VideoReciterSelector(
+            SizedBox(height: isLandscape ? 6.0 : 12.h),
+            VideoReciterSelectorTablet(
               selectedReciter: config.reciterName,
               selectedCategory: config.reciterCategory,
               onReciterSelected: (name, category, path) {
@@ -1239,8 +1363,8 @@ class _VerseCardGeneratorSheetTabletContentState
                     );
               },
             ),
-            SizedBox(height: 12.h),
-            VideoOptionsSelector(
+            SizedBox(height: isLandscape ? 6.0 : 12.h),
+            VideoOptionsSelectorTablet(
               config: config,
               onDisplayModeChanged: (mode) {
                 context
@@ -1285,7 +1409,7 @@ class _VerseCardGeneratorSheetTabletContentState
                 setState(() => _selectedThemeIndex = index);
               },
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: isLandscape ? 6.0 : 12.h),
             VerseCardRangePicker(
               surahNumber: _surahNumber,
               startAyah: _startAyah,
@@ -1319,7 +1443,7 @@ class _VerseCardGeneratorSheetTabletContentState
                 _loadAllVerseData();
               },
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: isLandscape ? 6.0 : 12.h),
             VerseCardOptionsBar(
               includeTafsir: _includeTafsir,
               onToggleTafsir: (val) {
@@ -1382,7 +1506,7 @@ class _VerseCardGeneratorSheetTabletContentState
                 _loadAllVerseData();
               },
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: isLandscape ? 6.0 : 12.h),
             VerseCardOptionsBar(
               includeTafsir: _includeTafsir,
               onToggleTafsir: (val) {
@@ -1435,31 +1559,33 @@ class _VerseCardFormatSelectorTablet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: 14.h),
+      padding: EdgeInsets.only(bottom: isLandscape ? 8.0 : 14.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             l10n.verseCardFormatLabel,
             style: TextStyle(
-              fontSize: 16.sp,
+              fontSize: isLandscape ? 13.0 : 16.sp,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 10.h),
+          SizedBox(height: isLandscape ? 6.0 : 10.h),
           Container(
             width: MediaQuery.sizeOf(context).width,
             decoration: BoxDecoration(
               color: AppColors.surfaceCream,
-              borderRadius: BorderRadius.circular(14.r),
+              borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 14.r),
               border: Border.all(
                 color: AppColors.accentGold.withValues(alpha: 0.4),
               ),
             ),
-            padding: EdgeInsets.all(4.r),
+            padding: EdgeInsets.all(isLandscape ? 3.0 : 4.r),
             child: Row(
               children: [
                 Expanded(
@@ -1470,7 +1596,7 @@ class _VerseCardFormatSelectorTablet extends StatelessWidget {
                     onTap: () => onFormatChanged(ShareFormat.video),
                   ),
                 ),
-                SizedBox(width: 4.w),
+                SizedBox(width: isLandscape ? 2.0 : 4.w),
                 Expanded(
                   child: _FormatTileTablet(
                     label: l10n.verseCardFormatImage,
@@ -1479,7 +1605,7 @@ class _VerseCardFormatSelectorTablet extends StatelessWidget {
                     onTap: () => onFormatChanged(ShareFormat.image),
                   ),
                 ),
-                SizedBox(width: 4.w),
+                SizedBox(width: isLandscape ? 2.0 : 4.w),
                 Expanded(
                   child: _FormatTileTablet(
                     label: l10n.verseCardFormatText,
@@ -1488,7 +1614,7 @@ class _VerseCardFormatSelectorTablet extends StatelessWidget {
                     onTap: () => onFormatChanged(ShareFormat.text),
                   ),
                 ),
-                SizedBox(width: 4.w),
+                SizedBox(width: isLandscape ? 2.0 : 4.w),
                 Expanded(
                   child: _FormatTileTablet(
                     label: l10n.verseCardFormatFullPage,
@@ -1521,15 +1647,21 @@ class _FormatTileTablet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
+        padding: EdgeInsets.symmetric(
+          horizontal: isLandscape ? 4.0 : 8.w,
+          vertical: isLandscape ? 6.0 : 10.h,
+        ),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.accentGold : Colors.transparent,
-          borderRadius: BorderRadius.circular(10.r),
+          borderRadius: BorderRadius.circular(isLandscape ? 8.0 : 10.r),
           boxShadow: isSelected
               ? [
                   BoxShadow(
@@ -1544,10 +1676,10 @@ class _FormatTileTablet extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 18.sp,
+              size: isLandscape ? 15.0 : 18.sp,
               color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
-            SizedBox(width: 6.w),
+            SizedBox(width: isLandscape ? 4.0 : 6.w),
             Flexible(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
@@ -1555,7 +1687,7 @@ class _FormatTileTablet extends StatelessWidget {
                   label,
                   maxLines: 1,
                   style: TextStyle(
-                    fontSize: 14.5.sp,
+                    fontSize: isLandscape ? 12.0 : 14.5.sp,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                     color: isSelected ? Colors.white : AppColors.textPrimary,
                   ),
@@ -1599,6 +1731,8 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     Widget buildButtons() {
       switch (selectedFormat) {
@@ -1616,28 +1750,30 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                         AppColors.accentGold.withValues(alpha: 0.85),
                     disabledForegroundColor:
                         Colors.white.withValues(alpha: 0.9),
-                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    padding: EdgeInsets.symmetric(
+                      vertical: isLandscape ? 10.0 : 14.h,
+                    ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.r),
+                      borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 14.r),
                     ),
                     elevation: 2,
                   ),
                   icon: isExportingVideo
                       ? CupertinoActivityIndicator(
-                          radius: 9.r,
+                          radius: isLandscape ? 7.0 : 9.r,
                           color: Colors.white,
                         )
-                      : Icon(Icons.share_rounded, size: 22.sp),
+                      : Icon(Icons.share_rounded, size: isLandscape ? 18.0 : 22.sp),
                   label: Text(
                     'مشاركة الفيديو',
                     style: TextStyle(
-                      fontSize: 16.5.sp,
+                      fontSize: isLandscape ? 13.5 : 16.5.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              SizedBox(width: 12.w),
+              SizedBox(width: isLandscape ? 8.0 : 12.w),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: isExportingVideo ? null : onSaveVideo,
@@ -1651,21 +1787,23 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                       ),
                       width: 1.5,
                     ),
-                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    padding: EdgeInsets.symmetric(
+                      vertical: isLandscape ? 10.0 : 14.h,
+                    ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.r),
+                      borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 14.r),
                     ),
                   ),
                   icon: isExportingVideo
                       ? CupertinoActivityIndicator(
-                          radius: 9.r,
+                          radius: isLandscape ? 7.0 : 9.r,
                           color: AppColors.accentGold,
                         )
-                      : Icon(Icons.download_rounded, size: 22.sp),
+                      : Icon(Icons.download_rounded, size: isLandscape ? 18.0 : 22.sp),
                   label: Text(
                     'حفظ الفيديو',
                     style: TextStyle(
-                      fontSize: 16.5.sp,
+                      fontSize: isLandscape ? 13.5 : 16.5.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -1688,28 +1826,30 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                         AppColors.accentGold.withValues(alpha: 0.85),
                     disabledForegroundColor:
                         Colors.white.withValues(alpha: 0.9),
-                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    padding: EdgeInsets.symmetric(
+                      vertical: isLandscape ? 10.0 : 14.h,
+                    ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.r),
+                      borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 14.r),
                     ),
                     elevation: 2,
                   ),
                   icon: isSharing
                       ? CupertinoActivityIndicator(
-                          radius: 9.r,
+                          radius: isLandscape ? 7.0 : 9.r,
                           color: Colors.white,
                         )
-                      : Icon(Icons.share_rounded, size: 22.sp),
+                      : Icon(Icons.share_rounded, size: isLandscape ? 18.0 : 22.sp),
                   label: Text(
                     l10n.verseCardShareImage,
                     style: TextStyle(
-                      fontSize: 16.5.sp,
+                      fontSize: isLandscape ? 13.5 : 16.5.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              SizedBox(width: 12.w),
+              SizedBox(width: isLandscape ? 8.0 : 12.w),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: (isSaving || isSharing) ? null : onSave,
@@ -1723,21 +1863,23 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                       ),
                       width: 1.5,
                     ),
-                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    padding: EdgeInsets.symmetric(
+                      vertical: isLandscape ? 10.0 : 14.h,
+                    ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.r),
+                      borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 14.r),
                     ),
                   ),
                   icon: isSaving
                       ? CupertinoActivityIndicator(
-                          radius: 9.r,
+                          radius: isLandscape ? 7.0 : 9.r,
                           color: AppColors.accentGold,
                         )
-                      : Icon(Icons.download_rounded, size: 22.sp),
+                      : Icon(Icons.download_rounded, size: isLandscape ? 18.0 : 22.sp),
                   label: Text(
                     l10n.verseCardSaveImage,
                     style: TextStyle(
-                      fontSize: 16.5.sp,
+                      fontSize: isLandscape ? 13.5 : 16.5.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -1754,17 +1896,19 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accentGold,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 14.h),
+                padding: EdgeInsets.symmetric(
+                  vertical: isLandscape ? 10.0 : 14.h,
+                ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14.r),
+                  borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 14.r),
                 ),
                 elevation: 2,
               ),
-              icon: Icon(Icons.copy_rounded, size: 22.sp),
+              icon: Icon(Icons.copy_rounded, size: isLandscape ? 18.0 : 22.sp),
               label: Text(
                 l10n.verseCardCopyText,
                 style: TextStyle(
-                  fontSize: 16.5.sp,
+                  fontSize: isLandscape ? 13.5 : 16.5.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1847,12 +1991,14 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
 
 class _VideoPreviewViewportTablet extends StatelessWidget {
   final VideoStudioState state;
+  final bool isLandscape;
   final VoidCallback onTogglePlay;
   final ValueChanged<int>? onVerseIndexChanged;
   final VoidCallback? onOpenFullscreen;
 
   const _VideoPreviewViewportTablet({
     required this.state,
+    this.isLandscape = false,
     required this.onTogglePlay,
     this.onVerseIndexChanged,
     this.onOpenFullscreen,
@@ -1874,13 +2020,13 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
     final double previewHeight;
     switch (config.aspectRatio) {
       case VideoAspectRatio.portrait9x16:
-        previewHeight = 380.h;
+        previewHeight = isLandscape ? 470.0 : 380.h;
         break;
       case VideoAspectRatio.square1x1:
-        previewHeight = 290.h;
+        previewHeight = isLandscape ? 380.0 : 290.h;
         break;
       case VideoAspectRatio.landscape16x9:
-        previewHeight = 200.h;
+        previewHeight = isLandscape ? 280.0 : 200.h;
         break;
     }
 
@@ -1889,7 +2035,12 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: EdgeInsets.only(top: 14.h, bottom: 6.h, left: 16.w, right: 16.w),
+            padding: EdgeInsets.only(
+              top: isLandscape ? 4.0 : 14.h,
+              bottom: isLandscape ? 4.0 : 6.h,
+              left: isLandscape ? 8.0 : 16.w,
+              right: isLandscape ? 8.0 : 16.w,
+            ),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOutCubic,
@@ -1900,7 +2051,7 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                 child: Container(
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16.r),
+                    borderRadius: BorderRadius.circular(isLandscape ? 12.0 : 16.r),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.16),
@@ -1962,12 +2113,15 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 10.h),
+          SizedBox(height: isLandscape ? 6.0 : 10.h),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+            padding: EdgeInsets.symmetric(
+              horizontal: isLandscape ? 10.0 : 14.w,
+              vertical: isLandscape ? 4.0 : 8.h,
+            ),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(20.r),
+              borderRadius: BorderRadius.circular(isLandscape ? 14.0 : 20.r),
               border: Border.all(
                 color: AppColors.accentGold.withValues(alpha: 0.15),
                 width: 1,
@@ -1984,12 +2138,12 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                       state.verses.isNotEmpty ? state.verses.last.verseNumber : config.endAyah,
                     ),
                     style: TextStyle(
-                      fontSize: 13.5.sp,
+                      fontSize: isLandscape ? 12.0 : 13.5.sp,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  SizedBox(width: 12.w),
+                  SizedBox(width: isLandscape ? 8.0 : 12.w),
                   Directionality(
                     textDirection: TextDirection.ltr,
                     child: Row(
@@ -2002,31 +2156,31 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                                 .add(const VideoStudioPlaybackReset());
                           },
                           icon: const Icon(Icons.replay_rounded),
-                          iconSize: 22.sp,
+                          iconSize: isLandscape ? 18.0 : 22.sp,
                           color: AppColors.accentGold,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           tooltip: 'إعادة من البداية',
                         ),
-                        SizedBox(width: 12.w),
+                        SizedBox(width: isLandscape ? 8.0 : 12.w),
                         IconButton(
                           onPressed: currentIndex > 0 && onVerseIndexChanged != null
                               ? () => onVerseIndexChanged!(currentIndex - 1)
                               : null,
                           icon: const Icon(Icons.skip_previous_rounded),
-                          iconSize: 24.sp,
+                          iconSize: isLandscape ? 19.0 : 24.sp,
                           color: AppColors.accentGold,
                           disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
-                        SizedBox(width: 12.w),
+                        SizedBox(width: isLandscape ? 8.0 : 12.w),
                         InkWell(
                           onTap: onTogglePlay,
-                          borderRadius: BorderRadius.circular(20.r),
+                          borderRadius: BorderRadius.circular(isLandscape ? 14.0 : 20.r),
                           child: Container(
-                            width: 42.r,
-                            height: 42.r,
+                            width: isLandscape ? 32.0 : 42.r,
+                            height: isLandscape ? 32.0 : 42.r,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: AppColors.accentGold,
@@ -2041,8 +2195,8 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                             child: state.isPreparingAudio
                                 ? Center(
                                     child: SizedBox(
-                                      width: 18.r,
-                                      height: 18.r,
+                                      width: isLandscape ? 14.0 : 18.r,
+                                      height: isLandscape ? 14.0 : 18.r,
                                       child: const CircularProgressIndicator(
                                         strokeWidth: 2,
                                         color: Colors.white,
@@ -2054,17 +2208,17 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                                         ? Icons.pause_rounded
                                         : Icons.play_arrow_rounded,
                                     color: Colors.white,
-                                    size: 26.sp,
+                                    size: isLandscape ? 20.0 : 26.sp,
                                   ),
                           ),
                         ),
-                        SizedBox(width: 12.w),
+                        SizedBox(width: isLandscape ? 8.0 : 12.w),
                         IconButton(
                           onPressed: currentIndex < totalVerses - 1 && onVerseIndexChanged != null
                               ? () => onVerseIndexChanged!(currentIndex + 1)
                               : null,
                           icon: const Icon(Icons.skip_next_rounded),
-                          iconSize: 24.sp,
+                          iconSize: isLandscape ? 19.0 : 24.sp,
                           color: AppColors.accentGold,
                           disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
                           padding: EdgeInsets.zero,
@@ -2074,17 +2228,17 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                     ),
                   ),
                   if (onOpenFullscreen != null) ...[
-                    SizedBox(width: 12.w),
+                    SizedBox(width: isLandscape ? 8.0 : 12.w),
                     Container(
                       width: 1,
-                      height: 16.h,
+                      height: isLandscape ? 12.0 : 16.h,
                       color: AppColors.accentGold.withValues(alpha: 0.2),
                     ),
-                    SizedBox(width: 10.w),
+                    SizedBox(width: isLandscape ? 6.0 : 10.w),
                     IconButton(
                       onPressed: onOpenFullscreen,
                       icon: const Icon(Icons.fullscreen_rounded),
-                      iconSize: 24.sp,
+                      iconSize: isLandscape ? 19.0 : 24.sp,
                       color: AppColors.accentGold,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),

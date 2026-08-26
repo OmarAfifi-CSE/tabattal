@@ -89,6 +89,9 @@ class QuranPageFrameTablet extends StatelessWidget {
       fontWeight: FontWeight.bold,
     );
 
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+
     return Material(
       color: Colors.transparent,
       child: LayoutBuilder(
@@ -119,6 +122,7 @@ class QuranPageFrameTablet extends StatelessWidget {
                     goldColor: mushafTheme.goldColor,
                     innerColor: mushafTheme.innerBorderColor,
                     backgroundColor: mushafTheme.backgroundColor,
+                    isLandscape: isLandscape,
                   ),
                   size: Size.infinite,
                 ),
@@ -165,11 +169,15 @@ class QuranPageFrameTablet extends StatelessWidget {
                     },
                     child: _TabletFrameInfoBox(
                       theme: mushafTheme,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2.5,
+                      ),
                       child: Text(
                         juzName,
-                        style: headerStyle.copyWith(fontSize: 16.5.sp),
+                        style: headerStyle.copyWith(fontSize: 13.5),
                         textAlign: TextAlign.center,
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -207,11 +215,15 @@ class QuranPageFrameTablet extends StatelessWidget {
                     },
                     child: _TabletFrameInfoBox(
                       theme: mushafTheme,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2.5,
+                      ),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
                           surahName,
-                          style: headerStyle.copyWith(fontSize: 16.5.sp),
+                          style: headerStyle.copyWith(fontSize: 13.5),
                           textAlign: TextAlign.center,
                           maxLines: 1,
                         ),
@@ -236,15 +248,15 @@ class QuranPageFrameTablet extends StatelessWidget {
                       },
                       child: _TabletFrameInfoBox(
                         theme: mushafTheme,
-                        margin: EdgeInsets.symmetric(horizontal: 4.w),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 2.w,
-                          vertical: 2.h,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 3,
+                          vertical: 1.5,
                         ),
                         child: Icon(
                           Icons.segment_rounded,
                           color: mushafTheme.goldColor,
-                          size: 28.sp,
+                          size: 20.0,
                         ),
                       ),
                     ),
@@ -260,6 +272,11 @@ class QuranPageFrameTablet extends StatelessWidget {
                   translation: const Offset(0.0, 0.5),
                   child: _TabletFrameInfoBox(
                     theme: mushafTheme,
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
@@ -269,9 +286,9 @@ class QuranPageFrameTablet extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'Amiri',
                           color: mushafTheme.textColor,
-                          fontSize: 18.sp,
+                          fontSize: 14.5,
                           fontWeight: FontWeight.w900,
-                          height: 1.1.h,
+                          height: 1.1,
                         ),
                       ),
                     ),
@@ -287,6 +304,7 @@ class QuranPageFrameTablet extends StatelessWidget {
                     pageWidth: pageWidth,
                     pageHeight: pageHeight,
                     isLeftPage: isLeftPage,
+                    isLandscape: isLandscape,
                     mushafTheme: mushafTheme,
                   ),
             ],
@@ -313,16 +331,16 @@ class _TabletFrameInfoBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: margin ?? (EdgeInsets.symmetric(horizontal: 4.w)),
+      margin: margin ?? const EdgeInsets.symmetric(horizontal: 3),
       padding:
-          padding ?? (EdgeInsets.symmetric(horizontal: 4.w, vertical: 3.h)),
+          padding ?? const EdgeInsets.symmetric(horizontal: 5, vertical: 2.5),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         border: Border.all(
           color: theme.goldColor.withValues(alpha: 0.6),
-          width: 1.0.w,
+          width: 1.0,
         ),
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(10),
         color: theme.backgroundColor,
       ),
       child: child,
@@ -335,6 +353,7 @@ class _TabletHizbMarker extends StatelessWidget {
   final double pageWidth;
   final double pageHeight;
   final bool isLeftPage;
+  final bool isLandscape;
   final MushafTheme mushafTheme;
 
   const _TabletHizbMarker({
@@ -342,6 +361,7 @@ class _TabletHizbMarker extends StatelessWidget {
     required this.pageWidth,
     required this.pageHeight,
     required this.isLeftPage,
+    this.isLandscape = false,
     required this.mushafTheme,
   });
 
@@ -352,9 +372,9 @@ class _TabletHizbMarker extends StatelessWidget {
         marker['line'] as int,
         pageHeight,
       ),
-      left: isLeftPage ? (pageWidth * 0.056) : null,
-      right: !isLeftPage ? (pageWidth * 0.044) : null,
-      width: pageWidth * 0.085,
+      left: isLeftPage ? (pageWidth * (isLandscape ? 0.056 : 0.056)) : null,
+      right: !isLeftPage ? (pageWidth * (isLandscape ? 0.044 : 0.044)) : null,
+      width: isLandscape ? 56.0 : (pageWidth * 0.085),
       child: FractionalTranslation(
         translation: Offset(isLeftPage ? -0.5 : 0.5, -0.5),
         child: Stack(
@@ -362,31 +382,33 @@ class _TabletHizbMarker extends StatelessWidget {
           children: [
             // Ornament glyph from QCF_BSML
             Transform.scale(
-              scaleX: 0.58,
+              scaleX: isLandscape ? 0.55 : 0.58,
               scaleY: 1.0,
               child: Text(
                 '\u00F5',
                 style: TextStyle(
                   fontFamily: 'QCF_BSML',
-                  fontSize: 88.sp,
+                  fontSize: isLandscape ? 66.0 : 88.sp,
                   color: mushafTheme.goldColor,
-                  height: 1.0.h,
+                  height: isLandscape ? 1.0 : 1.0.h,
                 ),
               ),
             ),
             // Label text centred inside the ornament
             Transform.translate(
-              offset: Offset(-4.w, 12.h),
+              offset: isLandscape
+                  ? const Offset(-4.8, 12.0)
+                  : Offset(-4.w, 12.h),
               child: SizedBox(
-                width: pageWidth * 0.060,
+                width: isLandscape ? 28.0 : (pageWidth * 0.060),
                 child: Text.rich(
                   TextSpan(
                     children: _buildHizbLabelTextSpans(
                       (marker['text'] as String).toArabicDigits,
                       TextStyle(
                         fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
-                        fontSize: 8.sp,
-                        height: 1.h,
+                        fontSize: isLandscape ? 6.8 : 8.sp,
+                        height: isLandscape ? 1.18 : 1.h,
                         color: mushafTheme.textColor,
                         fontWeight: FontWeight.bold,
                       ),

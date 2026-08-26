@@ -53,7 +53,17 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
       _highlightToken = 1;
     }
 
-    context.read<QuranRepository>().getLinesByPage(_currentPage);
+    final repo = context.read<QuranRepository>();
+    repo.getLinesByPage(_currentPage);
+    if (_currentPage + 1 <= QuranConstants.totalPages) {
+      repo.getLinesByPage(_currentPage + 1);
+    }
+    if (_currentPage + 2 <= QuranConstants.totalPages) {
+      repo.getLinesByPage(_currentPage + 2);
+    }
+    if (_currentPage - 1 >= 1) {
+      repo.getLinesByPage(_currentPage - 1);
+    }
   }
 
   void _onPageChanged(int newPage) {
@@ -66,14 +76,27 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
   }
 
   Future<void> _commitPageChange(int newPage, int token) async {
-    final result = await context.read<QuranRepository>().getLinesByPage(
-      newPage,
-    );
+    final repo = context.read<QuranRepository>();
+    final result = await repo.getLinesByPage(newPage);
     if (!mounted || token != _pageChangeToken) return;
     result.fold((_) {}, (_) {
       if (!mounted || token != _pageChangeToken) return;
       setState(() => _currentPage = newPage);
       context.read<AudioPreferencesService>().saveLastReadPage(newPage);
+
+      // Prewarm adjacent neighbor pages in RAM cache
+      if (newPage + 1 <= QuranConstants.totalPages) {
+        repo.getLinesByPage(newPage + 1);
+      }
+      if (newPage + 2 <= QuranConstants.totalPages) {
+        repo.getLinesByPage(newPage + 2);
+      }
+      if (newPage - 1 >= 1) {
+        repo.getLinesByPage(newPage - 1);
+      }
+      if (newPage - 2 >= 1) {
+        repo.getLinesByPage(newPage - 2);
+      }
     });
   }
 
@@ -184,7 +207,8 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
             listener: _handleAudioStateChange,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final isTwoPageMode = constraints.maxWidth >= 1000;
+                final isLandscape = constraints.maxWidth > constraints.maxHeight;
+                final isTwoPageMode = isLandscape || constraints.maxWidth >= 900;
                 final pageStep = isTwoPageMode ? 2 : 1;
 
                 return Stack(
@@ -201,7 +225,9 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                         final isVisible =
                             state is! AudioIdle && state is! AudioError;
                         final double paddingBottom = isVisible
-                            ? (_isAudioExpanded ? 80.h : 30.h)
+                            ? (isLandscape
+                                ? 0.0
+                                : (_isAudioExpanded ? 80.h : 30.h))
                             : 0;
                         return AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
@@ -239,77 +265,22 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                                     children: [
                                       Expanded(
                                         child: Center(
-                                          child: AspectRatio(
-                                            aspectRatio: 650 / 950,
-                                            child: RepaintBoundary(
-                                              child: QuranPageWidgetTablet(
-                                                key: ValueKey(
-                                                  'page_$rightPage',
-                                                ),
-                                                pageNumber: rightPage,
-                                                onNavigateToPage:
-                                                    (p, {verseKey}) =>
-                                                        _navigateToPage(
-                                                          p,
-                                                          verseKey: verseKey,
-                                                        ),
-                                                highlightVerseKey:
-                                                    (rightPage ==
-                                                            _currentPage ||
-                                                        leftPage ==
-                                                            _currentPage)
-                                                    ? _highlightVerseKey
-                                                    : null,
-                                                highlightToken:
-                                                    (rightPage ==
-                                                            _currentPage ||
-                                                        leftPage ==
-                                                            _currentPage)
-                                                    ? _highlightToken
-                                                    : 0,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      if (leftPage <=
-                                          QuranConstants.totalPages)
-                                        Container(
-                                          width: 2,
-                                          margin: const EdgeInsets.symmetric(
-                                            vertical: 40,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Colors.transparent,
-                                                AppColors.accentGold
-                                                    .withValues(alpha: 0.3),
-                                                Colors.transparent,
-                                              ],
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                            ),
-                                          ),
-                                        ),
-                                      if (leftPage <=
-                                          QuranConstants.totalPages)
-                                        Expanded(
-                                          child: Center(
-                                            child: AspectRatio(
-                                              aspectRatio: 650 / 950,
+                                          child: FittedBox(
+                                            fit: BoxFit.contain,
+                                            child: SizedBox(
+                                              width: 800,
+                                              height: 1200,
                                               child: RepaintBoundary(
                                                 child: QuranPageWidgetTablet(
                                                   key: ValueKey(
-                                                    'page_$leftPage',
+                                                    'page_$rightPage',
                                                   ),
-                                                  pageNumber: leftPage,
+                                                  pageNumber: rightPage,
                                                   onNavigateToPage:
                                                       (p, {verseKey}) =>
                                                           _navigateToPage(
                                                             p,
-                                                            verseKey:
-                                                                verseKey,
+                                                            verseKey: verseKey,
                                                           ),
                                                   highlightVerseKey:
                                                       (rightPage ==
@@ -325,6 +296,71 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                                                               _currentPage)
                                                       ? _highlightToken
                                                       : 0,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      if (leftPage <=
+                                          QuranConstants.totalPages)
+                                        Container(
+                                          width: 1.5,
+                                          margin: const EdgeInsets.symmetric(
+                                            vertical: 36,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Colors.transparent,
+                                                settingsState
+                                                    .effectiveMushafTheme
+                                                    .goldColor
+                                                    .withValues(alpha: 0.35),
+                                                Colors.transparent,
+                                              ],
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                            ),
+                                          ),
+                                        ),
+                                      if (leftPage <=
+                                          QuranConstants.totalPages)
+                                        Expanded(
+                                          child: Center(
+                                            child: FittedBox(
+                                              fit: BoxFit.contain,
+                                              child: SizedBox(
+                                                width: 800,
+                                                height: 1200,
+                                                child: RepaintBoundary(
+                                                  child: QuranPageWidgetTablet(
+                                                    key: ValueKey(
+                                                      'page_$leftPage',
+                                                    ),
+                                                    pageNumber: leftPage,
+                                                    onNavigateToPage:
+                                                        (p, {verseKey}) =>
+                                                            _navigateToPage(
+                                                              p,
+                                                              verseKey:
+                                                                  verseKey,
+                                                            ),
+                                                    highlightVerseKey:
+                                                        (rightPage ==
+                                                                _currentPage ||
+                                                            leftPage ==
+                                                                _currentPage)
+                                                        ? _highlightVerseKey
+                                                        : null,
+                                                    highlightToken:
+                                                        (rightPage ==
+                                                                _currentPage ||
+                                                            leftPage ==
+                                                                _currentPage)
+                                                        ? _highlightToken
+                                                        : 0,
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -368,16 +404,33 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                         return AnimatedPositioned(
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeOutCubic,
-                          bottom: isVisible ? 0 : -200,
-                          left: 16.w,
-                          right: 16.w,
-                          child: MediaControlBarTablet(
-                            isExpanded: _isAudioExpanded,
-                            onToggleExpanded: () {
-                              setState(
-                                () => _isAudioExpanded = !_isAudioExpanded,
-                              );
-                            },
+                          bottom: isVisible
+                              ? (isLandscape ? 12.0 : 16.h)
+                              : -150.0,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isLandscape ? 16.0 : 16.w,
+                              ),
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: isLandscape
+                                      ? 600.0
+                                      : (constraints.maxWidth - 32.w),
+                                ),
+                                child: MediaControlBarTablet(
+                                  isExpanded: _isAudioExpanded,
+                                  onToggleExpanded: () {
+                                    setState(
+                                      () => _isAudioExpanded =
+                                          !_isAudioExpanded,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
                           ),
                         );
                       },

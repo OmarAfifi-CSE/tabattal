@@ -153,17 +153,15 @@ class SurahHeaderWidgetTablet extends StatelessWidget {
         ? mushafTheme.textColor
         : mushafTheme.goldColor;
 
-    return SizedBox(
-      width: canvasWidth,
-      child: FittedBox(
-        fit: BoxFit.fitWidth,
-        child: SizedBox(
-          width: canvasWidth,
-          height: 85.0,
-          child: Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
-            children: [
+    return FittedBox(
+      fit: BoxFit.fitWidth,
+      child: SizedBox(
+        width: canvasWidth,
+        height: 85.0,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
               // 1. The decorative frame from QCF_BSML
               SizedBox(
                 width: canvasWidth,
@@ -252,7 +250,6 @@ class SurahHeaderWidgetTablet extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }
