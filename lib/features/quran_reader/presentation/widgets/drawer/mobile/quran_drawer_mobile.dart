@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../../../../l10n/app_localizations.dart';
+import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/theme/app_colors.dart';
-import '../../../../../settings/bloc/settings_bloc.dart';
-import '../../../../../settings/bloc/settings_event.dart';
-import '../../../../../settings/bloc/settings_state.dart';
-import '../../../../bloc/bookmark/bookmark_bloc.dart';
-import '../../../../bloc/bookmark/bookmark_state.dart';
-import '../../../pages/search/mobile/quran_search_screen_mobile.dart';
-import 'quran_audio_manager_view_mobile.dart';
+import '../../../../../settings/presentation/bloc/settings_bloc.dart';
+import '../../../../../settings/presentation/bloc/settings_event.dart';
+import '../../../../../settings/presentation/bloc/settings_state.dart';
+import '../../../../../quran_bookmarks/presentation/bloc/bookmark_bloc.dart';
+import '../../../../../quran_bookmarks/presentation/bloc/bookmark_state.dart';
+import '../../../../../quran_search/presentation/screens/mobile/quran_search_screen_mobile.dart';
+import '../../../../../quran_audio/presentation/widgets/mobile/quran_audio_manager_view_mobile.dart';
 import 'quran_full_tafsir_view_mobile.dart';
 import 'quran_translation_view_mobile.dart';
-import 'quran_bookmarks_view_mobile.dart';
+import '../../../../../quran_bookmarks/presentation/widgets/mobile/quran_bookmarks_view_mobile.dart';
 import 'quran_index_view_mobile.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
 import '../../../../data/models/verse_model.dart';
-import '../../mobile/verse_card_generator_sheet_mobile.dart';
-import 'theme_and_language_sheet_mobile.dart';
+import '../../../../../quran_verse_card/presentation/widgets/mobile/verse_card_generator_sheet_mobile.dart';
+import '../../../../../settings/presentation/widgets/mobile/theme_and_language_sheet_mobile.dart';
 
 class QuranDrawerMobile extends StatelessWidget {
   final int currentPage;

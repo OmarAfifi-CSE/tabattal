@@ -10,9 +10,9 @@ import '../../data/datasources/quran_remote_data_source.dart';
 import '../../data/models/verse_model.dart';
 import '../../data/models/tafsir_model.dart';
 import '../../data/models/translation_model.dart';
-import '../../data/models/search_verse_model.dart';
-import '../../bloc/quran/quran_page_cache.dart';
-import '../../bloc/quran/quran_state.dart';
+import '../../../quran_search/data/models/search_verse_model.dart';
+import '../../presentation/bloc/quran_page_cache.dart';
+import '../../presentation/bloc/quran_state.dart';
 
 abstract class QuranRepository {
   Future<Either<Failure, List<LineData>>> getLinesByPage(int pageNumber);

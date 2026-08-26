@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../../../../core/utils/arabic_text_utils.dart';
-import '../../../../../../../l10n/app_localizations.dart';
+import '../../../../../../core/utils/arabic_text_utils.dart';
+import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
 import '../../../../../../core/theme/app_colors.dart';
 

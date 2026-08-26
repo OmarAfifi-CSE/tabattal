@@ -5,14 +5,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 
-import 'features/quran_reader/presentation/pages/mobile/quran_mobile_screen.dart';
-import 'features/quran_reader/presentation/pages/tablet/quran_tablet_screen.dart';
-import 'features/quran_reader/presentation/pages/desktop/quran_desktop_screen.dart';
-import 'features/quran_reader/presentation/pages/web/quran_web_screen.dart';
+import 'features/quran_reader/presentation/screens/mobile/quran_mobile_screen.dart';
+import 'features/quran_reader/presentation/screens/tablet/quran_tablet_screen.dart';
+import 'features/quran_reader/presentation/screens/desktop/quran_desktop_screen.dart';
+import 'features/quran_reader/presentation/screens/web/quran_web_screen.dart';
 import 'core/utils/responsive_layout.dart';
-import 'features/quran_reader/bloc/audio/audio_bloc.dart';
-import 'features/quran_reader/bloc/bookmark/bookmark_bloc.dart';
-import 'features/quran_reader/bloc/bookmark/bookmark_event.dart';
+import 'features/quran_audio/presentation/bloc/audio_bloc.dart';
+import 'features/quran_bookmarks/presentation/bloc/bookmark_bloc.dart';
+import 'features/quran_bookmarks/presentation/bloc/bookmark_event.dart';
 import 'features/quran_reader/domain/repositories/quran_repository.dart';
 import 'features/quran_reader/data/datasources/quran_local_data_source.dart';
 
@@ -22,11 +22,11 @@ import 'core/theme/app_colors.dart';
 import 'core/network/audio_download_manager.dart';
 import 'core/services/audio_preferences_service.dart';
 import 'core/bloc/locale/locale_cubit.dart';
-import 'features/settings/bloc/settings_bloc.dart';
-import 'features/settings/bloc/settings_state.dart';
-import 'features/quran_reader/bloc/hifz/hifz_bloc.dart';
+import 'features/settings/presentation/bloc/settings_bloc.dart';
+import 'features/settings/presentation/bloc/settings_state.dart';
+import 'features/quran_hifz/presentation/bloc/hifz_bloc.dart';
 
-import 'features/quran_reader/bloc/quran/quran_bloc.dart';
+import 'features/quran_reader/presentation/bloc/quran_bloc.dart';
 
 // ---------------------------------------------------------------------------
 // Main entrypoint

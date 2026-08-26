@@ -12,7 +12,7 @@ import '../../domain/entities/video_project_config.dart';
 import '../../domain/entities/word_timing_segment.dart';
 import 'custom_image_service.dart';
 import 'word_timing_service.dart';
-import '../../../quran_reader/presentation/widgets/verse_card/helpers/verse_card_text_utils.dart';
+import '../../../quran_verse_card/presentation/widgets/shared/helpers/verse_card_text_utils.dart';
 
 class _CachedDynamicLayout {
   final TextPainter versePainter;

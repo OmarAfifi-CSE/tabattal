@@ -2,14 +2,14 @@ import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/database/database_helper.dart';
 import '../models/verse_model.dart';
-import '../models/search_verse_model.dart';
+import '../../../quran_search/data/models/search_verse_model.dart';
 import '../models/tafsir_model.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/utils/arabic_text_utils.dart';
 import '../../../../core/constants/quran_constants.dart';
 import '../../../../core/constants/quran_topics.dart';
 
-import '../../bloc/quran/quran_page_cache.dart';
+import '../../presentation/bloc/quran_page_cache.dart';
 
 abstract class QuranLocalDataSource {
   Future<List<WordModel>> getWordsByPage(int pageNumber);

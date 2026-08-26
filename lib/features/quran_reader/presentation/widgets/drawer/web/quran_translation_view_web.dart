@@ -2,17 +2,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../../../../l10n/app_localizations.dart';
+import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_text_styles.dart';
 import '../../../../../../core/utils/arabic_text_utils.dart';
 import '../../../../domain/repositories/quran_repository.dart';
 import '../../../../data/datasources/quran_local_data_source.dart';
-import '../../../../bloc/audio/audio_bloc.dart';
-import '../../../../bloc/audio/audio_event.dart';
-import '../../../../bloc/audio/audio_state.dart';
+import '../../../../../quran_audio/presentation/bloc/audio_bloc.dart';
+import '../../../../../quran_audio/presentation/bloc/audio_event.dart';
+import '../../../../../quran_audio/presentation/bloc/audio_state.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
-import '../../web/audio_settings_sheet_web.dart';
+import '../../../../../quran_audio/presentation/widgets/web/audio_settings_sheet_web.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class QuranTranslationViewWeb extends StatefulWidget {

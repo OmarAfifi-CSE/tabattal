@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../quran_reader/data/models/verse_model.dart';
-import '../../../quran_reader/presentation/widgets/mobile/verse_card_generator_sheet_mobile.dart';
-import '../../../quran_reader/presentation/widgets/tablet/verse_card_generator_sheet_tablet.dart';
+import '../../../quran_verse_card/presentation/widgets/desktop/verse_card_generator_sheet_desktop.dart';
+import '../../../quran_verse_card/presentation/widgets/mobile/verse_card_generator_sheet_mobile.dart';
+import '../../../quran_verse_card/presentation/widgets/tablet/verse_card_generator_sheet_tablet.dart';
+import '../../../quran_verse_card/presentation/widgets/web/verse_card_generator_sheet_web.dart';
 
 /// Shows the unified Quran Video Studio modal bottom sheet matching the app theme.
 void showQuranVideoStudioModal(
@@ -22,8 +25,24 @@ void showQuranVideoStudioModal(
           words: const [],
         );
 
-  final isTablet = MediaQuery.sizeOf(context).width > 600;
-  if (isTablet) {
+  final width = MediaQuery.sizeOf(context).width;
+  if (kIsWeb || width > 1000) {
+    if (kIsWeb) {
+      showVerseCardGeneratorModalWeb(
+        context,
+        verse: verse,
+        initialFormat: ShareFormat.video,
+        initialVerses: initialVerses,
+      );
+    } else {
+      showVerseCardGeneratorModalDesktop(
+        context,
+        verse: verse,
+        initialFormat: ShareFormat.video,
+        initialVerses: initialVerses,
+      );
+    }
+  } else if (width > 600) {
     showVerseCardGeneratorModalTablet(
       context,
       verse: verse,
@@ -70,8 +89,22 @@ class QuranVideoStudioScreen extends StatelessWidget {
             words: const [],
           );
 
-    final isTablet = MediaQuery.sizeOf(context).width > 600;
-    if (isTablet) {
+    final width = MediaQuery.sizeOf(context).width;
+    if (kIsWeb) {
+      return VerseCardGeneratorSheetWeb(
+        verse: effectiveVerse,
+        initialFormat: ShareFormat.video,
+        initialVerses: initialVerses,
+      );
+    }
+    if (width > 1000) {
+      return VerseCardGeneratorSheetDesktop(
+        verse: effectiveVerse,
+        initialFormat: ShareFormat.video,
+        initialVerses: initialVerses,
+      );
+    }
+    if (width > 600) {
       return VerseCardGeneratorSheetTablet(
         verse: effectiveVerse,
         initialFormat: ShareFormat.video,

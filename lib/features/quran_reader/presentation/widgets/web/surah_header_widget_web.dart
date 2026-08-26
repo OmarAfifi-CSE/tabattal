@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/constants/quran_metadata.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../settings/bloc/settings_bloc.dart';
+import '../../../../settings/presentation/bloc/settings_bloc.dart';
 
 class SurahHeaderWidgetWeb extends StatelessWidget {
   final int surahNumber;

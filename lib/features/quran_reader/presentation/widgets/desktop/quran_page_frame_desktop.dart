@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/constants/hizb_data.dart';
 import '../../../../../core/theme/mushaf_theme.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
-import '../../../../settings/bloc/settings_bloc.dart';
+import '../../../../settings/presentation/bloc/settings_bloc.dart';
 import '../drawer/desktop/quran_index_view_desktop.dart';
 import 'quran_border_painter_desktop.dart';
 

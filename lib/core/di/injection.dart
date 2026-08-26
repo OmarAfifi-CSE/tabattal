@@ -9,7 +9,7 @@ import '../services/audio_preferences_service.dart';
 import '../../features/quran_reader/data/datasources/quran_local_data_source.dart';
 import '../../features/quran_reader/data/datasources/quran_remote_data_source.dart';
 import '../../features/quran_reader/domain/repositories/quran_repository.dart';
-import '../../features/quran_reader/domain/repositories/bookmark_repository.dart';
+import '../../features/quran_bookmarks/domain/repositories/bookmark_repository.dart';
 
 import '../services/quran_audio_handler.dart';
 
