@@ -2,22 +2,22 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../../../l10n/app_localizations.dart';
-import '../../../../../core/constants/quran_metadata.dart';
-import '../../../../../core/network/audio_download_manager.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/utils/app_snack_bar.dart';
-import '../../../../../core/utils/reciter_localization.dart';
-import '../audio_selector_button.dart';
+import '../../../../../../../l10n/app_localizations.dart';
+import '../../../../../../core/constants/quran_metadata.dart';
+import '../../../../../../core/network/audio_download_manager.dart';
+import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../core/utils/app_snack_bar.dart';
+import '../../../../../../core/utils/reciter_localization.dart';
+import '../../audio_selector_button.dart';
 
-class QuranAudioManagerView extends StatefulWidget {
-  const QuranAudioManagerView({super.key});
+class QuranAudioManagerViewMobile extends StatefulWidget {
+  const QuranAudioManagerViewMobile({super.key});
 
   @override
-  State<QuranAudioManagerView> createState() => _QuranAudioManagerViewState();
+  State<QuranAudioManagerViewMobile> createState() => _QuranAudioManagerViewMobileState();
 }
 
-class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
+class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobile> {
   late final AudioDownloadManager _downloadManager;
 
   String _selectedCategory = AudioDownloadManager.reciterCategories.keys.first;
@@ -382,7 +382,7 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
                   itemCount: 114,
                   itemBuilder: (context, index) {
                     final surah = index + 1;
-                    return _AudioManagerSurahItem(
+                    return _AudioManagerSurahItemMobile(
                       surah: surah,
                       progressNotifier: _surahProgress[surah]!,
                       isActivelyDownloading: _activeDownloads.contains(surah),
@@ -399,14 +399,14 @@ class _QuranAudioManagerViewState extends State<QuranAudioManagerView> {
   }
 }
 
-class _AudioManagerSurahItem extends StatelessWidget {
+class _AudioManagerSurahItemMobile extends StatelessWidget {
   final int surah;
   final ValueNotifier<double> progressNotifier;
   final bool isActivelyDownloading;
   final VoidCallback onDownload;
   final VoidCallback onCancel;
 
-  const _AudioManagerSurahItem({
+  const _AudioManagerSurahItemMobile({
     required this.surah,
     required this.progressNotifier,
     required this.isActivelyDownloading,

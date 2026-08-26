@@ -7,14 +7,14 @@ import '../../../bloc/hifz/hifz_bloc.dart';
 import '../../../bloc/hifz/hifz_event.dart';
 import '../../../bloc/hifz/hifz_state.dart';
 
-class HifzToolbarWidget extends StatefulWidget {
-  const HifzToolbarWidget({super.key});
+class HifzToolbarWidgetMobile extends StatefulWidget {
+  const HifzToolbarWidgetMobile({super.key});
 
   @override
-  State<HifzToolbarWidget> createState() => _HifzToolbarWidgetState();
+  State<HifzToolbarWidgetMobile> createState() => _HifzToolbarWidgetMobileState();
 }
 
-class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
+class _HifzToolbarWidgetMobileState extends State<HifzToolbarWidgetMobile> {
   double? _top;
   double? _left;
   bool _isMinimized = false;
@@ -152,19 +152,19 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
                                   size: 20.sp,
                                 ),
                                 SizedBox(width: 6.w),
-                                _HifzTypeChip(
+                                _HifzTypeChipMobile(
                                   type: HifzMaskingType.fullVerse,
                                   label: l10n.hifzMaskFull,
                                   isSelected: state.maskingType == HifzMaskingType.fullVerse,
                                 ),
                                 SizedBox(width: 5.w),
-                                _HifzTypeChip(
+                                _HifzTypeChipMobile(
                                   type: HifzMaskingType.wordByWord,
                                   label: l10n.hifzMaskWord,
                                   isSelected: state.maskingType == HifzMaskingType.wordByWord,
                                 ),
                                 SizedBox(width: 10.w),
-                                _HifzActionIcon(
+                                _HifzActionIconMobile(
                                   icon: Icons.refresh_rounded,
                                   color: AppColors.accentGold,
                                   onTap: () {
@@ -172,7 +172,7 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
                                   },
                                 ),
                                 SizedBox(width: 3.w),
-                                _HifzActionIcon(
+                                _HifzActionIconMobile(
                                   icon: Icons.unfold_less_rounded,
                                   color: AppColors.textSecondary,
                                   onTap: () {
@@ -180,7 +180,7 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
                                   },
                                 ),
                                 SizedBox(width: 3.w),
-                                _HifzActionIcon(
+                                _HifzActionIconMobile(
                                   icon: Icons.close_rounded,
                                   color: Colors.redAccent,
                                   onTap: () {
@@ -203,12 +203,12 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
   }
 }
 
-class _HifzActionIcon extends StatelessWidget {
+class _HifzActionIconMobile extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
 
-  const _HifzActionIcon({
+  const _HifzActionIconMobile({
     required this.icon,
     required this.color,
     required this.onTap,
@@ -234,12 +234,12 @@ class _HifzActionIcon extends StatelessWidget {
   }
 }
 
-class _HifzTypeChip extends StatelessWidget {
+class _HifzTypeChipMobile extends StatelessWidget {
   final HifzMaskingType type;
   final String label;
   final bool isSelected;
 
-  const _HifzTypeChip({
+  const _HifzTypeChipMobile({
     required this.type,
     required this.label,
     required this.isSelected,

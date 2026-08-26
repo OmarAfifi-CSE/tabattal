@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../core/constants/quran_metadata.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/utils/arabic_text_utils.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../data/models/verse_model.dart';
-import '../../domain/repositories/quran_repository.dart';
+import '../../../../../core/constants/quran_metadata.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../../core/utils/arabic_text_utils.dart';
+import '../../../../../l10n/app_localizations.dart';
+import '../../../data/models/verse_model.dart';
+import '../../../domain/repositories/quran_repository.dart';
 
-class WordMeaningItem {
+class WordMeaningItemMobile {
   final String word;
   final String meaning;
 
-  const WordMeaningItem({
+  const WordMeaningItemMobile({
     required this.word,
     required this.meaning,
   });
 }
 
-List<WordMeaningItem> _parseGhareeb(String raw) {
+List<WordMeaningItemMobile> _parseGhareeb(String raw) {
   final lines = raw.split('\n');
-  final items = <WordMeaningItem>[];
+  final items = <WordMeaningItemMobile>[];
   for (final line in lines) {
     final trimmed = line.trim();
     if (trimmed.isEmpty) continue;
@@ -29,18 +29,18 @@ List<WordMeaningItem> _parseGhareeb(String raw) {
     if (colonIdx != -1) {
       final word = trimmed.substring(0, colonIdx).trim();
       final meaning = trimmed.substring(colonIdx + 1).trim();
-      items.add(WordMeaningItem(word: word, meaning: meaning));
+      items.add(WordMeaningItemMobile(word: word, meaning: meaning));
     } else {
-      items.add(WordMeaningItem(word: '', meaning: trimmed));
+      items.add(WordMeaningItemMobile(word: '', meaning: trimmed));
     }
   }
   return items;
 }
 
-class WordMeaningsSheet extends StatefulWidget {
+class WordMeaningsSheetMobile extends StatefulWidget {
   final VerseModel verse;
 
-  const WordMeaningsSheet({
+  const WordMeaningsSheetMobile({
     super.key,
     required this.verse,
   });
@@ -53,16 +53,16 @@ class WordMeaningsSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => WordMeaningsSheet(verse: verse),
+      builder: (ctx) => WordMeaningsSheetMobile(verse: verse),
     );
   }
 
   @override
-  State<WordMeaningsSheet> createState() => _WordMeaningsSheetState();
+  State<WordMeaningsSheetMobile> createState() => _WordMeaningsSheetMobileState();
 }
 
-class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
-  List<WordMeaningItem>? _meanings;
+class _WordMeaningsSheetMobileState extends State<WordMeaningsSheetMobile> {
+  List<WordMeaningItemMobile>? _meanings;
   bool _isLoading = false;
 
   @override
@@ -143,7 +143,7 @@ class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
             ),
 
             // Header: Title & Surah/Ayah Reference
-            _WordMeaningsHeader(
+            _WordMeaningsHeaderMobile(
               surahName: surahName,
               ayahNumber: ayahNumber,
               isArabic: isArabic,
@@ -164,7 +164,7 @@ class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
                 ),
               )
             else if (_meanings == null || _meanings!.isEmpty)
-              _WordMeaningsEmptyState(isArabic: isArabic)
+              _WordMeaningsEmptyStateMobile(isArabic: isArabic)
             else
               Flexible(
                 child: ListView.separated(
@@ -176,7 +176,7 @@ class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
                   itemCount: _meanings!.length,
                   separatorBuilder: (context, index) => SizedBox(height: 10.h),
                   itemBuilder: (context, index) {
-                    return _WordMeaningCard(
+                    return _WordMeaningCardMobile(
                       item: _meanings![index],
                       index: index,
                     );
@@ -190,13 +190,13 @@ class _WordMeaningsSheetState extends State<WordMeaningsSheet> {
   }
 }
 
-class _WordMeaningsHeader extends StatelessWidget {
+class _WordMeaningsHeaderMobile extends StatelessWidget {
   final String surahName;
   final int ayahNumber;
   final bool isArabic;
   final AppLocalizations l10n;
 
-  const _WordMeaningsHeader({
+  const _WordMeaningsHeaderMobile({
     required this.surahName,
     required this.ayahNumber,
     required this.isArabic,
@@ -255,10 +255,10 @@ class _WordMeaningsHeader extends StatelessWidget {
   }
 }
 
-class _WordMeaningsEmptyState extends StatelessWidget {
+class _WordMeaningsEmptyStateMobile extends StatelessWidget {
   final bool isArabic;
 
-  const _WordMeaningsEmptyState({required this.isArabic});
+  const _WordMeaningsEmptyStateMobile({required this.isArabic});
 
   @override
   Widget build(BuildContext context) {
@@ -290,11 +290,11 @@ class _WordMeaningsEmptyState extends StatelessWidget {
   }
 }
 
-class _WordMeaningCard extends StatelessWidget {
-  final WordMeaningItem item;
+class _WordMeaningCardMobile extends StatelessWidget {
+  final WordMeaningItemMobile item;
   final int index;
 
-  const _WordMeaningCard({
+  const _WordMeaningCardMobile({
     required this.item,
     required this.index,
   });

@@ -1,28 +1,28 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../../../l10n/app_localizations.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
-import '../../../../../core/utils/arabic_text_utils.dart';
-import '../../../../quran_reader/domain/repositories/quran_repository.dart';
-import '../../../../quran_reader/data/datasources/quran_local_data_source.dart';
-import '../../../bloc/audio/audio_bloc.dart';
-import '../../../bloc/audio/audio_event.dart';
-import '../../../bloc/audio/audio_state.dart';
-import '../../../../../core/constants/quran_metadata.dart';
-import '../audio_settings_sheet.dart';
+import '../../../../../../../l10n/app_localizations.dart';
+import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../core/theme/app_text_styles.dart';
+import '../../../../../../core/utils/arabic_text_utils.dart';
+import '../../../../domain/repositories/quran_repository.dart';
+import '../../../../data/datasources/quran_local_data_source.dart';
+import '../../../../bloc/audio/audio_bloc.dart';
+import '../../../../bloc/audio/audio_event.dart';
+import '../../../../bloc/audio/audio_state.dart';
+import '../../../../../../core/constants/quran_metadata.dart';
+import '../../audio_settings_sheet.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-class QuranTranslationView extends StatefulWidget {
+class QuranTranslationViewMobile extends StatefulWidget {
   final int pageNumber;
-  const QuranTranslationView({super.key, required this.pageNumber});
+  const QuranTranslationViewMobile({super.key, required this.pageNumber});
 
   @override
-  State<QuranTranslationView> createState() => _QuranTranslationViewState();
+  State<QuranTranslationViewMobile> createState() => _QuranTranslationViewMobileState();
 }
 
-class VerseTranslationData {
+class VerseTranslationDataMobile {
   final String verseKey;
   final String textUthmani;
   final String translationText;
@@ -31,7 +31,7 @@ class VerseTranslationData {
   final int page;
   final int verseId;
 
-  VerseTranslationData({
+  VerseTranslationDataMobile({
     required this.verseKey,
     required this.textUthmani,
     required this.translationText,
@@ -41,12 +41,12 @@ class VerseTranslationData {
   }) : verseId = surah * 1000 + ayah;
 }
 
-class _QuranTranslationViewState extends State<QuranTranslationView> {
+class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile> {
   late final QuranRepository _repository;
   late final QuranLocalDataSource _localDS;
   bool _isLoadingInitial = true;
   bool _isLoadingMore = false;
-  final List<VerseTranslationData> _list = [];
+  final List<VerseTranslationDataMobile> _list = [];
   int _currentSurahId = 1;
   final int _translationResourceId = 20; // Default: Saheeh International
   int _initialScrollIndex = 0;
@@ -177,7 +177,7 @@ class _QuranTranslationViewState extends State<QuranTranslationView> {
 
       final newItems = verses
           .map(
-            (verse) => VerseTranslationData(
+            (verse) => VerseTranslationDataMobile(
               verseKey: verse.verseKey,
               textUthmani: verse.textUthmani,
               translationText:

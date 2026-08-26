@@ -9,10 +9,10 @@ import '../../../../../settings/bloc/settings_state.dart';
 import '../../../../bloc/bookmark/bookmark_bloc.dart';
 import '../../../../bloc/bookmark/bookmark_state.dart';
 import '../../../pages/search/desktop/quran_search_screen_desktop.dart';
-import '../quran_audio_manager_view.dart';
-import '../quran_full_tafsir_view.dart';
-import '../quran_translation_view.dart';
-import '../theme_and_language_sheet.dart';
+import '../tablet/quran_audio_manager_view_tablet.dart';
+import '../tablet/quran_full_tafsir_view_tablet.dart';
+import '../tablet/quran_translation_view_tablet.dart';
+import '../tablet/theme_and_language_sheet_tablet.dart';
 import 'quran_bookmarks_view_desktop.dart';
 import 'quran_index_view_desktop.dart';
 
@@ -160,7 +160,7 @@ class QuranDrawerDesktop extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) =>
-                              QuranFullTafsirView(pageNumber: currentPage),
+                              QuranFullTafsirViewTablet(pageNumber: currentPage),
                         ),
                       );
                       if (result is Map<String, dynamic>) {
@@ -183,7 +183,7 @@ class QuranDrawerDesktop extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) =>
-                              QuranTranslationView(pageNumber: currentPage),
+                              QuranTranslationViewTablet(pageNumber: currentPage),
                         ),
                       );
                       if (result is Map<String, dynamic>) {
@@ -205,7 +205,7 @@ class QuranDrawerDesktop extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const QuranAudioManagerView(),
+                          builder: (_) => const QuranAudioManagerViewTablet(),
                         ),
                       );
                     },
@@ -216,7 +216,7 @@ class QuranDrawerDesktop extends StatelessWidget {
                     subtitle: l10n.drawerThemeAndLanguageSubtitle,
                     onTap: () {
                       Navigator.pop(context);
-                      showThemeAndLanguageModal(context);
+                      showThemeAndLanguageModalTablet(context);
                     },
                   ),
                 ],

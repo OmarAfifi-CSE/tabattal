@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../../l10n/app_localizations.dart';
-import '../../../../../core/bloc/locale/locale_cubit.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/mushaf_theme.dart';
-import '../../../../settings/bloc/settings_bloc.dart';
-import '../../../../settings/bloc/settings_event.dart';
-import '../../../../settings/bloc/settings_state.dart';
+import '../../../../../../../l10n/app_localizations.dart';
+import '../../../../../../core/bloc/locale/locale_cubit.dart';
+import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../core/theme/mushaf_theme.dart';
+import '../../../../../settings/bloc/settings_bloc.dart';
+import '../../../../../settings/bloc/settings_event.dart';
+import '../../../../../settings/bloc/settings_state.dart';
 
-
-/// Unified modal bottom sheet for managing App Language, Dark Mode, and Mushaf Color Themes.
-void showThemeAndLanguageModal(BuildContext context) {
+/// Unified modal bottom sheet for managing App Language, Dark Mode, and Mushaf Color Themes (Mobile).
+void showThemeAndLanguageModalMobile(BuildContext context) {
   final settingsBloc = context.read<SettingsBloc>();
   final localeCubit = context.read<LocaleCubit>();
 
@@ -25,13 +24,13 @@ void showThemeAndLanguageModal(BuildContext context) {
         BlocProvider.value(value: settingsBloc),
         BlocProvider.value(value: localeCubit),
       ],
-      child: const ThemeAndLanguageSheet(),
+      child: const ThemeAndLanguageSheetMobile(),
     ),
   );
 }
 
-class ThemeAndLanguageSheet extends StatelessWidget {
-  const ThemeAndLanguageSheet({super.key});
+class ThemeAndLanguageSheetMobile extends StatelessWidget {
+  const ThemeAndLanguageSheetMobile({super.key});
 
   String _getThemeName(BuildContext context, String id) {
     final l10n = AppLocalizations.of(context)!;
@@ -165,7 +164,7 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                           child: Row(
                             children: [
                               Expanded(
-                                child: _LanguagePill(
+                                child: _LanguagePillMobile(
                                   label: 'العربية',
                                   isSelected: isCurrentArabic,
                                   activeGold: activeTheme.goldColor,
@@ -178,7 +177,7 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                               ),
                               SizedBox(width: 8.w),
                               Expanded(
-                                child: _LanguagePill(
+                                child: _LanguagePillMobile(
                                   label: 'English',
                                   isSelected: !isCurrentArabic,
                                   activeGold: activeTheme.goldColor,
@@ -219,7 +218,7 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                                 color: activeTheme.goldColor.withValues(alpha: 0.12),
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(
+                            child: Icon(
                                 isDark
                                     ? Icons.dark_mode_rounded
                                     : Icons.light_mode_rounded,
@@ -371,13 +370,13 @@ class ThemeAndLanguageSheet extends StatelessWidget {
   }
 }
 
-class _LanguagePill extends StatelessWidget {
+class _LanguagePillMobile extends StatelessWidget {
   final String label;
   final bool isSelected;
   final Color activeGold;
   final VoidCallback onTap;
 
-  const _LanguagePill({
+  const _LanguagePillMobile({
     required this.label,
     required this.isSelected,
     required this.activeGold,
@@ -427,10 +426,10 @@ class _LanguagePill extends StatelessWidget {
   }
 }
 
-/// Dual icon for Drawer entry representing both Mushaf Appearance and Language.
-class ThemeAndLanguageDrawerIcon extends StatelessWidget {
+/// Dual icon for Drawer entry representing both Mushaf Appearance and Language (Mobile).
+class ThemeAndLanguageDrawerIconMobile extends StatelessWidget {
   final double? size;
-  const ThemeAndLanguageDrawerIcon({super.key, this.size});
+  const ThemeAndLanguageDrawerIconMobile({super.key, this.size});
 
   @override
   Widget build(BuildContext context) {
@@ -471,4 +470,3 @@ class ThemeAndLanguageDrawerIcon extends StatelessWidget {
     );
   }
 }
-

@@ -21,9 +21,9 @@ import '../../../bloc/audio/audio_event.dart';
 import '../../../bloc/hifz/hifz_bloc.dart';
 import '../../../bloc/hifz/hifz_event.dart';
 import '../../../bloc/hifz/hifz_state.dart';
-import '../verse_card_generator_sheet.dart';
 import '../tafsir_selector_menu.dart';
-import '../word_meanings_sheet.dart';
+import 'verse_card_generator_sheet_mobile.dart';
+import 'word_meanings_sheet_mobile.dart';
 import '../overlay_position_delegate.dart';
 
 class VerseActionMenuMobile extends StatefulWidget {
@@ -893,7 +893,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                           l10n.menuWordMeanings,
                           () {
                             _close(keepHighlight: true);
-                            WordMeaningsSheet.show(
+                            WordMeaningsSheetMobile.show(
                               context,
                               verse: widget.verse,
                             ).then((_) {
@@ -993,7 +993,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                           } else if (qState is TranslationLoaded) {
                             translationText = qState.translation.text;
                           }
-                          showVerseCardGeneratorModal(
+                          showVerseCardGeneratorModalMobile(
                             context,
                             verse: widget.verse,
                             tafsirText: tafsirText,

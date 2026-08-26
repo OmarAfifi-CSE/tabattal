@@ -1,5 +1,5 @@
 import '../../widgets/drawer/mobile/quran_drawer_mobile.dart';
-import '../../widgets/hifz/hifz_toolbar_widget.dart';
+import '../../widgets/mobile/hifz_toolbar_widget_mobile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -236,7 +236,7 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                     );
                   },
                 ),
-                const HifzToolbarWidget(),
+                const HifzToolbarWidgetMobile(),
                 BlocBuilder<AudioBloc, AudioState>(
                   builder: (context, state) {
                     final isVisible =

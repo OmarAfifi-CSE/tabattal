@@ -1,33 +1,33 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../../../l10n/app_localizations.dart';
+import '../../../../../../../l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
-import '../../../../../core/utils/arabic_text_utils.dart';
-import '../../../../quran_reader/domain/repositories/quran_repository.dart';
-import '../../../../quran_reader/data/datasources/quran_local_data_source.dart';
-import '../../../bloc/audio/audio_bloc.dart';
-import '../../../bloc/audio/audio_event.dart';
-import '../../../bloc/audio/audio_state.dart';
-import '../../../../../core/constants/quran_metadata.dart';
-import '../audio_settings_sheet.dart';
-import '../tafsir_selector_menu.dart';
-import '../../../domain/entities/download_state.dart';
-import '../../../../../core/error/failures.dart';
-import '../../../../../core/widgets/mixed_direction_text.dart';
+import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../core/theme/app_text_styles.dart';
+import '../../../../../../core/utils/arabic_text_utils.dart';
+import '../../../../domain/repositories/quran_repository.dart';
+import '../../../../data/datasources/quran_local_data_source.dart';
+import '../../../../bloc/audio/audio_bloc.dart';
+import '../../../../bloc/audio/audio_event.dart';
+import '../../../../bloc/audio/audio_state.dart';
+import '../../../../../../core/constants/quran_metadata.dart';
+import '../../audio_settings_sheet.dart';
+import '../../tafsir_selector_menu.dart';
+import '../../../../domain/entities/download_state.dart';
+import '../../../../../../core/error/failures.dart';
+import '../../../../../../core/widgets/mixed_direction_text.dart';
 
-class QuranFullTafsirView extends StatefulWidget {
+class QuranFullTafsirViewMobile extends StatefulWidget {
   final int pageNumber;
-  const QuranFullTafsirView({super.key, required this.pageNumber});
+  const QuranFullTafsirViewMobile({super.key, required this.pageNumber});
 
   @override
-  State<QuranFullTafsirView> createState() => _QuranFullTafsirViewState();
+  State<QuranFullTafsirViewMobile> createState() => _QuranFullTafsirViewMobileState();
 }
 
-class VerseTafsirData {
+class VerseTafsirDataMobile {
   final String verseKey;
   final String textUthmani;
   final String tafsirText;
@@ -38,7 +38,7 @@ class VerseTafsirData {
   final String? groupVerseRange;
   final bool isGroupContinuation;
 
-  VerseTafsirData({
+  VerseTafsirDataMobile({
     required this.verseKey,
     required this.textUthmani,
     required this.tafsirText,
@@ -50,12 +50,12 @@ class VerseTafsirData {
   }) : verseId = surah * 1000 + ayah;
 }
 
-class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
+class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
   late final QuranRepository _repository;
   late final QuranLocalDataSource _localDS;
   bool _isLoadingInitial = true;
   bool _isLoadingMore = false;
-  final List<VerseTafsirData> _tafsirList = [];
+  final List<VerseTafsirDataMobile> _tafsirList = [];
   int _currentSurahId = 1;
   int _tafsirResourceId = 16; // Default: Al-Muyassar
   int _initialScrollIndex = 0;
@@ -278,7 +278,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
           .toList()
         ..sort();
 
-      final List<VerseTafsirData> newItems = [];
+      final List<VerseTafsirDataMobile> newItems = [];
 
       for (final verse in verses) {
         final rootAyah = directAyahs.lastWhere(
@@ -301,7 +301,7 @@ class _QuranFullTafsirViewState extends State<QuranFullTafsirView> {
         String resolvedText = tafsirMap['$surahId:$rootAyah'] ?? _noTafsirText;
 
         newItems.add(
-          VerseTafsirData(
+          VerseTafsirDataMobile(
             verseKey: verse.verseKey,
             textUthmani: verse.textUthmani,
             tafsirText: resolvedText,

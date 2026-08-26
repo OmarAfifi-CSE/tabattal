@@ -9,15 +9,15 @@ import '../../../../../settings/bloc/settings_state.dart';
 import '../../../../bloc/bookmark/bookmark_bloc.dart';
 import '../../../../bloc/bookmark/bookmark_state.dart';
 import '../../../pages/search/mobile/quran_search_screen_mobile.dart';
-import '../quran_audio_manager_view.dart';
-import '../quran_full_tafsir_view.dart';
-import '../quran_translation_view.dart';
+import 'quran_audio_manager_view_mobile.dart';
+import 'quran_full_tafsir_view_mobile.dart';
+import 'quran_translation_view_mobile.dart';
 import 'quran_bookmarks_view_mobile.dart';
 import 'quran_index_view_mobile.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
 import '../../../../data/models/verse_model.dart';
-import '../../verse_card_generator_sheet.dart';
-import '../theme_and_language_sheet.dart';
+import '../../mobile/verse_card_generator_sheet_mobile.dart';
+import 'theme_and_language_sheet_mobile.dart';
 
 class QuranDrawerMobile extends StatelessWidget {
   final int currentPage;
@@ -163,7 +163,7 @@ class QuranDrawerMobile extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (_) =>
-                                QuranFullTafsirView(pageNumber: currentPage),
+                                QuranFullTafsirViewMobile(pageNumber: currentPage),
                           ),
                         );
                         if (result is Map<String, dynamic>) {
@@ -186,7 +186,7 @@ class QuranDrawerMobile extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (_) =>
-                                QuranTranslationView(pageNumber: currentPage),
+                                QuranTranslationViewMobile(pageNumber: currentPage),
                           ),
                         );
                         if (result is Map<String, dynamic>) {
@@ -208,7 +208,7 @@ class QuranDrawerMobile extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const QuranAudioManagerView(),
+                            builder: (_) => const QuranAudioManagerViewMobile(),
                           ),
                         );
                       },
@@ -220,7 +220,7 @@ class QuranDrawerMobile extends StatelessWidget {
                       onTap: () {
                         Navigator.pop(context);
                         final surahNum = QuranMetadata.getSurahForPage(currentPage);
-                        showVerseCardGeneratorModal(
+                        showVerseCardGeneratorModalMobile(
                           context,
                           verse: VerseModel(
                             id: 0,
@@ -236,12 +236,12 @@ class QuranDrawerMobile extends StatelessWidget {
                       },
                     ),
                     _MobileDrawerItem(
-                      iconWidget: const ThemeAndLanguageDrawerIcon(),
+                      iconWidget: const ThemeAndLanguageDrawerIconMobile(),
                       title: l10n.drawerThemeAndLanguage,
                       subtitle: l10n.drawerThemeAndLanguageSubtitle,
                       onTap: () {
                         Navigator.pop(context);
-                        showThemeAndLanguageModal(context);
+                        showThemeAndLanguageModalMobile(context);
                       },
                     ),
                     SizedBox(height: 8.h),

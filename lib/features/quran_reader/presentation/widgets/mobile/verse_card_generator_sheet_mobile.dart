@@ -6,50 +6,50 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../../../core/constants/quran_metadata.dart';
-import '../../../../core/database/database_helper.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/arabic_text_utils.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../../settings/bloc/settings_bloc.dart';
-import '../../bloc/audio/audio_bloc.dart';
-import '../../bloc/audio/audio_event.dart';
-import '../../data/models/verse_model.dart';
+import '../../../../../core/constants/quran_metadata.dart';
+import '../../../../../core/database/database_helper.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/utils/arabic_text_utils.dart';
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../settings/bloc/settings_bloc.dart';
+import '../../../bloc/audio/audio_bloc.dart';
+import '../../../bloc/audio/audio_event.dart';
+import '../../../data/models/verse_model.dart';
 
-import '../../../quran_video_studio/data/repositories/video_studio_repository_impl.dart';
-import '../../../quran_video_studio/data/services/video_export_service.dart';
-import '../../../quran_video_studio/domain/entities/video_enums.dart';
-import '../../../quran_video_studio/domain/entities/video_project_config.dart';
-import '../../../quran_video_studio/presentation/bloc/video_studio_bloc.dart';
-import '../../../quran_video_studio/presentation/bloc/video_studio_event.dart';
-import '../../../quran_video_studio/presentation/bloc/video_studio_state.dart';
-import '../../../quran_video_studio/presentation/widgets/video_aspect_ratio_bar.dart';
-import '../../../quran_video_studio/presentation/widgets/video_background_selector.dart';
-import '../../../quran_video_studio/presentation/widgets/video_export_progress_dialog.dart';
-import '../../../quran_video_studio/presentation/widgets/video_fullscreen_preview_modal.dart';
-import '../../../quran_video_studio/presentation/widgets/video_options_selector.dart';
-import '../../../quran_video_studio/presentation/widgets/video_preview_viewport.dart';
-import '../../../quran_video_studio/presentation/widgets/video_range_picker.dart';
-import '../../../quran_video_studio/presentation/widgets/video_reciter_selector.dart';
-import '../../../quran_video_studio/presentation/widgets/video_theme_selector.dart';
+import '../../../../quran_video_studio/data/repositories/video_studio_repository_impl.dart';
+import '../../../../quran_video_studio/data/services/video_export_service.dart';
+import '../../../../quran_video_studio/domain/entities/video_enums.dart';
+import '../../../../quran_video_studio/domain/entities/video_project_config.dart';
+import '../../../../quran_video_studio/presentation/bloc/video_studio_bloc.dart';
+import '../../../../quran_video_studio/presentation/bloc/video_studio_event.dart';
+import '../../../../quran_video_studio/presentation/bloc/video_studio_state.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_aspect_ratio_bar.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_background_selector.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_export_progress_dialog.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_fullscreen_preview_modal.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_options_selector.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_preview_viewport.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_range_picker.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_reciter_selector.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_theme_selector.dart';
 
-import 'verse_card/helpers/verse_card_text_utils.dart';
-import 'verse_card/models/verse_card_theme.dart';
-import 'verse_card/services/verse_card_image_exporter.dart';
-import 'verse_card/widgets/verse_card_action_buttons.dart';
-import 'verse_card/widgets/verse_card_content_preview.dart';
-import 'verse_card/widgets/verse_card_format_selector.dart';
-import 'verse_card/widgets/verse_card_full_page_preview.dart';
-import 'verse_card/widgets/verse_card_options_bar.dart';
-import 'verse_card/widgets/verse_card_range_picker.dart';
-import 'verse_card/widgets/verse_card_text_preview.dart';
-import 'verse_card/widgets/verse_card_theme_selector.dart';
+import '../verse_card/helpers/verse_card_text_utils.dart';
+import '../verse_card/models/verse_card_theme.dart';
+import '../verse_card/services/verse_card_image_exporter.dart';
+import '../verse_card/widgets/verse_card_action_buttons.dart';
+import '../verse_card/widgets/verse_card_content_preview.dart';
+import '../verse_card/widgets/verse_card_format_selector.dart';
+import '../verse_card/widgets/verse_card_full_page_preview.dart';
+import '../verse_card/widgets/verse_card_options_bar.dart';
+import '../verse_card/widgets/verse_card_range_picker.dart';
+import '../verse_card/widgets/verse_card_text_preview.dart';
+import '../verse_card/widgets/verse_card_theme_selector.dart';
 
 // Re-export models for external consumers
-export 'verse_card/models/verse_card_theme.dart';
+export '../verse_card/models/verse_card_theme.dart';
 
 /// Shows the unified Verse Card & Video Generator modal (Mobile).
-void showVerseCardGeneratorModal(
+void showVerseCardGeneratorModalMobile(
   BuildContext context, {
   required VerseModel verse,
   String? tafsirText,
@@ -73,7 +73,7 @@ void showVerseCardGeneratorModal(
     ),
     builder: (ctx) => ConstrainedBox(
       constraints: BoxConstraints(maxHeight: maxSheetHeight),
-      child: VerseCardGeneratorSheet(
+      child: VerseCardGeneratorSheetMobile(
         verse: verse,
         tafsirText: tafsirText,
         translationText: translationText,
@@ -86,7 +86,7 @@ void showVerseCardGeneratorModal(
   );
 }
 
-class VerseCardGeneratorSheet extends StatelessWidget {
+class VerseCardGeneratorSheetMobile extends StatelessWidget {
   final VerseModel verse;
   final String? tafsirText;
   final String? translationText;
@@ -95,7 +95,7 @@ class VerseCardGeneratorSheet extends StatelessWidget {
   final ShareFormat initialFormat;
   final List<VerseModel>? initialVerses;
 
-  const VerseCardGeneratorSheet({
+  const VerseCardGeneratorSheetMobile({
     super.key,
     required this.verse,
     this.tafsirText,
@@ -127,7 +127,7 @@ class VerseCardGeneratorSheet extends StatelessWidget {
             verses: initialVerses ?? [verse],
           ),
         ),
-      child: _VerseCardGeneratorSheetContent(
+      child: _VerseCardGeneratorSheetContentMobile(
         verse: verse,
         tafsirText: tafsirText,
         translationText: translationText,
@@ -139,7 +139,7 @@ class VerseCardGeneratorSheet extends StatelessWidget {
   }
 }
 
-class _VerseCardGeneratorSheetContent extends StatefulWidget {
+class _VerseCardGeneratorSheetContentMobile extends StatefulWidget {
   final VerseModel verse;
   final String? tafsirText;
   final String? translationText;
@@ -147,7 +147,7 @@ class _VerseCardGeneratorSheetContent extends StatefulWidget {
   final int? pageNumber;
   final ShareFormat initialFormat;
 
-  const _VerseCardGeneratorSheetContent({
+  const _VerseCardGeneratorSheetContentMobile({
     required this.verse,
     this.tafsirText,
     this.translationText,
@@ -157,12 +157,12 @@ class _VerseCardGeneratorSheetContent extends StatefulWidget {
   });
 
   @override
-  State<_VerseCardGeneratorSheetContent> createState() =>
-      _VerseCardGeneratorSheetContentState();
+  State<_VerseCardGeneratorSheetContentMobile> createState() =>
+      _VerseCardGeneratorSheetContentMobileState();
 }
 
-class _VerseCardGeneratorSheetContentState
-    extends State<_VerseCardGeneratorSheetContent> {
+class _VerseCardGeneratorSheetContentMobileState
+    extends State<_VerseCardGeneratorSheetContentMobile> {
   final GlobalKey _repaintKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
 
