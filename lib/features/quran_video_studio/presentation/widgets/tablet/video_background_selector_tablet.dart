@@ -1,12 +1,11 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
-import '../../../domain/entities/video_enums.dart';
 import '../../../domain/entities/video_project_config.dart';
 import '../shared/custom_background_modal.dart';
 import '../shared/custom_video_modal.dart';
+import '../shared/video_media_provider.dart';
 
 /// Dedicated tablet background selector for video studio.
 class VideoBackgroundSelectorTablet extends StatelessWidget {
@@ -25,20 +24,11 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
     final l10n = AppLocalizations.of(context)!;
 
-    final hasCustomImage = config.backgroundType == VideoBackgroundType.customImage &&
-        config.customImagePath != null &&
-        config.customImagePath!.isNotEmpty &&
-        File(config.customImagePath!).existsSync();
-
-    final hasCustomVideo = config.backgroundType == VideoBackgroundType.customVideo &&
-        config.customVideoPath != null &&
-        config.customVideoPath!.isNotEmpty &&
-        File(config.customVideoPath!).existsSync();
-
-    final isDefaultTheme = !hasCustomImage && !hasCustomVideo;
+    final hasCustomImage = config.hasCustomImage;
+    final hasCustomVideo = config.hasCustomVideo;
+    final isDefaultTheme = !config.hasCustomMedia;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,7 +37,7 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              isEn ? 'Video Background' : 'خلفية الفيديو',
+              l10n.videoStudioThemeAndBg,
               style: TextStyle(
                 fontSize: 16.0.sp,
                 fontWeight: FontWeight.bold,
@@ -65,7 +55,7 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
               )
             else if (hasCustomImage)
               Text(
-                isEn ? 'Custom Photo Active' : 'صورة مخصصة نشطة',
+                l10n.videoStudioCustomPhotoActive,
                 style: TextStyle(
                   fontSize: 13.5.sp,
                   fontWeight: FontWeight.w600,
@@ -175,7 +165,7 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                     ),
                     image: hasCustomImage
                         ? DecorationImage(
-                            image: FileImage(File(config.customImagePath!)),
+                            image: getCustomImageProvider(config.customImagePath!),
                             fit: BoxFit.cover,
                             colorFilter: ColorFilter.mode(
                               Colors.black.withValues(alpha: 0.45),

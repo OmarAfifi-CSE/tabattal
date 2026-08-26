@@ -1,0 +1,19 @@
+{
+  "name": "tabattal-video-export-service",
+  "version": "1.0.0",
+  "description": "Ultra-fast and Secure Cloud Video Rendering Microservice for Tabattal Quran Video Studio using FFmpeg",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "multer": "^1.4.5-lts.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

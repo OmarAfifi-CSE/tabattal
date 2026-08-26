@@ -35,6 +35,7 @@ class VerseCardRangePicker extends StatelessWidget {
     required List<int> options,
     required ValueChanged<int> onSelected,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
 
     showModalBottomSheet(
@@ -135,9 +136,11 @@ class VerseCardRangePicker extends StatelessWidget {
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            isEn
-                                ? 'Ayah $item'
-                                : 'آية ${VerseCardTextUtils.toArabicDigits(item)}',
+                            l10n.verseCardAyah(
+                              isEn
+                                  ? '$item'
+                                  : VerseCardTextUtils.toArabicDigits(item),
+                            ),
                             style: TextStyle(
                               fontSize: 12.sp,
                               fontWeight: FontWeight.bold,
@@ -199,9 +202,11 @@ class VerseCardRangePicker extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  isEn
-                      ? 'Surah ${QuranMetadata.getSurahNameEnglish(surahNumber!)}'
-                      : 'سورة ${QuranMetadata.getSurahName(surahNumber!)}',
+                  l10n.verseCardSurah(
+                    isEn
+                        ? QuranMetadata.getSurahNameEnglish(surahNumber!)
+                        : QuranMetadata.getSurahName(surahNumber!),
+                  ),
                   style: TextStyle(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.bold,
@@ -241,9 +246,11 @@ class VerseCardRangePicker extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        isEn
-                            ? 'From Ayah $startAyah'
-                            : 'من آية ${VerseCardTextUtils.toArabicDigits(startAyah)}',
+                        l10n.verseCardFromAyah(
+                          isEn
+                              ? '$startAyah'
+                              : VerseCardTextUtils.toArabicDigits(startAyah),
+                        ),
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontWeight: FontWeight.w600,
@@ -285,9 +292,11 @@ class VerseCardRangePicker extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        isEn
-                            ? 'To Ayah $endAyah'
-                            : 'إلى آية ${VerseCardTextUtils.toArabicDigits(endAyah)}',
+                        l10n.verseCardToAyah(
+                          isEn
+                              ? '$endAyah'
+                              : VerseCardTextUtils.toArabicDigits(endAyah),
+                        ),
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontWeight: FontWeight.w600,

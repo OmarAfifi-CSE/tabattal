@@ -11,6 +11,7 @@ enum ShareFormat { video, image, text, fullPage }
 
 /// Represents a color theme for the Verse Card.
 class VerseCardTheme {
+  final String id;
   final String name;
   final String nameEn;
   final Color backgroundColor;
@@ -21,6 +22,7 @@ class VerseCardTheme {
   final Color borderColor;
 
   const VerseCardTheme({
+    required this.id,
     required this.name,
     required this.nameEn,
     required this.backgroundColor,
@@ -37,6 +39,7 @@ class VerseCardTheme {
 
   static const List<VerseCardTheme> themes = [
     VerseCardTheme(
+      id: 'cream',
       name: 'كريمي',
       nameEn: 'Cream',
       backgroundColor: Color(0xFFFBF7F0),
@@ -47,6 +50,7 @@ class VerseCardTheme {
       borderColor: Color(0xFFEAD8BA),
     ),
     VerseCardTheme(
+      id: 'white',
       name: 'أبيض',
       nameEn: 'White',
       backgroundColor: Color(0xFFFFFFFF),
@@ -57,6 +61,7 @@ class VerseCardTheme {
       borderColor: Color(0xFFF0E5D1),
     ),
     VerseCardTheme(
+      id: 'parchment',
       name: 'عتيق',
       nameEn: 'Vintage',
       backgroundColor: Color(0xFFF5EBE0),
@@ -67,6 +72,7 @@ class VerseCardTheme {
       borderColor: Color(0xFFE3D4C1),
     ),
     VerseCardTheme(
+      id: 'roseGold',
       name: 'روز جولد',
       nameEn: 'Rose Gold',
       backgroundColor: Color(0xFFFDF8F5),
@@ -77,6 +83,7 @@ class VerseCardTheme {
       borderColor: Color(0xFFF0DCD5),
     ),
     VerseCardTheme(
+      id: 'mint',
       name: 'نعناعي',
       nameEn: 'Mint',
       backgroundColor: Color(0xFFF0F7F4),
@@ -87,6 +94,7 @@ class VerseCardTheme {
       borderColor: Color(0xFFD6E8DB),
     ),
     VerseCardTheme(
+      id: 'olive',
       name: 'زيتوني',
       nameEn: 'Olive',
       backgroundColor: Color(0xFFF7F8F2),
@@ -97,6 +105,7 @@ class VerseCardTheme {
       borderColor: Color(0xFFDFE3D1),
     ),
     VerseCardTheme(
+      id: 'iceBlue',
       name: 'ثلجي',
       nameEn: 'Ice',
       backgroundColor: Color(0xFFF4F8FA),
@@ -107,6 +116,7 @@ class VerseCardTheme {
       borderColor: Color(0xFFD6E4EE),
     ),
     VerseCardTheme(
+      id: 'slate',
       name: 'رخامي',
       nameEn: 'Marble',
       backgroundColor: Color(0xFFF4F5F7),
@@ -117,6 +127,7 @@ class VerseCardTheme {
       borderColor: Color(0xFFD8DFE8),
     ),
     VerseCardTheme(
+      id: 'emerald',
       name: 'زمردي',
       nameEn: 'Emerald',
       backgroundColor: Color(0xFF0A1F18),
@@ -127,6 +138,7 @@ class VerseCardTheme {
       borderColor: Color(0xFF1D3B30),
     ),
     VerseCardTheme(
+      id: 'burgundy',
       name: 'عنابي',
       nameEn: 'Burgundy',
       backgroundColor: Color(0xFF1A0C14),
@@ -137,6 +149,7 @@ class VerseCardTheme {
       borderColor: Color(0xFF331B28),
     ),
     VerseCardTheme(
+      id: 'dark',
       name: 'ليلي',
       nameEn: 'Midnight',
       backgroundColor: Color(0xFF0D1117),

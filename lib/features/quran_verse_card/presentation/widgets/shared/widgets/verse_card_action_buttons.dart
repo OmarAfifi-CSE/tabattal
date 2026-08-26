@@ -67,7 +67,7 @@ class VerseCardActionButtons extends StatelessWidget {
                         )
                       : const Icon(Icons.share_rounded),
                   label: Text(
-                    'مشاركة الفيديو',
+                    l10n.videoStudioShare,
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.bold,
@@ -101,7 +101,7 @@ class VerseCardActionButtons extends StatelessWidget {
                         )
                       : const Icon(Icons.download_rounded),
                   label: Text(
-                    'حفظ الفيديو',
+                    l10n.videoStudioSave,
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.bold,

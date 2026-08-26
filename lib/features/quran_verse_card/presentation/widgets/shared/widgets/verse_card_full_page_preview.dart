@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../../../l10n/app_localizations.dart';
 import '../models/verse_card_theme.dart';
 
 /// Full page snapshot card preview.
@@ -68,7 +69,7 @@ class VerseCardFullPagePreview extends StatelessWidget {
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    'تعذر التقاط صورة الصفحة',
+                    AppLocalizations.of(context)!.verseCardCapturePageError,
                     style: TextStyle(
                       fontFamily: 'Amiri',
                       fontSize: 13.sp,
@@ -79,7 +80,7 @@ class VerseCardFullPagePreview extends StatelessWidget {
                   TextButton.icon(
                     onPressed: onRetryCapture,
                     icon: const Icon(Icons.refresh_rounded, size: 16),
-                    label: const Text('إعادة المحاولة'),
+                    label: Text(AppLocalizations.of(context)!.verseCardRetry),
                   ),
                 ],
               ),
@@ -97,7 +98,9 @@ class VerseCardFullPagePreview extends StatelessWidget {
               ),
               SizedBox(width: 6.w),
               Text(
-                'تَـبَـتَّـلْ • Tabattal',
+                Localizations.localeOf(context).languageCode == 'en'
+                    ? 'Tabattal'
+                    : 'تَـبَـتَّـلْ • Tabattal',
                 style: TextStyle(
                   fontFamily: 'Amiri',
                   fontSize: 13.sp,

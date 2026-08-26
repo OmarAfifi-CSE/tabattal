@@ -48,7 +48,7 @@ class UpdateService {
         }
 
         // 3. Check App Updates (Android Only)
-        if (Platform.isAndroid) {
+        if (!kIsWeb && Platform.isAndroid) {
           final updateType =
               data['update_type']?.toString().toLowerCase() ?? 'flexible';
           await _handleInAppUpdate(updateType);

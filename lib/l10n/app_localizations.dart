@@ -1483,6 +1483,376 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تغيير الفيديو'**
   String get videoBgChangeVideo;
+
+  /// No description provided for @videoStudioDownloadVideo.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنزيل الفيديو'**
+  String get videoStudioDownloadVideo;
+
+  /// No description provided for @videoStudioDownloadedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تنزيل مقطع الفيديو بنجاح'**
+  String get videoStudioDownloadedSuccess;
+
+  /// No description provided for @videoStudioDownloadedError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تنزيل مقطع الفيديو'**
+  String get videoStudioDownloadedError;
+
+  /// No description provided for @videoStudioAudioWaveform.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار الموجة الصوتية'**
+  String get videoStudioAudioWaveform;
+
+  /// No description provided for @videoStudioReplayFromStart.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة من البداية'**
+  String get videoStudioReplayFromStart;
+
+  /// No description provided for @videoStudioShowSurahBadgeAndAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار اسم السورة ورقم الآية'**
+  String get videoStudioShowSurahBadgeAndAyah;
+
+  /// No description provided for @videoStudioThemeAndColors.
+  ///
+  /// In ar, this message translates to:
+  /// **'المظهر والألوان'**
+  String get videoStudioThemeAndColors;
+
+  /// No description provided for @videoStudioCustomPhotoActive.
+  ///
+  /// In ar, this message translates to:
+  /// **'صورة مخصصة نشطة'**
+  String get videoStudioCustomPhotoActive;
+
+  /// No description provided for @videoStudioCustomPhotoTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'خلفية مخصصة'**
+  String get videoStudioCustomPhotoTitle;
+
+  /// No description provided for @videoStudioChooseImageGallery.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختيار من المعرض'**
+  String get videoStudioChooseImageGallery;
+
+  /// No description provided for @videoStudioChooseImageGallerySub.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر أي صورة من جهازك لتكون خلفية'**
+  String get videoStudioChooseImageGallerySub;
+
+  /// No description provided for @videoStudioImageUrl.
+  ///
+  /// In ar, this message translates to:
+  /// **'رابط صورة مباشر'**
+  String get videoStudioImageUrl;
+
+  /// No description provided for @videoStudioImageUrlSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'ضع رابط صورة مباشرة من الإنترنت'**
+  String get videoStudioImageUrlSub;
+
+  /// No description provided for @videoStudioApplyImage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تطبيق الصورة'**
+  String get videoStudioApplyImage;
+
+  /// No description provided for @videoStudioApplyVideo.
+  ///
+  /// In ar, this message translates to:
+  /// **'تطبيق الفيديو'**
+  String get videoStudioApplyVideo;
+
+  /// No description provided for @videoStudioRemoveCustomImage.
+  ///
+  /// In ar, this message translates to:
+  /// **'إزالة الصورة المخصصة'**
+  String get videoStudioRemoveCustomImage;
+
+  /// No description provided for @videoStudioLoadingImage.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري معالجة الصورة...'**
+  String get videoStudioLoadingImage;
+
+  /// No description provided for @videoStudioEnterImageUrl.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى إدخال رابط الصورة'**
+  String get videoStudioEnterImageUrl;
+
+  /// No description provided for @videoStudioEnterVideoUrl.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى إدخال رابط الفيديو'**
+  String get videoStudioEnterVideoUrl;
+
+  /// No description provided for @videoStudioFailedToLoadImage.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تحميل الصورة من الرابط'**
+  String get videoStudioFailedToLoadImage;
+
+  /// No description provided for @videoStudioFailedToLoadVideo.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تحميل الفيديو من الرابط'**
+  String get videoStudioFailedToLoadVideo;
+
+  /// No description provided for @videoStudioPickImageError.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطأ أثناء اختيار الصورة: {error}'**
+  String videoStudioPickImageError(String error);
+
+  /// No description provided for @videoStudioPickVideoError.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطأ أثناء اختيار الفيديو: {error}'**
+  String videoStudioPickVideoError(String error);
+
+  /// No description provided for @verseCardShareError.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطأ أثناء المشاركة: {error}'**
+  String verseCardShareError(String error);
+
+  /// No description provided for @verseCardSaveError.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطأ أثناء حفظ الصورة: {error}'**
+  String verseCardSaveError(String error);
+
+  /// No description provided for @verseCardImageDownloadedSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تنزيل الصورة بنجاح'**
+  String get verseCardImageDownloadedSuccess;
+
+  /// No description provided for @verseCardImageDownloadedError.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطأ أثناء تنزيل الصورة'**
+  String get verseCardImageDownloadedError;
+
+  /// No description provided for @verseCardImageSavedGallerySuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حفظ الصورة في المعرض بنجاح'**
+  String get verseCardImageSavedGallerySuccess;
+
+  /// No description provided for @verseCardImageSavedGalleryError.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطأ أثناء حفظ الصورة'**
+  String get verseCardImageSavedGalleryError;
+
+  /// No description provided for @verseCardCapturePageError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر التقاط صورة الصفحة'**
+  String get verseCardCapturePageError;
+
+  /// No description provided for @verseCardRetry.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة المحاولة'**
+  String get verseCardRetry;
+
+  /// No description provided for @videoStudioReciterCategoryMurattal.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرتل'**
+  String get videoStudioReciterCategoryMurattal;
+
+  /// No description provided for @videoStudioReciterCategoryMujawwad.
+  ///
+  /// In ar, this message translates to:
+  /// **'مجود'**
+  String get videoStudioReciterCategoryMujawwad;
+
+  /// No description provided for @verseCardThemeWhite.
+  ///
+  /// In ar, this message translates to:
+  /// **'أبيض'**
+  String get verseCardThemeWhite;
+
+  /// No description provided for @verseCardThemeParchment.
+  ///
+  /// In ar, this message translates to:
+  /// **'عتيق'**
+  String get verseCardThemeParchment;
+
+  /// No description provided for @verseCardThemeRoseGold.
+  ///
+  /// In ar, this message translates to:
+  /// **'روز جولد'**
+  String get verseCardThemeRoseGold;
+
+  /// No description provided for @verseCardThemeMint.
+  ///
+  /// In ar, this message translates to:
+  /// **'نعناعي'**
+  String get verseCardThemeMint;
+
+  /// No description provided for @verseCardThemeOlive.
+  ///
+  /// In ar, this message translates to:
+  /// **'زيتوني'**
+  String get verseCardThemeOlive;
+
+  /// No description provided for @verseCardThemeIceBlue.
+  ///
+  /// In ar, this message translates to:
+  /// **'ثلجي'**
+  String get verseCardThemeIceBlue;
+
+  /// No description provided for @verseCardThemeSlate.
+  ///
+  /// In ar, this message translates to:
+  /// **'رخامي'**
+  String get verseCardThemeSlate;
+
+  /// No description provided for @verseCardThemeEmerald.
+  ///
+  /// In ar, this message translates to:
+  /// **'زمردي'**
+  String get verseCardThemeEmerald;
+
+  /// No description provided for @verseCardThemeBurgundy.
+  ///
+  /// In ar, this message translates to:
+  /// **'عنابي'**
+  String get verseCardThemeBurgundy;
+
+  /// No description provided for @verseCardThemeDark.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليلي'**
+  String get verseCardThemeDark;
+
+  /// No description provided for @verseCardThemeCream.
+  ///
+  /// In ar, this message translates to:
+  /// **'كريمي'**
+  String get verseCardThemeCream;
+
+  /// No description provided for @videoExportErrorConnection.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر الاتصال بخادم تصدير الفيديو. يرجى التأكد من تشغيل خادم التصدير أو التحقق من الاتصال.'**
+  String get videoExportErrorConnection;
+
+  /// No description provided for @verseCardSurahSingleAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة {surahName} • آية {ayah}'**
+  String verseCardSurahSingleAyah(String surahName, String ayah);
+
+  /// No description provided for @verseCardSurahMultipleAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة {surahName} • الآيات ({startAyah} - {endAyah})'**
+  String verseCardSurahMultipleAyahs(
+    String surahName,
+    String startAyah,
+    String endAyah,
+  );
+
+  /// No description provided for @verseCardFromAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'من آية {ayah}'**
+  String verseCardFromAyah(String ayah);
+
+  /// No description provided for @verseCardToAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلى آية {ayah}'**
+  String verseCardToAyah(String ayah);
+
+  /// No description provided for @verseCardAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية {ayah}'**
+  String verseCardAyah(String ayah);
+
+  /// No description provided for @verseCardSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة {surahName}'**
+  String verseCardSurah(String surahName);
+
+  /// No description provided for @videoStudioProgressDownloadingAudio.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري تحميل التلاوة الصوتية...'**
+  String get videoStudioProgressDownloadingAudio;
+
+  /// No description provided for @videoStudioProgressGeneratingOverlays.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري إعداد النصوص والمشاهد...'**
+  String get videoStudioProgressGeneratingOverlays;
+
+  /// No description provided for @videoStudioProgressEncoding.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري تصدير ومعالجة مقطع الفيديو...'**
+  String get videoStudioProgressEncoding;
+
+  /// No description provided for @videoStudioExportPreparing.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري بدء إعداد مقطع الفيديو...'**
+  String get videoStudioExportPreparing;
+
+  /// No description provided for @audioDownloadPause.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيقاف التحميل'**
+  String get audioDownloadPause;
+
+  /// No description provided for @audioDownloadPaused.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إيقاف التحميل مؤقتًا'**
+  String get audioDownloadPaused;
+
+  /// No description provided for @audioDownloadStartingAll.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري بدء تحميل جميع السور...'**
+  String get audioDownloadStartingAll;
+
+  /// No description provided for @audioDownloadAllSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تحميل جميع السور بنجاح'**
+  String get audioDownloadAllSuccess;
+
+  /// No description provided for @audioDownloadFailedCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تحميل {count} سور'**
+  String audioDownloadFailedCount(int count);
+
+  /// No description provided for @searchFilterAll.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get searchFilterAll;
 }
 
 class _AppLocalizationsDelegate

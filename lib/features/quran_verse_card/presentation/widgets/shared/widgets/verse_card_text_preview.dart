@@ -49,12 +49,15 @@ class VerseCardTextPreview extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     final rangeText = startAyah == endAyah
-        ? (isEn
-              ? 'Surah $surahName • Ayah $startAyah'
-              : 'سورة $surahName • آية $startAyah')
-        : (isEn
-              ? 'Surah $surahName • Ayahs $startAyah - $endAyah'
-              : 'سورة $surahName • الآيات ($startAyah - $endAyah)');
+        ? l10n.verseCardSurahSingleAyah(
+            surahName,
+            isEn ? '$startAyah' : VerseCardTextUtils.toArabicDigits(startAyah),
+          )
+        : l10n.verseCardSurahMultipleAyahs(
+            surahName,
+            isEn ? '$startAyah' : VerseCardTextUtils.toArabicDigits(startAyah),
+            isEn ? '$endAyah' : VerseCardTextUtils.toArabicDigits(endAyah),
+          );
 
     return Container(
       width: MediaQuery.sizeOf(context).width,

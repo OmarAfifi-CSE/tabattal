@@ -110,7 +110,9 @@ class VideoRangePickerDesktop extends StatelessWidget {
                               ),
                               alignment: Alignment.center,
                               child: Text(
-                                VerseCardTextUtils.toArabicDigits(ayah),
+                                Localizations.localeOf(context).languageCode == 'en'
+                                    ? '$ayah'
+                                    : VerseCardTextUtils.toArabicDigits(ayah),
                                 style: TextStyle(
                                   fontSize: 15.0.sp,
                                   fontWeight: isSelected
@@ -139,6 +141,7 @@ class VideoRangePickerDesktop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
     final startOptions = List.generate(totalAyahsInSurah, (i) => i + 1);
     final maxEnd = _getMaxEndAyah(startAyah);
     final endOptions = List.generate(
@@ -173,9 +176,11 @@ class VideoRangePickerDesktop extends StatelessWidget {
                 ),
               ),
               child: Text(
-                Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Surah ${QuranMetadata.getSurahNameEnglish(surahNumber)}'
-                    : 'سورة ${QuranMetadata.getSurahName(surahNumber)}',
+                l10n.verseCardSurah(
+                  isEn
+                      ? QuranMetadata.getSurahNameEnglish(surahNumber)
+                      : QuranMetadata.getSurahName(surahNumber),
+                ),
                 style: TextStyle(
                   fontSize: 13.0.sp,
                   fontWeight: FontWeight.bold,
@@ -220,9 +225,11 @@ class VideoRangePickerDesktop extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          Localizations.localeOf(context).languageCode == 'en'
-                              ? 'From Ayah $startAyah'
-                              : 'من آية ${VerseCardTextUtils.toArabicDigits(startAyah)}',
+                          l10n.verseCardFromAyah(
+                            isEn
+                                ? '$startAyah'
+                                : VerseCardTextUtils.toArabicDigits(startAyah),
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -275,9 +282,11 @@ class VideoRangePickerDesktop extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          Localizations.localeOf(context).languageCode == 'en'
-                              ? 'To Ayah $endAyah'
-                              : 'إلى آية ${VerseCardTextUtils.toArabicDigits(endAyah)}',
+                          l10n.verseCardToAyah(
+                            isEn
+                                ? '$endAyah'
+                                : VerseCardTextUtils.toArabicDigits(endAyah),
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(

@@ -54,6 +54,18 @@ class VideoProjectConfig extends Equatable {
 
   int get totalAyahsCount => (endAyah - startAyah + 1).clamp(1, 20);
 
+  bool get hasCustomImage =>
+      backgroundType == VideoBackgroundType.customImage &&
+      customImagePath != null &&
+      customImagePath!.trim().isNotEmpty;
+
+  bool get hasCustomVideo =>
+      backgroundType == VideoBackgroundType.customVideo &&
+      customVideoPath != null &&
+      customVideoPath!.trim().isNotEmpty;
+
+  bool get hasCustomMedia => hasCustomImage || hasCustomVideo;
+
   VideoProjectConfig copyWith({
     int? surahNumber,
     int? startAyah,

@@ -288,6 +288,7 @@ class AudioDownloadManager {
     int currentAyah, {
     int lookaheadCount = 3,
   }) async {
+    if (kIsWeb) return;
     int surah = currentSurah;
     int ayah = currentAyah;
 

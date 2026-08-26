@@ -145,6 +145,7 @@ class VideoRangePickerMobile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
     final startOptions = List.generate(totalAyahsInSurah, (i) => i + 1);
     final maxEnd = _getMaxEndAyah(startAyah);
     final endOptions = List.generate(
@@ -178,9 +179,11 @@ class VideoRangePickerMobile extends StatelessWidget {
                 ),
               ),
               child: Text(
-                Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Surah ${QuranMetadata.getSurahNameEnglish(surahNumber)}'
-                    : 'سورة ${QuranMetadata.getSurahName(surahNumber)}',
+                l10n.verseCardSurah(
+                  isEn
+                      ? QuranMetadata.getSurahNameEnglish(surahNumber)
+                      : QuranMetadata.getSurahName(surahNumber),
+                ),
                 style: TextStyle(
                   fontSize: 11.sp,
                   fontWeight: FontWeight.bold,
@@ -221,9 +224,11 @@ class VideoRangePickerMobile extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        Localizations.localeOf(context).languageCode == 'en'
-                            ? 'From Ayah $startAyah'
-                            : 'من آية ${VerseCardTextUtils.toArabicDigits(startAyah)}',
+                        l10n.verseCardFromAyah(
+                          isEn
+                              ? '$startAyah'
+                              : VerseCardTextUtils.toArabicDigits(startAyah),
+                        ),
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontWeight: FontWeight.w600,
@@ -269,9 +274,11 @@ class VideoRangePickerMobile extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        Localizations.localeOf(context).languageCode == 'en'
-                            ? 'To Ayah $endAyah'
-                            : 'إلى آية ${VerseCardTextUtils.toArabicDigits(endAyah)}',
+                        l10n.verseCardToAyah(
+                          isEn
+                              ? '$endAyah'
+                              : VerseCardTextUtils.toArabicDigits(endAyah),
+                        ),
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontWeight: FontWeight.w600,

@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../../quran_reader/data/models/verse_model.dart';
 import '../../domain/entities/word_timing_segment.dart';
@@ -17,8 +18,9 @@ class WordTimingService {
                 connectTimeout: const Duration(seconds: 6),
                 receiveTimeout: const Duration(seconds: 8),
                 headers: {
-                  'User-Agent':
-                      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  if (!kIsWeb)
+                    'User-Agent':
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                   'Accept': 'application/json',
                 },
               ),

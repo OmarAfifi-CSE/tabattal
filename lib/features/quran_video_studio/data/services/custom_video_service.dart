@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
@@ -13,8 +14,9 @@ class CustomVideoService {
       connectTimeout: const Duration(seconds: 25),
       receiveTimeout: const Duration(seconds: 60),
       headers: {
-        'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        if (!kIsWeb)
+          'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
     ),
   );
@@ -42,6 +44,10 @@ class CustomVideoService {
     final cleanUrl = url.trim();
     if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
       throw const FormatException('الرابط يجب أن يبدأ بـ http:// أو https://');
+    }
+
+    if (kIsWeb) {
+      return cleanUrl;
     }
 
     final tempDir = await getTemporaryDirectory();

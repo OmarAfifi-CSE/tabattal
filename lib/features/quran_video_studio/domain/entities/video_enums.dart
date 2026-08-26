@@ -74,7 +74,7 @@ enum VideoQuality {
   hd720p,
   uhd4k;
 
-  String get label {
+  String get labelArabic {
     switch (this) {
       case VideoQuality.fhd1080p:
         return '1080p (عالية الدقة FHD)';
@@ -84,6 +84,19 @@ enum VideoQuality {
         return '4K (فائقة الدقة 4K)';
     }
   }
+
+  String get labelEnglish {
+    switch (this) {
+      case VideoQuality.fhd1080p:
+        return '1080p (FHD High Quality)';
+      case VideoQuality.hd720p:
+        return '720p (HD Fast)';
+      case VideoQuality.uhd4k:
+        return '4K (Ultra HD)';
+    }
+  }
+
+  String get label => labelArabic;
 
   String get shortLabel {
     switch (this) {

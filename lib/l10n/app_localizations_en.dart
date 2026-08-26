@@ -747,4 +747,220 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoBgChangeVideo => 'Change Video';
+
+  @override
+  String get videoStudioDownloadVideo => 'Download Video';
+
+  @override
+  String get videoStudioDownloadedSuccess => 'Video downloaded successfully';
+
+  @override
+  String get videoStudioDownloadedError => 'Failed to download video';
+
+  @override
+  String get videoStudioAudioWaveform => 'Show Audio Waveform';
+
+  @override
+  String get videoStudioReplayFromStart => 'Replay from start';
+
+  @override
+  String get videoStudioShowSurahBadgeAndAyah =>
+      'Show Surah Name & Ayah Number';
+
+  @override
+  String get videoStudioThemeAndColors => 'Theme & Colors';
+
+  @override
+  String get videoStudioCustomPhotoActive => 'Custom Photo Active';
+
+  @override
+  String get videoStudioCustomPhotoTitle => 'Custom Background';
+
+  @override
+  String get videoStudioChooseImageGallery => 'Choose from Gallery';
+
+  @override
+  String get videoStudioChooseImageGallerySub =>
+      'Pick any image from your device as background';
+
+  @override
+  String get videoStudioImageUrl => 'Direct Image URL';
+
+  @override
+  String get videoStudioImageUrlSub => 'Paste a direct image link from the web';
+
+  @override
+  String get videoStudioApplyImage => 'Apply Image';
+
+  @override
+  String get videoStudioApplyVideo => 'Apply Video';
+
+  @override
+  String get videoStudioRemoveCustomImage => 'Remove Custom Image';
+
+  @override
+  String get videoStudioLoadingImage => 'Processing image...';
+
+  @override
+  String get videoStudioEnterImageUrl => 'Please enter image URL';
+
+  @override
+  String get videoStudioEnterVideoUrl => 'Please enter video URL';
+
+  @override
+  String get videoStudioFailedToLoadImage => 'Failed to load image from link';
+
+  @override
+  String get videoStudioFailedToLoadVideo => 'Failed to load video from link';
+
+  @override
+  String videoStudioPickImageError(String error) {
+    return 'Error while picking image: $error';
+  }
+
+  @override
+  String videoStudioPickVideoError(String error) {
+    return 'Error while picking video: $error';
+  }
+
+  @override
+  String verseCardShareError(String error) {
+    return 'Error while sharing: $error';
+  }
+
+  @override
+  String verseCardSaveError(String error) {
+    return 'Error while saving image: $error';
+  }
+
+  @override
+  String get verseCardImageDownloadedSuccess => 'Image downloaded successfully';
+
+  @override
+  String get verseCardImageDownloadedError => 'Error while downloading image';
+
+  @override
+  String get verseCardImageSavedGallerySuccess =>
+      'Image saved to gallery successfully';
+
+  @override
+  String get verseCardImageSavedGalleryError =>
+      'Failed to save image to gallery';
+
+  @override
+  String get verseCardCapturePageError => 'Failed to capture mushaf page';
+
+  @override
+  String get verseCardRetry => 'Retry';
+
+  @override
+  String get videoStudioReciterCategoryMurattal => 'Murattal';
+
+  @override
+  String get videoStudioReciterCategoryMujawwad => 'Mujawwad';
+
+  @override
+  String get verseCardThemeWhite => 'White';
+
+  @override
+  String get verseCardThemeParchment => 'Parchment';
+
+  @override
+  String get verseCardThemeRoseGold => 'Rose Gold';
+
+  @override
+  String get verseCardThemeMint => 'Mint';
+
+  @override
+  String get verseCardThemeOlive => 'Olive';
+
+  @override
+  String get verseCardThemeIceBlue => 'Ice Blue';
+
+  @override
+  String get verseCardThemeSlate => 'Slate';
+
+  @override
+  String get verseCardThemeEmerald => 'Emerald';
+
+  @override
+  String get verseCardThemeBurgundy => 'Burgundy';
+
+  @override
+  String get verseCardThemeDark => 'Night';
+
+  @override
+  String get verseCardThemeCream => 'Cream';
+
+  @override
+  String get videoExportErrorConnection =>
+      'Could not connect to video export server. Please ensure the server is running or check your connection.';
+
+  @override
+  String verseCardSurahSingleAyah(String surahName, String ayah) {
+    return 'Surah $surahName • Ayah $ayah';
+  }
+
+  @override
+  String verseCardSurahMultipleAyahs(
+    String surahName,
+    String startAyah,
+    String endAyah,
+  ) {
+    return 'Surah $surahName • Ayahs ($startAyah - $endAyah)';
+  }
+
+  @override
+  String verseCardFromAyah(String ayah) {
+    return 'From Ayah $ayah';
+  }
+
+  @override
+  String verseCardToAyah(String ayah) {
+    return 'To Ayah $ayah';
+  }
+
+  @override
+  String verseCardAyah(String ayah) {
+    return 'Ayah $ayah';
+  }
+
+  @override
+  String verseCardSurah(String surahName) {
+    return 'Surah $surahName';
+  }
+
+  @override
+  String get videoStudioProgressDownloadingAudio =>
+      'Downloading recitation audio...';
+
+  @override
+  String get videoStudioProgressGeneratingOverlays =>
+      'Preparing verse animations...';
+
+  @override
+  String get videoStudioProgressEncoding => 'Encoding and rendering video...';
+
+  @override
+  String get videoStudioExportPreparing => 'Starting video generation...';
+
+  @override
+  String get audioDownloadPause => 'Pause Download';
+
+  @override
+  String get audioDownloadPaused => 'Download paused';
+
+  @override
+  String get audioDownloadStartingAll => 'Starting download for all surahs...';
+
+  @override
+  String get audioDownloadAllSuccess => 'All surahs downloaded successfully';
+
+  @override
+  String audioDownloadFailedCount(int count) {
+    return 'Failed to download $count surahs';
+  }
+
+  @override
+  String get searchFilterAll => 'All';
 }

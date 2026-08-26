@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../domain/entities/video_theme_preset.dart';
 
 /// Theme selector with horizontal luxury theme swatches for styling text, badges, and accents.
@@ -16,13 +17,14 @@ class VideoThemeSelectorMobile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isEn ? 'Theme & Accent Palette' : 'المظهر والألوان',
+          l10n.videoStudioThemeAndColors,
           style: TextStyle(
             fontSize: 13.sp,
             fontWeight: FontWeight.bold,

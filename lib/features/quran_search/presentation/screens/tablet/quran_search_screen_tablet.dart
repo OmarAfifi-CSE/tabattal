@@ -647,7 +647,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                         ),
                       ),
                       child: Text(
-                        isAr ? 'الكل' : 'All',
+                        l10n.searchFilterAll,
                         style: TextStyle(
                           fontSize: 15.sp,
                           fontWeight: FontWeight.bold,

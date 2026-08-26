@@ -376,5 +376,124 @@
   "videoBgInvalidVideoUrl": "يرجى إدخال رابط فيديو صالح (MP4)",
   "videoBgCardDesign": "تصميم البطاقة",
   "videoBgCustomPhoto": "صورة مخصصة",
-  "videoBgChangeVideo": "تغيير الفيديو"
+  "videoBgChangeVideo": "تغيير الفيديو",
+  "videoStudioDownloadVideo": "تنزيل الفيديو",
+  "videoStudioDownloadedSuccess": "تم تنزيل مقطع الفيديو بنجاح",
+  "videoStudioDownloadedError": "تعذر تنزيل مقطع الفيديو",
+  "videoStudioAudioWaveform": "إظهار الموجة الصوتية",
+  "videoStudioReplayFromStart": "إعادة من البداية",
+  "videoStudioShowSurahBadgeAndAyah": "إظهار اسم السورة ورقم الآية",
+  "videoStudioThemeAndColors": "المظهر والألوان",
+  "videoStudioCustomPhotoActive": "صورة مخصصة نشطة",
+  "videoStudioCustomPhotoTitle": "خلفية مخصصة",
+  "videoStudioChooseImageGallery": "اختيار من المعرض",
+  "videoStudioChooseImageGallerySub": "اختر أي صورة من جهازك لتكون خلفية",
+  "videoStudioImageUrl": "رابط صورة مباشر",
+  "videoStudioImageUrlSub": "ضع رابط صورة مباشرة من الإنترنت",
+  "videoStudioApplyImage": "تطبيق الصورة",
+  "videoStudioApplyVideo": "تطبيق الفيديو",
+  "videoStudioRemoveCustomImage": "إزالة الصورة المخصصة",
+  "videoStudioLoadingImage": "جاري معالجة الصورة...",
+  "videoStudioEnterImageUrl": "يرجى إدخال رابط الصورة",
+  "videoStudioEnterVideoUrl": "يرجى إدخال رابط الفيديو",
+  "videoStudioFailedToLoadImage": "فشل تحميل الصورة من الرابط",
+  "videoStudioFailedToLoadVideo": "فشل تحميل الفيديو من الرابط",
+  "videoStudioPickImageError": "خطأ أثناء اختيار الصورة: {error}",
+  "@videoStudioPickImageError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "videoStudioPickVideoError": "خطأ أثناء اختيار الفيديو: {error}",
+  "@videoStudioPickVideoError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "verseCardShareError": "خطأ أثناء المشاركة: {error}",
+  "@verseCardShareError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "verseCardSaveError": "خطأ أثناء حفظ الصورة: {error}",
+  "@verseCardSaveError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "verseCardImageDownloadedSuccess": "تم تنزيل الصورة بنجاح",
+  "verseCardImageDownloadedError": "خطأ أثناء تنزيل الصورة",
+  "verseCardImageSavedGallerySuccess": "تم حفظ الصورة في المعرض بنجاح",
+  "verseCardImageSavedGalleryError": "خطأ أثناء حفظ الصورة",
+  "verseCardCapturePageError": "تعذر التقاط صورة الصفحة",
+  "verseCardRetry": "إعادة المحاولة",
+  "videoStudioReciterCategoryMurattal": "مرتل",
+  "videoStudioReciterCategoryMujawwad": "مجود",
+  "verseCardThemeWhite": "أبيض",
+  "verseCardThemeParchment": "عتيق",
+  "verseCardThemeRoseGold": "روز جولد",
+  "verseCardThemeMint": "نعناعي",
+  "verseCardThemeOlive": "زيتوني",
+  "verseCardThemeIceBlue": "ثلجي",
+  "verseCardThemeSlate": "رخامي",
+  "verseCardThemeEmerald": "زمردي",
+  "verseCardThemeBurgundy": "عنابي",
+  "verseCardThemeDark": "ليلي",
+  "verseCardThemeCream": "كريمي",
+  "videoExportErrorConnection": "تعذر الاتصال بخادم تصدير الفيديو. يرجى التأكد من تشغيل خادم التصدير أو التحقق من الاتصال.",
+  "verseCardSurahSingleAyah": "سورة {surahName} • آية {ayah}",
+  "@verseCardSurahSingleAyah": {
+    "placeholders": {
+      "surahName": { "type": "String" },
+      "ayah": { "type": "String" }
+    }
+  },
+  "verseCardSurahMultipleAyahs": "سورة {surahName} • الآيات ({startAyah} - {endAyah})",
+  "@verseCardSurahMultipleAyahs": {
+    "placeholders": {
+      "surahName": { "type": "String" },
+      "startAyah": { "type": "String" },
+      "endAyah": { "type": "String" }
+    }
+  },
+  "verseCardFromAyah": "من آية {ayah}",
+  "@verseCardFromAyah": {
+    "placeholders": {
+      "ayah": { "type": "String" }
+    }
+  },
+  "verseCardToAyah": "إلى آية {ayah}",
+  "@verseCardToAyah": {
+    "placeholders": {
+      "ayah": { "type": "String" }
+    }
+  },
+  "verseCardAyah": "آية {ayah}",
+  "@verseCardAyah": {
+    "placeholders": {
+      "ayah": { "type": "String" }
+    }
+  },
+  "verseCardSurah": "سورة {surahName}",
+  "@verseCardSurah": {
+    "placeholders": {
+      "surahName": { "type": "String" }
+    }
+  },
+  "videoStudioProgressDownloadingAudio": "جاري تحميل التلاوة الصوتية...",
+  "videoStudioProgressGeneratingOverlays": "جاري إعداد النصوص والمشاهد...",
+  "videoStudioProgressEncoding": "جاري تصدير ومعالجة مقطع الفيديو...",
+  "videoStudioExportPreparing": "جاري بدء إعداد مقطع الفيديو...",
+  "audioDownloadPause": "إيقاف التحميل",
+  "audioDownloadPaused": "تم إيقاف التحميل مؤقتًا",
+  "audioDownloadStartingAll": "جاري بدء تحميل جميع السور...",
+  "audioDownloadAllSuccess": "تم تحميل جميع السور بنجاح",
+  "audioDownloadFailedCount": "فشل تحميل {count} سور",
+  "@audioDownloadFailedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "searchFilterAll": "الكل"
 }

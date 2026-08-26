@@ -194,7 +194,7 @@ class VideoPreviewViewport extends StatelessWidget {
                           color: AppColors.accentGold,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          tooltip: 'إعادة من البداية',
+                          tooltip: l10n.videoStudioReplayFromStart,
                         ),
                         SizedBox(width: 8.w),
 

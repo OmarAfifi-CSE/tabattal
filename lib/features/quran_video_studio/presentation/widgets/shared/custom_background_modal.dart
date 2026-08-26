@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../data/services/custom_image_service.dart';
 
 /// Modal bottom sheet allowing the user to pick a custom background image
@@ -28,9 +29,9 @@ class CustomBackgroundModal extends StatefulWidget {
       backgroundColor: AppColors.cardCream,
       isScrollControlled: true,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
-      builder: (ctx) => CustomBackgroundModal(
+      builder: (_) => CustomBackgroundModal(
         currentImagePath: currentImagePath,
         onImageSelected: onImageSelected,
         onImageRemoved: onImageRemoved,
@@ -44,9 +45,9 @@ class CustomBackgroundModal extends StatefulWidget {
 
 class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
   final TextEditingController _urlController = TextEditingController();
-  bool _isUrlInputExpanded = false;
   bool _isLoading = false;
   String? _errorMessage;
+  bool _isUrlInputExpanded = false;
 
   @override
   void dispose() {
@@ -55,6 +56,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
   }
 
   Future<void> _handlePickGallery() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _errorMessage = null;
       _isLoading = true;
@@ -70,7 +72,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'خطأ أثناء اختيار الصورة: $e';
+          _errorMessage = l10n.videoStudioPickImageError(e.toString());
         });
       }
     } finally {
@@ -81,9 +83,10 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
   }
 
   Future<void> _handleDownloadUrl() async {
+    final l10n = AppLocalizations.of(context)!;
     final url = _urlController.text.trim();
     if (url.isEmpty) {
-      setState(() => _errorMessage = 'يرجى إدخال رابط الصورة');
+      setState(() => _errorMessage = l10n.videoStudioEnterImageUrl);
       return;
     }
 
@@ -100,7 +103,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e is FormatException ? e.message : 'فشل تحميل الصورة من الرابط';
+          _errorMessage = e is FormatException ? e.message : l10n.videoStudioFailedToLoadImage;
         });
       }
     } finally {
@@ -112,6 +115,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
@@ -148,7 +152,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  isEn ? 'Custom Background' : 'خلفية مخصصة',
+                  l10n.videoStudioCustomPhotoTitle,
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.bold,
@@ -208,7 +212,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
                       CircularProgressIndicator(color: AppColors.accentGold),
                       SizedBox(height: 10.h),
                       Text(
-                        isEn ? 'Loading image...' : 'جاري معالجة الصورة...',
+                        l10n.videoStudioLoadingImage,
                         style: TextStyle(
                           fontSize: 12.sp,
                           color: AppColors.textSecondary,
@@ -222,10 +226,8 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
               // Option 1: Pick from Gallery
               _buildOptionTile(
                 icon: Icons.photo_library_outlined,
-                title: isEn ? 'Choose from Gallery' : 'اختيار من المعرض',
-                subtitle: isEn
-                    ? 'Pick an image from your device'
-                    : 'اختر أي صورة من جهازك لتكون خلفية',
+                title: l10n.videoStudioChooseImageGallery,
+                subtitle: l10n.videoStudioChooseImageGallerySub,
                 onTap: _handlePickGallery,
               ),
               SizedBox(height: 10.h),
@@ -233,10 +235,8 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
               // Option 2: Image URL
               _buildOptionTile(
                 icon: Icons.link_rounded,
-                title: isEn ? 'Image URL' : 'رابط صورة مباشر',
-                subtitle: isEn
-                    ? 'Paste a link to download an online image'
-                    : 'ضع رابط صورة مباشرة من الإنترنت',
+                title: l10n.videoStudioImageUrl,
+                subtitle: l10n.videoStudioImageUrlSub,
                 onTap: () {
                   setState(() {
                     _isUrlInputExpanded = !_isUrlInputExpanded;
@@ -297,7 +297,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
                       ElevatedButton.icon(
                         onPressed: _handleDownloadUrl,
                         icon: const Icon(Icons.download_rounded, size: 18),
-                        label: Text(isEn ? 'Load Image' : 'تطبيق الصورة'),
+                        label: Text(l10n.videoStudioApplyImage),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.accentGold,
                           foregroundColor: Colors.white,
@@ -330,7 +330,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
                     color: errorColor,
                   ),
                   label: Text(
-                    isEn ? 'Remove Custom Image' : 'إزالة الصورة المخصصة',
+                    l10n.videoStudioRemoveCustomImage,
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: errorColor,

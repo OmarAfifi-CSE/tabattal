@@ -639,7 +639,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
                         ),
                       ),
                       child: Text(
-                        isAr ? 'الكل' : 'All',
+                        l10n.searchFilterAll,
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontWeight: FontWeight.bold,

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
@@ -36,6 +37,21 @@ class AudioTimelineService {
     required int endAyah,
     void Function(double progress)? onProgress,
   }) async {
+    final totalAyahs = endAyah - startAyah + 1;
+
+    if (kIsWeb) {
+      final List<String> webUrls = [];
+      for (int i = 0; i < totalAyahs; i++) {
+        final ayah = startAyah + i;
+        final surahStr = surahNumber.toString().padLeft(3, '0');
+        final ayahStr = ayah.toString().padLeft(3, '0');
+        final url = 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
+        webUrls.add(url);
+        onProgress?.call((i + 1) / totalAyahs);
+      }
+      return webUrls;
+    }
+
     _cancelToken = CancelToken();
     final tempDir = await getTemporaryDirectory();
     final audioDir = Directory('${tempDir.path}/video_studio_audio/$reciterPath');
@@ -43,7 +59,6 @@ class AudioTimelineService {
       await audioDir.create(recursive: true);
     }
 
-    final totalAyahs = endAyah - startAyah + 1;
     final List<String> localFilePaths = [];
 
     for (int i = 0; i < totalAyahs; i++) {
@@ -79,18 +94,21 @@ class AudioTimelineService {
     required int ayahNumber,
     required String reciterPath,
   }) async {
+    final surahStr = surahNumber.toString().padLeft(3, '0');
+    final ayahStr = ayahNumber.toString().padLeft(3, '0');
+    final url = 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
+
+    if (kIsWeb) return url;
+
     try {
       final tempDir = await getTemporaryDirectory();
       final audioDir = Directory('${tempDir.path}/video_studio_audio/$reciterPath');
       if (!await audioDir.exists()) {
         await audioDir.create(recursive: true);
       }
-      final surahStr = surahNumber.toString().padLeft(3, '0');
-      final ayahStr = ayahNumber.toString().padLeft(3, '0');
       final filePath = '${audioDir.path}/$surahStr$ayahStr.mp3';
       final file = File(filePath);
       if (!await file.exists()) {
-        final url = 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
         await _dio.download(url, filePath, cancelToken: _cancelToken);
       }
       return filePath;
@@ -108,7 +126,9 @@ class AudioTimelineService {
 
     try {
       for (final path in audioFilePaths) {
-        final duration = await player.setFilePath(path);
+        final duration = path.startsWith('http') || kIsWeb
+            ? await player.setUrl(path)
+            : await player.setFilePath(path);
         durations.add(duration ?? const Duration(seconds: 4));
       }
     } finally {

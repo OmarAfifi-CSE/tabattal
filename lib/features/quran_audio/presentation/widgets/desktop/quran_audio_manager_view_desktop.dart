@@ -164,14 +164,14 @@ class _QuranAudioManagerViewDesktopState
   }
 
   Future<void> _downloadAll() async {
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
     if (_isDownloadingAll) {
       _batchCancelToken?.cancel('Batch download cancelled');
       _batchCancelToken = null;
       setState(() => _isDownloadingAll = false);
       AppSnackBar.show(
         context,
-        message: isArabic ? 'تم إيقاف التحميل مؤقتًا' : 'Download paused',
+        message: l10n.audioDownloadPaused,
         icon: Icons.pause_circle_outline_rounded,
       );
       return;
@@ -181,9 +181,7 @@ class _QuranAudioManagerViewDesktopState
     _batchCancelToken = CancelToken();
     AppSnackBar.show(
       context,
-      message: isArabic
-          ? 'جاري بدء تحميل جميع السور...'
-          : 'Starting download for all surahs...',
+      message: l10n.audioDownloadStartingAll,
       icon: Icons.downloading_rounded,
     );
 
@@ -209,16 +207,12 @@ class _QuranAudioManagerViewDesktopState
         if (failedCount == 0) {
           AppSnackBar.showSuccess(
             context,
-            isArabic
-                ? 'تم تحميل جميع السور بنجاح'
-                : 'All surahs downloaded successfully',
+            l10n.audioDownloadAllSuccess,
           );
         } else {
           AppSnackBar.showError(
             context,
-            isArabic
-                ? 'فشل تحميل $failedCount سور'
-                : 'Failed to download $failedCount surahs',
+            l10n.audioDownloadFailedCount(failedCount),
           );
         }
       }
@@ -443,7 +437,7 @@ class _QuranAudioManagerViewDesktopState
                                 ),
                           label: Text(
                             _isDownloadingAll
-                                ? (isEn ? 'Pause Download' : 'إيقاف التحميل')
+                                ? l10n.audioDownloadPause
                                 : l10n.audioDownloadAll,
                             style: TextStyle(
                               fontSize: 18.5.sp,

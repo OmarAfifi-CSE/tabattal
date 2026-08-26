@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+temp
+*.mp4
+*.ts
+*.png

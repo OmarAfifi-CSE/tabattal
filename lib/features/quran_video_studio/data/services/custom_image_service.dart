@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
@@ -16,8 +16,9 @@ class CustomImageService {
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 25),
       headers: {
-        'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        if (!kIsWeb)
+          'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
     ),
   );
@@ -32,7 +33,17 @@ class CustomImageService {
         maxHeight: 3840,
         imageQuality: 95,
       );
-      return pickedFile?.path;
+      if (pickedFile == null) return null;
+
+      if (kIsWeb) {
+        final bytes = await pickedFile.readAsBytes();
+        final codec = await ui.instantiateImageCodec(bytes);
+        final frame = await codec.getNextFrame();
+        _uiImageCache[pickedFile.path] = frame.image;
+        return pickedFile.path;
+      }
+
+      return pickedFile.path;
     } catch (_) {
       return null;
     }
@@ -64,6 +75,11 @@ class CustomImageService {
     final frame = await codec.getNextFrame();
     final image = frame.image;
 
+    if (kIsWeb) {
+      _uiImageCache[cleanUrl] = image;
+      return cleanUrl;
+    }
+
     final tempDir = await getTemporaryDirectory();
     final fileName = 'custom_bg_${DateTime.now().millisecondsSinceEpoch}.png';
     final filePath = p.join(tempDir.path, fileName);
@@ -84,6 +100,25 @@ class CustomImageService {
     }
 
     try {
+      if (kIsWeb ||
+          filePath.startsWith('http://') ||
+          filePath.startsWith('https://') ||
+          filePath.startsWith('blob:')) {
+        final response = await _dio.get<List<int>>(
+          filePath,
+          options: Options(responseType: ResponseType.bytes),
+        );
+        if (response.data != null) {
+          final bytes = Uint8List.fromList(response.data!);
+          final codec = await ui.instantiateImageCodec(bytes);
+          final frame = await codec.getNextFrame();
+          final image = frame.image;
+          _uiImageCache[filePath] = image;
+          return image;
+        }
+        return null;
+      }
+
       final file = File(filePath);
       if (!await file.exists()) return null;
 

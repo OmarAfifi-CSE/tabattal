@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -58,18 +59,31 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
   Future<void> _initPlayer() async {
     final path = widget.videoPath;
     if (_initializedPath == path && _controller != null) return;
+    if (path.trim().isEmpty) return;
 
-    final file = File(path);
-    if (!file.existsSync()) return;
+    final isWebOrUrl = kIsWeb ||
+        path.startsWith('http://') ||
+        path.startsWith('https://') ||
+        path.startsWith('blob:');
+
+    if (!isWebOrUrl) {
+      final file = File(path);
+      if (!file.existsSync()) return;
+    }
 
     final oldController = _controller;
     _controller = null;
     await oldController?.dispose();
 
-    final newController = VideoPlayerController.file(
-      file,
-      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-    );
+    final newController = isWebOrUrl
+        ? VideoPlayerController.networkUrl(
+            Uri.parse(path),
+            videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+          )
+        : VideoPlayerController.file(
+            File(path),
+            videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+          );
     _initializedPath = path;
 
     try {

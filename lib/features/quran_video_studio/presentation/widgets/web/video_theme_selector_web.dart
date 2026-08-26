@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../domain/entities/video_theme_preset.dart';
 
 /// Dedicated web theme selector with horizontal luxury theme swatches.
@@ -17,12 +18,13 @@ class VideoThemeSelectorWeb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isEn ? 'Theme & Accent Palette' : 'المظهر والألوان',
+          l10n.videoStudioThemeAndColors,
           style: TextStyle(
             fontSize: 16.0.sp,
             fontWeight: FontWeight.bold,

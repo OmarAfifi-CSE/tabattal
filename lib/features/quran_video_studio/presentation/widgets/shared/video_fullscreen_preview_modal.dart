@@ -257,7 +257,7 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                                 icon: const Icon(Icons.replay_rounded),
                                 color: AppColors.accentGold,
                                 iconSize: 24.r,
-                                tooltip: 'إعادة من البداية',
+                                tooltip: l10n.videoStudioReplayFromStart,
                               ),
                             ),
 

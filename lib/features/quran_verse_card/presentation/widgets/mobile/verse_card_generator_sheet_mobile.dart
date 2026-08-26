@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -248,20 +247,8 @@ class _VerseCardGeneratorSheetContentMobileState
     try {
       final settingsState = context.read<SettingsBloc>().state;
       final activeThemeId = settingsState.effectiveMushafTheme.id;
-      final String targetName = switch (activeThemeId) {
-        'white' => 'أبيض',
-        'parchment' => 'عتيق',
-        'roseGold' => 'روز جولد',
-        'mint' => 'نعناعي',
-        'olive' => 'زيتوني',
-        'iceBlue' => 'ثلجي',
-        'slate' => 'رخامي',
-        'emerald' => 'زمردي',
-        'burgundy' => 'عنابي',
-        'dark' => 'ليلي',
-        _ => 'كريمي',
-      };
-      final idx = VerseCardTheme.themes.indexWhere((t) => t.name == targetName);
+      final idx =
+          VerseCardTheme.themes.indexWhere((t) => t.id == activeThemeId);
       return idx != -1 ? idx : 0;
     } catch (_) {
       return 0;
@@ -284,6 +271,12 @@ class _VerseCardGeneratorSheetContentMobileState
         );
       }
     });
+  }
+
+  void _clearStatusBanner() {
+    if (_statusMessage != null) {
+      setState(() => _statusMessage = null);
+    }
   }
 
   void _dismissExportDialog() {
@@ -716,7 +709,8 @@ class _VerseCardGeneratorSheetContentMobileState
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'خطأ أثناء المشاركة: $e';
+          _statusMessage =
+              AppLocalizations.of(context)!.verseCardShareError(e.toString());
           _isSuccessStatus = false;
         });
       }
@@ -750,10 +744,11 @@ class _VerseCardGeneratorSheetContentMobileState
       );
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
           _statusMessage = success
-              ? 'تم حفظ الصورة في المعرض بنجاح'
-              : 'خطأ أثناء حفظ الصورة';
+              ? l10n.verseCardImageSavedGallerySuccess
+              : l10n.verseCardImageSavedGalleryError;
           _isSuccessStatus = success;
         });
         _scrollToStatusBanner();
@@ -761,7 +756,8 @@ class _VerseCardGeneratorSheetContentMobileState
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'خطأ أثناء حفظ الصورة: $e';
+          _statusMessage =
+              AppLocalizations.of(context)!.verseCardSaveError(e.toString());
           _isSuccessStatus = false;
         });
         _scrollToStatusBanner();
@@ -829,7 +825,7 @@ class _VerseCardGeneratorSheetContentMobileState
             if (videoState.pendingExportAction == VideoExportAction.share) {
               await VideoExportService.shareOutput(
                 filePath: outputPath,
-                title: 'تلاوة عطرة من تطبيق تبتل',
+                title: l10n.videoStudioShareCaption,
               );
             } else {
               final saved = await VideoExportService.saveToGallery(
@@ -838,8 +834,8 @@ class _VerseCardGeneratorSheetContentMobileState
               if (mounted) {
                 setState(() {
                   _statusMessage = saved
-                      ? 'تم حفظ مقطع الفيديو في المعرض بنجاح'
-                      : 'تعذر حفظ الفيديو في المعرض';
+                      ? l10n.videoStudioSavedSuccess
+                      : l10n.videoStudioSavedError;
                   _isSuccessStatus = saved;
                 });
                 _scrollToStatusBanner();
@@ -1015,18 +1011,22 @@ class _VerseCardGeneratorSheetContentMobileState
                     onSave: _saveCardImage,
                     onCopyText: () => _copyTextToClipboard(context),
                     onShareVideo: () {
-                      context.read<VideoStudioBloc>().add(
-                            const VideoStudioExportStarted(
-                              action: VideoExportAction.share,
-                            ),
-                          );
+                      final bloc = context.read<VideoStudioBloc>();
+                      _showExportDialog(context, bloc);
+                      bloc.add(
+                        const VideoStudioExportStarted(
+                          action: VideoExportAction.share,
+                        ),
+                      );
                     },
                     onSaveVideo: () {
-                      context.read<VideoStudioBloc>().add(
-                            const VideoStudioExportStarted(
-                              action: VideoExportAction.saveToGallery,
-                            ),
-                          );
+                      final bloc = context.read<VideoStudioBloc>();
+                      _showExportDialog(context, bloc);
+                      bloc.add(
+                        const VideoStudioExportStarted(
+                          action: VideoExportAction.saveToGallery,
+                        ),
+                      );
                     },
                     statusMessage: _statusMessage,
                     isSuccessStatus: _isSuccessStatus,
@@ -1068,6 +1068,9 @@ class _VerseCardGeneratorSheetContentMobileState
           key: _repaintKey,
           child: Container(
             key: const ValueKey('image_card_preview'),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16.r),
+            ),
             padding: EdgeInsets.symmetric(vertical: 4.h),
             child: VerseCardContentPreview(
               theme: _activeTheme,
@@ -1088,34 +1091,39 @@ class _VerseCardGeneratorSheetContentMobileState
         );
 
       case ShareFormat.text:
-        return Container(
-          key: const ValueKey('text_card_preview'),
-          padding: EdgeInsets.symmetric(vertical: 4.h),
-          child: VerseCardTextPreview(
-            theme: _activeTheme,
-            surahNumber: _surahNumber,
-            startAyah: _startAyah,
-            endAyah: _endAyah,
-            verseTextUthmani: _verseTextUthmani,
-            qcfSpans: _qcfSpans,
-            isLoadingText: _isLoadingText,
-            includeTafsir: _includeTafsir,
-            tafsirText: _tafsirText,
-            isLoadingTafsir: _isLoadingTafsir,
-            includeTranslation: _includeTranslation,
-            translationText: _translationText,
-            isLoadingTranslation: _isLoadingTranslation,
+        return KeyedSubtree(
+          key: const ValueKey('text_preview'),
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 4.h),
+            child: VerseCardTextPreview(
+              theme: _activeTheme,
+              surahNumber: _surahNumber,
+              startAyah: _startAyah,
+              endAyah: _endAyah,
+              verseTextUthmani: _verseTextUthmani,
+              qcfSpans: _qcfSpans,
+              isLoadingText: _isLoadingText,
+              includeTafsir: _includeTafsir,
+              tafsirText: _tafsirText,
+              isLoadingTafsir: _isLoadingTafsir,
+              includeTranslation: _includeTranslation,
+              translationText: _translationText,
+              isLoadingTranslation: _isLoadingTranslation,
+            ),
           ),
         );
 
       case ShareFormat.fullPage:
-        return RepaintBoundary(
-          key: _repaintKey,
-          child: VerseCardFullPagePreview(
-            theme: _activeTheme,
-            isCapturingSnapshot: _isCapturingSnapshot,
-            pageSnapshot: _pageSnapshot,
-            onRetryCapture: _loadFullPageData,
+        return KeyedSubtree(
+          key: const ValueKey('full_page_preview'),
+          child: RepaintBoundary(
+            key: _repaintKey,
+            child: VerseCardFullPagePreview(
+              theme: _activeTheme,
+              isCapturingSnapshot: _isCapturingSnapshot,
+              pageSnapshot: _pageSnapshot,
+              onRetryCapture: _loadFullPageData,
+            ),
           ),
         );
     }
@@ -1132,6 +1140,7 @@ class _VerseCardGeneratorSheetContentMobileState
             VideoAspectRatioBarMobile(
               selectedRatio: config.aspectRatio,
               onRatioSelected: (ratio) {
+                _clearStatusBanner();
                 context
                     .read<VideoStudioBloc>()
                     .add(VideoStudioAspectRatioChanged(ratio));
@@ -1140,11 +1149,13 @@ class _VerseCardGeneratorSheetContentMobileState
             VideoBackgroundSelectorMobile(
               config: config,
               onCustomImageChanged: (path) {
+                _clearStatusBanner();
                 context
                     .read<VideoStudioBloc>()
                     .add(VideoStudioCustomImageSelected(path));
               },
               onCustomVideoChanged: (path) {
+                _clearStatusBanner();
                 context
                     .read<VideoStudioBloc>()
                     .add(VideoStudioCustomVideoSelected(path));
@@ -1153,12 +1164,7 @@ class _VerseCardGeneratorSheetContentMobileState
             SizedBox(height: 12.h),
             Builder(
               builder: (context) {
-                final bool hasCustomMedia = (config.customImagePath != null &&
-                        config.customImagePath!.isNotEmpty &&
-                        File(config.customImagePath!).existsSync()) ||
-                    (config.customVideoPath != null &&
-                        config.customVideoPath!.isNotEmpty &&
-                        File(config.customVideoPath!).existsSync());
+                final bool hasCustomMedia = config.hasCustomMedia;
                 final bool showThemeSelector =
                     !hasCustomMedia || config.showCardFrame;
 
@@ -1171,6 +1177,7 @@ class _VerseCardGeneratorSheetContentMobileState
                           child: VideoThemeSelectorMobile(
                             selectedPreset: config.themePreset,
                             onThemeSelected: (theme) {
+                              _clearStatusBanner();
                               context
                                   .read<VideoStudioBloc>()
                                   .add(VideoStudioThemeChanged(theme));
@@ -1187,6 +1194,7 @@ class _VerseCardGeneratorSheetContentMobileState
               endAyah: _endAyah,
               onStartAyahChanged: (start) {
                 if (start == _startAyah) return;
+                _clearStatusBanner();
                 final maxEnd = (start + 9).clamp(1, _totalAyahsInSurah);
                 int newEnd = _endAyah;
                 if (newEnd < start) {
@@ -1208,6 +1216,7 @@ class _VerseCardGeneratorSheetContentMobileState
               },
               onEndAyahChanged: (end) {
                 if (end == _endAyah) return;
+                _clearStatusBanner();
                 int newStart = _startAyah;
                 if (newStart > end) {
                   newStart = end;
@@ -1230,6 +1239,7 @@ class _VerseCardGeneratorSheetContentMobileState
               selectedReciter: config.reciterName,
               selectedCategory: config.reciterCategory,
               onReciterSelected: (name, category, path) {
+                _clearStatusBanner();
                 context.read<VideoStudioBloc>().add(
                       VideoStudioReciterChanged(
                         reciterName: name,
@@ -1243,11 +1253,13 @@ class _VerseCardGeneratorSheetContentMobileState
             VideoOptionsSelectorMobile(
               config: config,
               onDisplayModeChanged: (mode) {
+                _clearStatusBanner();
                 context
                     .read<VideoStudioBloc>()
                     .add(VideoStudioTextDisplayModeChanged(mode));
               },
               onQualityChanged: (quality) {
+                _clearStatusBanner();
                 context
                     .read<VideoStudioBloc>()
                     .add(VideoStudioQualityChanged(quality));
@@ -1260,6 +1272,7 @@ class _VerseCardGeneratorSheetContentMobileState
                 showEnglishTranslation,
                 showAudioWaveform,
               }) {
+                _clearStatusBanner();
                 context.read<VideoStudioBloc>().add(
                       VideoStudioOptionToggled(
                         showSurahBadge: showSurahBadge,

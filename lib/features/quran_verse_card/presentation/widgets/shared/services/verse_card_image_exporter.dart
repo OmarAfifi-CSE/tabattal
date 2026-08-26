@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
 import '../../../../../../l10n/app_localizations.dart';
+import '../helpers/verse_card_text_utils.dart';
 
 /// Service responsible for rendering, capturing Ultra-HD PNGs, saving to storage, and sharing.
 class VerseCardImageExporter {
@@ -187,12 +188,15 @@ class VerseCardImageExporter {
     final l10n = AppLocalizations.of(context)!;
 
     final rangeText = startAyah == endAyah
-        ? (isEn
-              ? 'Surah $surahName • Ayah $startAyah'
-              : 'سورة $surahName • آية $startAyah')
-        : (isEn
-              ? 'Surah $surahName • Ayahs $startAyah - $endAyah'
-              : 'سورة $surahName • الآيات ($startAyah - $endAyah)');
+        ? l10n.verseCardSurahSingleAyah(
+            surahName,
+            isEn ? '$startAyah' : VerseCardTextUtils.toArabicDigits(startAyah),
+          )
+        : l10n.verseCardSurahMultipleAyahs(
+            surahName,
+            isEn ? '$startAyah' : VerseCardTextUtils.toArabicDigits(startAyah),
+            isEn ? '$endAyah' : VerseCardTextUtils.toArabicDigits(endAyah),
+          );
 
     final buffer = StringBuffer();
     buffer.writeln('( $verseTextUthmani )');

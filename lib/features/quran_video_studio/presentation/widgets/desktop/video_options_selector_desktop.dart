@@ -231,9 +231,7 @@ class VideoOptionsSelectorDesktop extends StatelessWidget {
                 context: context,
                 icon: Icons.bookmark_outline_rounded,
                 title: config.textDisplayMode == VideoTextDisplayMode.lineByLine
-                    ? (Localizations.localeOf(context).languageCode == 'ar'
-                        ? 'إظهار اسم السورة ورقم الآية'
-                        : 'Show Surah Name & Ayah Number')
+                    ? l10n.videoStudioShowSurahBadgeAndAyah
                     : l10n.videoStudioShowSurahBadge,
                 value: config.showSurahBadge,
                 onChanged: (val) => onToggleOption(showSurahBadge: val),

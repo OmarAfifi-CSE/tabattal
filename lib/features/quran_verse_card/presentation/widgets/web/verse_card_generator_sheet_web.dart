@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -259,20 +258,8 @@ class _VerseCardGeneratorSheetWebContentState
     try {
       final settingsState = context.read<SettingsBloc>().state;
       final activeThemeId = settingsState.effectiveMushafTheme.id;
-      final String targetName = switch (activeThemeId) {
-        'white' => 'أبيض',
-        'parchment' => 'عتيق',
-        'roseGold' => 'روز جولد',
-        'mint' => 'نعناعي',
-        'olive' => 'زيتوني',
-        'iceBlue' => 'ثلجي',
-        'slate' => 'رخامي',
-        'emerald' => 'زمردي',
-        'burgundy' => 'عنابي',
-        'dark' => 'ليلي',
-        _ => 'كريمي',
-      };
-      final idx = VerseCardTheme.themes.indexWhere((t) => t.name == targetName);
+      final idx =
+          VerseCardTheme.themes.indexWhere((t) => t.id == activeThemeId);
       return idx != -1 ? idx : 0;
     } catch (_) {
       return 0;
@@ -295,6 +282,12 @@ class _VerseCardGeneratorSheetWebContentState
         );
       }
     });
+  }
+
+  void _clearStatusBanner() {
+    if (_statusMessage != null) {
+      setState(() => _statusMessage = null);
+    }
   }
 
   void _dismissExportDialog() {
@@ -727,7 +720,8 @@ class _VerseCardGeneratorSheetWebContentState
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'خطأ أثناء المشاركة: $e';
+          _statusMessage =
+              AppLocalizations.of(context)!.verseCardShareError(e.toString());
           _isSuccessStatus = false;
         });
       }
@@ -761,10 +755,11 @@ class _VerseCardGeneratorSheetWebContentState
       );
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
           _statusMessage = success
-              ? 'تم حفظ الصورة في المعرض بنجاح'
-              : 'خطأ أثناء حفظ الصورة';
+              ? l10n.verseCardImageDownloadedSuccess
+              : l10n.verseCardImageDownloadedError;
           _isSuccessStatus = success;
         });
         _scrollToStatusBanner();
@@ -772,7 +767,8 @@ class _VerseCardGeneratorSheetWebContentState
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'خطأ أثناء حفظ الصورة: $e';
+          _statusMessage =
+              AppLocalizations.of(context)!.verseCardSaveError(e.toString());
           _isSuccessStatus = false;
         });
         _scrollToStatusBanner();
@@ -841,7 +837,7 @@ class _VerseCardGeneratorSheetWebContentState
             if (videoState.pendingExportAction == VideoExportAction.share) {
               await VideoExportService.shareOutput(
                 filePath: outputPath,
-                title: 'تلاوة عطرة من تطبيق تبتل',
+                title: l10n.videoStudioShareCaption,
               );
             } else {
               final saved = await VideoExportService.saveToGallery(
@@ -850,8 +846,8 @@ class _VerseCardGeneratorSheetWebContentState
               if (mounted) {
                 setState(() {
                   _statusMessage = saved
-                      ? 'تم حفظ مقطع الفيديو في المعرض بنجاح'
-                      : 'تعذر حفظ الفيديو في المعرض';
+                      ? l10n.videoStudioDownloadedSuccess
+                      : l10n.videoStudioDownloadedError;
                   _isSuccessStatus = saved;
                 });
                 _scrollToStatusBanner();
@@ -1007,18 +1003,22 @@ class _VerseCardGeneratorSheetWebContentState
                                   onSave: _saveCardImage,
                                   onCopyText: () => _copyTextToClipboard(context),
                                   onShareVideo: () {
-                                    context.read<VideoStudioBloc>().add(
-                                          const VideoStudioExportStarted(
-                                            action: VideoExportAction.share,
-                                          ),
-                                        );
+                                    final bloc = context.read<VideoStudioBloc>();
+                                    _showExportDialog(context, bloc);
+                                    bloc.add(
+                                      const VideoStudioExportStarted(
+                                        action: VideoExportAction.share,
+                                      ),
+                                    );
                                   },
                                   onSaveVideo: () {
-                                    context.read<VideoStudioBloc>().add(
-                                          const VideoStudioExportStarted(
-                                            action: VideoExportAction.saveToGallery,
-                                          ),
-                                        );
+                                    final bloc = context.read<VideoStudioBloc>();
+                                    _showExportDialog(context, bloc);
+                                    bloc.add(
+                                      const VideoStudioExportStarted(
+                                        action: VideoExportAction.saveToGallery,
+                                      ),
+                                    );
                                   },
                                   statusMessage: _statusMessage,
                                   isSuccessStatus: _isSuccessStatus,
@@ -1132,18 +1132,22 @@ class _VerseCardGeneratorSheetWebContentState
                         onSave: _saveCardImage,
                         onCopyText: () => _copyTextToClipboard(context),
                         onShareVideo: () {
-                          context.read<VideoStudioBloc>().add(
-                                const VideoStudioExportStarted(
-                                  action: VideoExportAction.share,
-                                ),
-                              );
+                          final bloc = context.read<VideoStudioBloc>();
+                          _showExportDialog(context, bloc);
+                          bloc.add(
+                            const VideoStudioExportStarted(
+                              action: VideoExportAction.share,
+                            ),
+                          );
                         },
                         onSaveVideo: () {
-                          context.read<VideoStudioBloc>().add(
-                                const VideoStudioExportStarted(
-                                  action: VideoExportAction.saveToGallery,
-                                ),
-                              );
+                          final bloc = context.read<VideoStudioBloc>();
+                          _showExportDialog(context, bloc);
+                          bloc.add(
+                            const VideoStudioExportStarted(
+                              action: VideoExportAction.saveToGallery,
+                            ),
+                          );
                         },
                         statusMessage: _statusMessage,
                         isSuccessStatus: _isSuccessStatus,
@@ -1254,6 +1258,7 @@ class _VerseCardGeneratorSheetWebContentState
             VideoAspectRatioBarWeb(
               selectedRatio: config.aspectRatio,
               onRatioSelected: (ratio) {
+                _clearStatusBanner();
                 context
                     .read<VideoStudioBloc>()
                     .add(VideoStudioAspectRatioChanged(ratio));
@@ -1262,11 +1267,13 @@ class _VerseCardGeneratorSheetWebContentState
             VideoBackgroundSelectorWeb(
               config: config,
               onCustomImageChanged: (path) {
+                _clearStatusBanner();
                 context
                     .read<VideoStudioBloc>()
                     .add(VideoStudioCustomImageSelected(path));
               },
               onCustomVideoChanged: (path) {
+                _clearStatusBanner();
                 context
                     .read<VideoStudioBloc>()
                     .add(VideoStudioCustomVideoSelected(path));
@@ -1275,12 +1282,7 @@ class _VerseCardGeneratorSheetWebContentState
             SizedBox(height: isLandscape ? 6.0 : 12.h),
             Builder(
               builder: (context) {
-                final bool hasCustomMedia = (config.customImagePath != null &&
-                        config.customImagePath!.isNotEmpty &&
-                        File(config.customImagePath!).existsSync()) ||
-                    (config.customVideoPath != null &&
-                        config.customVideoPath!.isNotEmpty &&
-                        File(config.customVideoPath!).existsSync());
+                final bool hasCustomMedia = config.hasCustomMedia;
                 final bool showThemeSelector =
                     !hasCustomMedia || config.showCardFrame;
 
@@ -1295,6 +1297,7 @@ class _VerseCardGeneratorSheetWebContentState
                           child: VideoThemeSelectorWeb(
                             selectedPreset: config.themePreset,
                             onThemeSelected: (theme) {
+                              _clearStatusBanner();
                               context
                                   .read<VideoStudioBloc>()
                                   .add(VideoStudioThemeChanged(theme));
@@ -1311,6 +1314,7 @@ class _VerseCardGeneratorSheetWebContentState
               endAyah: _endAyah,
               onStartAyahChanged: (start) {
                 if (start == _startAyah) return;
+                _clearStatusBanner();
                 final maxEnd = (start + 9).clamp(1, _totalAyahsInSurah);
                 int newEnd = _endAyah;
                 if (newEnd < start) {
@@ -1332,6 +1336,7 @@ class _VerseCardGeneratorSheetWebContentState
               },
               onEndAyahChanged: (end) {
                 if (end == _endAyah) return;
+                _clearStatusBanner();
                 int newStart = _startAyah;
                 if (newStart > end) {
                   newStart = end;
@@ -1354,6 +1359,7 @@ class _VerseCardGeneratorSheetWebContentState
               selectedReciter: config.reciterName,
               selectedCategory: config.reciterCategory,
               onReciterSelected: (name, category, path) {
+                _clearStatusBanner();
                 context.read<VideoStudioBloc>().add(
                       VideoStudioReciterChanged(
                         reciterName: name,
@@ -1367,11 +1373,13 @@ class _VerseCardGeneratorSheetWebContentState
             VideoOptionsSelectorWeb(
               config: config,
               onDisplayModeChanged: (mode) {
+                _clearStatusBanner();
                 context
                     .read<VideoStudioBloc>()
                     .add(VideoStudioTextDisplayModeChanged(mode));
               },
               onQualityChanged: (quality) {
+                _clearStatusBanner();
                 context
                     .read<VideoStudioBloc>()
                     .add(VideoStudioQualityChanged(quality));
@@ -1384,6 +1392,7 @@ class _VerseCardGeneratorSheetWebContentState
                 showEnglishTranslation,
                 showAudioWaveform,
               }) {
+                _clearStatusBanner();
                 context.read<VideoStudioBloc>().add(
                       VideoStudioOptionToggled(
                         showSurahBadge: showSurahBadge,
@@ -1738,79 +1747,40 @@ class _VerseCardActionButtonsWeb extends StatelessWidget {
     Widget buildButtons() {
       switch (selectedFormat) {
         case ShareFormat.video:
-          return Row(
+          return SizedBox(
             key: const ValueKey('video_action_buttons_web'),
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: isExportingVideo ? null : onShareVideo,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accentGold,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor:
-                        AppColors.accentGold.withValues(alpha: 0.85),
-                    disabledForegroundColor:
-                        Colors.white.withValues(alpha: 0.9),
-                    padding: EdgeInsets.symmetric(
-                      vertical: isLandscape ? 12.0.h : 16.0.h,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
-                    ),
-                    elevation: 2,
-                  ),
-                  icon: isExportingVideo
-                      ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 8.0 : 10.r,
-                          color: Colors.white,
-                        )
-                      : Icon(Icons.share_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
-                  label: Text(
-                    'مشاركة الفيديو',
-                    style: TextStyle(
-                      fontSize: isLandscape ? 15.0.sp : 18.0.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+            width: MediaQuery.sizeOf(context).width,
+            child: ElevatedButton.icon(
+              onPressed: isExportingVideo ? null : onSaveVideo,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accentGold,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor:
+                    AppColors.accentGold.withValues(alpha: 0.85),
+                disabledForegroundColor:
+                    Colors.white.withValues(alpha: 0.9),
+                padding: EdgeInsets.symmetric(
+                  vertical: isLandscape ? 12.0.h : 16.0.h,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
+                ),
+                elevation: 2,
+              ),
+              icon: isExportingVideo
+                  ? CupertinoActivityIndicator(
+                      radius: isLandscape ? 8.0 : 10.r,
+                      color: Colors.white,
+                    )
+                  : Icon(Icons.download_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
+              label: Text(
+                l10n.videoStudioDownloadVideo,
+                style: TextStyle(
+                  fontSize: isLandscape ? 15.0.sp : 18.0.sp,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(width: isLandscape ? 10.0.w : 14.0.w),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: isExportingVideo ? null : onSaveVideo,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.accentGold,
-                    disabledForegroundColor:
-                        AppColors.accentGold.withValues(alpha: 0.85),
-                    side: BorderSide(
-                      color: AppColors.accentGold.withValues(
-                        alpha: isExportingVideo ? 0.85 : 1.0,
-                      ),
-                      width: 1.5,
-                    ),
-                    padding: EdgeInsets.symmetric(
-                      vertical: isLandscape ? 12.0.h : 16.0.h,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
-                    ),
-                  ),
-                  icon: isExportingVideo
-                      ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 8.0 : 10.r,
-                          color: AppColors.accentGold,
-                        )
-                      : Icon(Icons.download_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
-                  label: Text(
-                    'حفظ الفيديو',
-                    style: TextStyle(
-                      fontSize: isLandscape ? 15.0.sp : 18.0.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           );
         case ShareFormat.image:
         case ShareFormat.fullPage:
@@ -2161,7 +2131,7 @@ class _VideoPreviewViewportWeb extends StatelessWidget {
                           color: AppColors.accentGold,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          tooltip: 'إعادة من البداية',
+                          tooltip: l10n.videoStudioReplayFromStart,
                         ),
                         SizedBox(width: isLandscape ? 8.0 : 12.w),
                         IconButton(

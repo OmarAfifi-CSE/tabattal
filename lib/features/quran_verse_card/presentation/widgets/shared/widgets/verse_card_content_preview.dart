@@ -178,12 +178,21 @@ class VerseCardContentPreview extends StatelessWidget {
               ),
               child: Text(
                 startAyah == endAyah
-                    ? (isEn
-                          ? 'Surah $surahCleanName • Ayah $startAyah'
-                          : 'سورة $surahCleanName • الآية $startAyah')
-                    : (isEn
-                          ? 'Surah $surahCleanName • Ayahs $startAyah-$endAyah'
-                          : 'سورة $surahCleanName • الآيات ($startAyah - $endAyah)'),
+                    ? l10n.verseCardSurahSingleAyah(
+                        surahCleanName,
+                        isEn
+                            ? '$startAyah'
+                            : VerseCardTextUtils.toArabicDigits(startAyah),
+                      )
+                    : l10n.verseCardSurahMultipleAyahs(
+                        surahCleanName,
+                        isEn
+                            ? '$startAyah'
+                            : VerseCardTextUtils.toArabicDigits(startAyah),
+                        isEn
+                            ? '$endAyah'
+                            : VerseCardTextUtils.toArabicDigits(endAyah),
+                      ),
                 style: TextStyle(
                   fontSize: 12.sp,
                   fontWeight: FontWeight.bold,
@@ -330,9 +339,9 @@ class VerseCardContentPreview extends StatelessWidget {
                 ),
                 SizedBox(width: 6.w),
                 Text(
-                  'تَـبَـتَّـلْ • Tabattal',
+                  isEn ? 'Tabattal' : 'تَـبَـتَّـلْ',
                   style: TextStyle(
-                    fontFamily: 'Amiri',
+                    fontFamily: isEn ? null : 'Amiri',
                     fontSize: 13.sp,
                     fontWeight: FontWeight.bold,
                     color: theme.secondaryTextColor.withValues(alpha: 0.85),

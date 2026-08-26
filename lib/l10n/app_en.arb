@@ -377,5 +377,124 @@
   "videoBgInvalidVideoUrl": "Please enter a valid video link (MP4)",
   "videoBgCardDesign": "Card Design",
   "videoBgCustomPhoto": "Custom Photo",
-  "videoBgChangeVideo": "Change Video"
+  "videoBgChangeVideo": "Change Video",
+  "videoStudioDownloadVideo": "Download Video",
+  "videoStudioDownloadedSuccess": "Video downloaded successfully",
+  "videoStudioDownloadedError": "Failed to download video",
+  "videoStudioAudioWaveform": "Show Audio Waveform",
+  "videoStudioReplayFromStart": "Replay from start",
+  "videoStudioShowSurahBadgeAndAyah": "Show Surah Name & Ayah Number",
+  "videoStudioThemeAndColors": "Theme & Colors",
+  "videoStudioCustomPhotoActive": "Custom Photo Active",
+  "videoStudioCustomPhotoTitle": "Custom Background",
+  "videoStudioChooseImageGallery": "Choose from Gallery",
+  "videoStudioChooseImageGallerySub": "Pick any image from your device as background",
+  "videoStudioImageUrl": "Direct Image URL",
+  "videoStudioImageUrlSub": "Paste a direct image link from the web",
+  "videoStudioApplyImage": "Apply Image",
+  "videoStudioApplyVideo": "Apply Video",
+  "videoStudioRemoveCustomImage": "Remove Custom Image",
+  "videoStudioLoadingImage": "Processing image...",
+  "videoStudioEnterImageUrl": "Please enter image URL",
+  "videoStudioEnterVideoUrl": "Please enter video URL",
+  "videoStudioFailedToLoadImage": "Failed to load image from link",
+  "videoStudioFailedToLoadVideo": "Failed to load video from link",
+  "videoStudioPickImageError": "Error while picking image: {error}",
+  "@videoStudioPickImageError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "videoStudioPickVideoError": "Error while picking video: {error}",
+  "@videoStudioPickVideoError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "verseCardShareError": "Error while sharing: {error}",
+  "@verseCardShareError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "verseCardSaveError": "Error while saving image: {error}",
+  "@verseCardSaveError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "verseCardImageDownloadedSuccess": "Image downloaded successfully",
+  "verseCardImageDownloadedError": "Error while downloading image",
+  "verseCardImageSavedGallerySuccess": "Image saved to gallery successfully",
+  "verseCardImageSavedGalleryError": "Failed to save image to gallery",
+  "verseCardCapturePageError": "Failed to capture mushaf page",
+  "verseCardRetry": "Retry",
+  "videoStudioReciterCategoryMurattal": "Murattal",
+  "videoStudioReciterCategoryMujawwad": "Mujawwad",
+  "verseCardThemeWhite": "White",
+  "verseCardThemeParchment": "Parchment",
+  "verseCardThemeRoseGold": "Rose Gold",
+  "verseCardThemeMint": "Mint",
+  "verseCardThemeOlive": "Olive",
+  "verseCardThemeIceBlue": "Ice Blue",
+  "verseCardThemeSlate": "Slate",
+  "verseCardThemeEmerald": "Emerald",
+  "verseCardThemeBurgundy": "Burgundy",
+  "verseCardThemeDark": "Night",
+  "verseCardThemeCream": "Cream",
+  "videoExportErrorConnection": "Could not connect to video export server. Please ensure the server is running or check your connection.",
+  "verseCardSurahSingleAyah": "Surah {surahName} • Ayah {ayah}",
+  "@verseCardSurahSingleAyah": {
+    "placeholders": {
+      "surahName": { "type": "String" },
+      "ayah": { "type": "String" }
+    }
+  },
+  "verseCardSurahMultipleAyahs": "Surah {surahName} • Ayahs ({startAyah} - {endAyah})",
+  "@verseCardSurahMultipleAyahs": {
+    "placeholders": {
+      "surahName": { "type": "String" },
+      "startAyah": { "type": "String" },
+      "endAyah": { "type": "String" }
+    }
+  },
+  "verseCardFromAyah": "From Ayah {ayah}",
+  "@verseCardFromAyah": {
+    "placeholders": {
+      "ayah": { "type": "String" }
+    }
+  },
+  "verseCardToAyah": "To Ayah {ayah}",
+  "@verseCardToAyah": {
+    "placeholders": {
+      "ayah": { "type": "String" }
+    }
+  },
+  "verseCardAyah": "Ayah {ayah}",
+  "@verseCardAyah": {
+    "placeholders": {
+      "ayah": { "type": "String" }
+    }
+  },
+  "verseCardSurah": "Surah {surahName}",
+  "@verseCardSurah": {
+    "placeholders": {
+      "surahName": { "type": "String" }
+    }
+  },
+  "videoStudioProgressDownloadingAudio": "Downloading recitation audio...",
+  "videoStudioProgressGeneratingOverlays": "Preparing verse animations...",
+  "videoStudioProgressEncoding": "Encoding and rendering video...",
+  "videoStudioExportPreparing": "Starting video generation...",
+  "audioDownloadPause": "Pause Download",
+  "audioDownloadPaused": "Download paused",
+  "audioDownloadStartingAll": "Starting download for all surahs...",
+  "audioDownloadAllSuccess": "All surahs downloaded successfully",
+  "audioDownloadFailedCount": "Failed to download {count} surahs",
+  "@audioDownloadFailedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "searchFilterAll": "All"
 }

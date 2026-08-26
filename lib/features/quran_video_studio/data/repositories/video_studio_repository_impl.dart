@@ -4,17 +4,18 @@ import '../../../../core/utils/arabic_text_utils.dart';
 import '../../../quran_reader/data/models/verse_model.dart';
 import '../../domain/entities/video_project_config.dart';
 import '../../domain/entities/video_render_progress.dart';
+import '../../domain/repositories/i_video_export_service.dart';
 import '../../domain/repositories/i_video_studio_repository.dart';
 import '../services/audio_timeline_service.dart';
 import '../services/video_export_service.dart';
 
 class VideoStudioRepositoryImpl implements IVideoStudioRepository {
   final AudioTimelineService _audioService;
-  final VideoExportService _exportService;
+  final IVideoExportService _exportService;
 
   VideoStudioRepositoryImpl({
     AudioTimelineService? audioService,
-    VideoExportService? exportService,
+    IVideoExportService? exportService,
   })  : _audioService = audioService ?? AudioTimelineService(),
         _exportService = exportService ?? VideoExportService();
 

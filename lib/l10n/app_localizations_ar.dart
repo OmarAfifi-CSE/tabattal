@@ -746,4 +746,219 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get videoBgChangeVideo => 'تغيير الفيديو';
+
+  @override
+  String get videoStudioDownloadVideo => 'تنزيل الفيديو';
+
+  @override
+  String get videoStudioDownloadedSuccess => 'تم تنزيل مقطع الفيديو بنجاح';
+
+  @override
+  String get videoStudioDownloadedError => 'تعذر تنزيل مقطع الفيديو';
+
+  @override
+  String get videoStudioAudioWaveform => 'إظهار الموجة الصوتية';
+
+  @override
+  String get videoStudioReplayFromStart => 'إعادة من البداية';
+
+  @override
+  String get videoStudioShowSurahBadgeAndAyah => 'إظهار اسم السورة ورقم الآية';
+
+  @override
+  String get videoStudioThemeAndColors => 'المظهر والألوان';
+
+  @override
+  String get videoStudioCustomPhotoActive => 'صورة مخصصة نشطة';
+
+  @override
+  String get videoStudioCustomPhotoTitle => 'خلفية مخصصة';
+
+  @override
+  String get videoStudioChooseImageGallery => 'اختيار من المعرض';
+
+  @override
+  String get videoStudioChooseImageGallerySub =>
+      'اختر أي صورة من جهازك لتكون خلفية';
+
+  @override
+  String get videoStudioImageUrl => 'رابط صورة مباشر';
+
+  @override
+  String get videoStudioImageUrlSub => 'ضع رابط صورة مباشرة من الإنترنت';
+
+  @override
+  String get videoStudioApplyImage => 'تطبيق الصورة';
+
+  @override
+  String get videoStudioApplyVideo => 'تطبيق الفيديو';
+
+  @override
+  String get videoStudioRemoveCustomImage => 'إزالة الصورة المخصصة';
+
+  @override
+  String get videoStudioLoadingImage => 'جاري معالجة الصورة...';
+
+  @override
+  String get videoStudioEnterImageUrl => 'يرجى إدخال رابط الصورة';
+
+  @override
+  String get videoStudioEnterVideoUrl => 'يرجى إدخال رابط الفيديو';
+
+  @override
+  String get videoStudioFailedToLoadImage => 'فشل تحميل الصورة من الرابط';
+
+  @override
+  String get videoStudioFailedToLoadVideo => 'فشل تحميل الفيديو من الرابط';
+
+  @override
+  String videoStudioPickImageError(String error) {
+    return 'خطأ أثناء اختيار الصورة: $error';
+  }
+
+  @override
+  String videoStudioPickVideoError(String error) {
+    return 'خطأ أثناء اختيار الفيديو: $error';
+  }
+
+  @override
+  String verseCardShareError(String error) {
+    return 'خطأ أثناء المشاركة: $error';
+  }
+
+  @override
+  String verseCardSaveError(String error) {
+    return 'خطأ أثناء حفظ الصورة: $error';
+  }
+
+  @override
+  String get verseCardImageDownloadedSuccess => 'تم تنزيل الصورة بنجاح';
+
+  @override
+  String get verseCardImageDownloadedError => 'خطأ أثناء تنزيل الصورة';
+
+  @override
+  String get verseCardImageSavedGallerySuccess =>
+      'تم حفظ الصورة في المعرض بنجاح';
+
+  @override
+  String get verseCardImageSavedGalleryError => 'خطأ أثناء حفظ الصورة';
+
+  @override
+  String get verseCardCapturePageError => 'تعذر التقاط صورة الصفحة';
+
+  @override
+  String get verseCardRetry => 'إعادة المحاولة';
+
+  @override
+  String get videoStudioReciterCategoryMurattal => 'مرتل';
+
+  @override
+  String get videoStudioReciterCategoryMujawwad => 'مجود';
+
+  @override
+  String get verseCardThemeWhite => 'أبيض';
+
+  @override
+  String get verseCardThemeParchment => 'عتيق';
+
+  @override
+  String get verseCardThemeRoseGold => 'روز جولد';
+
+  @override
+  String get verseCardThemeMint => 'نعناعي';
+
+  @override
+  String get verseCardThemeOlive => 'زيتوني';
+
+  @override
+  String get verseCardThemeIceBlue => 'ثلجي';
+
+  @override
+  String get verseCardThemeSlate => 'رخامي';
+
+  @override
+  String get verseCardThemeEmerald => 'زمردي';
+
+  @override
+  String get verseCardThemeBurgundy => 'عنابي';
+
+  @override
+  String get verseCardThemeDark => 'ليلي';
+
+  @override
+  String get verseCardThemeCream => 'كريمي';
+
+  @override
+  String get videoExportErrorConnection =>
+      'تعذر الاتصال بخادم تصدير الفيديو. يرجى التأكد من تشغيل خادم التصدير أو التحقق من الاتصال.';
+
+  @override
+  String verseCardSurahSingleAyah(String surahName, String ayah) {
+    return 'سورة $surahName • آية $ayah';
+  }
+
+  @override
+  String verseCardSurahMultipleAyahs(
+    String surahName,
+    String startAyah,
+    String endAyah,
+  ) {
+    return 'سورة $surahName • الآيات ($startAyah - $endAyah)';
+  }
+
+  @override
+  String verseCardFromAyah(String ayah) {
+    return 'من آية $ayah';
+  }
+
+  @override
+  String verseCardToAyah(String ayah) {
+    return 'إلى آية $ayah';
+  }
+
+  @override
+  String verseCardAyah(String ayah) {
+    return 'آية $ayah';
+  }
+
+  @override
+  String verseCardSurah(String surahName) {
+    return 'سورة $surahName';
+  }
+
+  @override
+  String get videoStudioProgressDownloadingAudio =>
+      'جاري تحميل التلاوة الصوتية...';
+
+  @override
+  String get videoStudioProgressGeneratingOverlays =>
+      'جاري إعداد النصوص والمشاهد...';
+
+  @override
+  String get videoStudioProgressEncoding =>
+      'جاري تصدير ومعالجة مقطع الفيديو...';
+
+  @override
+  String get videoStudioExportPreparing => 'جاري بدء إعداد مقطع الفيديو...';
+
+  @override
+  String get audioDownloadPause => 'إيقاف التحميل';
+
+  @override
+  String get audioDownloadPaused => 'تم إيقاف التحميل مؤقتًا';
+
+  @override
+  String get audioDownloadStartingAll => 'جاري بدء تحميل جميع السور...';
+
+  @override
+  String get audioDownloadAllSuccess => 'تم تحميل جميع السور بنجاح';
+
+  @override
+  String audioDownloadFailedCount(int count) {
+    return 'فشل تحميل $count سور';
+  }
+
+  @override
+  String get searchFilterAll => 'الكل';
 }

@@ -57,6 +57,7 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
   }
 
   Future<void> _handlePickGallery() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _errorMessage = null;
       _isLoading = true;
@@ -73,7 +74,7 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'خطأ أثناء اختيار الفيديو: $e';
+          _errorMessage = l10n.videoStudioPickVideoError(e.toString());
         });
       }
     } finally {
@@ -84,9 +85,10 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
   }
 
   Future<void> _handleDownloadUrl() async {
+    final l10n = AppLocalizations.of(context)!;
     final url = _urlController.text.trim();
     if (url.isEmpty) {
-      setState(() => _errorMessage = 'يرجى إدخال رابط الفيديو');
+      setState(() => _errorMessage = l10n.videoStudioEnterVideoUrl);
       return;
     }
 
@@ -113,7 +115,7 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e is FormatException ? e.message : 'فشل تحميل الفيديو من الرابط';
+          _errorMessage = e is FormatException ? e.message : l10n.videoStudioFailedToLoadVideo;
         });
       }
     } finally {
@@ -322,7 +324,7 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
                       ElevatedButton.icon(
                         onPressed: _handleDownloadUrl,
                         icon: const Icon(Icons.download_rounded, size: 18),
-                        label: Text(isEn ? 'Load Video' : 'تطبيق الفيديو'),
+                        label: Text(l10n.videoStudioApplyVideo),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.accentGold,
                           foregroundColor: Colors.white,

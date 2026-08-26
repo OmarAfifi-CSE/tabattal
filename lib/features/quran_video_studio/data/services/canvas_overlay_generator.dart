@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -284,9 +283,7 @@ class CanvasOverlayGenerator {
     final theme = config.themePreset;
     final rect = Rect.fromLTWH(0, 0, width, height);
 
-    final hasCustomImage = config.customImagePath != null &&
-        config.customImagePath!.isNotEmpty &&
-        File(config.customImagePath!).existsSync();
+    final hasCustomImage = config.hasCustomImage;
 
     if (hasCustomImage) {
       final uiImage = CustomImageService.getCachedUiImage(config.customImagePath!);
@@ -324,20 +321,13 @@ class CanvasOverlayGenerator {
 
   /// Resolves whether the background is light or dark (based on custom image or video dimming).
   static bool _isLightBackground(VideoProjectConfig config) {
-    final hasCustomImage = config.customImagePath != null &&
-        config.customImagePath!.isNotEmpty &&
-        File(config.customImagePath!).existsSync();
-    if (hasCustomImage) {
+    if (config.hasCustomImage) {
       final rawLuminance = CustomImageService.getCachedLuminance(config.customImagePath!);
       final effectiveLuminance = rawLuminance * (1.0 - config.backgroundDimming);
       return effectiveLuminance > 0.55;
     }
 
-    final hasCustomVideo = config.backgroundType == VideoBackgroundType.customVideo &&
-        config.customVideoPath != null &&
-        config.customVideoPath!.isNotEmpty &&
-        File(config.customVideoPath!).existsSync();
-    if (hasCustomVideo) {
+    if (config.hasCustomVideo) {
       const baseLuminance = 0.5;
       final effectiveLuminance = baseLuminance * (1.0 - config.backgroundDimming);
       return effectiveLuminance > 0.55;
@@ -348,12 +338,7 @@ class CanvasOverlayGenerator {
 
   /// Resolves whether custom media (image or video) is active.
   static bool _hasCustomMedia(VideoProjectConfig config) {
-    return (config.customImagePath != null &&
-            config.customImagePath!.isNotEmpty &&
-            File(config.customImagePath!).existsSync()) ||
-        (config.customVideoPath != null &&
-            config.customVideoPath!.isNotEmpty &&
-            File(config.customVideoPath!).existsSync());
+    return config.hasCustomMedia;
   }
 
   /// Resolves the accent / ornament / brand color.
@@ -535,6 +520,7 @@ class CanvasOverlayGenerator {
             color: isFramelessCustom ? badgeAccentColor : theme.accentColor,
             fontSize: baseScale * 0.026,
             fontWeight: FontWeight.bold,
+            fontFamily: isEn ? null : 'Amiri',
           ),
         ),
         textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
@@ -584,6 +570,7 @@ class CanvasOverlayGenerator {
             color: textColors.secondaryTextColor,
             fontSize: baseScale * 0.023,
             fontWeight: FontWeight.w600,
+            fontFamily: isEn ? null : 'Amiri',
           ),
         ),
         textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
