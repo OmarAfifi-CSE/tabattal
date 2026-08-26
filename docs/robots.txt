@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Sitemap Index
+Sitemap: https://omar-afifi.com/tabattal/sitemap.xml

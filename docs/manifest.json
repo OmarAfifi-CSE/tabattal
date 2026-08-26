@@ -1,15 +1,57 @@
 {
-  "name": "Tabattal",
-  "short_name": "Tabattal",
-  "start_url": ".",
+  "name": "تبتل | المصحف الرقمي وصانع فيديوهات القرآن - Tabattal",
+  "short_name": "تبتل - Tabattal",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0A0F16",
   "theme_color": "#D4AF37",
+  "description": "المصحف الرقمي الأصيل برسم مصحف المدينة QCF V2 وصانع فيديوهات وريلز القرآن الكريم المتزامن مع الصوت، وبطاقات الآيات، واختبار الحفظ، والتفسير بدون إعلانات.",
+  "orientation": "any",
+  "dir": "rtl",
+  "lang": "ar",
+  "categories": [
+    "books",
+    "education",
+    "lifestyle",
+    "productivity",
+    "utilities",
+    "video"
+  ],
   "icons": [
     { "src": "assets/images/icons/favicon.ico", "type": "image/x-icon", "sizes": "16x16 32x32" },
     { "src": "assets/images/icons/icon-192.png", "type": "image/png", "sizes": "192x192" },
     { "src": "assets/images/icons/icon-512.png", "type": "image/png", "sizes": "512x512" },
     { "src": "assets/images/icons/icon-192-maskable.png", "type": "image/png", "sizes": "192x192", "purpose": "maskable" },
     { "src": "assets/images/icons/icon-512-maskable.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "قراءة المصحف الشريف",
+      "short_name": "المصحف",
+      "description": "فتح المصحف بالرسم العثماني لمصحف المدينة",
+      "url": "./app/#quran",
+      "icons": [{ "src": "assets/images/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "صانع فيديوهات وريلز القرآن",
+      "short_name": "استوديو الفيديو",
+      "description": "تصميم ريلز وقصص القرآن الكريم المتزامنة",
+      "url": "./app/#studio",
+      "icons": [{ "src": "assets/images/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "تثبيت واختبار الحفظ",
+      "short_name": "اختبار الحفظ",
+      "description": "إخفاء وكشف الآيات لمراجعة وتثبيت الحفظ",
+      "url": "./app/#hifz",
+      "icons": [{ "src": "assets/images/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "مكتبة التفسير وغريب القرآن",
+      "short_name": "التفسير",
+      "description": "قراءة تفاسير الآيات ومعاني غريب القرآن",
+      "url": "./app/#tafsir",
+      "icons": [{ "src": "assets/images/icons/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

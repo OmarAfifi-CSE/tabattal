@@ -1,46 +1,387 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar" dir="rtl">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
+  <!-- Base HREF for Flutter routing -->
   <base href="$FLUTTER_BASE_HREF">
 
+  <!-- Core Meta Tags -->
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  
+  <!-- Primary SEO Meta Tags -->
+  <title>تبتل | المصحف الرقمي وصانع فيديوهات وريلز القرآن الكريم - Tabattal Quran App & Studio</title>
+  <meta name="title" content="تبتل | المصحف الرقمي وصانع فيديوهات وريلز القرآن الكريم - Tabattal Quran App & Studio">
+  <meta name="description" content="تطبيق تبتل (Tabattal) - تجربة المصحف الرقمي الأصيل برسم مصحف المدينة QCF V2 (15 سطرًا)، صانع فيديوهات وريلز القرآن الكريم بدقة 1080p بمقاسات 9:16 و1:1 و16:9 مع تزامن التلاوة، بطاقات الآيات، اختبار وتثبيت الحفظ، التفاسير وغريب القرآن، وتلاوات صوتية بدون إنترنت. مجاني 100% وبدون إعلانات تمامًا (صدقة جارية).">
+  <meta name="keywords" content="تبتل, تطبيق تبتل, Tabattal, Tabattal Quran, مصحف المدينة الرقمي, مصحف برسم عثماني, خطوط مجمع الملك فهد, QCF V2, صانع فيديوهات القرآن, صانع ريلز قرآني, عمل فيديو قرآني متزامن, Quran Video Studio, Quran Reels Maker, تصميم بطاقات الآيات, اختبار حفظ القرآن, تثبيت الحفظ, إخفاء الآيات, غريب القرآن, تفسير القرآن بدون نت, تلاوات صوتية بدون انترنت, EveryAyah, مشاري العفاسي, عبد الباسط, الحصري, مصحف بدون إعلانات, تطبيق إسلامي بدون إعلانات, تطبيق قرآن مجاني, صدقة جارية, الوضع الليلي للمصحف, OLED Quran Dark Mode">
+  <meta name="author" content="Omar Afifi">
+  <meta name="application-name" content="تبتل - Tabattal">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 
-  <!-- iOS meta tags & icons -->
+  <!-- Canonical & Language Alternates -->
+  <link rel="canonical" href="https://omar-afifi.com/tabattal/app/">
+  <link rel="alternate" hreflang="ar" href="https://omar-afifi.com/tabattal/app/">
+  <link rel="alternate" hreflang="en" href="https://omar-afifi.com/tabattal/">
+  <link rel="alternate" hreflang="x-default" href="https://omar-afifi.com/tabattal/">
+
+  <!-- Open Graph / Facebook / WhatsApp / Telegram -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="تبتل - Tabattal">
+  <meta property="og:url" content="https://omar-afifi.com/tabattal/app/">
+  <meta property="og:title" content="تبتل | المصحف الرقمي وصانع فيديوهات وريلز القرآن الكريم">
+  <meta property="og:description" content="المصحف الرقمي الأصيل بالرسم العثماني وصانع مقاطع وفيديوهات القرآن المتزامنة مع الصوت بدقة 1080p، اختبار الحفظ والتفاسير. مجاني 100% بدون إعلانات.">
+  <meta property="og:image" content="https://omar-afifi.com/tabattal/assets/images/hero-mockup.webp">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="تطبيق تبتل للقرآن الكريم وصانع مقاطع الفيديو">
+  <meta property="og:locale" content="ar_AR">
+  <meta property="og:locale:alternate" content="en_US">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://omar-afifi.com/tabattal/app/">
+  <meta name="twitter:title" content="تبتل | المصحف الرقمي وصانع فيديوهات وريلز القرآن الكريم">
+  <meta name="twitter:description" content="تطبيق تبتل للقرآن الكريم: رسم مصحف المدينة QCF V2، صانع ريلز القرآن المتزامن، واختبار وتثبيت الحفظ. مجاني بالكامل بدون إعلانات.">
+  <meta name="twitter:image" content="https://omar-afifi.com/tabattal/assets/images/hero-mockup.webp">
+  <meta name="twitter:image:alt" content="Tabattal Quran App & Video Studio">
+
+  <!-- Mobile & PWA Configuration -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Tabattal - تبتل">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="تبتل - Tabattal">
+  <meta name="theme-color" content="#0A0F16">
+  <meta name="color-scheme" content="dark light">
+
+  <!-- Favicons and Icons -->
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>Tabattal - تبتل</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Google Fonts Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Structured Data / JSON-LD: SoftwareApplication & MobileApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "تبتل - Tabattal",
+    "alternateName": ["Tabattal", "تطبيق تبتل", "Tabattal Quran", "تبتل للقرآن الكريم"],
+    "operatingSystem": "Android, Web, iOS, Windows, macOS, Linux",
+    "applicationCategory": "Religious, Books & Reference, MultimediaApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock"
+    },
+    "description": "تطبيق تبتل للقرآن الكريم: المصحف الرقمي بالرسم العثماني لمصحف المدينة (QCF V2)، وصانع فيديوهات وريلز القرآن الكريم (9:16 / 1:1 / 16:9) مع تزامن التلاوة EveryAyah، وتصميم بطاقات الآيات، واختبار وتثبيت الحفظ الذكي، ومكتبة التفاسير وغريب القرآن، وتلاوات صوتية بدون إنترنت. مجاني 100% وبدون إعلانات تمامًا.",
+    "softwareVersion": "1.3.0",
+    "inLanguage": ["ar", "en"],
+    "author": {
+      "@type": "Person",
+      "name": "Omar Afifi",
+      "url": "https://github.com/OmarAfifi-CSE"
+    },
+    "publisher": {
+      "@type": "Person",
+      "name": "Omar Afifi"
+    },
+    "featureList": [
+      "مصحف المدينة الرقمي الأصيل بدقة المتجهات QCF V2 و15 سطرًا",
+      "صانع فيديوهات وريلز وستوري القرآن الكريم (9:16 و1:1 و16:9) مع تزامن الصوت ومكتبة خلفيات فيديو",
+      "تصميم بطاقات الآيات الفاخرة ومشاركتها مع التفسير والترجمة",
+      "وضع تثبيت واختبار الحفظ الذكي بإخفاء الآيات والكلمات تفاعليًا",
+      "مكتبة التفسير الشاملة وغريب القرآن والترجمة الإنجليزية المعتمدة",
+      "مدير الصوتيات والتلاوات مع إمكانية التحميل والاستماع دون إنترنت",
+      "11 ثيمًا لونيًا ملكيًا ووضع ليلي حقيقي OLED Dark Mode",
+      "تطبيق مجاني بالكامل بدون إعلانات وبدون أي تتبع (صدقة جارية)"
+    ],
+    "screenshot": "https://omar-afifi.com/tabattal/assets/images/hero-mockup.webp",
+    "url": "https://omar-afifi.com/tabattal/app/",
+    "installUrl": "https://play.google.com/store/apps/details?id=com.omarafifi.tabattal",
+    "downloadUrl": "https://play.google.com/store/apps/details?id=com.omarafifi.tabattal"
+  }
+  </script>
+
+  <!-- Structured Data / JSON-LD: FAQPage for Rich Google SERP Accordions -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "ما هو تطبيق تبتل (Tabattal) للقرآن الكريم؟",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "تبتل هو تطبيق قرآني متكامل ومتقدم يجمع بين تجربة قراءة المصحف الرقمي الأصيل بالرسم العثماني المطابق لمصحف المدينة النبوية (15 سطرًا) بدقة متجهات فائقة 120 FPS، وبين استوديو صانع فيديوهات وريلز القرآن الكريم المتزامن مع الصوت، وأدوات الحفظ والتفسير والاستماع الصوتي دون إنترنت."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "كيف يمكن تصميم وصناعة فيديوهات وريلز القرآن عبر تطبيق تبتل؟",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "يوفر تطبيق تبتل استوديو فيديو مدمج (Quran Video Studio) يتيح اختيار حتى 10 آيات متتالية، وتصدير مقاطع فيديو سينمائية بمقاسات متعددة (9:16 للريلز وتيك توك، 1:1 لبوستات وحالات واتساب، و16:9 لليوتيوب) مع تزامن دقيق لكل سطر مع تلاوة القارئ المفضل وخلفيات فيديو أو صور مخصصة مع معالجة سريعة عبر العتاد بدقة 1080p."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "هل تطبيق تبتل مجاني ويخلو تمامًا من الإعلانات؟",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "نعم، تطبيق تبتل مجاني 100% ومدفوع النية كـ صدقة جارية؛ لا يحتوي على أي نوع من الإعلانات التجارية المزعجة ولا يجمع أي بيانات شخصية ولا يتضمن أي أدوات تتبع على الإطلاق."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "كيف يعمل وضع تثبيت واختبار الحفظ في تطبيق تبتل؟",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "يتيح وضع الحفظ الذكي إخفاء الآيات أو الكلمات مباشرة داخل صفحة المصحف بدون التأثير على بنية الصفحة، مع إمكانية النقر لكشف الآيات تفاعليًا للتأكد من دقة الحفظ والمراجعة الدورية."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "هل يمكن استخدام تطبيق تبتل والاستماع للتلاوات بدون إنترنت؟",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "نعم، يعمل تبتل وفق معمارية Offline-First، حيث يمكن تحميل سور كاملة أو المصحف كاملًا بأصوات كبار القراء، وقراءة التفسير وغريب القرآن والبحث في النص القرآني دون الحاجة لأي اتصال بالإنترنت."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "ما هو الخط المعتمد في تبتل لعرض صفحات المصحف؟",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "يعتمد تبتل على خطوط مصحف المدينة المنورة الرسمية من مجمع الملك فهد لطباعة المصحف الشريف (QCF V2 Glyphs) بدقة متجهات رياضية فائقة تضمن وضوحًا لا نهائيًا على كافة الشاشات."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- Structured Data / JSON-LD: WebSite with SearchAction -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "تبتل - Tabattal",
+    "alternateName": "Tabattal Quran",
+    "url": "https://omar-afifi.com/tabattal/",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://omar-afifi.com/tabattal/app/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <!-- Preloader & SEO Prerender Styling -->
+  <style>
+    :root {
+      --bg-color: #0A0F16;
+      --gold-color: #D4AF37;
+      --gold-hover: #F3D268;
+      --text-muted: #8A97A6;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: #FFFFFF;
+      font-family: 'Outfit', 'Amiri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Luxury Loading Animation for Core Web Vitals */
+    #tabattal-loader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #151d2a 0%, #0A0F16 100%);
+      z-index: 9999;
+      transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+    }
+
+    .loader-ring {
+      width: 80px;
+      height: 80px;
+      border: 3px solid rgba(212, 175, 55, 0.15);
+      border-top-color: var(--gold-color);
+      border-radius: 50%;
+      animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      margin-bottom: 24px;
+    }
+
+    .loader-brand {
+      font-family: 'Amiri', serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--gold-color);
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+
+    .loader-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Semantic SEO Content Container (Accessible to search engine crawlers) */
+    .seo-prerender-shell {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Noscript fallback layout */
+    noscript .noscript-banner {
+      display: block;
+      padding: 30px;
+      max-width: 800px;
+      margin: 40px auto;
+      background: #1A2332;
+      border: 1px solid var(--gold-color);
+      border-radius: 16px;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    noscript a {
+      color: var(--gold-color);
+      text-decoration: underline;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <!-- Instant Visual Loader Shell -->
+  <div id="tabattal-loader" aria-hidden="true">
+    <div class="loader-ring"></div>
+    <div class="loader-brand">تَبَتَّلْ</div>
+    <div class="loader-subtitle">TABATTAL QURAN APP</div>
+  </div>
+
+  <!-- Semantic Prerendered HTML for Googlebot / Bingbot / AI Crawlers -->
+  <main class="seo-prerender-shell" aria-label="وصف تطبيق تبتل للقرآن الكريم">
+    <header>
+      <h1>تطبيق تبتل للقرآن الكريم | المصحف الرقمي الأصيل وصانع مقاطع الفيديو والريلز (Tabattal)</h1>
+      <p>تطبيق إسلامي شامل ومجاني 100% بدون إعلانات وبدون أي تتبع، مدفوع النية صدقة جارية، يجمع بين القراءة الأصيلة بالرسم العثماني لمصحف المدينة المنورة وصناعة المحتوى القرآني الاحترافي.</p>
+    </header>
+
+    <article>
+      <h2>الميزات الرئيسية لتطبيق تبتل (Tabattal Quran Features):</h2>
+      
+      <section>
+        <h3>1. مصحف المدينة المنورة الرقمي (QCF V2 Vector Typography)</h3>
+        <p>عرض صفحات المصحف الشريف بالرسم العثماني المطابق لطبعة مجمع الملك فهد بالمدينة المنورة بنظام 15 سطرًا متطابقًا، مع خطوط المتجهات عالية الدقة وسلاسة تقليب الصفحات بسرعة 120 إطارًا في الثانية بدون أي تقطيع أو بطء.</p>
+      </section>
+
+      <section>
+        <h3>2. صانع فيديوهات وريلز القرآن الكريم (Quran Video Studio & Reels Maker)</h3>
+        <p>استوديو تصميم ومونتاج مقاطع القرآن الكريم بمقاسات 9:16 (ريلز انستغرام، تيك توك، شورتس يوتيوب)، و1:1 (حالات وبوستات واتساب وفيسبوك)، و16:9 (فيديوهات يوتيوب والشاشات العريضة) مع تزامن آلي دقيق مع صوت القارئ، وإضافة خلفيات فيديو متحركة أو صور من المعرض وتصدير فائق السرعة بدقة 1080p.</p>
+      </section>
+
+      <section>
+        <h3>3. مصمم بطاقات ومخطوطات الآيات (Verse Card Generator)</h3>
+        <p>تصميم بطاقات مشاركة الآيات الفاخرة للآيات الفردية أو المجموعات حتى 25 آية مع إمكانية تضمين التفسير الميسر والترجمة الإنجليزية وتصدير صور عالية الجودة بـ 11 نمطًا لونيًا متميزًا.</p>
+      </section>
+
+      <section>
+        <h3>4. وضع تثبيت واختبار الحفظ التفاعلي (Smart Hifz Memorization Mode)</h3>
+        <p>أداة ذكية لمراجعة القرآن الكريم عبر إخفاء الآيات أو الكلمات بلمسة واحدة دون تغيير شكل الصفحة، مع خاصية النقر للكشف التدريجي لاختبار قوة الحفظ بدقة وسهولة.</p>
+      </section>
+
+      <section>
+        <h3>5. مكتبة التفسير وغريب القرآن والترجمة الإنجليزية</h3>
+        <p>معاني الكلمات الصعبة وغريب القرآن بدون إنترنت، وربط التفاسير المعتمدة بمجموعات الآيات المترابطة، مع الترجمة الإنجليزية الواضحة والدقيقة للنص القرآني.</p>
+      </section>
+
+      <section>
+        <h3>6. التلاوات الصوتية والاستماع بدون إنترنت (EveryAyah Audio Recitations)</h3>
+        <p>مكتبة تلاوات لأشهر قراء العالم الإسلامي مع إمكانية تشغيل التلاوات في الخلفية، وتحميل السور كاملة للاستماع دون اتصال بالإنترنت، ومؤقت النوم المخصص.</p>
+      </section>
+
+      <section>
+        <h3>7. 11 ثيمًا لونيًا ملكيًا والوضع الليلي الحقيقي (OLED Dark Mode)</h3>
+        <p>خيارات تخصيص مرنة تتضمن ألوان القراءة المريحة للعين (Creamy, Parchment, Rose Gold, Mint, Olive, Ice Blue, Slate, Emerald, Burgundy, Pure White, OLED Dark) مع تكيّف عناصر الواجهة تلقائيًا.</p>
+      </section>
+
+      <section>
+        <h3>8. مجاني تمامًا وبدون إعلانات (100% Free & Ad-Free Sadaqa Jariya)</h3>
+        <p>مشروع تطوعي خالص لوجه الله تعالى كـ صدقة جارية، خالٍ تمامًا من الإعلانات التجارية، والتحليلات التتبعية، ويعمل بالكامل Offline بدون إنترنت بعد التحميل.</p>
+      </section>
+    </article>
+
+    <footer>
+      <nav aria-label="روابط سريعة">
+        <ul>
+          <li><a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal">تحميل تطبيق تبتل على متجر Google Play للأندرويد</a></li>
+          <li><a href="https://omar-afifi.com/tabattal/">موقع تطبيق تبتل الرسمي ومميزات التطبيق</a></li>
+          <li><a href="https://github.com/OmarAfifi-CSE/tabattal">المشروع على GitHub والمصدر المفتوح</a></li>
+          <li><a href="https://github.com/OmarAfifi-CSE/tabattal/blob/main/PRIVACY_POLICY.md">سياسة الخصوصية وحماية البيانات</a></li>
+        </ul>
+      </nav>
+      <p>جميع الحقوق محفوظة &copy; 2026 - تبتل (Tabattal) - تطوير عمر عفيفي (Omar Afifi).</p>
+    </footer>
+  </main>
+
+  <!-- Noscript Fallback for Users Without JavaScript -->
+  <noscript>
+    <div class="noscript-banner">
+      <h2>تطبيق تبتل للقرآن الكريم (Tabattal)</h2>
+      <p>يتطلب تشغيل تطبيق الويب تفعيل لغة JavaScript في متصفحك لتجربة القراءة والتلاوة التفاعلية.</p>
+      <p>يمكنك تحميل التطبيق الرسمي مباشرة لهواتف الأندرويد عبر <a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank" rel="noopener">متجر Google Play</a> أو زيارة <a href="https://omar-afifi.com/tabattal/">الموقع الرسمي لتطبيق تبتل</a>.</p>
+    </div>
+  </noscript>
+
+  <!-- Flutter Web Bootstrapper -->
+  <script>
+    // Smoothly remove the visual preloader when Flutter finishes initial frame rendering
+    window.addEventListener('flutter-first-frame', function () {
+      var loader = document.getElementById('tabattal-loader');
+      if (loader) {
+        loader.style.opacity = '0';
+        loader.style.visibility = 'hidden';
+        setTimeout(function () {
+          loader.remove();
+        }, 500);
+      }
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
