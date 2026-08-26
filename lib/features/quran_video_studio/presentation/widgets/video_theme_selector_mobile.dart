@@ -4,11 +4,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/video_theme_preset.dart';
 
 /// Theme selector with horizontal luxury theme swatches for styling text, badges, and accents.
-class VideoThemeSelector extends StatelessWidget {
+class VideoThemeSelectorMobile extends StatelessWidget {
   final VideoThemePreset selectedPreset;
   final ValueChanged<VideoThemePreset> onThemeSelected;
 
-  const VideoThemeSelector({
+  const VideoThemeSelectorMobile({
     super.key,
     required this.selectedPreset,
     required this.onThemeSelected,
@@ -57,13 +57,13 @@ class VideoThemeSelector extends StatelessWidget {
                       width: isSelected ? 2.5 : 1,
                     ),
                     boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: AppColors.accentGold.withValues(alpha: 0.3),
-                              blurRadius: 6,
-                            ),
-                          ]
-                        : null,
+                    ? [
+                        BoxShadow(
+                          color: AppColors.accentGold.withValues(alpha: 0.3),
+                          blurRadius: 6,
+                        ),
+                      ]
+                    : null,
                   ),
                   child: Row(
                     children: [

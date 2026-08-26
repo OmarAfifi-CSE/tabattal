@@ -10,13 +10,13 @@ import 'custom_video_modal.dart';
 
 /// Dedicated background selector that cleanly separates Background (Card Design vs Custom Photo vs Custom Video)
 /// from the Theme Palette styling.
-class VideoBackgroundSelector extends StatelessWidget {
+class VideoBackgroundSelectorMobile extends StatelessWidget {
   final VideoProjectConfig config;
   final ValueChanged<String?> onCustomImageChanged;
   final ValueChanged<String?>? onCustomVideoChanged;
   final ValueChanged<double>? onDimmingChanged;
 
-  const VideoBackgroundSelector({
+  const VideoBackgroundSelectorMobile({
     super.key,
     required this.config,
     required this.onCustomImageChanged,

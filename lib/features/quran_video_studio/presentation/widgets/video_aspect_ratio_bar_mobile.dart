@@ -3,11 +3,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/video_enums.dart';
 
-class VideoAspectRatioBar extends StatelessWidget {
+class VideoAspectRatioBarMobile extends StatelessWidget {
   final VideoAspectRatio selectedRatio;
   final ValueChanged<VideoAspectRatio> onRatioSelected;
 
-  const VideoAspectRatioBar({
+  const VideoAspectRatioBarMobile({
     super.key,
     required this.selectedRatio,
     required this.onRatioSelected,

@@ -4,12 +4,12 @@ import '../../../../core/constants/reciter_catalog.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 
-class VideoReciterSelector extends StatefulWidget {
+class VideoReciterSelectorMobile extends StatefulWidget {
   final String selectedReciter;
   final String? selectedCategory;
   final void Function(String name, String category, String path) onReciterSelected;
 
-  const VideoReciterSelector({
+  const VideoReciterSelectorMobile({
     super.key,
     required this.selectedReciter,
     this.selectedCategory,
@@ -17,10 +17,10 @@ class VideoReciterSelector extends StatefulWidget {
   });
 
   @override
-  State<VideoReciterSelector> createState() => _VideoReciterSelectorState();
+  State<VideoReciterSelectorMobile> createState() => _VideoReciterSelectorMobileState();
 }
 
-class _VideoReciterSelectorState extends State<VideoReciterSelector> {
+class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile> {
   late String _activeCategory;
 
   @override
@@ -30,7 +30,7 @@ class _VideoReciterSelectorState extends State<VideoReciterSelector> {
   }
 
   @override
-  void didUpdateWidget(covariant VideoReciterSelector oldWidget) {
+  void didUpdateWidget(covariant VideoReciterSelectorMobile oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedCategory != null) {
       _activeCategory = widget.selectedCategory!;

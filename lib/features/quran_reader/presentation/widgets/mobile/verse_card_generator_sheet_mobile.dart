@@ -23,15 +23,15 @@ import '../../../../quran_video_studio/domain/entities/video_project_config.dart
 import '../../../../quran_video_studio/presentation/bloc/video_studio_bloc.dart';
 import '../../../../quran_video_studio/presentation/bloc/video_studio_event.dart';
 import '../../../../quran_video_studio/presentation/bloc/video_studio_state.dart';
-import '../../../../quran_video_studio/presentation/widgets/video_aspect_ratio_bar.dart';
-import '../../../../quran_video_studio/presentation/widgets/video_background_selector.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_aspect_ratio_bar_mobile.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_background_selector_mobile.dart';
 import '../../../../quran_video_studio/presentation/widgets/video_export_progress_dialog.dart';
 import '../../../../quran_video_studio/presentation/widgets/video_fullscreen_preview_modal.dart';
-import '../../../../quran_video_studio/presentation/widgets/video_options_selector.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_options_selector_mobile.dart';
 import '../../../../quran_video_studio/presentation/widgets/video_preview_viewport.dart';
-import '../../../../quran_video_studio/presentation/widgets/video_range_picker.dart';
-import '../../../../quran_video_studio/presentation/widgets/video_reciter_selector.dart';
-import '../../../../quran_video_studio/presentation/widgets/video_theme_selector.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_range_picker_mobile.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_reciter_selector_mobile.dart';
+import '../../../../quran_video_studio/presentation/widgets/video_theme_selector_mobile.dart';
 
 import '../verse_card/helpers/verse_card_text_utils.dart';
 import '../verse_card/models/verse_card_theme.dart';
@@ -1129,7 +1129,7 @@ class _VerseCardGeneratorSheetContentMobileState
         return Column(
           key: const ValueKey('video_options_group'),
           children: [
-            VideoAspectRatioBar(
+            VideoAspectRatioBarMobile(
               selectedRatio: config.aspectRatio,
               onRatioSelected: (ratio) {
                 context
@@ -1137,7 +1137,7 @@ class _VerseCardGeneratorSheetContentMobileState
                     .add(VideoStudioAspectRatioChanged(ratio));
               },
             ),
-            VideoBackgroundSelector(
+            VideoBackgroundSelectorMobile(
               config: config,
               onCustomImageChanged: (path) {
                 context
@@ -1168,7 +1168,7 @@ class _VerseCardGeneratorSheetContentMobileState
                   child: showThemeSelector
                       ? Padding(
                           padding: EdgeInsets.only(bottom: 12.h),
-                          child: VideoThemeSelector(
+                          child: VideoThemeSelectorMobile(
                             selectedPreset: config.themePreset,
                             onThemeSelected: (theme) {
                               context
@@ -1181,7 +1181,7 @@ class _VerseCardGeneratorSheetContentMobileState
                 );
               },
             ),
-            VideoRangePicker(
+            VideoRangePickerMobile(
               surahNumber: config.surahNumber,
               startAyah: _startAyah,
               endAyah: _endAyah,
@@ -1226,7 +1226,7 @@ class _VerseCardGeneratorSheetContentMobileState
               },
             ),
             SizedBox(height: 12.h),
-            VideoReciterSelector(
+            VideoReciterSelectorMobile(
               selectedReciter: config.reciterName,
               selectedCategory: config.reciterCategory,
               onReciterSelected: (name, category, path) {
@@ -1240,7 +1240,7 @@ class _VerseCardGeneratorSheetContentMobileState
               },
             ),
             SizedBox(height: 12.h),
-            VideoOptionsSelector(
+            VideoOptionsSelectorMobile(
               config: config,
               onDisplayModeChanged: (mode) {
                 context

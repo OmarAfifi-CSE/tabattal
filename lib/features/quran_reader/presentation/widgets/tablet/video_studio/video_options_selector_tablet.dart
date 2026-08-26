@@ -37,12 +37,12 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
         Text(
           l10n.videoStudioDisplayMode,
           style: TextStyle(
-            fontSize: 16.0.sp,
+            fontSize: 14.0.sp,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 8.0.h),
+        SizedBox(height: 5.0.h),
         Row(
           children: VideoTextDisplayMode.values.map((mode) {
             final isSelected = config.textDisplayMode == mode;
@@ -64,18 +64,18 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 4.0.w),
                 child: InkWell(
                   onTap: () => onDisplayModeChanged?.call(mode),
-                  borderRadius: BorderRadius.circular(12.0.r),
+                  borderRadius: BorderRadius.circular(10.0.r),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: EdgeInsets.symmetric(
-                      vertical: 10.0.h,
-                      horizontal: 8.0.w,
+                      vertical: 5.0.h,
+                      horizontal: 6.0.w,
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.accentGold.withValues(alpha: 0.15)
                           : AppColors.accentGold.withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(12.0.r),
+                      borderRadius: BorderRadius.circular(10.0.r),
                       border: Border.all(
                         color: isSelected
                             ? AppColors.accentGold
@@ -88,18 +88,18 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
                       children: [
                         Icon(
                           icon,
-                          size: 22.0.sp,
+                          size: 17.0.sp,
                           color: isSelected
                               ? AppColors.accentGold
                               : AppColors.textSecondary,
                         ),
-                        SizedBox(height: 6.0.h),
+                        SizedBox(height: 2.0.h),
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
                             label,
                             style: TextStyle(
-                              fontSize: 14.5.sp,
+                              fontSize: 12.5.sp,
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.w500,
@@ -119,18 +119,18 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
           }).toList(),
         ),
 
-        SizedBox(height: 12.0.h),
+        SizedBox(height: 8.0.h),
 
         // 2. Video Quality Selection
         Text(
           l10n.videoStudioQuality,
           style: TextStyle(
-            fontSize: 16.0.sp,
+            fontSize: 14.0.sp,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 8.0.h),
+        SizedBox(height: 5.0.h),
         Row(
           children: VideoQuality.values.map((quality) {
             final isSelected = config.videoQuality == quality;
@@ -139,15 +139,15 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 4.0.w),
                 child: InkWell(
                   onTap: () => onQualityChanged?.call(quality),
-                  borderRadius: BorderRadius.circular(12.0.r),
+                  borderRadius: BorderRadius.circular(10.0.r),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.symmetric(vertical: 8.0.h),
+                    padding: EdgeInsets.symmetric(vertical: 4.0.h),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.accentGold.withValues(alpha: 0.15)
                           : AppColors.accentGold.withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(12.0.r),
+                      borderRadius: BorderRadius.circular(10.0.r),
                       border: Border.all(
                         color: isSelected
                             ? AppColors.accentGold
@@ -156,18 +156,20 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
                       ),
                     ),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           quality.shortLabel,
                           style: TextStyle(
-                            fontSize: 15.0.sp,
+                            fontSize: 13.0.sp,
                             fontWeight: FontWeight.bold,
                             color: isSelected
                                 ? AppColors.accentGold
                                 : AppColors.textPrimary,
+                            height: 1.1,
                           ),
                         ),
-                        SizedBox(height: 2.0.h),
+                        SizedBox(height: 1.0.h),
                         Text(
                           quality == VideoQuality.uhd4k
                               ? l10n.videoQualityUltra
@@ -175,13 +177,14 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
                                   ? l10n.videoQualityHigh
                                   : l10n.videoQualityFast,
                           style: TextStyle(
-                            fontSize: 12.0.sp,
+                            fontSize: 10.5.sp,
                             fontWeight: isSelected
                                 ? FontWeight.w600
                                 : FontWeight.normal,
                             color: isSelected
                                 ? AppColors.accentGold
                                 : AppColors.textSecondary,
+                            height: 1.1,
                           ),
                         ),
                       ],
@@ -193,7 +196,7 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
           }).toList(),
         ),
 
-        SizedBox(height: 12.0.h),
+        SizedBox(height: 8.0.h),
 
         // 3. Display Options Toggles
         Text(

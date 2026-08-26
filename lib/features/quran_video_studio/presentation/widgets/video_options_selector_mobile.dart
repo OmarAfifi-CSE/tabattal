@@ -5,7 +5,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/video_project_config.dart';
 import '../../domain/entities/video_enums.dart';
 
-class VideoOptionsSelector extends StatelessWidget {
+class VideoOptionsSelectorMobile extends StatelessWidget {
   final VideoProjectConfig config;
   final ValueChanged<VideoQuality>? onQualityChanged;
   final ValueChanged<VideoTextDisplayMode>? onDisplayModeChanged;
@@ -18,7 +18,7 @@ class VideoOptionsSelector extends StatelessWidget {
     bool? showAudioWaveform,
   }) onToggleOption;
 
-  const VideoOptionsSelector({
+  const VideoOptionsSelectorMobile({
     super.key,
     required this.config,
     this.onQualityChanged,
@@ -42,7 +42,7 @@ class VideoOptionsSelector extends StatelessWidget {
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 6.h),
+        SizedBox(height: 5.h),
         Row(
           children: VideoTextDisplayMode.values.map((mode) {
             final isSelected = config.textDisplayMode == mode;
@@ -64,15 +64,15 @@ class VideoOptionsSelector extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 3.w),
                 child: InkWell(
                   onTap: () => onDisplayModeChanged?.call(mode),
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(10.r),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 4.w),
+                    padding: EdgeInsets.symmetric(vertical: 5.h, horizontal: 4.w),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.accentGold.withValues(alpha: 0.15)
                           : AppColors.accentGold.withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(12.r),
+                      borderRadius: BorderRadius.circular(10.r),
                       border: Border.all(
                         color: isSelected
                             ? AppColors.accentGold
@@ -85,10 +85,10 @@ class VideoOptionsSelector extends StatelessWidget {
                       children: [
                         Icon(
                           icon,
-                          size: 16.sp,
+                          size: 15.sp,
                           color: isSelected ? AppColors.accentGold : AppColors.textSecondary,
                         ),
-                        SizedBox(height: 4.h),
+                        SizedBox(height: 2.h),
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
@@ -109,7 +109,7 @@ class VideoOptionsSelector extends StatelessWidget {
           }).toList(),
         ),
 
-        SizedBox(height: 14.h),
+        SizedBox(height: 10.h),
 
         // 2. Video Quality Selection
         Text(
@@ -120,7 +120,7 @@ class VideoOptionsSelector extends StatelessWidget {
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 6.h),
+        SizedBox(height: 5.h),
         Row(
           children: VideoQuality.values.map((quality) {
             final isSelected = config.videoQuality == quality;
@@ -129,15 +129,15 @@ class VideoOptionsSelector extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 3.w),
                 child: InkWell(
                   onTap: () => onQualityChanged?.call(quality),
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(10.r),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    padding: EdgeInsets.symmetric(vertical: 4.h),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.accentGold.withValues(alpha: 0.15)
                           : AppColors.accentGold.withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(12.r),
+                      borderRadius: BorderRadius.circular(10.r),
                       border: Border.all(
                         color: isSelected
                             ? AppColors.accentGold
@@ -146,16 +146,18 @@ class VideoOptionsSelector extends StatelessWidget {
                       ),
                     ),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           quality.shortLabel,
                           style: TextStyle(
-                            fontSize: 13.sp,
+                            fontSize: 12.5.sp,
                             fontWeight: FontWeight.bold,
                             color: isSelected ? AppColors.accentGold : AppColors.textPrimary,
+                            height: 1.1,
                           ),
                         ),
-                        SizedBox(height: 2.h),
+                        SizedBox(height: 1.h),
                         Text(
                           quality == VideoQuality.uhd4k
                               ? l10n.videoQualityUltra
@@ -166,6 +168,7 @@ class VideoOptionsSelector extends StatelessWidget {
                             fontSize: 9.5.sp,
                             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                             color: isSelected ? AppColors.accentGold : AppColors.textSecondary,
+                            height: 1.1,
                           ),
                         ),
                       ],
@@ -177,7 +180,7 @@ class VideoOptionsSelector extends StatelessWidget {
           }).toList(),
         ),
 
-        SizedBox(height: 14.h),
+        SizedBox(height: 10.h),
 
         // 3. Display Options Toggles
         Text(

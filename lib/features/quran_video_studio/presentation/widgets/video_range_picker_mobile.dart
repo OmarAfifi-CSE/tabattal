@@ -5,14 +5,14 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../quran_reader/presentation/widgets/verse_card/helpers/verse_card_text_utils.dart';
 
-class VideoRangePicker extends StatelessWidget {
+class VideoRangePickerMobile extends StatelessWidget {
   final int surahNumber;
   final int startAyah;
   final int endAyah;
   final ValueChanged<int> onStartAyahChanged;
   final ValueChanged<int> onEndAyahChanged;
 
-  const VideoRangePicker({
+  const VideoRangePickerMobile({
     super.key,
     required this.surahNumber,
     required this.startAyah,
