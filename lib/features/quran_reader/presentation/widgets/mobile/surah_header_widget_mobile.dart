@@ -161,7 +161,7 @@ class SurahHeaderWidgetMobile extends StatelessWidget {
       fit: BoxFit.fitWidth,
       child: SizedBox(
         width: canvasWidth,
-        height: 85.0.h,
+        height: 60.0.h,
         child: Stack(
           alignment: Alignment.center,
           clipBehavior: Clip.none,
@@ -171,7 +171,7 @@ class SurahHeaderWidgetMobile extends StatelessWidget {
               width: canvasWidth,
               child: Transform.scale(
                 scaleX: 1.0,
-                scaleY: 1.8,
+                scaleY: 1.28,
                 child: FittedBox(
                   fit: BoxFit.fitWidth,
                   child: Text(
@@ -207,7 +207,7 @@ class SurahHeaderWidgetMobile extends StatelessWidget {
             // 3. Right Oval Text (Verses count) — in canvasWidth coords
             Positioned(
               right: 77.0.w,
-              top: 34.0.h,
+              top: 22.0.h,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -238,7 +238,7 @@ class SurahHeaderWidgetMobile extends StatelessWidget {
             // 4. Left Oval Text (Revelation place) — in canvasWidth coords
             Positioned(
               left: 74.0.w,
-              top: 38.0.h,
+              top: 25.0.h,
               child: Text(
                 revelationPlace,
                 textAlign: TextAlign.center,

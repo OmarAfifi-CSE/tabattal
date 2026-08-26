@@ -91,35 +91,55 @@ class _MediaControlBarDesktopState extends State<MediaControlBarDesktop> {
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     if (isLandscape) {
-      return AnimatedCrossFade(
+      return AnimatedSize(
         duration: const Duration(milliseconds: 250),
-        crossFadeState: widget.isExpanded
-            ? CrossFadeState.showFirst
-            : CrossFadeState.showSecond,
-        firstChild: _DesktopLandscapeHorizonBar(
-          onToggleExpanded: widget.onToggleExpanded,
-          sleepTimerMinutes: _sleepTimerMinutes,
-          timerEndTime: _timerEndTime,
-          onSleepTimerSelected: _handleSleepTimerSelection,
-        ),
-        secondChild: _DesktopLandscapeWhisperingPill(
-          onToggleExpanded: widget.onToggleExpanded,
+        curve: Curves.easeOutCubic,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          child: widget.isExpanded
+              ? _DesktopLandscapeHorizonBar(
+                  key: const ValueKey('landscape_expanded'),
+                  onToggleExpanded: widget.onToggleExpanded,
+                  sleepTimerMinutes: _sleepTimerMinutes,
+                  timerEndTime: _timerEndTime,
+                  onSleepTimerSelected: _handleSleepTimerSelection,
+                )
+              : _DesktopLandscapeWhisperingPill(
+                  key: const ValueKey('landscape_pill'),
+                  onToggleExpanded: widget.onToggleExpanded,
+                ),
         ),
       );
     }
 
-    return AnimatedCrossFade(
+    return AnimatedSize(
       duration: const Duration(milliseconds: 300),
-      crossFadeState: widget.isExpanded
-          ? CrossFadeState.showFirst
-          : CrossFadeState.showSecond,
-      firstChild: _DesktopExpandedPlayer(
-        onToggleExpanded: widget.onToggleExpanded,
-        sleepTimerMinutes: _sleepTimerMinutes,
-        timerEndTime: _timerEndTime,
-        onSleepTimerSelected: _handleSleepTimerSelection,
+      curve: Curves.easeOutCubic,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        child: widget.isExpanded
+            ? _DesktopExpandedPlayer(
+                key: const ValueKey('portrait_expanded'),
+                onToggleExpanded: widget.onToggleExpanded,
+                sleepTimerMinutes: _sleepTimerMinutes,
+                timerEndTime: _timerEndTime,
+                onSleepTimerSelected: _handleSleepTimerSelection,
+              )
+            : _DesktopMiniPlayer(
+                key: const ValueKey('portrait_mini'),
+                onToggleExpanded: widget.onToggleExpanded,
+              ),
       ),
-      secondChild: _DesktopMiniPlayer(onToggleExpanded: widget.onToggleExpanded),
     );
   }
 }
@@ -135,6 +155,7 @@ class _DesktopLandscapeHorizonBar extends StatelessWidget {
   final ValueChanged<int> onSleepTimerSelected;
 
   const _DesktopLandscapeHorizonBar({
+    super.key,
     required this.onToggleExpanded,
     required this.sleepTimerMinutes,
     required this.timerEndTime,
@@ -156,19 +177,12 @@ class _DesktopLandscapeHorizonBar extends StatelessWidget {
       height: 44.h,
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: AppColors.cardCream.withValues(alpha: 0.96),
+        color: AppColors.cardCream,
         borderRadius: BorderRadius.circular(22.r),
         border: Border.all(
-          color: AppColors.accentGold.withValues(alpha: 0.45),
-          width: 1.0.r,
+          color: AppColors.bronzeIcon,
+          width: 1.2.r,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -395,7 +409,10 @@ class _DesktopLandscapeHorizonBar extends StatelessWidget {
 class _DesktopLandscapeWhisperingPill extends StatelessWidget {
   final VoidCallback onToggleExpanded;
 
-  const _DesktopLandscapeWhisperingPill({required this.onToggleExpanded});
+  const _DesktopLandscapeWhisperingPill({
+    super.key,
+    required this.onToggleExpanded,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -407,19 +424,12 @@ class _DesktopLandscapeWhisperingPill extends StatelessWidget {
         height: 32.h,
         padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
         decoration: BoxDecoration(
-          color: AppColors.cardCream.withValues(alpha: 0.96),
+          color: AppColors.cardCream,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: AppColors.accentGold.withValues(alpha: 0.45),
-            width: 1.0.r,
+            color: AppColors.bronzeIcon,
+            width: 1.2.r,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 3),
-            ),
-          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -500,6 +510,7 @@ class _DesktopExpandedPlayer extends StatelessWidget {
   final ValueChanged<int> onSleepTimerSelected;
 
   const _DesktopExpandedPlayer({
+    super.key,
     required this.onToggleExpanded,
     required this.sleepTimerMinutes,
     required this.timerEndTime,
@@ -519,14 +530,15 @@ class _DesktopExpandedPlayer extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
                 padding: EdgeInsets.zero,
-                constraints: BoxConstraints(minWidth: 32.w, minHeight: 32.h),
+                constraints: const BoxConstraints(),
                 icon: Icon(
                   Icons.keyboard_arrow_down_rounded,
                   color: AppColors.inkBrown,
-                  size: 22.sp,
+                  size: 20.sp,
                 ),
                 onPressed: onToggleExpanded,
               ),
@@ -553,7 +565,10 @@ class _DesktopExpandedPlayer extends StatelessWidget {
 class _DesktopMiniPlayer extends StatelessWidget {
   final VoidCallback onToggleExpanded;
 
-  const _DesktopMiniPlayer({required this.onToggleExpanded});
+  const _DesktopMiniPlayer({
+    super.key,
+    required this.onToggleExpanded,
+  });
 
   @override
   Widget build(BuildContext context) {

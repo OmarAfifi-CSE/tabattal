@@ -378,14 +378,17 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
         padding: const EdgeInsets.symmetric(vertical: 2.0),
         child: SurahHeaderWidgetDesktop(surahNumber: surahId),
       );
-      final basmala = Center(
-        child: Text(
-          '1 2 3',
-          style: TextStyle(
-            fontFamily: 'QCF_BSML',
-            fontSize: 26.0,
-            color: mushafTheme.textColor,
-            height: 1.0,
+      final basmala = Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Center(
+          child: Text(
+            '1 2 3',
+            style: TextStyle(
+              fontFamily: 'QCF_BSML',
+              fontSize: 26.0,
+              color: mushafTheme.textColor,
+              height: 1.0,
+            ),
           ),
         ),
       );

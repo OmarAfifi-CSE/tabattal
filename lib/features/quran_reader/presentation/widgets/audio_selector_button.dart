@@ -82,9 +82,9 @@ class AudioSelectorButton<T> extends StatelessWidget {
             ),
           ],
           child: Container(
-            height: height,
+            constraints: BoxConstraints(minHeight: height),
             width: MediaQuery.sizeOf(context).width,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.surfaceCream,
               borderRadius: BorderRadius.circular(10),
@@ -100,6 +100,7 @@ class AudioSelectorButton<T> extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         label,
@@ -107,6 +108,7 @@ class AudioSelectorButton<T> extends StatelessWidget {
                           fontSize: labelFontSize,
                           color: AppColors.accentGold,
                           fontWeight: FontWeight.w600,
+                          height: 1.15,
                         ),
                       ),
                       Text(
@@ -116,6 +118,7 @@ class AudioSelectorButton<T> extends StatelessWidget {
                           fontSize: valueFontSize,
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
+                          height: 1.15,
                         ),
                       ),
                     ],

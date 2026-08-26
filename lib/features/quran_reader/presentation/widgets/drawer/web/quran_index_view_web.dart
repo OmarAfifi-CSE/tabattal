@@ -139,14 +139,15 @@ class _SurahListTabState extends State<_SurahListTab>
                     ? QuranMetadata.getSurahNameEnglish(surahNum)
                     : QuranMetadata.getSurahName(surahNum);
 
-                return Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceCream,
+                return Material(
+                  color: AppColors.surfaceCream,
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(
+                    side: BorderSide(
                       color: AppColors.accentGold.withValues(alpha: 0.2),
                     ),
                   ),
+                  clipBehavior: Clip.antiAlias,
                   child: _IndexSurahTile(
                     surahNum: surahNum,
                     startPage: startPage,
@@ -286,14 +287,15 @@ class _JuzListTabState extends State<_JuzListTab>
                 final juzNum = index + 1;
                 final startPage = widget.juzStartPages[index];
 
-                return Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceCream,
+                return Material(
+                  color: AppColors.surfaceCream,
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(
+                    side: BorderSide(
                       color: AppColors.accentGold.withValues(alpha: 0.2),
                     ),
                   ),
+                  clipBehavior: Clip.antiAlias,
                   child: _IndexJuzTile(
                     juzNum: juzNum,
                     startPage: startPage,

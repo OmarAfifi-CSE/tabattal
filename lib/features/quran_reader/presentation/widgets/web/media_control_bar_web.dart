@@ -91,35 +91,55 @@ class _MediaControlBarWebState extends State<MediaControlBarWeb> {
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     if (isLandscape) {
-      return AnimatedCrossFade(
+      return AnimatedSize(
         duration: const Duration(milliseconds: 250),
-        crossFadeState: widget.isExpanded
-            ? CrossFadeState.showFirst
-            : CrossFadeState.showSecond,
-        firstChild: _WebLandscapeHorizonBar(
-          onToggleExpanded: widget.onToggleExpanded,
-          sleepTimerMinutes: _sleepTimerMinutes,
-          timerEndTime: _timerEndTime,
-          onSleepTimerSelected: _handleSleepTimerSelection,
-        ),
-        secondChild: _WebLandscapeWhisperingPill(
-          onToggleExpanded: widget.onToggleExpanded,
+        curve: Curves.easeOutCubic,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          child: widget.isExpanded
+              ? _WebLandscapeHorizonBar(
+                  key: const ValueKey('landscape_expanded'),
+                  onToggleExpanded: widget.onToggleExpanded,
+                  sleepTimerMinutes: _sleepTimerMinutes,
+                  timerEndTime: _timerEndTime,
+                  onSleepTimerSelected: _handleSleepTimerSelection,
+                )
+              : _WebLandscapeWhisperingPill(
+                  key: const ValueKey('landscape_pill'),
+                  onToggleExpanded: widget.onToggleExpanded,
+                ),
         ),
       );
     }
 
-    return AnimatedCrossFade(
+    return AnimatedSize(
       duration: const Duration(milliseconds: 300),
-      crossFadeState: widget.isExpanded
-          ? CrossFadeState.showFirst
-          : CrossFadeState.showSecond,
-      firstChild: _WebExpandedPlayer(
-        onToggleExpanded: widget.onToggleExpanded,
-        sleepTimerMinutes: _sleepTimerMinutes,
-        timerEndTime: _timerEndTime,
-        onSleepTimerSelected: _handleSleepTimerSelection,
+      curve: Curves.easeOutCubic,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        child: widget.isExpanded
+            ? _WebExpandedPlayer(
+                key: const ValueKey('portrait_expanded'),
+                onToggleExpanded: widget.onToggleExpanded,
+                sleepTimerMinutes: _sleepTimerMinutes,
+                timerEndTime: _timerEndTime,
+                onSleepTimerSelected: _handleSleepTimerSelection,
+              )
+            : _WebMiniPlayer(
+                key: const ValueKey('portrait_mini'),
+                onToggleExpanded: widget.onToggleExpanded,
+              ),
       ),
-      secondChild: _WebMiniPlayer(onToggleExpanded: widget.onToggleExpanded),
     );
   }
 }
@@ -135,6 +155,7 @@ class _WebLandscapeHorizonBar extends StatelessWidget {
   final ValueChanged<int> onSleepTimerSelected;
 
   const _WebLandscapeHorizonBar({
+    super.key,
     required this.onToggleExpanded,
     required this.sleepTimerMinutes,
     required this.timerEndTime,
@@ -156,19 +177,12 @@ class _WebLandscapeHorizonBar extends StatelessWidget {
       height: 44.h,
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: AppColors.cardCream.withValues(alpha: 0.96),
+        color: AppColors.cardCream,
         borderRadius: BorderRadius.circular(22.r),
         border: Border.all(
-          color: AppColors.accentGold.withValues(alpha: 0.45),
-          width: 1.0.r,
+          color: AppColors.bronzeIcon,
+          width: 1.2.r,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -395,7 +409,10 @@ class _WebLandscapeHorizonBar extends StatelessWidget {
 class _WebLandscapeWhisperingPill extends StatelessWidget {
   final VoidCallback onToggleExpanded;
 
-  const _WebLandscapeWhisperingPill({required this.onToggleExpanded});
+  const _WebLandscapeWhisperingPill({
+    super.key,
+    required this.onToggleExpanded,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -407,19 +424,12 @@ class _WebLandscapeWhisperingPill extends StatelessWidget {
         height: 32.h,
         padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
         decoration: BoxDecoration(
-          color: AppColors.cardCream.withValues(alpha: 0.96),
+          color: AppColors.cardCream,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: AppColors.accentGold.withValues(alpha: 0.45),
-            width: 1.0.r,
+            color: AppColors.bronzeIcon,
+            width: 1.2.r,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 3),
-            ),
-          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -500,6 +510,7 @@ class _WebExpandedPlayer extends StatelessWidget {
   final ValueChanged<int> onSleepTimerSelected;
 
   const _WebExpandedPlayer({
+    super.key,
     required this.onToggleExpanded,
     required this.sleepTimerMinutes,
     required this.timerEndTime,
@@ -553,7 +564,10 @@ class _WebExpandedPlayer extends StatelessWidget {
 class _WebMiniPlayer extends StatelessWidget {
   final VoidCallback onToggleExpanded;
 
-  const _WebMiniPlayer({required this.onToggleExpanded});
+  const _WebMiniPlayer({
+    super.key,
+    required this.onToggleExpanded,
+  });
 
   @override
   Widget build(BuildContext context) {
