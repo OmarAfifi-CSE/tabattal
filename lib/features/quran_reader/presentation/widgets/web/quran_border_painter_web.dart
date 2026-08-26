@@ -61,11 +61,11 @@ class QuranBorderPainterWeb extends CustomPainter {
       final double top = H * 0.035;
       final double bottom = H * 0.965;
 
-      final double cutTop = isLandscape ? 118.0.h : 112.0.h;
-      final double cutBottom = isLandscape ? 156.0.h : 146.0.h;
+      final double cutTop = 118.0.h;
+      final double cutBottom = 156.0.h;
 
-      final double diamondRadius = isLandscape ? 5.5.r : 4.5.r;
-      final double diamondStep = isLandscape ? 16.0.r : 14.0.r;
+      final double diamondRadius = 5.5.r;
+      final double diamondStep = 16.0.r;
 
       // 3. Build the exact continuous wireframe of the border with cuts
       final Path framePath = Path();
@@ -140,11 +140,11 @@ class QuranBorderPainterWeb extends CustomPainter {
       _borderCacheWeb[cacheKey] = data;
     }
 
-    _outerBoundPaint.strokeWidth = isLandscape ? 15.0.r : 12.0.r;
+    _outerBoundPaint.strokeWidth = 15.0.r;
     _outerBoundPaint.color = goldColor;
     canvas.drawPath(data.framePath, _outerBoundPaint);
 
-    _innerFillPaint.strokeWidth = isLandscape ? 12.5.r : 10.0.r;
+    _innerFillPaint.strokeWidth = 12.5.r;
     _innerFillPaint.color = innerColor;
     canvas.drawPath(data.framePath, _innerFillPaint);
 

@@ -392,9 +392,9 @@ class _WebHizbMarker extends StatelessWidget {
         marker['line'] as int,
         pageHeight,
       ),
-      left: isLeftPage ? (pageWidth * (isLandscape ? 0.061 : 0.059)) : null,
-      right: !isLeftPage ? (pageWidth * (isLandscape ? 0.039 : 0.041)) : null,
-      width: isLandscape ? 98.0.w : (pageWidth * 0.102),
+      left: isLeftPage ? (pageWidth * 0.061) : null,
+      right: !isLeftPage ? (pageWidth * 0.039) : null,
+      width: 98.0.w,
       child: FractionalTranslation(
         translation: Offset(isLeftPage ? -0.5 : 0.5, -0.5),
         child: Stack(
@@ -402,13 +402,13 @@ class _WebHizbMarker extends StatelessWidget {
           children: [
             // Ornament glyph from QCF_BSML
             Transform.scale(
-              scaleX: isLandscape ? 0.64 : 0.66,
+              scaleX: 0.64,
               scaleY: 1.0,
               child: Text(
                 '\u00F5',
                 style: TextStyle(
                   fontFamily: 'QCF_BSML',
-                  fontSize: (isLandscape ? 116.0 : 108.0).sp,
+                  fontSize: 116.0.sp,
                   color: mushafTheme.goldColor,
                   height: 1.0,
                 ),
@@ -416,18 +416,16 @@ class _WebHizbMarker extends StatelessWidget {
             ),
             // Label text centred inside the ornament
             Transform.translate(
-              offset: isLandscape
-                  ? Offset(-9.5.w, 25.5.h)
-                  : Offset(-7.2.w, 19.5.h),
+              offset: Offset(-9.5.w, 25.5.h),
               child: SizedBox(
-                width: isLandscape ? 56.0.w : (pageWidth * 0.078),
+                width: 56.0.w,
                 child: Text.rich(
                   TextSpan(
                     children: _buildHizbLabelTextSpans(
                       (marker['text'] as String).toArabicDigits,
                       TextStyle(
                         fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
-                        fontSize: (isLandscape ? 13.0 : 11.5).sp,
+                        fontSize: 13.0.sp,
                         height: 1.18,
                         color: mushafTheme.textColor,
                         fontWeight: FontWeight.bold,

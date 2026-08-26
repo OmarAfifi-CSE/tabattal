@@ -235,7 +235,7 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final isLandscape = constraints.maxWidth > constraints.maxHeight;
-                final isTwoPageMode = isLandscape || constraints.maxWidth >= 900;
+                final isTwoPageMode = isLandscape && constraints.maxWidth >= 1000;
                 final pageStep = isTwoPageMode ? 2 : 1;
 
                 return Stack(

@@ -68,7 +68,7 @@ Sharing is limited to plain text or flat cards → no way to create modern, sync
 **Tabattal bridges both worlds and pioneers native video creation — with zero compromise.**
 
 - 📖 **Authentic Vector Engine:** Powered by official King Fahd Complex **QCF V2 glyph fonts**, drawing every word with mathematical precision to match the physical Madani Mushaf at 120 FPS.
-- 🎬 **First-of-its-Kind Quran Video Studio:** Create breathtaking cinema reels (9:16 / 1:1 / 16:9) with synchronized EveryAyah recitations, authentic line-by-line Madani typography, animated video backgrounds, and 1080p hardware-accelerated export.
+- 🎬 **Quran Video & Reels Studio:** Design and export captivating, beautifully animated videos (9:16 / 1:1 / 16:9) with synchronized EveryAyah recitations, authentic line-by-line Madani typography, dynamic video backgrounds, and instant hardware-accelerated rendering.
 
 > Infinite sharpness. Zero jank. Real-time media creation. Zero compromises.
 
@@ -207,7 +207,7 @@ All 604 page fonts pre-warmed in RAM — no zip extraction, no runtime layout ov
 
 <br/>
 
-### 🎬 Quran Video Studio & Reels Maker *(First of its kind)*
+### 🎬 Quran Video Studio & Reels Maker *(Creative Video Suite)*
 
 <table>
 <tr>
@@ -226,7 +226,7 @@ All 604 page fonts pre-warmed in RAM — no zip extraction, no runtime layout ov
 - **Synchronized Recitation** — Precise EveryAyah audio sync with authentic line-by-line Madani vector typography
 - **Dual Media Backgrounds** — Custom gallery images or **animated video backgrounds** (local or direct URL) with audio mixing
 - **Adaptive Luminance Engine** — Auto-adjusts text colors (pure white / deep black) with adjustable dimming
-- **Hardware-Accelerated FFmpeg Export** — Crisp, crystal-clear 1080p video rendering with instant gallery indexing
+- **Hardware-Accelerated FFmpeg Export** — Crisp, high-fidelity video rendering with instant gallery indexing
 
 </td>
 </tr>

@@ -61,11 +61,11 @@ class QuranBorderPainterDesktop extends CustomPainter {
       final double top = H * 0.035;
       final double bottom = H * 0.965;
 
-      final double cutTop = isLandscape ? 118.0.h : 112.0.h;
-      final double cutBottom = isLandscape ? 156.0.h : 146.0.h;
+      final double cutTop = 118.0.h;
+      final double cutBottom = 156.0.h;
 
-      final double diamondRadius = isLandscape ? 5.5.r : 4.5.r;
-      final double diamondStep = isLandscape ? 16.0.r : 14.0.r;
+      final double diamondRadius = 5.5.r;
+      final double diamondStep = 16.0.r;
 
       // 3. Build the exact continuous wireframe of the border with cuts
       final Path framePath = Path();
@@ -120,19 +120,16 @@ class QuranBorderPainterDesktop extends CustomPainter {
         double exactStep = length / nSegments;
 
         for (int i = 0; i <= nSegments; i++) {
-          final double dist = i * exactStep;
-          final Tangent? tangent = metric.getTangentForOffset(dist);
-          if (tangent == null) continue;
-
-          final Offset pos = tangent.position;
-          final Offset dir = tangent.vector;
-          final Offset normal = Offset(-dir.dy, dir.dx);
-
-          allDiamondsPath.moveTo(pos.dx + dir.dx * diamondRadius, pos.dy + dir.dy * diamondRadius);
-          allDiamondsPath.lineTo(pos.dx + normal.dx * diamondRadius, pos.dy + normal.dy * diamondRadius);
-          allDiamondsPath.lineTo(pos.dx - dir.dx * diamondRadius, pos.dy - dir.dy * diamondRadius);
-          allDiamondsPath.lineTo(pos.dx - normal.dx * diamondRadius, pos.dy - normal.dy * diamondRadius);
-          allDiamondsPath.close();
+          final double distance = i * exactStep;
+          final Tangent? tangent = metric.getTangentForOffset(distance);
+          if (tangent != null) {
+            allDiamondsPath.addOval(
+              Rect.fromCircle(
+                center: tangent.position,
+                radius: diamondRadius,
+              ),
+            );
+          }
         }
       }
 
@@ -140,11 +137,11 @@ class QuranBorderPainterDesktop extends CustomPainter {
       _borderCacheDesktop[cacheKey] = data;
     }
 
-    _outerBoundPaint.strokeWidth = isLandscape ? 15.0.r : 12.0.r;
+    _outerBoundPaint.strokeWidth = 15.0.r;
     _outerBoundPaint.color = goldColor;
     canvas.drawPath(data.framePath, _outerBoundPaint);
 
-    _innerFillPaint.strokeWidth = isLandscape ? 12.5.r : 10.0.r;
+    _innerFillPaint.strokeWidth = 12.5.r;
     _innerFillPaint.color = innerColor;
     canvas.drawPath(data.framePath, _innerFillPaint);
 

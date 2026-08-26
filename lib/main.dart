@@ -106,51 +106,70 @@ class TabattalApp extends StatelessWidget {
             return BlocBuilder<LocaleCubit, Locale>(
               builder: (context, locale) {
                 return ResponsiveLayout(
-                  // Web: calibrated to 800×900 so .sp/.w/.h render at reasonable scale
-                  // for a typical browser viewport (900–1400px wide).
-                  webBody: ScreenUtilInit(
-                    designSize: const Size(1536, 864),
-                    minTextAdapt: true,
-                    splitScreenMode: false,
-                    child: MaterialApp(
-                      title: 'Tabattal - تبتل',
-                      debugShowCheckedModeBanner: false,
-                      locale: locale,
-                      supportedLocales: AppLocalizations.supportedLocales,
-                      localizationsDelegates: const [
-                        AppLocalizations.delegate,
-                        GlobalMaterialLocalizations.delegate,
-                        GlobalWidgetsLocalizations.delegate,
-                        GlobalCupertinoLocalizations.delegate,
-                      ],
-                      theme: appTheme(),
-                      darkTheme: appThemeDark(),
-                      themeMode: settingsState.themeMode,
-                      builder: appDirectionalityBuilder,
-                      home: const QuranWebScreen(),
-                    ),
+                  // Web: adapts designSize dynamically based on viewport orientation
+                  webBody: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isLandscape =
+                          constraints.maxWidth > constraints.maxHeight;
+                      final isTwoPage =
+                          isLandscape && constraints.maxWidth >= 1000;
+                      return ScreenUtilInit(
+                        designSize: isTwoPage
+                            ? const Size(1536, 864)
+                            : const Size(1000, 864),
+                        minTextAdapt: true,
+                        splitScreenMode: false,
+                        child: MaterialApp(
+                          title: 'Tabattal - تبتل',
+                          debugShowCheckedModeBanner: false,
+                          locale: locale,
+                          supportedLocales: AppLocalizations.supportedLocales,
+                          localizationsDelegates: const [
+                            AppLocalizations.delegate,
+                            GlobalMaterialLocalizations.delegate,
+                            GlobalWidgetsLocalizations.delegate,
+                            GlobalCupertinoLocalizations.delegate,
+                          ],
+                          theme: appTheme(),
+                          darkTheme: appThemeDark(),
+                          themeMode: settingsState.themeMode,
+                          builder: appDirectionalityBuilder,
+                          home: const QuranWebScreen(),
+                        ),
+                      );
+                    },
                   ),
-                  desktopBody: ScreenUtilInit(
-                    designSize: const Size(1536, 864),
-                    minTextAdapt: true,
-                    splitScreenMode: false,
-                    child: MaterialApp(
-                      title: 'Tabattal - تبتل',
-                      debugShowCheckedModeBanner: false,
-                      locale: locale,
-                      supportedLocales: AppLocalizations.supportedLocales,
-                      localizationsDelegates: const [
-                        AppLocalizations.delegate,
-                        GlobalMaterialLocalizations.delegate,
-                        GlobalWidgetsLocalizations.delegate,
-                        GlobalCupertinoLocalizations.delegate,
-                      ],
-                      theme: appTheme(),
-                      darkTheme: appThemeDark(),
-                      themeMode: settingsState.themeMode,
-                      builder: appDirectionalityBuilder,
-                      home: const QuranDesktopScreen(),
-                    ),
+                  desktopBody: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isLandscape =
+                          constraints.maxWidth > constraints.maxHeight;
+                      final isTwoPage =
+                          isLandscape && constraints.maxWidth >= 1000;
+                      return ScreenUtilInit(
+                        designSize: isTwoPage
+                            ? const Size(1536, 864)
+                            : const Size(1000, 864),
+                        minTextAdapt: true,
+                        splitScreenMode: false,
+                        child: MaterialApp(
+                          title: 'Tabattal - تبتل',
+                          debugShowCheckedModeBanner: false,
+                          locale: locale,
+                          supportedLocales: AppLocalizations.supportedLocales,
+                          localizationsDelegates: const [
+                            AppLocalizations.delegate,
+                            GlobalMaterialLocalizations.delegate,
+                            GlobalWidgetsLocalizations.delegate,
+                            GlobalCupertinoLocalizations.delegate,
+                          ],
+                          theme: appTheme(),
+                          darkTheme: appThemeDark(),
+                          themeMode: settingsState.themeMode,
+                          builder: appDirectionalityBuilder,
+                          home: const QuranDesktopScreen(),
+                        ),
+                      );
+                    },
                   ),
                   tabletBody: LayoutBuilder(
                     builder: (context, constraints) {
