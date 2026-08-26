@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
@@ -48,7 +47,6 @@ class VerseCardTextPreview extends StatelessWidget {
         ? QuranMetadata.getSurahNameEnglish(surahNumber)
         : QuranMetadata.getSurahName(surahNumber);
     final l10n = AppLocalizations.of(context)!;
-    const isWeb = kIsWeb;
 
     final rangeText = startAyah == endAyah
         ? (isEn
@@ -60,7 +58,7 @@ class VerseCardTextPreview extends StatelessWidget {
 
     return Container(
       width: MediaQuery.sizeOf(context).width,
-      padding: EdgeInsets.all(isWeb ? 16 : 14.r),
+      padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
         color: theme.cardBackground,
         borderRadius: BorderRadius.circular(16.r),
@@ -135,7 +133,7 @@ class VerseCardTextPreview extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.auto_stories_outlined,
-                                size: isWeb ? 13 : 12.r,
+                                size: 12.r,
                                 color: theme.accentColor,
                               ),
                               SizedBox(width: 5.w),
@@ -143,7 +141,7 @@ class VerseCardTextPreview extends StatelessWidget {
                                 l10n.verseCardTafsirBadge,
                                 style: TextStyle(
                                   fontFamily: isEn ? null : 'Amiri',
-                                  fontSize: isWeb ? 12 : 11.sp,
+                                  fontSize: 11.sp,
                                   fontWeight: FontWeight.bold,
                                   color: theme.accentColor,
                                 ),
@@ -156,7 +154,7 @@ class VerseCardTextPreview extends StatelessWidget {
                           text: tafsirText.trim(),
                           style: TextStyle(
                             fontFamily: 'Amiri',
-                            fontSize: isWeb ? 13 : 12.sp,
+                            fontSize: 12.sp,
                             height: 1.6,
                             color: theme.secondaryTextColor,
                           ),
@@ -197,7 +195,7 @@ class VerseCardTextPreview extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.translate_rounded,
-                                size: isWeb ? 13 : 12.r,
+                                size: 12.r,
                                 color: theme.accentColor,
                               ),
                               SizedBox(width: 5.w),
@@ -205,7 +203,7 @@ class VerseCardTextPreview extends StatelessWidget {
                                 l10n.verseCardTranslationBadge,
                                 style: TextStyle(
                                   fontFamily: isEn ? null : 'Amiri',
-                                  fontSize: isWeb ? 12 : 11.sp,
+                                  fontSize: 11.sp,
                                   fontWeight: FontWeight.bold,
                                   color: theme.accentColor,
                                 ),
@@ -217,7 +215,7 @@ class VerseCardTextPreview extends StatelessWidget {
                         MixedDirectionText(
                           text: translationText.trim(),
                           style: TextStyle(
-                            fontSize: isWeb ? 13 : 12.sp,
+                            fontSize: 12.sp,
                             height: 1.5,
                             fontStyle: FontStyle.italic,
                             color: theme.secondaryTextColor,
@@ -243,7 +241,7 @@ class VerseCardTextPreview extends StatelessWidget {
               rangeText,
               style: TextStyle(
                 fontFamily: 'Amiri',
-                fontSize: isWeb ? 12 : 11.sp,
+                fontSize: 11.sp,
                 fontWeight: FontWeight.bold,
                 color: theme.accentColor,
               ),

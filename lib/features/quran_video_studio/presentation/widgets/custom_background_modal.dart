@@ -260,6 +260,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
                     children: [
                       TextField(
                         controller: _urlController,
+                        textAlignVertical: TextAlignVertical.center,
                         keyboardType: TextInputType.url,
                         textDirection: TextDirection.ltr,
                         style: TextStyle(

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../core/theme/app_colors.dart';
@@ -19,7 +18,6 @@ class VerseCardFormatSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    const isWeb = kIsWeb;
 
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
@@ -29,7 +27,7 @@ class VerseCardFormatSelector extends StatelessWidget {
           Text(
             l10n.verseCardFormatLabel,
             style: TextStyle(
-              fontSize: isWeb ? 14 : 13.sp,
+              fontSize: 13.sp,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),

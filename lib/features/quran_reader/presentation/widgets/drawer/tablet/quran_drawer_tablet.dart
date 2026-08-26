@@ -9,8 +9,7 @@ import '../../../../../settings/bloc/settings_state.dart';
 import '../../../../bloc/bookmark/bookmark_bloc.dart';
 import '../../../../bloc/bookmark/bookmark_state.dart';
 import '../../../pages/search/tablet/quran_search_screen_tablet.dart';
-import '../quran_audio_manager_view.dart';
-import '../theme_and_language_sheet.dart';
+import 'quran_audio_manager_view_tablet.dart';
 import 'theme_and_language_sheet_tablet.dart';
 import 'quran_bookmarks_view_tablet.dart';
 import 'quran_full_tafsir_view_tablet.dart';
@@ -35,7 +34,7 @@ class QuranDrawerTablet extends StatelessWidget {
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     final drawer = Drawer(
-      width: isLandscape ? 360.0 : 380.w,
+      width: isLandscape ? 360.0.w : 380.w,
       backgroundColor: AppColors.surfaceCream,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
@@ -63,13 +62,13 @@ class QuranDrawerTablet extends StatelessWidget {
                               child: Text(
                                 l10n.themeScrollDirection,
                                 style: TextStyle(
-                                  fontSize: isLandscape ? 13.5 : 14.5,
+                                  fontSize: (isLandscape ? 13.5 : 14.5).sp,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textPrimary,
                                 ),
                               ),
                             ),
-                            SizedBox(height: isLandscape ? 8.0 : 10.0),
+                            SizedBox(height: (isLandscape ? 8.0 : 10.0).h),
                             ScrollDirectionToggle(
                               scrollDirection: state.scrollDirection,
                               onChanged: (val) => context
@@ -208,14 +207,14 @@ class QuranDrawerTablet extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const QuranAudioManagerView(),
+                          builder: (_) => const QuranAudioManagerViewTablet(),
                         ),
                       );
                     },
                   ),
                   _TabletDrawerItem(
-                    iconWidget: ThemeAndLanguageDrawerIcon(
-                      size: isLandscape ? 46.0 : 50.0,
+                    iconWidget: ThemeAndLanguageDrawerIconTablet(
+                      size: (isLandscape ? 46.0 : 50.0).r,
                     ),
                     title: l10n.drawerThemeAndLanguage,
                     subtitle: l10n.drawerThemeAndLanguageSubtitle,
@@ -250,7 +249,7 @@ class _TabletDrawerHeader extends StatelessWidget {
     return Container(
       width: MediaQuery.sizeOf(context).width,
       padding: isLandscape
-          ? const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0)
+          ? EdgeInsets.symmetric(horizontal: 16.0.w, vertical: 16.0.h)
           : EdgeInsets.fromLTRB(18.w, 20.h, 18.w, 16.h),
       decoration: BoxDecoration(
         color: AppColors.accentGold.withValues(alpha: 0.08),
@@ -266,16 +265,16 @@ class _TabletDrawerHeader extends StatelessWidget {
           Icon(
             Icons.auto_stories_rounded,
             color: AppColors.accentGold.withValues(alpha: 0.8),
-            size: isLandscape ? 36.0 : 36.sp,
+            size: (isLandscape ? 36.0 : 36.0).sp,
           ),
-          SizedBox(height: isLandscape ? 6.0 : 10.h),
+          SizedBox(height: (isLandscape ? 6.0 : 10.0).h),
           Text(
             '\uFD71 وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا \uFD70',
             textAlign: TextAlign.center,
             textDirection: TextDirection.rtl,
             style: TextStyle(
               fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
-              fontSize: isLandscape ? 23.0 : 23.sp,
+              fontSize: (isLandscape ? 23.0 : 23.0).sp,
               height: isLandscape ? 1.45 : 1.8.h,
               fontWeight: FontWeight.normal,
               color: AppColors.textPrimary.withValues(alpha: 0.9),
@@ -296,16 +295,16 @@ class _TabletBookmarkBadge extends StatelessWidget {
       builder: (context, state) {
         if (state.bookmarkedVerseKeys.isEmpty) return const SizedBox.shrink();
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 9.0, vertical: 3.0),
+          padding: EdgeInsets.symmetric(horizontal: 9.0.w, vertical: 3.0.h),
           decoration: BoxDecoration(
             color: AppColors.accentGold,
-            borderRadius: BorderRadius.circular(10.0),
+            borderRadius: BorderRadius.circular(10.0.r),
           ),
           child: Text(
             '${state.bookmarkedVerseKeys.length}',
             style: TextStyle(
               color: AppColors.cardCream,
-              fontSize: 12.5,
+              fontSize: 12.5.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -342,28 +341,28 @@ class _TabletDrawerItem extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: isLandscape ? 18.0 : 20.0,
-          vertical: isLandscape ? 10.0 : 13.0,
+          horizontal: (isLandscape ? 18.0 : 20.0).w,
+          vertical: (isLandscape ? 10.0 : 13.0).h,
         ),
         child: Row(
           children: [
             Container(
-              width: isLandscape ? 46.0 : 50.0,
-              height: isLandscape ? 46.0 : 50.0,
+              width: (isLandscape ? 46.0 : 50.0).r,
+              height: (isLandscape ? 46.0 : 50.0).r,
               decoration: BoxDecoration(
                 color: AppColors.accentGold.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12.0),
+                borderRadius: BorderRadius.circular(12.0.r),
               ),
               child: iconWidget ??
                   (icon != null
                       ? Icon(
                           icon,
                           color: AppColors.accentGold,
-                          size: isLandscape ? 22.0 : 25.0,
+                          size: (isLandscape ? 22.0 : 25.0).r,
                         )
                       : const SizedBox.shrink()),
             ),
-            SizedBox(width: isLandscape ? 12.0 : 14.0),
+            SizedBox(width: (isLandscape ? 12.0 : 14.0).w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,23 +373,23 @@ class _TabletDrawerItem extends StatelessWidget {
                         child: Text(
                           title,
                           style: TextStyle(
-                            fontSize: isLandscape ? 16.0 : 17.5,
+                            fontSize: (isLandscape ? 16.0 : 17.5).sp,
                             fontWeight: FontWeight.bold,
                             color: AppColors.textPrimary,
                           ),
                         ),
                       ),
                       if (badge != null) ...[
-                        const SizedBox(width: 8.0),
+                        SizedBox(width: 8.0.w),
                         badge!,
                       ],
                     ],
                   ),
-                  const SizedBox(height: 2.0),
+                  SizedBox(height: 2.0.h),
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: isLandscape ? 12.5 : 13.5,
+                      fontSize: (isLandscape ? 12.5 : 13.5).sp,
                       color: AppColors.textPrimary.withValues(alpha: 0.55),
                       height: 1.3,
                     ),
@@ -403,7 +402,7 @@ class _TabletDrawerItem extends StatelessWidget {
                   ? Icons.chevron_left_rounded
                   : Icons.chevron_right_rounded,
               color: AppColors.textPrimary.withValues(alpha: 0.25),
-              size: isLandscape ? 20.0 : 22.0,
+              size: (isLandscape ? 20.0 : 22.0).r,
             ),
           ],
         ),
@@ -442,10 +441,10 @@ class ScrollDirectionToggle extends StatelessWidget {
         : Alignment.centerRight;
 
     return Container(
-      height: isLandscape ? 38.0 : 42.0,
+      height: (isLandscape ? 42.0 : 46.0).h,
       decoration: BoxDecoration(
         color: AppColors.divider.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 12.0),
+        borderRadius: BorderRadius.circular((isLandscape ? 12.0 : 14.0).r),
       ),
       child: Stack(
         children: [
@@ -456,11 +455,11 @@ class ScrollDirectionToggle extends StatelessWidget {
             child: FractionallySizedBox(
               widthFactor: 0.5,
               child: Container(
-                margin: const EdgeInsets.all(3.0),
+                margin: EdgeInsets.all(3.0.r),
                 decoration: BoxDecoration(
                   color: activeTheme.backgroundColor,
                   borderRadius:
-                      BorderRadius.circular(isLandscape ? 8.0 : 10.0),
+                      BorderRadius.circular((isLandscape ? 10.0 : 12.0).r),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
@@ -486,18 +485,18 @@ class ScrollDirectionToggle extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.swap_horiz_rounded,
-                            size: isLandscape ? 16.0 : 18.0,
+                            size: (isLandscape ? 18.0 : 20.0).r,
                             color: isHorizontal
                                 ? activeTheme.goldColor
                                 : AppColors.textPrimary.withValues(alpha: 0.6),
                           ),
-                          const SizedBox(width: 5.0),
+                          SizedBox(width: 6.0.w),
                           FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Text(
                               l10n.themeScrollHorizontal,
                               style: TextStyle(
-                                fontSize: isLandscape ? 12.0 : 13.0,
+                                fontSize: (isLandscape ? 13.5 : 15.0).sp,
                                 fontWeight: isHorizontal
                                     ? FontWeight.bold
                                     : FontWeight.w500,
@@ -524,18 +523,18 @@ class ScrollDirectionToggle extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.swap_vert_rounded,
-                            size: isLandscape ? 16.0 : 18.0,
+                            size: (isLandscape ? 18.0 : 20.0).r,
                             color: !isHorizontal
                                 ? activeTheme.goldColor
                                 : AppColors.textPrimary.withValues(alpha: 0.6),
                           ),
-                          const SizedBox(width: 5.0),
+                          SizedBox(width: 6.0.w),
                           FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Text(
                               l10n.themeScrollVertical,
                               style: TextStyle(
-                                fontSize: isLandscape ? 12.0 : 13.0,
+                                fontSize: (isLandscape ? 13.5 : 15.0).sp,
                                 fontWeight: !isHorizontal
                                     ? FontWeight.bold
                                     : FontWeight.w500,

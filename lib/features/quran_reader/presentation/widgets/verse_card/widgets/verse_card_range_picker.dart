@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
@@ -37,7 +36,6 @@ class VerseCardRangePicker extends StatelessWidget {
     required ValueChanged<int> onSelected,
   }) {
     final isEn = Localizations.localeOf(context).languageCode == 'en';
-    const isWeb = kIsWeb;
 
     showModalBottomSheet(
       context: context,
@@ -77,7 +75,7 @@ class VerseCardRangePicker extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: isWeb ? 17 : 16.sp,
+                        fontSize: 16.sp,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
                       ),
@@ -141,7 +139,7 @@ class VerseCardRangePicker extends StatelessWidget {
                                 ? 'Ayah $item'
                                 : 'آية ${VerseCardTextUtils.toArabicDigits(item)}',
                             style: TextStyle(
-                              fontSize: isWeb ? 13 : 12.sp,
+                              fontSize: 12.sp,
                               fontWeight: FontWeight.bold,
                               color: isSelected
                                   ? Colors.white
@@ -165,7 +163,6 @@ class VerseCardRangePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
-    const isWeb = kIsWeb;
 
     final startOptions = List.generate(totalAyahsInSurah, (i) => i + 1);
     final maxEndForCurrentStart = _getMaxEndAyah(startAyah);
@@ -184,7 +181,7 @@ class VerseCardRangePicker extends StatelessWidget {
             Text(
               l10n.verseCardVerseRange,
               style: TextStyle(
-                fontSize: isWeb ? 14 : 13.sp,
+                fontSize: 13.sp,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),

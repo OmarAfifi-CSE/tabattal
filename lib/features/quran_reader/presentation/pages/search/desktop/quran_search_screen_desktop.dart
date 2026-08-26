@@ -419,6 +419,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
             Expanded(
               child: TextField(
                 controller: _searchController,
+                textAlignVertical: TextAlignVertical.center,
                 style: TextStyle(
                   fontSize: 16,
                   color: AppColors.textPrimary,
@@ -434,7 +435,8 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                     fontSize: 16,
                   ),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.only(bottom: 8),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
             ),

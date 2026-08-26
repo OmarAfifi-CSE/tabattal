@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../l10n/app_localizations.dart';
@@ -40,14 +41,14 @@ class VideoRangePickerTablet extends StatelessWidget {
         return Dialog(
           backgroundColor: AppColors.cardCream,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
+            borderRadius: BorderRadius.circular(20.0.r),
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420, maxHeight: 480),
+            constraints: BoxConstraints(maxWidth: 420.w, maxHeight: 480.h),
             child: Directionality(
               textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(20.0.r),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -57,29 +58,29 @@ class VideoRangePickerTablet extends StatelessWidget {
                         Text(
                           title,
                           style: TextStyle(
-                            fontSize: 15.0,
+                            fontSize: 17.0.sp,
                             fontWeight: FontWeight.bold,
                             color: AppColors.textPrimary,
                           ),
                         ),
                         IconButton(
                           onPressed: () => Navigator.pop(ctx),
-                          icon: const Icon(Icons.close_rounded),
+                          icon: Icon(Icons.close_rounded, size: 24.sp),
                         ),
                       ],
                     ),
-                    const Divider(height: 1),
-                    const SizedBox(height: 8.0),
+                    Divider(height: 1.h),
+                    SizedBox(height: 10.0.h),
                     Expanded(
                       child: GridView.builder(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        padding: EdgeInsets.symmetric(vertical: 8.0.h),
                         physics: const BouncingScrollPhysics(),
                         gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
+                            SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 5,
-                          childAspectRatio: 1.4,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
+                          childAspectRatio: 1.3,
+                          crossAxisSpacing: 10.w,
+                          mainAxisSpacing: 10.h,
                         ),
                         itemCount: options.length,
                         itemBuilder: (context, index) {
@@ -91,30 +92,30 @@ class VideoRangePickerTablet extends StatelessWidget {
                               onSelected(ayah);
                               Navigator.pop(ctx);
                             },
-                            borderRadius: BorderRadius.circular(10.0),
+                            borderRadius: BorderRadius.circular(12.0.r),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? AppColors.accentGold
                                     : AppColors.accentGold
                                         .withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(10.0),
+                                borderRadius: BorderRadius.circular(12.0.r),
                                 border: Border.all(
                                   color: isSelected
                                       ? AppColors.accentGold
                                       : AppColors.accentGold
                                           .withValues(alpha: 0.25),
-                                  width: 1,
+                                  width: 1.w,
                                 ),
                               ),
                               alignment: Alignment.center,
                               child: Text(
                                 VerseCardTextUtils.toArabicDigits(ayah),
                                 style: TextStyle(
-                                  fontSize: 13.0,
+                                  fontSize: 15.0.sp,
                                   fontWeight: isSelected
                                       ? FontWeight.bold
-                                      : FontWeight.w500,
+                                      : FontWeight.w600,
                                   color: isSelected
                                       ? Colors.white
                                       : AppColors.textPrimary,
@@ -154,21 +155,21 @@ class VideoRangePickerTablet extends StatelessWidget {
             Text(
               l10n.videoStudioVerseRange,
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 16.0.sp,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(width: 4.0),
+            SizedBox(width: 8.0.w),
             Container(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 6.0, vertical: 1.5),
+                  EdgeInsets.symmetric(horizontal: 8.0.w, vertical: 3.0.h),
               decoration: BoxDecoration(
                 color: AppColors.accentGold.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(5.0),
+                borderRadius: BorderRadius.circular(8.0.r),
                 border: Border.all(
                   color: AppColors.accentGold.withValues(alpha: 0.28),
-                  width: 1,
+                  width: 1.w,
                 ),
               ),
               child: Text(
@@ -176,7 +177,7 @@ class VideoRangePickerTablet extends StatelessWidget {
                     ? 'Surah ${QuranMetadata.getSurahNameEnglish(surahNumber)}'
                     : 'سورة ${QuranMetadata.getSurahName(surahNumber)}',
                 style: TextStyle(
-                  fontSize: 10.0,
+                  fontSize: 13.0.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.accentGold,
                 ),
@@ -184,7 +185,7 @@ class VideoRangePickerTablet extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 4.0),
+        SizedBox(height: 8.0.h),
         Row(
           children: [
             Expanded(
@@ -200,18 +201,18 @@ class VideoRangePickerTablet extends StatelessWidget {
                     },
                   );
                 },
-                borderRadius: BorderRadius.circular(10.0),
+                borderRadius: BorderRadius.circular(12.0.r),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8.0,
-                    vertical: 5.0,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.0.w,
+                    vertical: 10.0.h,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.accentGold.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(10.0),
+                    borderRadius: BorderRadius.circular(12.0.r),
                     border: Border.all(
                       color: AppColors.accentGold.withValues(alpha: 0.2),
-                      width: 1,
+                      width: 1.w,
                     ),
                   ),
                   child: Row(
@@ -225,7 +226,7 @@ class VideoRangePickerTablet extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 10.5,
+                            fontSize: 14.5.sp,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
                           ),
@@ -233,7 +234,7 @@ class VideoRangePickerTablet extends StatelessWidget {
                       ),
                       Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        size: 16.0,
+                        size: 20.0.sp,
                         color: AppColors.accentGold,
                       ),
                     ],
@@ -241,7 +242,7 @@ class VideoRangePickerTablet extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 6.0),
+            SizedBox(width: 8.0.w),
             Expanded(
               child: InkWell(
                 onTap: () {
@@ -255,18 +256,18 @@ class VideoRangePickerTablet extends StatelessWidget {
                     },
                   );
                 },
-                borderRadius: BorderRadius.circular(10.0),
+                borderRadius: BorderRadius.circular(12.0.r),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8.0,
-                    vertical: 5.0,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.0.w,
+                    vertical: 10.0.h,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.accentGold.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(10.0),
+                    borderRadius: BorderRadius.circular(12.0.r),
                     border: Border.all(
                       color: AppColors.accentGold.withValues(alpha: 0.2),
-                      width: 1,
+                      width: 1.w,
                     ),
                   ),
                   child: Row(
@@ -280,7 +281,7 @@ class VideoRangePickerTablet extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 10.5,
+                            fontSize: 14.5.sp,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
                           ),
@@ -288,7 +289,7 @@ class VideoRangePickerTablet extends StatelessWidget {
                       ),
                       Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        size: 16.0,
+                        size: 20.0.sp,
                         color: AppColors.accentGold,
                       ),
                     ],

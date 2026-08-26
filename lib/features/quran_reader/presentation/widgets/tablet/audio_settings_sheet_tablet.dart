@@ -29,12 +29,12 @@ void showAudioSettingsSheetTablet(BuildContext context, {int? verseId}) {
       context: context,
       builder: (_) => Dialog(
         backgroundColor: AppColors.cardCream,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        insetPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440, maxHeight: 520),
+          constraints: BoxConstraints(maxWidth: 440.w, maxHeight: 520.h),
           child: Directionality(
             textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
             child: MultiBlocProvider(
@@ -52,7 +52,7 @@ void showAudioSettingsSheetTablet(BuildContext context, {int? verseId}) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.cardCream,
-      constraints: const BoxConstraints(maxWidth: 480),
+      constraints: BoxConstraints(maxWidth: 480.w),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
@@ -181,16 +181,19 @@ class _AudioSettingsSheetContentState
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: isLandscape ? 420 : MediaQuery.sizeOf(context).height * 0.88,
+          maxHeight: isLandscape ? 420.h : MediaQuery.sizeOf(context).height * 0.88,
         ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Container(
             padding: EdgeInsets.fromLTRB(
-              isLandscape ? 16.0 : 20.w,
-              isLandscape ? 12.0 : 8.h,
-              isLandscape ? 16.0 : 20.w,
-              isLandscape ? 14.0 : 16.h,
+              (isLandscape ? 16.0 : 20.0).w,
+              (isLandscape ? 12.0 : 8.0).h,
+              (isLandscape ? 16.0 : 20.0).w,
+              math.max(
+                (isLandscape ? 14.0 : 16.0).h,
+                MediaQuery.paddingOf(context).bottom,
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -213,13 +216,13 @@ class _AudioSettingsSheetContentState
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    if (isLandscape) const SizedBox(width: 24),
+                    if (isLandscape) SizedBox(width: 24.w),
                     Expanded(
                       child: Text(
                         AppLocalizations.of(context)!.audioSettingsTitle,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: isLandscape ? 17.0 : 24.sp,
+                          fontSize: (isLandscape ? 17.0 : 24.0).sp,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
                         ),
@@ -229,7 +232,7 @@ class _AudioSettingsSheetContentState
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
                         child: Container(
-                          padding: const EdgeInsets.all(4),
+                          padding: EdgeInsets.all(4.r),
                           decoration: BoxDecoration(
                             color: AppColors.textPrimary.withValues(alpha: 0.06),
                             shape: BoxShape.circle,
@@ -237,13 +240,13 @@ class _AudioSettingsSheetContentState
                           child: Icon(
                             Icons.close,
                             color: AppColors.inkBrown,
-                            size: 16,
+                            size: 16.sp,
                           ),
                         ),
                       ),
                   ],
                 ),
-                SizedBox(height: isLandscape ? 10.0 : 16.h),
+                SizedBox(height: (isLandscape ? 10.0 : 16.0).h),
 
                 // ── Category Selector
                 AudioSelectorButton<String>(
@@ -251,18 +254,18 @@ class _AudioSettingsSheetContentState
                   label: AppLocalizations.of(context)!.audioTypeLabel,
                   value: _selectedCategory,
                   items: categories,
-                  height: isLandscape ? 44.0 : 56.h,
-                  itemHeight: isLandscape ? 36.0 : 44.h,
-                  maxHeight: 176.h,
-                  labelFontSize: isLandscape ? 11.5 : 14.sp,
-                  valueFontSize: isLandscape ? 14.0 : 18.5.sp,
-                  itemFontSize: isLandscape ? 14.0 : 18.sp,
-                  iconSize: isLandscape ? 18.0 : 24.sp,
+                  height: (isLandscape ? 48.0 : 58.0).h,
+                  itemHeight: (isLandscape ? 38.0 : 46.0).h,
+                  maxHeight: 180.h,
+                  labelFontSize: (isLandscape ? 13.0 : 15.5).sp,
+                  valueFontSize: (isLandscape ? 15.5 : 19.0).sp,
+                  itemFontSize: (isLandscape ? 15.0 : 18.5).sp,
+                  iconSize: (isLandscape ? 20.0 : 26.0).sp,
                   onChanged: (val) => _onCategoryChanged(val),
                   labelBuilder: (item) =>
                       ReciterLocalization.localizeByLang(isEn, item),
                 ),
-                SizedBox(height: isLandscape ? 8.0 : 12.h),
+                SizedBox(height: (isLandscape ? 10.0 : 14.0).h),
 
                 // ── Reciter Selector
                 AudioSelectorButton<String>(
@@ -270,18 +273,18 @@ class _AudioSettingsSheetContentState
                   label: AppLocalizations.of(context)!.audioReciterLabel,
                   value: _selectedReciter,
                   items: reciters,
-                  height: isLandscape ? 44.0 : 56.h,
-                  itemHeight: isLandscape ? 36.0 : 44.h,
-                  maxHeight: 176.h,
-                  labelFontSize: isLandscape ? 11.5 : 14.sp,
-                  valueFontSize: isLandscape ? 14.0 : 18.5.sp,
-                  itemFontSize: isLandscape ? 14.0 : 18.sp,
-                  iconSize: isLandscape ? 18.0 : 24.sp,
+                  height: (isLandscape ? 48.0 : 58.0).h,
+                  itemHeight: (isLandscape ? 38.0 : 46.0).h,
+                  maxHeight: 180.h,
+                  labelFontSize: (isLandscape ? 13.0 : 15.5).sp,
+                  valueFontSize: (isLandscape ? 15.5 : 19.0).sp,
+                  itemFontSize: (isLandscape ? 15.0 : 18.5).sp,
+                  iconSize: (isLandscape ? 20.0 : 26.0).sp,
                   onChanged: (val) => _onReciterChanged(val),
                   labelBuilder: (item) =>
                       ReciterLocalization.localizeByLang(isEn, item),
                 ),
-                SizedBox(height: isLandscape ? 8.0 : 12.h),
+                SizedBox(height: (isLandscape ? 10.0 : 14.0).h),
 
                 // ── Repeat Selector
                 AudioSelectorButton<int>(
@@ -289,25 +292,25 @@ class _AudioSettingsSheetContentState
                   label: AppLocalizations.of(context)!.audioRepeatLabel,
                   value: _selectedRepeatCount,
                   items: _repeatOptions,
-                  height: isLandscape ? 44.0 : 56.h,
-                  itemHeight: isLandscape ? 28.0 : 30.h,
-                  maxHeight: 110.h,
-                  labelFontSize: isLandscape ? 11.5 : 14.sp,
-                  valueFontSize: isLandscape ? 14.0 : 18.5.sp,
-                  itemFontSize: isLandscape ? 13.0 : 15.sp,
-                  iconSize: isLandscape ? 18.0 : 24.sp,
+                  height: (isLandscape ? 48.0 : 58.0).h,
+                  itemHeight: (isLandscape ? 32.0 : 38.0).h,
+                  maxHeight: 140.h,
+                  labelFontSize: (isLandscape ? 13.0 : 15.5).sp,
+                  valueFontSize: (isLandscape ? 15.5 : 19.0).sp,
+                  itemFontSize: (isLandscape ? 14.5 : 17.0).sp,
+                  iconSize: (isLandscape ? 20.0 : 26.0).sp,
                   onChanged: _onRepeatChanged,
                   labelBuilder: (item) => _getRepeatLabel(context, item),
                 ),
-                SizedBox(height: isLandscape ? 8.0 : 14.h),
+                SizedBox(height: (isLandscape ? 10.0 : 16.0).h),
                 Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: isLandscape ? 12.0 : 16.w,
-                    vertical: isLandscape ? 3.0 : 6.h,
+                    horizontal: (isLandscape ? 14.0 : 18.0).w,
+                    vertical: (isLandscape ? 6.0 : 10.0).h,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceCream,
-                    borderRadius: BorderRadius.circular(12.r),
+                    borderRadius: BorderRadius.circular(14.r),
                     border: Border.all(
                       color: AppColors.accentGold.withValues(alpha: 0.4),
                     ),
@@ -321,13 +324,13 @@ class _AudioSettingsSheetContentState
                           Icon(
                             Icons.play_circle_outline_rounded,
                             color: AppColors.accentGold,
-                            size: isLandscape ? 20.0 : 26.sp,
+                            size: (isLandscape ? 22.0 : 28.0).sp,
                           ),
-                          SizedBox(width: isLandscape ? 8.0 : 10.w),
+                          SizedBox(width: (isLandscape ? 10.0 : 12.0).w),
                           Text(
                             AppLocalizations.of(context)!.menuListenOnce,
                             style: TextStyle(
-                              fontSize: isLandscape ? 13.5 : 18.5.sp,
+                              fontSize: (isLandscape ? 15.0 : 19.0).sp,
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.bold,
                             ),
@@ -344,7 +347,7 @@ class _AudioSettingsSheetContentState
                     ],
                   ),
                 ),
-                SizedBox(height: isLandscape ? 12.0 : 20.h),
+                SizedBox(height: (isLandscape ? 14.0 : 22.0).h),
 
                 // ── Play / Apply button
                 ElevatedButton.icon(
@@ -352,10 +355,10 @@ class _AudioSettingsSheetContentState
                     backgroundColor: AppColors.accentGold,
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(
-                      vertical: isLandscape ? 10.0 : 14.h,
+                      vertical: (isLandscape ? 12.0 : 16.0).h,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
+                      borderRadius: BorderRadius.circular(14.r),
                     ),
                     elevation: 0,
                   ),
@@ -363,14 +366,14 @@ class _AudioSettingsSheetContentState
                     widget.verseId != null
                         ? Icons.play_arrow_rounded
                         : Icons.check_rounded,
-                    size: isLandscape ? 20.0 : 26.sp,
+                    size: (isLandscape ? 22.0 : 28.0).sp,
                   ),
                   label: Text(
                     widget.verseId != null
                         ? AppLocalizations.of(context)!.audioStartListening
                         : AppLocalizations.of(context)!.audioSaveSettings,
                     style: TextStyle(
-                      fontSize: isLandscape ? 14.5 : 19.5.sp,
+                      fontSize: (isLandscape ? 16.0 : 20.0).sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

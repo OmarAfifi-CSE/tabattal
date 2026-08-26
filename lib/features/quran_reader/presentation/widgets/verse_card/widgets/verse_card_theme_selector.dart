@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../core/theme/app_colors.dart';
@@ -19,7 +18,6 @@ class VerseCardThemeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    const isWeb = kIsWeb;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,12 +25,12 @@ class VerseCardThemeSelector extends StatelessWidget {
         Text(
           l10n.videoStudioThemeAndBg,
           style: TextStyle(
-            fontSize: isWeb ? 14 : 13.sp,
+            fontSize: 13.sp,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: isWeb ? 8 : 6.h),
+        SizedBox(height: 6.h),
         SizedBox(
           height: 42.h,
           child: ListView.separated(
@@ -82,7 +80,7 @@ class VerseCardThemeSelector extends StatelessWidget {
                       Text(
                         t.getLocalizedName(context),
                         style: TextStyle(
-                          fontSize: isWeb ? 13 : 12.sp,
+                          fontSize: 12.sp,
                           fontWeight: isSelected
                               ? FontWeight.bold
                               : FontWeight.normal,
@@ -96,7 +94,7 @@ class VerseCardThemeSelector extends StatelessWidget {
             },
           ),
         ),
-        SizedBox(height: isWeb ? 12 : 10.h),
+        SizedBox(height: 10.h),
       ],
     );
   }

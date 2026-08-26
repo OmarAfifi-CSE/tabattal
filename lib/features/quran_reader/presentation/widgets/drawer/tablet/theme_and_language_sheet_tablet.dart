@@ -1,5 +1,7 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/bloc/locale/locale_cubit.dart';
 import '../../../../../../core/theme/app_colors.dart';
@@ -20,11 +22,11 @@ void showThemeAndLanguageModalTablet(BuildContext context) {
       context: context,
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        insetPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480, maxHeight: 520),
+          constraints: BoxConstraints(maxWidth: 480.w, maxHeight: 520.h),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             child: MultiBlocProvider(
               providers: [
                 BlocProvider.value(value: settingsBloc),
@@ -43,7 +45,7 @@ void showThemeAndLanguageModalTablet(BuildContext context) {
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
-    constraints: const BoxConstraints(maxWidth: 620),
+    constraints: BoxConstraints(maxWidth: 620.w),
     elevation: 0,
     builder: (ctx) => MultiBlocProvider(
       providers: [
@@ -96,19 +98,26 @@ class ThemeAndLanguageSheetTablet extends StatelessWidget {
         return Directionality(
           textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
           child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isLandscape ? 16.0 : 24.0,
-              vertical: isLandscape ? 14.0 : 20.0,
+            padding: EdgeInsets.fromLTRB(
+              (isLandscape ? 16.0 : 24.0).w,
+              (isLandscape ? 14.0 : 20.0).h,
+              (isLandscape ? 16.0 : 24.0).w,
+              isDialog
+                  ? (isLandscape ? 14.0 : 20.0).h
+                  : math.max(
+                      (isLandscape ? 14.0 : 20.0).h,
+                      MediaQuery.paddingOf(context).bottom,
+                    ),
             ),
             decoration: BoxDecoration(
               color: AppColors.cardCream,
               borderRadius: isDialog
-                  ? BorderRadius.circular(20)
-                  : const BorderRadius.vertical(top: Radius.circular(24)),
+                  ? BorderRadius.circular(20.r)
+                  : BorderRadius.vertical(top: Radius.circular(24.r)),
               border: isDialog
                   ? Border.all(
                       color: AppColors.accentGold.withValues(alpha: 0.35),
-                      width: 1.5,
+                      width: 1.5.w,
                     )
                   : null,
             ),
@@ -122,12 +131,12 @@ class ThemeAndLanguageSheetTablet extends StatelessWidget {
                   if (!isDialog)
                     Center(
                       child: Container(
-                        width: 44,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: 16),
+                        width: 44.w,
+                        height: 4.h,
+                        margin: EdgeInsets.only(bottom: 16.h),
                         decoration: BoxDecoration(
                           color: AppColors.accentGold.withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: BorderRadius.circular(2.r),
                         ),
                       ),
                     ),
@@ -141,13 +150,13 @@ class ThemeAndLanguageSheetTablet extends StatelessWidget {
                           Icon(
                             Icons.palette_outlined,
                             color: AppColors.accentGold,
-                            size: isLandscape ? 20.0 : 26.0,
+                            size: (isLandscape ? 22.0 : 28.0).sp,
                           ),
-                          const SizedBox(width: 8.0),
+                          SizedBox(width: 10.0.w),
                           Text(
                             l10n.drawerThemeAndLanguage,
                             style: TextStyle(
-                              fontSize: isLandscape ? 16.0 : 20.0,
+                              fontSize: (isLandscape ? 17.0 : 22.0).sp,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textPrimary,
                             ),
@@ -159,71 +168,79 @@ class ThemeAndLanguageSheetTablet extends StatelessWidget {
                           onPressed: () => Navigator.pop(context),
                           icon: const Icon(Icons.close_rounded),
                           color: AppColors.textPrimary,
-                          iconSize: 20,
+                          iconSize: 22.sp,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
                     ],
                   ),
-                  SizedBox(height: isLandscape ? 12.0 : 18.0),
+                  SizedBox(height: (isLandscape ? 14.0 : 20.0).h),
 
                   // 1. Language Toggle Row
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentGold.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: AppColors.accentGold.withValues(alpha: 0.25),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _LanguagePillTablet(
-                            label: 'العربية',
-                            isSelected: isArabic,
-                            activeGold: activeTheme.goldColor,
-                            isLandscape: isLandscape,
-                            onTap: () {
-                              if (!isArabic) {
-                                context.read<LocaleCubit>().setLocale('ar');
-                              }
-                            },
+                  Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: BlocBuilder<LocaleCubit, Locale>(
+                      builder: (context, locale) {
+                        final isCurrentArabic = locale.languageCode == 'ar';
+                        return Container(
+                          padding: EdgeInsets.all(4.r),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentGold.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(14.r),
+                            border: Border.all(
+                              color: AppColors.accentGold.withValues(alpha: 0.25),
+                              width: 1.w,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: _LanguagePillTablet(
-                            label: 'English',
-                            isSelected: !isArabic,
-                            activeGold: activeTheme.goldColor,
-                            isLandscape: isLandscape,
-                            onTap: () {
-                              if (isArabic) {
-                                context.read<LocaleCubit>().setLocale('en');
-                              }
-                            },
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _LanguagePillTablet(
+                                  label: 'العربية',
+                                  isSelected: isCurrentArabic,
+                                  activeGold: activeTheme.goldColor,
+                                  isLandscape: isLandscape,
+                                  onTap: () {
+                                    if (!isCurrentArabic) {
+                                      context.read<LocaleCubit>().setLocale('ar');
+                                    }
+                                  },
+                                ),
+                              ),
+                              SizedBox(width: 6.w),
+                              Expanded(
+                                child: _LanguagePillTablet(
+                                  label: 'English',
+                                  isSelected: !isCurrentArabic,
+                                  activeGold: activeTheme.goldColor,
+                                  isLandscape: isLandscape,
+                                  onTap: () {
+                                    if (isCurrentArabic) {
+                                      context.read<LocaleCubit>().setLocale('en');
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   ),
-                  SizedBox(height: isLandscape ? 12.0 : 18.0),
+                  SizedBox(height: (isLandscape ? 14.0 : 20.0).h),
 
                   // 2. Dark Mode Quick Switch
                   Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: isLandscape ? 12.0 : 16.0,
-                      vertical: isLandscape ? 8.0 : 12.0,
+                      horizontal: (isLandscape ? 14.0 : 18.0).w,
+                      vertical: (isLandscape ? 10.0 : 14.0).h,
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.accentGold.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(14.r),
                       border: Border.all(
                         color: AppColors.accentGold.withValues(alpha: 0.2),
-                        width: 1,
+                        width: 1.w,
                       ),
                     ),
                     child: Row(
@@ -236,48 +253,45 @@ class ThemeAndLanguageSheetTablet extends StatelessWidget {
                                   ? Icons.dark_mode_rounded
                                   : Icons.light_mode_rounded,
                               color: AppColors.accentGold,
-                              size: isLandscape ? 18.0 : 22.0,
+                              size: (isLandscape ? 20.0 : 24.0).sp,
                             ),
-                            const SizedBox(width: 10),
+                            SizedBox(width: 12.w),
                             Text(
                               l10n.themeDarkMode,
                               style: TextStyle(
-                                fontSize: isLandscape ? 13.5 : 16.0,
+                                fontSize: (isLandscape ? 15.0 : 17.5).sp,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
                               ),
                             ),
                           ],
                         ),
-                        Transform.scale(
-                          scale: isLandscape ? 0.8 : 0.9,
-                          child: Switch(
-                            value: isDark,
-                            activeThumbColor: AppColors.accentGold,
-                            onChanged: (val) {
-                              context.read<SettingsBloc>().add(
-                                    ToggleThemeMode(
-                                      val ? ThemeMode.dark : ThemeMode.light,
-                                    ),
-                                  );
-                            },
-                          ),
+                        Switch(
+                          value: isDark,
+                          activeThumbColor: AppColors.accentGold,
+                          onChanged: (val) {
+                            context.read<SettingsBloc>().add(
+                                  ToggleThemeMode(
+                                    val ? ThemeMode.dark : ThemeMode.light,
+                                  ),
+                                );
+                          },
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: isLandscape ? 14.0 : 20.0),
+                  SizedBox(height: (isLandscape ? 16.0 : 22.0).h),
 
                   // 3. Mushaf Colors Palette Title
                   Text(
                     l10n.themeMushafColor,
                     style: TextStyle(
-                      fontSize: isLandscape ? 14.5 : 17.0,
+                      fontSize: (isLandscape ? 16.0 : 18.5).sp,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  SizedBox(height: isLandscape ? 8.0 : 12.0),
+                  SizedBox(height: (isLandscape ? 10.0 : 14.0).h),
 
                   // Mushaf Themes Grid
                   GridView.builder(
@@ -285,15 +299,15 @@ class ThemeAndLanguageSheetTablet extends StatelessWidget {
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: isLandscape ? 6 : 5,
-                      mainAxisSpacing: isLandscape ? 8.0 : 14.0,
-                      crossAxisSpacing: isLandscape ? 6.0 : 8.0,
-                      childAspectRatio: isLandscape ? 0.92 : 0.85,
+                      mainAxisSpacing: (isLandscape ? 8.0 : 12.0).h,
+                      crossAxisSpacing: (isLandscape ? 8.0 : 10.0).w,
+                      childAspectRatio: isLandscape ? 0.82 : 0.78,
                     ),
                     itemCount: MushafTheme.values.length,
                     itemBuilder: (context, index) {
                       final theme = MushafTheme.values[index];
                       final isSelected = state.mushafTheme.id == theme.id;
-                      final double circleSize = isLandscape ? 40.0 : 58.0;
+                      final double circleSize = (isLandscape ? 44.0 : 64.0).r;
 
                       return GestureDetector(
                         onTap: () {
@@ -301,55 +315,64 @@ class ThemeAndLanguageSheetTablet extends StatelessWidget {
                                 ChangeMushafTheme(theme.id),
                               );
                         },
+                        behavior: HitTestBehavior.opaque,
                         child: Column(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              width: circleSize,
-                              height: circleSize,
-                              decoration: BoxDecoration(
-                                color: theme.backgroundColor,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isSelected
-                                      ? theme.goldColor
-                                      : AppColors.accentGold
-                                          .withValues(alpha: 0.25),
-                                  width: isSelected ? 2.5 : 1,
+                            Expanded(
+                              child: Center(
+                                child: Container(
+                                  width: circleSize,
+                                  height: circleSize,
+                                  decoration: BoxDecoration(
+                                    color: theme.backgroundColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? theme.goldColor
+                                          : AppColors.accentGold
+                                              .withValues(alpha: 0.25),
+                                      width: (isSelected ? 2.5 : 1.0).w,
+                                    ),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: theme.goldColor
+                                                  .withValues(alpha: 0.4),
+                                              blurRadius: 8.r,
+                                              spreadRadius: 1.r,
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: isSelected
+                                      ? Icon(
+                                          Icons.check_rounded,
+                                          color: theme.goldColor,
+                                          size: (isLandscape ? 20.0 : 26.0).sp,
+                                        )
+                                      : null,
                                 ),
-                                boxShadow: isSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: theme.goldColor
-                                              .withValues(alpha: 0.4),
-                                          blurRadius: 8,
-                                          spreadRadius: 1,
-                                        ),
-                                      ]
-                                    : null,
                               ),
-                              child: isSelected
-                                  ? Icon(
-                                      Icons.check_rounded,
-                                      color: theme.goldColor,
-                                      size: isLandscape ? 18.0 : 24.0,
-                                    )
-                                  : null,
                             ),
-                            SizedBox(height: isLandscape ? 4.0 : 6.0),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                _getThemeName(context, theme.id),
-                                maxLines: 1,
-                                style: TextStyle(
-                                  fontSize: isLandscape ? 11.5 : 13.5,
-                                  color: isSelected
-                                      ? theme.goldColor
-                                      : AppColors.textPrimary,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.w500,
+                            SizedBox(height: (isLandscape ? 4.0 : 6.0).h),
+                            SizedBox(
+                              height: (isLandscape ? 18.0 : 22.0).h,
+                              child: Center(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    _getThemeName(context, theme.id),
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                      fontSize: (isLandscape ? 12.5 : 15.0).sp,
+                                      color: isSelected
+                                          ? theme.goldColor
+                                          : AppColors.textPrimary,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -390,14 +413,14 @@ class _LanguagePillTablet extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(vertical: isLandscape ? 8.0 : 12.0),
+        padding: EdgeInsets.symmetric(vertical: (isLandscape ? 10.0 : 14.0).h),
         decoration: BoxDecoration(
           color: isSelected
               ? activeGold.withValues(alpha: 0.15)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 12.0),
+          borderRadius: BorderRadius.circular((isLandscape ? 10.0 : 12.0).r),
           border: isSelected
-              ? Border.all(color: activeGold.withValues(alpha: 0.4), width: 1)
+              ? Border.all(color: activeGold.withValues(alpha: 0.4), width: 1.w)
               : null,
         ),
         child: Row(
@@ -406,16 +429,16 @@ class _LanguagePillTablet extends StatelessWidget {
             if (isSelected) ...[
               Icon(
                 Icons.check_circle_rounded,
-                size: isLandscape ? 15.0 : 18.0,
+                size: (isLandscape ? 16.0 : 20.0).sp,
                 color: activeGold,
               ),
-              SizedBox(width: isLandscape ? 4.0 : 6.0),
+              SizedBox(width: (isLandscape ? 6.0 : 8.0).w),
             ],
             Text(
               label,
               style: TextStyle(
-                fontSize: isLandscape ? 14.0 : 16.5,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                fontSize: (isLandscape ? 15.0 : 17.5).sp,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                 color: isSelected
                     ? activeGold
                     : AppColors.textPrimary.withValues(alpha: 0.7),
@@ -427,3 +450,51 @@ class _LanguagePillTablet extends StatelessWidget {
     );
   }
 }
+
+/// Dual icon for Tablet Drawer entry representing both Mushaf Appearance and Language.
+class ThemeAndLanguageDrawerIconTablet extends StatelessWidget {
+  final double? size;
+  const ThemeAndLanguageDrawerIconTablet({super.key, this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+    final s = size ?? (isLandscape ? 46.0 : 50.0).r;
+    return SizedBox(
+      width: s,
+      height: s,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            top: s * 0.16,
+            left: s * 0.16,
+            child: Icon(
+              Icons.palette_rounded,
+              color: AppColors.accentGold,
+              size: s * 0.44,
+            ),
+          ),
+          Positioned(
+            bottom: s * 0.11,
+            right: s * 0.11,
+            child: Container(
+              padding: EdgeInsets.all(1.5.r),
+              decoration: BoxDecoration(
+                color: AppColors.cardCream,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.translate_rounded,
+                color: AppColors.accentGold,
+                size: s * 0.32,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

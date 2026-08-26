@@ -210,7 +210,7 @@ class QuranDrawerWeb extends StatelessWidget {
                     },
                   ),
                   _WebDrawerItem(
-                    iconWidget: const ThemeAndLanguageDrawerIcon(isWeb: true),
+                    iconWidget: const _WebThemeAndLanguageIcon(),
                     title: l10n.drawerThemeAndLanguage,
                     subtitle: l10n.drawerThemeAndLanguageSubtitle,
                     onTap: () {
@@ -517,6 +517,49 @@ class ScrollDirectionToggle extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WebThemeAndLanguageIcon extends StatelessWidget {
+  const _WebThemeAndLanguageIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    const double webS = 44.0;
+    return SizedBox(
+      width: webS,
+      height: webS,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            top: webS * 0.16,
+            left: webS * 0.16,
+            child: Icon(
+              Icons.palette_rounded,
+              color: AppColors.accentGold,
+              size: webS * 0.44,
+            ),
+          ),
+          Positioned(
+            bottom: webS * 0.11,
+            right: webS * 0.11,
+            child: Container(
+              padding: const EdgeInsets.all(1.5),
+              decoration: BoxDecoration(
+                color: AppColors.cardCream,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.translate_rounded,
+                color: AppColors.accentGold,
+                size: webS * 0.32,
+              ),
             ),
           ),
         ],

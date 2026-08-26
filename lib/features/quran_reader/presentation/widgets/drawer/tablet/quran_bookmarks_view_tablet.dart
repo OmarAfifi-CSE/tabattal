@@ -53,11 +53,11 @@ class QuranBookmarksViewTablet extends StatelessWidget {
           if (isLandscape) {
             return GridView.builder(
               padding: EdgeInsets.all(16.r),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 childAspectRatio: 2.2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 16,
+                mainAxisSpacing: 12.h,
+                crossAxisSpacing: 16.w,
               ),
               itemCount: state.bookmarkedVerseKeys.length,
               itemBuilder: (context, index) {
@@ -79,7 +79,12 @@ class QuranBookmarksViewTablet extends StatelessWidget {
           }
 
           return ListView.separated(
-            padding: EdgeInsets.all(16.r),
+            padding: EdgeInsets.fromLTRB(
+              16.w,
+              16.h,
+              16.w,
+              16.h + MediaQuery.paddingOf(context).bottom,
+            ),
             itemCount: state.bookmarkedVerseKeys.length,
             separatorBuilder: (context, index) => SizedBox(height: 12.h),
             itemBuilder: (context, index) {
@@ -227,8 +232,8 @@ class _BookmarkCardState extends State<_BookmarkCard>
         boxShadow: [
           BoxShadow(
             color: AppColors.textPrimary.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            blurRadius: 8.r,
+            offset: Offset(0, 2.h),
           ),
         ],
       ),

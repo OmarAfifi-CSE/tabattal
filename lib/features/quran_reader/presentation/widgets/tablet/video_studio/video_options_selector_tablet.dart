@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../quran_video_studio/domain/entities/video_enums.dart';
@@ -36,12 +37,12 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
         Text(
           l10n.videoStudioDisplayMode,
           style: TextStyle(
-            fontSize: 11.5,
+            fontSize: 16.0.sp,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 4.0),
+        SizedBox(height: 8.0.h),
         Row(
           children: VideoTextDisplayMode.values.map((mode) {
             final isSelected = config.textDisplayMode == mode;
@@ -60,26 +61,26 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
 
             return Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                padding: EdgeInsets.symmetric(horizontal: 4.0.w),
                 child: InkWell(
                   onTap: () => onDisplayModeChanged?.call(mode),
-                  borderRadius: BorderRadius.circular(10.0),
+                  borderRadius: BorderRadius.circular(12.0.r),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 6.0,
-                      horizontal: 2.0,
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0.h,
+                      horizontal: 8.0.w,
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.accentGold.withValues(alpha: 0.15)
                           : AppColors.accentGold.withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(10.0),
+                      borderRadius: BorderRadius.circular(12.0.r),
                       border: Border.all(
                         color: isSelected
                             ? AppColors.accentGold
                             : AppColors.accentGold.withValues(alpha: 0.2),
-                        width: isSelected ? 1.5 : 1,
+                        width: isSelected ? 1.5.w : 1.w,
                       ),
                     ),
                     child: Column(
@@ -87,18 +88,18 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
                       children: [
                         Icon(
                           icon,
-                          size: 14.0,
+                          size: 22.0.sp,
                           color: isSelected
                               ? AppColors.accentGold
                               : AppColors.textSecondary,
                         ),
-                        const SizedBox(height: 3.0),
+                        SizedBox(height: 6.0.h),
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
                             label,
                             style: TextStyle(
-                              fontSize: 10.0,
+                              fontSize: 14.5.sp,
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.w500,
@@ -118,40 +119,40 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
           }).toList(),
         ),
 
-        const SizedBox(height: 8.0),
+        SizedBox(height: 12.0.h),
 
         // 2. Video Quality Selection
         Text(
           l10n.videoStudioQuality,
           style: TextStyle(
-            fontSize: 11.5,
+            fontSize: 16.0.sp,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 4.0),
+        SizedBox(height: 8.0.h),
         Row(
           children: VideoQuality.values.map((quality) {
             final isSelected = config.videoQuality == quality;
             return Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                padding: EdgeInsets.symmetric(horizontal: 4.0.w),
                 child: InkWell(
                   onTap: () => onQualityChanged?.call(quality),
-                  borderRadius: BorderRadius.circular(10.0),
+                  borderRadius: BorderRadius.circular(12.0.r),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(vertical: 5.0),
+                    padding: EdgeInsets.symmetric(vertical: 8.0.h),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.accentGold.withValues(alpha: 0.15)
                           : AppColors.accentGold.withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(10.0),
+                      borderRadius: BorderRadius.circular(12.0.r),
                       border: Border.all(
                         color: isSelected
                             ? AppColors.accentGold
                             : AppColors.accentGold.withValues(alpha: 0.2),
-                        width: isSelected ? 1.5 : 1,
+                        width: isSelected ? 1.5.w : 1.w,
                       ),
                     ),
                     child: Column(
@@ -159,14 +160,14 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
                         Text(
                           quality.shortLabel,
                           style: TextStyle(
-                            fontSize: 11.0,
+                            fontSize: 15.0.sp,
                             fontWeight: FontWeight.bold,
                             color: isSelected
                                 ? AppColors.accentGold
                                 : AppColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 1.0),
+                        SizedBox(height: 2.0.h),
                         Text(
                           quality == VideoQuality.uhd4k
                               ? l10n.videoQualityUltra
@@ -174,7 +175,7 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
                                   ? l10n.videoQualityHigh
                                   : l10n.videoQualityFast,
                           style: TextStyle(
-                            fontSize: 8.5,
+                            fontSize: 12.0.sp,
                             fontWeight: isSelected
                                 ? FontWeight.w600
                                 : FontWeight.normal,
@@ -192,25 +193,25 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
           }).toList(),
         ),
 
-        const SizedBox(height: 8.0),
+        SizedBox(height: 12.0.h),
 
         // 3. Display Options Toggles
         Text(
           l10n.videoStudioDisplayOptions,
           style: TextStyle(
-            fontSize: 11.5,
+            fontSize: 16.0.sp,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 4.0),
+        SizedBox(height: 8.0.h),
         Container(
           decoration: BoxDecoration(
             color: AppColors.accentGold.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(10.0),
+            borderRadius: BorderRadius.circular(14.0.r),
             border: Border.all(
               color: AppColors.accentGold.withValues(alpha: 0.15),
-              width: 1,
+              width: 1.w,
             ),
           ),
           child: Column(
@@ -222,7 +223,7 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
                 value: config.showCardFrame,
                 onChanged: (val) => onToggleOption(showCardFrame: val),
               ),
-              const Divider(height: 1, indent: 16, endIndent: 16),
+              Divider(height: 1.h, indent: 16.w, endIndent: 16.w),
               _buildSwitchRow(
                 context: context,
                 icon: Icons.bookmark_outline_rounded,
@@ -234,7 +235,7 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
                 value: config.showSurahBadge,
                 onChanged: (val) => onToggleOption(showSurahBadge: val),
               ),
-              const Divider(height: 1, indent: 16, endIndent: 16),
+              Divider(height: 1.h, indent: 16.w, endIndent: 16.w),
               _buildSwitchRow(
                 context: context,
                 icon: Icons.record_voice_over_outlined,
@@ -242,7 +243,7 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
                 value: config.showReciterName,
                 onChanged: (val) => onToggleOption(showReciterName: val),
               ),
-              const Divider(height: 1, indent: 16, endIndent: 16),
+              Divider(height: 1.h, indent: 16.w, endIndent: 16.w),
               _buildSwitchRow(
                 context: context,
                 icon: Icons.menu_book_outlined,
@@ -250,7 +251,7 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
                 value: config.showTafsir,
                 onChanged: (val) => onToggleOption(showTafsir: val),
               ),
-              const Divider(height: 1, indent: 16, endIndent: 16),
+              Divider(height: 1.h, indent: 16.w, endIndent: 16.w),
               _buildSwitchRow(
                 context: context,
                 icon: Icons.g_translate_outlined,
@@ -273,7 +274,7 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
     required ValueChanged<bool> onChanged,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 2.0),
+      padding: EdgeInsets.symmetric(horizontal: 14.0.w, vertical: 6.0.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -281,28 +282,25 @@ class VideoOptionsSelectorTablet extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                size: 14.0,
+                size: 20.0.sp,
                 color: AppColors.accentGold,
               ),
-              const SizedBox(width: 6.0),
+              SizedBox(width: 10.0.w),
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 10.5,
+                  fontSize: 15.0.sp,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textPrimary,
                 ),
               ),
             ],
           ),
-          Transform.scale(
-            scale: 0.8,
-            child: Switch(
-              value: value,
-              onChanged: onChanged,
-              activeThumbColor: AppColors.accentGold,
-              activeTrackColor: AppColors.accentGold.withValues(alpha: 0.4),
-            ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: AppColors.accentGold,
+            activeTrackColor: AppColors.accentGold.withValues(alpha: 0.4),
           ),
         ],
       ),

@@ -153,14 +153,14 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
     final isEn = Localizations.localeOf(context).languageCode == 'en';
 
     return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      height: 44.h,
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: AppColors.cardCream.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(22.r),
         border: Border.all(
           color: AppColors.accentGold.withValues(alpha: 0.45),
-          width: 1.0,
+          width: 1.0.r,
         ),
         boxShadow: [
           BoxShadow(
@@ -178,13 +178,13 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
           GestureDetector(
             onTap: () => showAudioSettingsSheetTablet(context),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
                 color: AppColors.surfaceCream.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14.r),
                 border: Border.all(
                   color: AppColors.bronzeIcon.withValues(alpha: 0.3),
-                  width: 0.8,
+                  width: 0.8.r,
                 ),
               ),
               child: Row(
@@ -193,11 +193,11 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
                   Icon(
                     Icons.multitrack_audio_rounded,
                     color: AppColors.bronzeDark,
-                    size: 15,
+                    size: 15.sp,
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4.w),
                   ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 120),
+                    constraints: BoxConstraints(maxWidth: 120.w),
                     child: BlocBuilder<AudioBloc, AudioState>(
                       builder: (context, state) {
                         final audioBloc = context.read<AudioBloc>();
@@ -209,7 +209,7 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
                           reciterName,
                           style: AppTextStyles.menuItemText.copyWith(
                             color: AppColors.inkBrown,
-                            fontSize: 12.0,
+                            fontSize: 12.0.sp,
                             fontWeight: FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -219,24 +219,24 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
                       },
                     ),
                   ),
-                  const SizedBox(width: 2),
+                  SizedBox(width: 2.w),
                   Icon(
                     Icons.keyboard_arrow_down_rounded,
                     color: AppColors.bronzeIcon,
-                    size: 16,
+                    size: 16.sp,
                   ),
                 ],
               ),
             ),
           ),
 
-          const SizedBox(width: 6),
+          SizedBox(width: 6.w),
           Container(
-            width: 1,
-            height: 16,
+            width: 1.w,
+            height: 16.h,
             color: AppColors.bronzeIcon.withValues(alpha: 0.25),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6.w),
 
           // ── Center: Playback Engine (LTR) ──
           Directionality(
@@ -246,27 +246,27 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
               children: [
                 IconButton(
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                  constraints: BoxConstraints(minWidth: 26.w, minHeight: 26.h),
                   icon: Icon(
                     Icons.fast_rewind_rounded,
                     color: AppColors.inkBrown,
-                    size: 17,
+                    size: 17.sp,
                   ),
                   onPressed: () =>
                       context.read<AudioBloc>().add(const PreviousSurah()),
                 ),
                 IconButton(
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                  constraints: BoxConstraints(minWidth: 26.w, minHeight: 26.h),
                   icon: Icon(
                     Icons.skip_previous_rounded,
                     color: AppColors.inkBrown,
-                    size: 19,
+                    size: 19.sp,
                   ),
                   onPressed: () =>
                       context.read<AudioBloc>().add(const PreviousAyah()),
                 ),
-                const SizedBox(width: 2),
+                SizedBox(width: 2.w),
                 BlocBuilder<AudioBloc, AudioState>(
                   builder: (context, state) {
                     final isPlaying = state is AudioPlaying;
@@ -274,30 +274,30 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
                     return _TabletPlayPauseButton(
                       isPlaying: isPlaying,
                       isLoading: isLoading,
-                      size: 32,
-                      iconSize: 18,
+                      size: 32.r,
+                      iconSize: 18.sp,
                     );
                   },
                 ),
-                const SizedBox(width: 2),
+                SizedBox(width: 2.w),
                 IconButton(
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                  constraints: BoxConstraints(minWidth: 26.w, minHeight: 26.h),
                   icon: Icon(
                     Icons.skip_next_rounded,
                     color: AppColors.inkBrown,
-                    size: 19,
+                    size: 19.sp,
                   ),
                   onPressed: () =>
                       context.read<AudioBloc>().add(const NextAyah()),
                 ),
                 IconButton(
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                  constraints: BoxConstraints(minWidth: 26.w, minHeight: 26.h),
                   icon: Icon(
                     Icons.fast_forward_rounded,
                     color: AppColors.inkBrown,
-                    size: 17,
+                    size: 17.sp,
                   ),
                   onPressed: () =>
                       context.read<AudioBloc>().add(const NextSurah()),
@@ -306,13 +306,13 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(width: 6),
+          SizedBox(width: 6.w),
           Container(
-            width: 1,
-            height: 16,
+            width: 1.w,
+            height: 16.h,
             color: AppColors.bronzeIcon.withValues(alpha: 0.25),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6.w),
 
           // ── Left/End: Timer, Minimize, Close ──
           Row(
@@ -321,12 +321,12 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
               SleepTimerSelectorMenu(
                 selectedMinutes: sleepTimerMinutes,
                 onSelected: onSleepTimerSelected,
-                itemHeight: 32,
-                maxHeight: 160,
-                itemFontSize: 11.5,
-                menuWidth: 120,
+                itemHeight: 32.h,
+                maxHeight: 160.h,
+                itemFontSize: 11.5.sp,
+                menuWidth: 120.w,
                 trigger: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  padding: EdgeInsets.symmetric(horizontal: 2.w),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -335,16 +335,16 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
                         color: sleepTimerMinutes != null
                             ? AppColors.bronzeDark
                             : AppColors.inkBrown,
-                        size: 15,
+                        size: 15.sp,
                       ),
                       if (timerEndTime != null) ...[
-                        const SizedBox(width: 2),
+                        SizedBox(width: 2.w),
                         Text(
                           _formatRemainingTime(
                             timerEndTime!.difference(DateTime.now()),
                           ),
                           style: TextStyle(
-                            fontSize: 8.5,
+                            fontSize: 8.5.sp,
                             color: AppColors.bronzeDark,
                             fontWeight: FontWeight.bold,
                           ),
@@ -356,19 +356,19 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
               ),
               IconButton(
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                constraints: BoxConstraints(minWidth: 24.w, minHeight: 24.h),
                 icon: Icon(
                   Icons.keyboard_arrow_down_rounded,
                   color: AppColors.inkBrown,
-                  size: 18,
+                  size: 18.sp,
                 ),
                 onPressed: onToggleExpanded,
               ),
-              const SizedBox(width: 2),
+              SizedBox(width: 2.w),
               GestureDetector(
                 onTap: () => context.read<AudioBloc>().add(const StopAudio()),
                 child: Container(
-                  padding: const EdgeInsets.all(3),
+                  padding: EdgeInsets.all(3.r),
                   decoration: BoxDecoration(
                     color: AppColors.textPrimary.withValues(alpha: 0.06),
                     shape: BoxShape.circle,
@@ -376,7 +376,7 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
                   child: Icon(
                     Icons.close,
                     color: AppColors.inkBrown,
-                    size: 13,
+                    size: 13.sp,
                   ),
                 ),
               ),
@@ -404,14 +404,14 @@ class _TabletLandscapeWhisperingPill extends StatelessWidget {
     return GestureDetector(
       onTap: onToggleExpanded,
       child: Container(
-        height: 32,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+        height: 32.h,
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
         decoration: BoxDecoration(
           color: AppColors.cardCream.withValues(alpha: 0.96),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
             color: AppColors.accentGold.withValues(alpha: 0.45),
-            width: 1.0,
+            width: 1.0.r,
           ),
           boxShadow: [
             BoxShadow(
@@ -431,14 +431,14 @@ class _TabletLandscapeWhisperingPill extends StatelessWidget {
                 return _TabletPlayPauseButton(
                   isPlaying: isPlaying,
                   isLoading: isLoading,
-                  size: 22,
-                  iconSize: 13,
+                  size: 22.r,
+                  iconSize: 13.sp,
                 );
               },
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6.w),
             ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 110),
+              constraints: BoxConstraints(maxWidth: 110.w),
               child: BlocBuilder<AudioBloc, AudioState>(
                 builder: (context, state) {
                   final audioBloc = context.read<AudioBloc>();
@@ -450,7 +450,7 @@ class _TabletLandscapeWhisperingPill extends StatelessWidget {
                     reciterName,
                     style: AppTextStyles.menuItemText.copyWith(
                       color: AppColors.inkBrown,
-                      fontSize: 11.5,
+                      fontSize: 11.5.sp,
                       fontWeight: FontWeight.w600,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -460,17 +460,17 @@ class _TabletLandscapeWhisperingPill extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: 4.w),
             Icon(
               Icons.keyboard_arrow_up_rounded,
               color: AppColors.inkBrown,
-              size: 16,
+              size: 16.sp,
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: 4.w),
             GestureDetector(
               onTap: () => context.read<AudioBloc>().add(const StopAudio()),
               child: Container(
-                padding: const EdgeInsets.all(2),
+                padding: EdgeInsets.all(2.r),
                 decoration: BoxDecoration(
                   color: AppColors.textPrimary.withValues(alpha: 0.06),
                   shape: BoxShape.circle,
@@ -478,7 +478,7 @@ class _TabletLandscapeWhisperingPill extends StatelessWidget {
                 child: Icon(
                   Icons.close,
                   color: AppColors.inkBrown,
-                  size: 12,
+                  size: 12.sp,
                 ),
               ),
             ),

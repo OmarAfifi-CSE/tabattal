@@ -7,14 +7,14 @@ import '../../../bloc/hifz/hifz_bloc.dart';
 import '../../../bloc/hifz/hifz_event.dart';
 import '../../../bloc/hifz/hifz_state.dart';
 
-class HifzToolbarWidget extends StatefulWidget {
-  const HifzToolbarWidget({super.key});
+class HifzToolbarWidgetTablet extends StatefulWidget {
+  const HifzToolbarWidgetTablet({super.key});
 
   @override
-  State<HifzToolbarWidget> createState() => _HifzToolbarWidgetState();
+  State<HifzToolbarWidgetTablet> createState() => _HifzToolbarWidgetTabletState();
 }
 
-class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
+class _HifzToolbarWidgetTabletState extends State<HifzToolbarWidgetTablet> {
   double? _top;
   double? _left;
   bool _isMinimized = false;
@@ -22,6 +22,8 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isLandscape =
+        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     return BlocBuilder<HifzBloc, HifzState>(
       buildWhen: (prev, curr) =>
@@ -31,18 +33,19 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
         if (!state.isHifzModeActive) return const SizedBox.shrink();
 
         final screenSize = MediaQuery.sizeOf(context);
-        final double bubbleSize = 42.r;
-        final double toolbarHeight = 42.r;
-        final double minMargin = 8.w;
-        final double maxTop = (screenSize.height - toolbarHeight - 110.h).clamp(4.0, screenSize.height);
+        final double bubbleSize = (isLandscape ? 52.0 : 56.0).r;
+        final double toolbarHeight = (isLandscape ? 52.0 : 54.0).r;
+        final double minMargin = (isLandscape ? 12.0 : 10.0).w;
+        final double maxTop = (screenSize.height - toolbarHeight - (isLandscape ? 70.0.h : 90.0.h)).clamp(4.0, screenSize.height);
 
-        // Default position at VERY TOP LEFT
-        _top ??= 4.h.clamp(4.0, maxTop);
+        // Default position at TOP LEFT
+        _top ??= (isLandscape ? 12.0.h : 10.0.h).clamp(4.0, maxTop);
         _left ??= minMargin;
 
         return Builder(
           builder: (builderContext) {
-            final double maxLeft = (screenSize.width - (_isMinimized ? bubbleSize : 340.w) - minMargin).clamp(minMargin, screenSize.width);
+            final double expandedWidth = (isLandscape ? 440.0 : 420.0).w;
+            final double maxLeft = (screenSize.width - (_isMinimized ? bubbleSize : expandedWidth) - minMargin).clamp(minMargin, screenSize.width);
             final bool isOnRightHalf = (_left! + bubbleSize / 2) > (screenSize.width / 2);
             final Alignment transitionAlignment = isOnRightHalf ? Alignment.centerRight : Alignment.centerLeft;
 
@@ -80,7 +83,7 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
                   ),
                   child: _isMinimized
                       ? InkWell(
-                          key: const ValueKey('minimized_bubble'),
+                          key: const ValueKey('tablet_minimized_bubble'),
                           onTap: () => setState(() => _isMinimized = false),
                           borderRadius: BorderRadius.circular(bubbleSize / 2),
                           child: Material(
@@ -95,14 +98,14 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: AppColors.accentGold,
-                                  width: 1.8,
+                                  width: 2.0.r,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: AppColors.accentGold.withValues(alpha: 0.3),
-                                    blurRadius: 9,
-                                    spreadRadius: 1,
-                                    offset: const Offset(0, 2),
+                                    blurRadius: 9.r,
+                                    spreadRadius: 1.r,
+                                    offset: Offset(0, 2.h),
                                   ),
                                 ],
                               ),
@@ -110,35 +113,35 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
                                 child: Icon(
                                   Icons.auto_stories_rounded,
                                   color: AppColors.accentGold,
-                                  size: 20.sp,
+                                  size: (isLandscape ? 26.0 : 28.0).sp,
                                 ),
                               ),
                             ),
                           ),
                         )
                       : Material(
-                          key: const ValueKey('expanded_toolbar'),
+                          key: const ValueKey('tablet_expanded_toolbar'),
                           color: Colors.transparent,
                           elevation: 6,
                           borderRadius: BorderRadius.circular(toolbarHeight / 2),
                           child: Container(
                             height: toolbarHeight,
                             padding: EdgeInsets.symmetric(
-                              horizontal: 10.w,
-                              vertical: 3.h,
+                              horizontal: (isLandscape ? 14.0 : 14.0).w,
+                              vertical: (isLandscape ? 4.0 : 4.0).h,
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.background.withValues(alpha: 0.95),
                               borderRadius: BorderRadius.circular(toolbarHeight / 2),
                               border: Border.all(
                                 color: AppColors.accentGold.withValues(alpha: 0.6),
-                                width: 1.5,
+                                width: 1.5.r,
                               ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withValues(alpha: 0.18),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
+                                  blurRadius: 12.r,
+                                  offset: Offset(0, 4.h),
                                 ),
                               ],
                             ),
@@ -149,40 +152,45 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
                                 Icon(
                                   Icons.drag_indicator_rounded,
                                   color: AppColors.textSecondary.withValues(alpha: 0.8),
-                                  size: 20.sp,
+                                  size: (isLandscape ? 22.0 : 24.0).sp,
                                 ),
-                                SizedBox(width: 6.w),
-                                _HifzTypeChip(
+                                SizedBox(width: (isLandscape ? 8.0 : 8.0).w),
+                                _TabletHifzTypeChip(
                                   type: HifzMaskingType.fullVerse,
                                   label: l10n.hifzMaskFull,
                                   isSelected: state.maskingType == HifzMaskingType.fullVerse,
+                                  isLandscape: isLandscape,
                                 ),
-                                SizedBox(width: 5.w),
-                                _HifzTypeChip(
+                                SizedBox(width: (isLandscape ? 8.0 : 8.0).w),
+                                _TabletHifzTypeChip(
                                   type: HifzMaskingType.wordByWord,
                                   label: l10n.hifzMaskWord,
                                   isSelected: state.maskingType == HifzMaskingType.wordByWord,
+                                  isLandscape: isLandscape,
                                 ),
-                                SizedBox(width: 10.w),
-                                _HifzActionIcon(
+                                SizedBox(width: (isLandscape ? 12.0 : 12.0).w),
+                                _TabletHifzActionIcon(
                                   icon: Icons.refresh_rounded,
                                   color: AppColors.accentGold,
+                                  isLandscape: isLandscape,
                                   onTap: () {
                                     context.read<HifzBloc>().add(const ClearRevealedItems());
                                   },
                                 ),
-                                SizedBox(width: 3.w),
-                                _HifzActionIcon(
+                                SizedBox(width: (isLandscape ? 6.0 : 6.0).w),
+                                _TabletHifzActionIcon(
                                   icon: Icons.unfold_less_rounded,
                                   color: AppColors.textSecondary,
+                                  isLandscape: isLandscape,
                                   onTap: () {
                                     setState(() => _isMinimized = true);
                                   },
                                 ),
-                                SizedBox(width: 3.w),
-                                _HifzActionIcon(
+                                SizedBox(width: (isLandscape ? 6.0 : 6.0).w),
+                                _TabletHifzActionIcon(
                                   icon: Icons.close_rounded,
                                   color: Colors.redAccent,
+                                  isLandscape: isLandscape,
                                   onTap: () {
                                     context
                                         .read<HifzBloc>()
@@ -203,15 +211,17 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
   }
 }
 
-class _HifzActionIcon extends StatelessWidget {
+class _TabletHifzActionIcon extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+  final bool isLandscape;
 
-  const _HifzActionIcon({
+  const _TabletHifzActionIcon({
     required this.icon,
     required this.color,
     required this.onTap,
+    required this.isLandscape,
   });
 
   @override
@@ -221,28 +231,30 @@ class _HifzActionIcon extends StatelessWidget {
       borderRadius: BorderRadius.circular(16.r),
       child: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: 5.w,
-          vertical: 4.h,
+          horizontal: (isLandscape ? 6.0 : 6.0).w,
+          vertical: (isLandscape ? 5.0 : 5.0).h,
         ),
         child: Icon(
           icon,
           color: color,
-          size: 18.sp,
+          size: (isLandscape ? 22.0 : 22.0).sp,
         ),
       ),
     );
   }
 }
 
-class _HifzTypeChip extends StatelessWidget {
+class _TabletHifzTypeChip extends StatelessWidget {
   final HifzMaskingType type;
   final String label;
   final bool isSelected;
+  final bool isLandscape;
 
-  const _HifzTypeChip({
+  const _TabletHifzTypeChip({
     required this.type,
     required this.label,
     required this.isSelected,
+    required this.isLandscape,
   });
 
   @override
@@ -254,8 +266,8 @@ class _HifzTypeChip extends StatelessWidget {
       borderRadius: BorderRadius.circular(20.r),
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: 10.w,
-          vertical: 4.h,
+          horizontal: (isLandscape ? 12.0 : 12.0).w,
+          vertical: (isLandscape ? 6.0 : 6.0).h,
         ),
         decoration: BoxDecoration(
           color: isSelected
@@ -266,8 +278,8 @@ class _HifzTypeChip extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 11.5.sp,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: (isLandscape ? 14.0 : 15.0).sp,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             color: isSelected ? Colors.white : AppColors.textSecondary,
           ),
         ),

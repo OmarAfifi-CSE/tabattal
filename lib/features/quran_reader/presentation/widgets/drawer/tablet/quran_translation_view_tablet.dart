@@ -375,7 +375,7 @@ class _QuranTranslationViewTabletState
                                     color: isPlaying
                                         ? AppColors.accentGold
                                         : AppColors.borderLight,
-                                    width: isPlaying ? 2 : 1,
+                                    width: isPlaying ? 2.w : 1.w,
                                   ),
                                 ),
                                 child: Column(

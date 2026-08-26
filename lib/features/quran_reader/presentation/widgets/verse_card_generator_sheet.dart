@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -49,7 +48,7 @@ import 'verse_card/widgets/verse_card_theme_selector.dart';
 // Re-export models for external consumers
 export 'verse_card/models/verse_card_theme.dart';
 
-/// Shows the unified Verse Card & Video Generator modal.
+/// Shows the unified Verse Card & Video Generator modal (Mobile).
 void showVerseCardGeneratorModal(
   BuildContext context, {
   required VerseModel verse,
@@ -64,51 +63,27 @@ void showVerseCardGeneratorModal(
     context.read<AudioBloc>().add(const PauseAudio());
   } catch (_) {}
 
-  const isWeb = kIsWeb;
-  final isWide = MediaQuery.sizeOf(context).width > 600;
-
-  if (isWide || isWeb) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 550, maxHeight: 850),
-          child: VerseCardGeneratorSheet(
-            verse: verse,
-            tafsirText: tafsirText,
-            translationText: translationText,
-            pageRepaintKey: pageRepaintKey,
-            pageNumber: pageNumber,
-            initialFormat: initialFormat,
-            initialVerses: initialVerses,
-          ),
-        ),
+  final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.90;
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: AppColors.cardCream,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+    ),
+    builder: (ctx) => ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxSheetHeight),
+      child: VerseCardGeneratorSheet(
+        verse: verse,
+        tafsirText: tafsirText,
+        translationText: translationText,
+        pageRepaintKey: pageRepaintKey,
+        pageNumber: pageNumber,
+        initialFormat: initialFormat,
+        initialVerses: initialVerses,
       ),
-    );
-  } else {
-    final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.90;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.cardCream,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
-      builder: (ctx) => ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxSheetHeight),
-        child: VerseCardGeneratorSheet(
-          verse: verse,
-          tafsirText: tafsirText,
-          translationText: translationText,
-          pageRepaintKey: pageRepaintKey,
-          pageNumber: pageNumber,
-          initialFormat: initialFormat,
-          initialVerses: initialVerses,
-        ),
-      ),
-    );
-  }
+    ),
+  );
 }
 
 class VerseCardGeneratorSheet extends StatelessWidget {
@@ -837,12 +812,9 @@ class _VerseCardGeneratorSheetContentState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
-    const isWeb = kIsWeb;
     final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
     final viewInsetsBottom = MediaQuery.viewInsetsOf(context).bottom;
-    final maxSheetHeight = isWeb
-        ? MediaQuery.sizeOf(context).height * 0.90
-        : MediaQuery.sizeOf(context).height * 0.88;
+    final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.88;
 
     return BlocConsumer<VideoStudioBloc, VideoStudioState>(
       listener: (context, videoState) async {
@@ -884,14 +856,12 @@ class _VerseCardGeneratorSheetContentState
             child: Container(
               decoration: BoxDecoration(
                 color: AppColors.cardCream,
-                borderRadius: isWeb || MediaQuery.sizeOf(context).width > 600
-                    ? BorderRadius.circular(20)
-                    : BorderRadius.vertical(top: Radius.circular(24.r)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
               ),
               padding: EdgeInsets.only(
-                left: isWeb ? 20 : 16.w,
-                right: isWeb ? 20 : 16.w,
-                top: isWeb ? 20 : 16.h,
+                left: 16.w,
+                right: 16.w,
+                top: 16.h,
                 bottom: bottomSafeArea + viewInsetsBottom,
               ),
               child: Column(
@@ -927,7 +897,7 @@ class _VerseCardGeneratorSheetContentState
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: isWeb ? 18 : 17.sp,
+                                fontSize: 17.sp,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.textPrimary,
                               ),
@@ -943,7 +913,7 @@ class _VerseCardGeneratorSheetContentState
                     ],
                   ),
                   const Divider(height: 1),
-                  SizedBox(height: isWeb ? 12 : 10.h),
+                  SizedBox(height: 10.h),
                   Flexible(
                     child: SingleChildScrollView(
                       controller: _scrollController,
@@ -978,7 +948,7 @@ class _VerseCardGeneratorSheetContentState
                               child: _buildPreviewArea(videoState),
                             ),
                           ),
-                          SizedBox(height: isWeb ? 16 : 14.h),
+                          SizedBox(height: 14.h),
 
                           // ---------------- FORMAT SELECTOR ----------------
                           VerseCardFormatSelector(
@@ -1033,7 +1003,7 @@ class _VerseCardGeneratorSheetContentState
                       ),
                     ),
                   ),
-                  SizedBox(height: isWeb ? 16 : 12.h),
+                  SizedBox(height: 12.h),
 
                   // ---------------- ACTION BUTTONS ----------------
                   VerseCardActionButtons(
@@ -1098,9 +1068,7 @@ class _VerseCardGeneratorSheetContentState
           key: _repaintKey,
           child: Container(
             key: const ValueKey('image_card_preview'),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16.r),
-            ),
+            padding: EdgeInsets.symmetric(vertical: 4.h),
             child: VerseCardContentPreview(
               theme: _activeTheme,
               surahNumber: _surahNumber,
@@ -1120,8 +1088,9 @@ class _VerseCardGeneratorSheetContentState
         );
 
       case ShareFormat.text:
-        return KeyedSubtree(
-          key: const ValueKey('text_preview'),
+        return Container(
+          key: const ValueKey('text_card_preview'),
+          padding: EdgeInsets.symmetric(vertical: 4.h),
           child: VerseCardTextPreview(
             theme: _activeTheme,
             surahNumber: _surahNumber,
@@ -1140,8 +1109,8 @@ class _VerseCardGeneratorSheetContentState
         );
 
       case ShareFormat.fullPage:
-        return KeyedSubtree(
-          key: const ValueKey('full_page_preview'),
+        return RepaintBoundary(
+          key: _repaintKey,
           child: VerseCardFullPagePreview(
             theme: _activeTheme,
             isCapturingSnapshot: _isCapturingSnapshot,
@@ -1153,7 +1122,6 @@ class _VerseCardGeneratorSheetContentState
   }
 
   Widget _buildOptionsArea(VideoStudioState videoState) {
-    const isWeb = kIsWeb;
     final config = videoState.config;
 
     switch (_selectedFormat) {
@@ -1316,7 +1284,7 @@ class _VerseCardGeneratorSheetContentState
               onThemeSelected: (index) =>
                   setState(() => _selectedThemeIndex = index),
             ),
-            SizedBox(height: isWeb ? 10 : 8.h),
+            SizedBox(height: 8.h),
             VerseCardRangePicker(
               surahNumber: _surahNumber,
               startAyah: _startAyah,
@@ -1362,7 +1330,7 @@ class _VerseCardGeneratorSheetContentState
                 _loadAllVerseData();
               },
             ),
-            SizedBox(height: isWeb ? 8 : 6.h),
+            SizedBox(height: 6.h),
             VerseCardOptionsBar(
               includeTafsir: _includeTafsir,
               onToggleTafsir: (val) {
@@ -1437,7 +1405,7 @@ class _VerseCardGeneratorSheetContentState
                 _loadAllVerseData();
               },
             ),
-            SizedBox(height: isWeb ? 8 : 6.h),
+            SizedBox(height: 6.h),
             VerseCardOptionsBar(
               includeTafsir: _includeTafsir,
               onToggleTafsir: (val) {

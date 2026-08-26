@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../quran_video_studio/domain/entities/video_enums.dart';
 
@@ -15,13 +16,13 @@ class VideoAspectRatioBarTablet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 3.0),
+      padding: EdgeInsets.symmetric(horizontal: 6.0.w, vertical: 4.0.h),
       decoration: BoxDecoration(
         color: AppColors.accentGold.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(18.0),
+        borderRadius: BorderRadius.circular(18.0.r),
         border: Border.all(
           color: AppColors.accentGold.withValues(alpha: 0.25),
-          width: 1,
+          width: 1.w,
         ),
       ),
       child: Row(
@@ -30,21 +31,21 @@ class VideoAspectRatioBarTablet extends StatelessWidget {
           final isSelected = ratio == selectedRatio;
           return InkWell(
             onTap: () => onRatioSelected(ratio),
-            borderRadius: BorderRadius.circular(14.0),
+            borderRadius: BorderRadius.circular(14.0.r),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOutCubic,
               padding:
-                  const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.5),
+                  EdgeInsets.symmetric(horizontal: 14.0.w, vertical: 6.0.h),
               decoration: BoxDecoration(
                 color: isSelected ? AppColors.accentGold : Colors.transparent,
-                borderRadius: BorderRadius.circular(14.0),
+                borderRadius: BorderRadius.circular(14.0.r),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
                           color: AppColors.accentGold.withValues(alpha: 0.35),
-                          blurRadius: 5,
-                          offset: const Offset(0, 1.5),
+                          blurRadius: 6.r,
+                          offset: Offset(0, 2.0.h),
                         ),
                       ]
                     : null,
@@ -54,16 +55,16 @@ class VideoAspectRatioBarTablet extends StatelessWidget {
                 children: [
                   Icon(
                     _getIconForRatio(ratio),
-                    size: 12.0,
+                    size: 16.0.sp,
                     color: isSelected ? Colors.white : AppColors.textPrimary,
                   ),
-                  const SizedBox(width: 4.0),
+                  SizedBox(width: 6.0.w),
                   Text(
                     ratio.shortLabel,
                     style: TextStyle(
-                      fontSize: 10.5,
+                      fontSize: 13.5.sp,
                       fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.w500,
+                          isSelected ? FontWeight.bold : FontWeight.w600,
                       color: isSelected ? Colors.white : AppColors.textPrimary,
                     ),
                   ),

@@ -422,6 +422,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
             Expanded(
               child: TextField(
                 controller: _searchController,
+                textAlignVertical: TextAlignVertical.center,
                 style: TextStyle(
                   fontSize: 16.sp,
                   color: AppColors.textPrimary,
@@ -437,7 +438,8 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
                     fontSize: 16.sp,
                   ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.only(bottom: 8.h),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(vertical: 10.h),
                 ),
               ),
             ),

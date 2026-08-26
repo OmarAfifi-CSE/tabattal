@@ -1,5 +1,5 @@
 import '../../widgets/drawer/tablet/quran_drawer_tablet.dart';
-import '../../widgets/hifz/hifz_toolbar_widget.dart';
+import '../../widgets/tablet/hifz_toolbar_widget_tablet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
@@ -305,9 +305,9 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                                       if (leftPage <=
                                           QuranConstants.totalPages)
                                         Container(
-                                          width: 1.5,
-                                          margin: const EdgeInsets.symmetric(
-                                            vertical: 36,
+                                          width: 1.5.w,
+                                          margin: EdgeInsets.symmetric(
+                                            vertical: (isLandscape ? 28.0 : 36.0).h,
                                           ),
                                           decoration: BoxDecoration(
                                             gradient: LinearGradient(
@@ -396,7 +396,7 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                         );
                       },
                     ),
-                    const HifzToolbarWidget(),
+                    const HifzToolbarWidgetTablet(),
                     BlocBuilder<AudioBloc, AudioState>(
                       builder: (context, state) {
                         final isVisible =
@@ -405,19 +405,19 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeOutCubic,
                           bottom: isVisible
-                              ? (isLandscape ? 12.0 : 16.h)
-                              : -150.0,
+                              ? (isLandscape ? 12.0.h : 16.h)
+                              : -150.0.h,
                           left: 0,
                           right: 0,
                           child: Center(
                             child: Padding(
                               padding: EdgeInsets.symmetric(
-                                horizontal: isLandscape ? 16.0 : 16.w,
+                                horizontal: (isLandscape ? 16.0 : 16.0).w,
                               ),
                               child: ConstrainedBox(
                                 constraints: BoxConstraints(
                                   maxWidth: isLandscape
-                                      ? 600.0
+                                      ? 600.0.w
                                       : (constraints.maxWidth - 32.w),
                                 ),
                                 child: MediaControlBarTablet(

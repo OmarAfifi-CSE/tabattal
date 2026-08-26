@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../quran_video_studio/domain/entities/video_enums.dart';
@@ -48,7 +49,7 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
             Text(
               isEn ? 'Video Background' : 'خلفية الفيديو',
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 16.0.sp,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
@@ -57,7 +58,7 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
               Text(
                 l10n.videoBgCustomVideoActive,
                 style: TextStyle(
-                  fontSize: 10.0,
+                  fontSize: 13.5.sp,
                   fontWeight: FontWeight.w600,
                   color: AppColors.accentGold,
                 ),
@@ -66,14 +67,14 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
               Text(
                 isEn ? 'Custom Photo Active' : 'صورة مخصصة نشطة',
                 style: TextStyle(
-                  fontSize: 10.0,
+                  fontSize: 13.5.sp,
                   fontWeight: FontWeight.w600,
                   color: AppColors.accentGold,
                 ),
               ),
           ],
         ),
-        const SizedBox(height: 6.0),
+        SizedBox(height: 8.0.h),
         Row(
           children: [
             // Option 1: Default Theme Gradient Background
@@ -89,20 +90,20 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8.0,
-                    vertical: 8.0,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.0.w,
+                    vertical: 12.0.h,
                   ),
                   decoration: BoxDecoration(
                     color: isDefaultTheme
                         ? AppColors.accentGold.withValues(alpha: 0.12)
                         : AppColors.surfaceCream,
-                    borderRadius: BorderRadius.circular(12.0),
+                    borderRadius: BorderRadius.circular(14.0.r),
                     border: Border.all(
                       color: isDefaultTheme
                           ? AppColors.accentGold
                           : AppColors.divider,
-                      width: isDefaultTheme ? 2.0 : 1.0,
+                      width: isDefaultTheme ? 2.0.w : 1.0.w,
                     ),
                   ),
                   child: Row(
@@ -112,12 +113,12 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                         isDefaultTheme
                             ? Icons.check_circle_rounded
                             : Icons.palette_outlined,
-                        size: 15.0,
+                        size: 20.0.sp,
                         color: isDefaultTheme
                             ? AppColors.accentGold
                             : AppColors.textSecondary,
                       ),
-                      const SizedBox(width: 5.0),
+                      SizedBox(width: 8.0.w),
                       Flexible(
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
@@ -125,7 +126,7 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                             l10n.videoBgCardDesign,
                             maxLines: 1,
                             style: TextStyle(
-                              fontSize: 11.5,
+                              fontSize: 14.5.sp,
                               fontWeight: isDefaultTheme
                                   ? FontWeight.bold
                                   : FontWeight.w500,
@@ -142,7 +143,7 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 6.0),
+            SizedBox(width: 8.0.w),
 
             // Option 2: Custom Photo (Gallery / URL)
             Expanded(
@@ -157,20 +158,20 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8.0,
-                    vertical: 8.0,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.0.w,
+                    vertical: 12.0.h,
                   ),
                   decoration: BoxDecoration(
                     color: hasCustomImage
                         ? AppColors.accentGold.withValues(alpha: 0.15)
                         : AppColors.surfaceCream,
-                    borderRadius: BorderRadius.circular(12.0),
+                    borderRadius: BorderRadius.circular(14.0.r),
                     border: Border.all(
                       color: hasCustomImage
                           ? AppColors.accentGold
                           : AppColors.divider,
-                      width: hasCustomImage ? 2.0 : 1.0,
+                      width: hasCustomImage ? 2.0.w : 1.0.w,
                     ),
                     image: hasCustomImage
                         ? DecorationImage(
@@ -190,12 +191,12 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                         hasCustomImage
                             ? Icons.edit_rounded
                             : Icons.add_photo_alternate_outlined,
-                        size: 15.0,
+                        size: 20.0.sp,
                         color: hasCustomImage
                             ? Colors.white
                             : AppColors.accentGold,
                       ),
-                      const SizedBox(width: 5.0),
+                      SizedBox(width: 8.0.w),
                       Flexible(
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
@@ -203,7 +204,7 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                             l10n.videoBgCustomPhoto,
                             maxLines: 1,
                             style: TextStyle(
-                              fontSize: 11.5,
+                              fontSize: 14.5.sp,
                               fontWeight: hasCustomImage
                                   ? FontWeight.bold
                                   : FontWeight.w600,
@@ -220,7 +221,7 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 6.0),
+            SizedBox(width: 8.0.w),
 
             // Option 3: Custom Video (Gallery / URL)
             Expanded(
@@ -235,20 +236,20 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8.0,
-                    vertical: 8.0,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.0.w,
+                    vertical: 12.0.h,
                   ),
                   decoration: BoxDecoration(
                     color: hasCustomVideo
                         ? AppColors.accentGold.withValues(alpha: 0.15)
                         : AppColors.surfaceCream,
-                    borderRadius: BorderRadius.circular(12.0),
+                    borderRadius: BorderRadius.circular(14.0.r),
                     border: Border.all(
                       color: hasCustomVideo
                           ? AppColors.accentGold
                           : AppColors.divider,
-                      width: hasCustomVideo ? 2.0 : 1.0,
+                      width: hasCustomVideo ? 2.0.w : 1.0.w,
                     ),
                   ),
                   child: Row(
@@ -258,12 +259,12 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                         hasCustomVideo
                             ? Icons.videocam_rounded
                             : Icons.videocam_outlined,
-                        size: 15.0,
+                        size: 20.0.sp,
                         color: hasCustomVideo
                             ? AppColors.accentGold
                             : AppColors.accentGold,
                       ),
-                      const SizedBox(width: 5.0),
+                      SizedBox(width: 8.0.w),
                       Flexible(
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
@@ -273,7 +274,7 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                                 : l10n.videoBgCustomVideo,
                             maxLines: 1,
                             style: TextStyle(
-                              fontSize: 11.5,
+                              fontSize: 14.5.sp,
                               fontWeight: hasCustomVideo
                                   ? FontWeight.bold
                                   : FontWeight.w600,

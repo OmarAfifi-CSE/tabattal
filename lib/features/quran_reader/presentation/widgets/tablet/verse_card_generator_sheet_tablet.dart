@@ -78,8 +78,8 @@ void showVerseCardGeneratorModalTablet(
     builder: (ctx) => Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: EdgeInsets.symmetric(
-        horizontal: isLandscape ? 12.0 : 20.w,
-        vertical: isLandscape ? 10.0 : 18.h,
+        horizontal: (isLandscape ? 12.0 : 20.0).w,
+        vertical: (isLandscape ? 10.0 : 18.0).h,
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxDialogW, maxHeight: maxDialogH),
@@ -1570,22 +1570,23 @@ class _VerseCardFormatSelectorTablet extends StatelessWidget {
           Text(
             l10n.verseCardFormatLabel,
             style: TextStyle(
-              fontSize: isLandscape ? 13.0 : 16.sp,
+              fontSize: isLandscape ? 15.0.sp : 17.5.sp,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: isLandscape ? 6.0 : 10.h),
+          SizedBox(height: isLandscape ? 6.0.h : 10.0.h),
           Container(
             width: MediaQuery.sizeOf(context).width,
             decoration: BoxDecoration(
               color: AppColors.surfaceCream,
-              borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 14.r),
+              borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
               border: Border.all(
                 color: AppColors.accentGold.withValues(alpha: 0.4),
+                width: 1.w,
               ),
             ),
-            padding: EdgeInsets.all(isLandscape ? 3.0 : 4.r),
+            padding: EdgeInsets.all(isLandscape ? 4.0.r : 6.0.r),
             child: Row(
               children: [
                 Expanded(
@@ -1596,7 +1597,7 @@ class _VerseCardFormatSelectorTablet extends StatelessWidget {
                     onTap: () => onFormatChanged(ShareFormat.video),
                   ),
                 ),
-                SizedBox(width: isLandscape ? 2.0 : 4.w),
+                SizedBox(width: isLandscape ? 4.0.w : 6.0.w),
                 Expanded(
                   child: _FormatTileTablet(
                     label: l10n.verseCardFormatImage,
@@ -1605,7 +1606,7 @@ class _VerseCardFormatSelectorTablet extends StatelessWidget {
                     onTap: () => onFormatChanged(ShareFormat.image),
                   ),
                 ),
-                SizedBox(width: isLandscape ? 2.0 : 4.w),
+                SizedBox(width: isLandscape ? 4.0.w : 6.0.w),
                 Expanded(
                   child: _FormatTileTablet(
                     label: l10n.verseCardFormatText,
@@ -1614,7 +1615,7 @@ class _VerseCardFormatSelectorTablet extends StatelessWidget {
                     onTap: () => onFormatChanged(ShareFormat.text),
                   ),
                 ),
-                SizedBox(width: isLandscape ? 2.0 : 4.w),
+                SizedBox(width: isLandscape ? 4.0.w : 6.0.w),
                 Expanded(
                   child: _FormatTileTablet(
                     label: l10n.verseCardFormatFullPage,
@@ -1656,12 +1657,12 @@ class _FormatTileTablet extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(
-          horizontal: isLandscape ? 4.0 : 8.w,
-          vertical: isLandscape ? 6.0 : 10.h,
+          horizontal: isLandscape ? 6.0.w : 10.0.w,
+          vertical: isLandscape ? 8.0.h : 12.0.h,
         ),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.accentGold : Colors.transparent,
-          borderRadius: BorderRadius.circular(isLandscape ? 8.0 : 10.r),
+          borderRadius: BorderRadius.circular(isLandscape ? 10.0.r : 12.0.r),
           boxShadow: isSelected
               ? [
                   BoxShadow(
@@ -1676,10 +1677,10 @@ class _FormatTileTablet extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: isLandscape ? 15.0 : 18.sp,
+              size: isLandscape ? 18.0.sp : 22.0.sp,
               color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
-            SizedBox(width: isLandscape ? 4.0 : 6.w),
+            SizedBox(width: isLandscape ? 6.0.w : 8.0.w),
             Flexible(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
@@ -1687,7 +1688,7 @@ class _FormatTileTablet extends StatelessWidget {
                   label,
                   maxLines: 1,
                   style: TextStyle(
-                    fontSize: isLandscape ? 12.0 : 14.5.sp,
+                    fontSize: isLandscape ? 14.0.sp : 16.0.sp,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                     color: isSelected ? Colors.white : AppColors.textPrimary,
                   ),
@@ -1751,29 +1752,29 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                     disabledForegroundColor:
                         Colors.white.withValues(alpha: 0.9),
                     padding: EdgeInsets.symmetric(
-                      vertical: isLandscape ? 10.0 : 14.h,
+                      vertical: isLandscape ? 12.0.h : 16.0.h,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 14.r),
+                      borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
                     ),
                     elevation: 2,
                   ),
                   icon: isExportingVideo
                       ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 7.0 : 9.r,
+                          radius: isLandscape ? 8.0 : 10.r,
                           color: Colors.white,
                         )
-                      : Icon(Icons.share_rounded, size: isLandscape ? 18.0 : 22.sp),
+                      : Icon(Icons.share_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
                   label: Text(
                     'مشاركة الفيديو',
                     style: TextStyle(
-                      fontSize: isLandscape ? 13.5 : 16.5.sp,
+                      fontSize: isLandscape ? 15.0.sp : 18.0.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              SizedBox(width: isLandscape ? 8.0 : 12.w),
+              SizedBox(width: isLandscape ? 10.0.w : 14.0.w),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: isExportingVideo ? null : onSaveVideo,
@@ -1788,22 +1789,22 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                       width: 1.5,
                     ),
                     padding: EdgeInsets.symmetric(
-                      vertical: isLandscape ? 10.0 : 14.h,
+                      vertical: isLandscape ? 12.0.h : 16.0.h,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 14.r),
+                      borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
                     ),
                   ),
                   icon: isExportingVideo
                       ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 7.0 : 9.r,
+                          radius: isLandscape ? 8.0 : 10.r,
                           color: AppColors.accentGold,
                         )
-                      : Icon(Icons.download_rounded, size: isLandscape ? 18.0 : 22.sp),
+                      : Icon(Icons.download_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
                   label: Text(
                     'حفظ الفيديو',
                     style: TextStyle(
-                      fontSize: isLandscape ? 13.5 : 16.5.sp,
+                      fontSize: isLandscape ? 15.0.sp : 18.0.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -1827,29 +1828,29 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                     disabledForegroundColor:
                         Colors.white.withValues(alpha: 0.9),
                     padding: EdgeInsets.symmetric(
-                      vertical: isLandscape ? 10.0 : 14.h,
+                      vertical: isLandscape ? 12.0.h : 16.0.h,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 14.r),
+                      borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
                     ),
                     elevation: 2,
                   ),
                   icon: isSharing
                       ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 7.0 : 9.r,
+                          radius: isLandscape ? 8.0 : 10.r,
                           color: Colors.white,
                         )
-                      : Icon(Icons.share_rounded, size: isLandscape ? 18.0 : 22.sp),
+                      : Icon(Icons.share_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
                   label: Text(
                     l10n.verseCardShareImage,
                     style: TextStyle(
-                      fontSize: isLandscape ? 13.5 : 16.5.sp,
+                      fontSize: isLandscape ? 15.0.sp : 18.0.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              SizedBox(width: isLandscape ? 8.0 : 12.w),
+              SizedBox(width: isLandscape ? 10.0.w : 14.0.w),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: (isSaving || isSharing) ? null : onSave,
@@ -1864,22 +1865,22 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                       width: 1.5,
                     ),
                     padding: EdgeInsets.symmetric(
-                      vertical: isLandscape ? 10.0 : 14.h,
+                      vertical: isLandscape ? 12.0.h : 16.0.h,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 14.r),
+                      borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
                     ),
                   ),
                   icon: isSaving
                       ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 7.0 : 9.r,
+                          radius: isLandscape ? 8.0 : 10.r,
                           color: AppColors.accentGold,
                         )
-                      : Icon(Icons.download_rounded, size: isLandscape ? 18.0 : 22.sp),
+                      : Icon(Icons.download_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
                   label: Text(
                     l10n.verseCardSaveImage,
                     style: TextStyle(
-                      fontSize: isLandscape ? 13.5 : 16.5.sp,
+                      fontSize: isLandscape ? 15.0.sp : 18.0.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -1897,18 +1898,18 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                 backgroundColor: AppColors.accentGold,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(
-                  vertical: isLandscape ? 10.0 : 14.h,
+                  vertical: isLandscape ? 12.0.h : 16.0.h,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(isLandscape ? 10.0 : 14.r),
+                  borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
                 ),
                 elevation: 2,
               ),
-              icon: Icon(Icons.copy_rounded, size: isLandscape ? 18.0 : 22.sp),
+              icon: Icon(Icons.copy_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
               label: Text(
                 l10n.verseCardCopyText,
                 style: TextStyle(
-                  fontSize: isLandscape ? 13.5 : 16.5.sp,
+                  fontSize: isLandscape ? 15.0.sp : 18.0.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),

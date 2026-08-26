@@ -19,7 +19,6 @@ void showThemeAndLanguageModal(BuildContext context) {
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
-    constraints: const BoxConstraints(maxWidth: 620),
     elevation: 0,
     builder: (ctx) => MultiBlocProvider(
       providers: [
@@ -284,9 +283,9 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 5,
-                      mainAxisSpacing: 14.h,
-                      crossAxisSpacing: 8.w,
-                      childAspectRatio: 0.85,
+                      mainAxisSpacing: 10.h,
+                      crossAxisSpacing: 6.w,
+                      childAspectRatio: 0.74,
                     ),
                     itemCount: MushafTheme.values.length,
                     itemBuilder: (context, index) {
@@ -298,53 +297,62 @@ class ThemeAndLanguageSheet extends StatelessWidget {
                             ChangeMushafTheme(theme.id),
                           );
                         },
+                        behavior: HitTestBehavior.opaque,
                         child: Column(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              width: 58.w,
-                              height: 58.w,
-                              decoration: BoxDecoration(
-                                color: theme.backgroundColor,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isSelected
-                                      ? theme.goldColor
-                                      : AppColors.borderLight,
-                                  width: isSelected ? 2.5 : 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.textPrimary.withValues(
-                                      alpha: 0.05,
+                            Expanded(
+                              child: Center(
+                                child: Container(
+                                  width: 48.r,
+                                  height: 48.r,
+                                  decoration: BoxDecoration(
+                                    color: theme.backgroundColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? theme.goldColor
+                                          : AppColors.borderLight,
+                                      width: isSelected ? 2.5 : 1,
                                     ),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.textPrimary.withValues(
+                                          alpha: 0.05,
+                                        ),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                  child: isSelected
+                                      ? Icon(
+                                          Icons.check_rounded,
+                                          color: theme.goldColor,
+                                          size: 22.sp,
+                                        )
+                                      : null,
+                                ),
                               ),
-                              child: isSelected
-                                  ? Icon(
-                                      Icons.check_rounded,
-                                      color: theme.goldColor,
-                                      size: 24.sp,
-                                    )
-                                  : null,
                             ),
-                            SizedBox(height: 6.h),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                _getThemeName(context, theme.id),
-                                maxLines: 1,
-                                style: TextStyle(
-                                  fontSize: 13.5.sp,
-                                  color: isSelected
-                                      ? theme.goldColor
-                                      : AppColors.textPrimary,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                            SizedBox(height: 4.h),
+                            SizedBox(
+                              height: 18.h,
+                              child: Center(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    _getThemeName(context, theme.id),
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                      fontSize: 12.5.sp,
+                                      color: isSelected
+                                          ? theme.goldColor
+                                          : AppColors.textPrimary,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -421,50 +429,11 @@ class _LanguagePill extends StatelessWidget {
 
 /// Dual icon for Drawer entry representing both Mushaf Appearance and Language.
 class ThemeAndLanguageDrawerIcon extends StatelessWidget {
-  final bool isWeb;
   final double? size;
-  const ThemeAndLanguageDrawerIcon({super.key, this.isWeb = false, this.size});
+  const ThemeAndLanguageDrawerIcon({super.key, this.size});
 
   @override
   Widget build(BuildContext context) {
-    if (isWeb) {
-      final webS = size ?? 44.0;
-      return SizedBox(
-        width: webS,
-        height: webS,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned(
-              top: webS * 0.16,
-              left: webS * 0.16,
-              child: Icon(
-                Icons.palette_rounded,
-                color: AppColors.accentGold,
-                size: webS * 0.44,
-              ),
-            ),
-            Positioned(
-              bottom: webS * 0.11,
-              right: webS * 0.11,
-              child: Container(
-                padding: const EdgeInsets.all(1.5),
-                decoration: BoxDecoration(
-                  color: AppColors.cardCream,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.translate_rounded,
-                  color: AppColors.accentGold,
-                  size: webS * 0.32,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
     final s = size ?? 44.w;
     return SizedBox(
       width: s,

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:ui';
 
 class _BorderPathDataTablet {
@@ -30,12 +31,10 @@ class QuranBorderPainterTablet extends CustomPainter {
   static final Paint _bgPaint = Paint();
   static final Paint _outerBoundPaint = Paint()
     ..style = PaintingStyle.stroke
-    ..strokeWidth = 12.0
     ..strokeJoin = StrokeJoin.miter
     ..strokeCap = StrokeCap.round;
   static final Paint _innerFillPaint = Paint()
     ..style = PaintingStyle.stroke
-    ..strokeWidth = 10.0
     ..strokeJoin = StrokeJoin.miter
     ..strokeCap = StrokeCap.round;
   static final Paint _diamondFillPaint = Paint()..style = PaintingStyle.fill;
@@ -62,8 +61,11 @@ class QuranBorderPainterTablet extends CustomPainter {
       final double top = H * 0.02;
       final double bottom = H * 0.97;
 
-      final double cutTop = isLandscape ? 70.0 : 95.0;
-      final double cutBottom = isLandscape ? 95.0 : 125.0;
+      final double cutTop = isLandscape ? 100.0.h : 95.0.h;
+      final double cutBottom = isLandscape ? 135.0.h : 125.0.h;
+
+      final double diamondRadius = isLandscape ? 5.5.r : 4.5.r;
+      final double diamondStep = isLandscape ? 16.0.r : 14.0.r;
 
       // 3. Build the exact continuous wireframe of the border with cuts
       final Path framePath = Path();
@@ -113,7 +115,7 @@ class QuranBorderPainterTablet extends CustomPainter {
       final Path allDiamondsPath = Path();
       for (final metric in framePath.computeMetrics()) {
         final double length = metric.length;
-        int nSegments = (length / 14.0).round();
+        int nSegments = (length / diamondStep).round();
         if (nSegments == 0) nSegments = 1;
         double exactStep = length / nSegments;
 
@@ -126,10 +128,10 @@ class QuranBorderPainterTablet extends CustomPainter {
           final Offset dir = tangent.vector;
           final Offset normal = Offset(-dir.dy, dir.dx);
 
-          allDiamondsPath.moveTo(pos.dx + dir.dx * 4.5, pos.dy + dir.dy * 4.5);
-          allDiamondsPath.lineTo(pos.dx + normal.dx * 4.5, pos.dy + normal.dy * 4.5);
-          allDiamondsPath.lineTo(pos.dx - dir.dx * 4.5, pos.dy - dir.dy * 4.5);
-          allDiamondsPath.lineTo(pos.dx - normal.dx * 4.5, pos.dy - normal.dy * 4.5);
+          allDiamondsPath.moveTo(pos.dx + dir.dx * diamondRadius, pos.dy + dir.dy * diamondRadius);
+          allDiamondsPath.lineTo(pos.dx + normal.dx * diamondRadius, pos.dy + normal.dy * diamondRadius);
+          allDiamondsPath.lineTo(pos.dx - dir.dx * diamondRadius, pos.dy - dir.dy * diamondRadius);
+          allDiamondsPath.lineTo(pos.dx - normal.dx * diamondRadius, pos.dy - normal.dy * diamondRadius);
           allDiamondsPath.close();
         }
       }
@@ -138,9 +140,11 @@ class QuranBorderPainterTablet extends CustomPainter {
       _borderCacheTablet[cacheKey] = data;
     }
 
+    _outerBoundPaint.strokeWidth = isLandscape ? 15.0.r : 12.0.r;
     _outerBoundPaint.color = goldColor;
     canvas.drawPath(data.framePath, _outerBoundPaint);
 
+    _innerFillPaint.strokeWidth = isLandscape ? 12.5.r : 10.0.r;
     _innerFillPaint.color = innerColor;
     canvas.drawPath(data.framePath, _innerFillPaint);
 

@@ -285,6 +285,7 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
                     children: [
                       TextField(
                         controller: _urlController,
+                        textAlignVertical: TextAlignVertical.center,
                         keyboardType: TextInputType.url,
                         textDirection: TextDirection.ltr,
                         style: TextStyle(

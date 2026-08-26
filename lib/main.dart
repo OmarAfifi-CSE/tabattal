@@ -149,28 +149,36 @@ class TabattalApp extends StatelessWidget {
                       home: const QuranDesktopScreen(),
                     ),
                   ),
-                  tabletBody: ScreenUtilInit(
-                    designSize: const Size(800, 900),
-                    minTextAdapt: true,
-                    splitScreenMode: false,
-                    child: MaterialApp(
-                      onGenerateTitle: (ctx) =>
-                          AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
-                      debugShowCheckedModeBanner: false,
-                      locale: locale,
-                      supportedLocales: AppLocalizations.supportedLocales,
-                      localizationsDelegates: const [
-                        AppLocalizations.delegate,
-                        GlobalMaterialLocalizations.delegate,
-                        GlobalWidgetsLocalizations.delegate,
-                        GlobalCupertinoLocalizations.delegate,
-                      ],
-                      theme: appTheme(),
-                      darkTheme: appThemeDark(),
-                      themeMode: settingsState.themeMode,
-                      builder: appDirectionalityBuilder,
-                      home: const QuranTabletScreen(),
-                    ),
+                  tabletBody: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isLandscape =
+                          constraints.maxWidth > constraints.maxHeight;
+                      return ScreenUtilInit(
+                        designSize: isLandscape
+                            ? const Size(1280, 800)
+                            : const Size(800, 1280),
+                        minTextAdapt: true,
+                        splitScreenMode: false,
+                        child: MaterialApp(
+                          onGenerateTitle: (ctx) =>
+                              AppLocalizations.of(ctx)?.appName ?? 'Tabattal',
+                          debugShowCheckedModeBanner: false,
+                          locale: locale,
+                          supportedLocales: AppLocalizations.supportedLocales,
+                          localizationsDelegates: const [
+                            AppLocalizations.delegate,
+                            GlobalMaterialLocalizations.delegate,
+                            GlobalWidgetsLocalizations.delegate,
+                            GlobalCupertinoLocalizations.delegate,
+                          ],
+                          theme: appTheme(),
+                          darkTheme: appThemeDark(),
+                          themeMode: settingsState.themeMode,
+                          builder: appDirectionalityBuilder,
+                          home: const QuranTabletScreen(),
+                        ),
+                      );
+                    },
                   ),
                   // Mobile: calibrated against OnePlus 13R (412×917 dp).
                   mobileBody: ScreenUtilInit(

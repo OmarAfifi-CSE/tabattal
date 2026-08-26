@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../core/constants/reciter_catalog.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../l10n/app_localizations.dart';
@@ -49,10 +50,10 @@ class _VideoReciterSelectorTabletState
         return Dialog(
           backgroundColor: AppColors.cardCream,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
+            borderRadius: BorderRadius.circular(20.0.r),
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500, maxHeight: 520),
+            constraints: BoxConstraints(maxWidth: 500.w, maxHeight: 520.h),
             child: Directionality(
               textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
               child: DefaultTabController(
@@ -68,7 +69,7 @@ class _VideoReciterSelectorTabletState
                 length: ReciterCatalog
                     .verifiedVideoRecitersByCategory.keys.length,
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16.0.r),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -78,12 +79,12 @@ class _VideoReciterSelectorTabletState
                           Row(
                             children: [
                               Icon(Icons.verified_rounded,
-                                  color: AppColors.accentGold, size: 20.0),
-                              const SizedBox(width: 8.0),
+                                  color: AppColors.accentGold, size: 20.0.sp),
+                              SizedBox(width: 8.0.w),
                               Text(
                                 l10n.videoStudioChooseReciter,
                                 style: TextStyle(
-                                  fontSize: 15.0,
+                                  fontSize: 15.0.sp,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textPrimary,
                                 ),
@@ -92,7 +93,7 @@ class _VideoReciterSelectorTabletState
                           ),
                           IconButton(
                             onPressed: () => Navigator.pop(ctx),
-                            icon: const Icon(Icons.close_rounded),
+                            icon: Icon(Icons.close_rounded, size: 22.sp),
                           ),
                         ],
                       ),
@@ -101,8 +102,8 @@ class _VideoReciterSelectorTabletState
                         unselectedLabelColor:
                             AppColors.textPrimary.withValues(alpha: 0.6),
                         indicatorColor: AppColors.accentGold,
-                        labelStyle: const TextStyle(
-                            fontSize: 12.0, fontWeight: FontWeight.bold),
+                        labelStyle: TextStyle(
+                            fontSize: 12.0.sp, fontWeight: FontWeight.bold),
                         tabs: ReciterCatalog
                             .verifiedVideoRecitersByCategory.keys
                             .map((cat) => Tab(
@@ -121,11 +122,11 @@ class _VideoReciterSelectorTabletState
 
                             return ListView.separated(
                               padding:
-                                  const EdgeInsets.symmetric(vertical: 8.0),
+                                  EdgeInsets.symmetric(vertical: 8.0.h),
                               physics: const BouncingScrollPhysics(),
                               itemCount: reciters.length,
                               separatorBuilder: (_, _) =>
-                                  const Divider(height: 1),
+                                  Divider(height: 1.h),
                               itemBuilder: (subCtx, idx) {
                                 final item = reciters[idx];
                                 final isSelected =
@@ -144,12 +145,12 @@ class _VideoReciterSelectorTabletState
                                         ? AppColors.accentGold
                                         : AppColors.textPrimary
                                             .withValues(alpha: 0.5),
-                                    size: 18.0,
+                                    size: 18.0.sp,
                                   ),
                                   title: Text(
                                     reciterDisplayName,
                                     style: TextStyle(
-                                      fontSize: 13.0,
+                                      fontSize: 13.0.sp,
                                       fontWeight: isSelected
                                           ? FontWeight.bold
                                           : FontWeight.normal,
@@ -160,7 +161,7 @@ class _VideoReciterSelectorTabletState
                                   ),
                                   trailing: isSelected
                                       ? Icon(Icons.check_circle_rounded,
-                                          color: AppColors.accentGold)
+                                          color: AppColors.accentGold, size: 20.sp)
                                       : null,
                                   onTap: () {
                                     setState(() {
@@ -205,7 +206,7 @@ class _VideoReciterSelectorTabletState
                 Text(
                   l10n.videoStudioReciter,
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 16.0.sp,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
@@ -214,14 +215,14 @@ class _VideoReciterSelectorTabletState
             ),
             InkWell(
               onTap: () => _showAllRecitersSheet(context),
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(8.0.r),
               child: Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                    EdgeInsets.symmetric(horizontal: 6.0.w, vertical: 3.0.h),
                 child: Text(
                   l10n.videoStudioViewAll,
                   style: TextStyle(
-                    fontSize: 10.0,
+                    fontSize: 14.0.sp,
                     fontWeight: FontWeight.w600,
                     color: AppColors.accentGold,
                   ),
@@ -230,17 +231,17 @@ class _VideoReciterSelectorTabletState
             ),
           ],
         ),
-        const SizedBox(height: 5.0),
+        SizedBox(height: 8.0.h),
 
         // 2. Category Selector Chips (مرتل / مجود / المصحف المعلم)
         SizedBox(
-          height: 28.0,
+          height: 38.0.h,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             itemCount:
                 ReciterCatalog.verifiedVideoRecitersByCategory.keys.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 6.0),
+            separatorBuilder: (_, _) => SizedBox(width: 8.0.w),
             itemBuilder: (context, index) {
               final cat = ReciterCatalog.verifiedVideoRecitersByCategory.keys
                   .elementAt(index);
@@ -266,23 +267,23 @@ class _VideoReciterSelectorTabletState
                         first['name']!, cat, first['path']!);
                   }
                 },
-                borderRadius: BorderRadius.circular(14.0),
+                borderRadius: BorderRadius.circular(16.0.r),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10.0,
-                    vertical: 3.0,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 14.0.w,
+                    vertical: 6.0.h,
                   ),
                   decoration: BoxDecoration(
                     color: isCatSelected
                         ? AppColors.accentGold
                         : AppColors.accentGold.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(14.0),
+                    borderRadius: BorderRadius.circular(16.0.r),
                     border: Border.all(
                       color: isCatSelected
                           ? AppColors.accentGold
                           : AppColors.accentGold.withValues(alpha: 0.25),
-                      width: 1,
+                      width: 1.w,
                     ),
                   ),
                   child: Center(
@@ -291,7 +292,7 @@ class _VideoReciterSelectorTabletState
                       child: Text(
                         isEn ? ReciterCatalog.getCategoryNameEnglish(cat) : cat,
                         style: TextStyle(
-                          fontSize: 10.0,
+                          fontSize: 13.5.sp,
                           fontWeight: isCatSelected
                               ? FontWeight.bold
                               : FontWeight.w500,
@@ -308,16 +309,16 @@ class _VideoReciterSelectorTabletState
             },
           ),
         ),
-        const SizedBox(height: 5.0),
+        SizedBox(height: 8.0.h),
 
         // 3. Reciters List for the active category
         SizedBox(
-          height: 32.0,
+          height: 44.0.h,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             itemCount: currentReciters.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 6.0),
+            separatorBuilder: (_, _) => SizedBox(width: 8.0.w),
             itemBuilder: (context, index) {
               final reciter = currentReciters[index];
               final isSelected = reciter['name'] == widget.selectedReciter;
@@ -334,23 +335,23 @@ class _VideoReciterSelectorTabletState
                     reciter['path']!,
                   );
                 },
-                borderRadius: BorderRadius.circular(16.0),
+                borderRadius: BorderRadius.circular(16.0.r),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10.0,
-                    vertical: 4.0,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 14.0.w,
+                    vertical: 6.0.h,
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? AppColors.accentGold.withValues(alpha: 0.15)
                         : Colors.transparent,
-                    borderRadius: BorderRadius.circular(16.0),
+                    borderRadius: BorderRadius.circular(16.0.r),
                     border: Border.all(
                       color: isSelected
                           ? AppColors.accentGold
                           : AppColors.accentGold.withValues(alpha: 0.25),
-                      width: isSelected ? 1.5 : 1,
+                      width: isSelected ? 1.5.w : 1.w,
                     ),
                   ),
                   child: Row(
@@ -358,18 +359,18 @@ class _VideoReciterSelectorTabletState
                     children: [
                       Icon(
                         Icons.record_voice_over_rounded,
-                        size: 11.5,
+                        size: 18.0.sp,
                         color: isSelected
                             ? AppColors.accentGold
                             : AppColors.textPrimary.withValues(alpha: 0.6),
                       ),
-                      const SizedBox(width: 5.0),
+                      SizedBox(width: 8.0.w),
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
                           reciterDisplayName,
                           style: TextStyle(
-                            fontSize: 10.0,
+                            fontSize: 14.0.sp,
                             fontWeight: isSelected
                                 ? FontWeight.bold
                                 : FontWeight.normal,

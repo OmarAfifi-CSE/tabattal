@@ -1,5 +1,5 @@
 import '../../widgets/drawer/web/quran_drawer_web.dart';
-import '../../widgets/hifz/hifz_toolbar_widget.dart';
+import '../../widgets/web/hifz_toolbar_widget_web.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -336,7 +336,7 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                           );
                         },
                       ),
-                      const HifzToolbarWidget(),
+                      const HifzToolbarWidgetWeb(),
                       BlocBuilder<AudioBloc, AudioState>(
                         builder: (context, state) {
                           final isVisible =

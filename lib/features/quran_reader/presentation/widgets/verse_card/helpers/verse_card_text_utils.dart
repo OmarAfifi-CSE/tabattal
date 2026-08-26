@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/verse_card_theme.dart';
@@ -27,37 +26,35 @@ class VerseCardTextUtils {
         .trim();
   }
 
-  /// Dynamically computes optimal font size and line height based on exact character length.
   static TextStyle getDynamicVerseTextStyle({
     required bool hasQcfFont,
     required String verseText,
     required VerseCardTheme theme,
   }) {
-    const isWeb = kIsWeb;
     final int length = verseText.length;
     double fontSize;
     double lineHeight;
 
     if (length <= 100) {
-      fontSize = hasQcfFont ? (isWeb ? 38 : 34.sp) : (isWeb ? 34 : 30.sp);
+      fontSize = hasQcfFont ? 34.sp : 30.sp;
       lineHeight = 1.90;
     } else if (length <= 180) {
-      fontSize = hasQcfFont ? (isWeb ? 33 : 29.sp) : (isWeb ? 29 : 26.sp);
+      fontSize = hasQcfFont ? 29.sp : 26.sp;
       lineHeight = 1.85;
     } else if (length <= 300) {
-      fontSize = hasQcfFont ? (isWeb ? 28 : 25.sp) : (isWeb ? 25 : 22.sp);
+      fontSize = hasQcfFont ? 25.sp : 22.sp;
       lineHeight = 1.80;
     } else if (length <= 480) {
-      fontSize = hasQcfFont ? (isWeb ? 23 : 21.sp) : (isWeb ? 21 : 19.sp);
+      fontSize = hasQcfFont ? 21.sp : 19.sp;
       lineHeight = 1.75;
     } else if (length <= 750) {
-      fontSize = hasQcfFont ? (isWeb ? 19 : 17.sp) : (isWeb ? 17 : 15.sp);
+      fontSize = hasQcfFont ? 17.sp : 15.sp;
       lineHeight = 1.70;
     } else if (length <= 1050) {
-      fontSize = hasQcfFont ? (isWeb ? 17 : 15.sp) : (isWeb ? 15 : 13.5.sp);
+      fontSize = hasQcfFont ? 15.sp : 13.5.sp;
       lineHeight = 1.65;
     } else {
-      fontSize = hasQcfFont ? (isWeb ? 15 : 13.5.sp) : (isWeb ? 13.5 : 12.sp);
+      fontSize = hasQcfFont ? 13.5.sp : 12.sp;
       lineHeight = 1.60;
     }
 

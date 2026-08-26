@@ -24,9 +24,6 @@ void showAudioSettingsSheetMobile(BuildContext context, {int? verseId}) {
   showModalBottomSheet(
     context: context,
     backgroundColor: AppColors.cardCream,
-    constraints: MediaQuery.sizeOf(context).width > 600
-        ? BoxConstraints(maxWidth: 450.w)
-        : null,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
     ),

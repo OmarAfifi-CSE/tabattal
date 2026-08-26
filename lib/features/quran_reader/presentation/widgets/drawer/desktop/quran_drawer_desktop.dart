@@ -211,7 +211,7 @@ class QuranDrawerDesktop extends StatelessWidget {
                     },
                   ),
                   _DesktopDrawerItem(
-                    iconWidget: const ThemeAndLanguageDrawerIcon(),
+                    iconWidget: const _DesktopThemeAndLanguageIcon(),
                     title: l10n.drawerThemeAndLanguage,
                     subtitle: l10n.drawerThemeAndLanguageSubtitle,
                     onTap: () {
@@ -516,6 +516,49 @@ class ScrollDirectionToggle extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DesktopThemeAndLanguageIcon extends StatelessWidget {
+  const _DesktopThemeAndLanguageIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    const double deskS = 44.0;
+    return SizedBox(
+      width: deskS,
+      height: deskS,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            top: deskS * 0.16,
+            left: deskS * 0.16,
+            child: Icon(
+              Icons.palette_rounded,
+              color: AppColors.accentGold,
+              size: deskS * 0.44,
+            ),
+          ),
+          Positioned(
+            bottom: deskS * 0.11,
+            right: deskS * 0.11,
+            child: Container(
+              padding: const EdgeInsets.all(1.5),
+              decoration: BoxDecoration(
+                color: AppColors.cardCream,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.translate_rounded,
+                color: AppColors.accentGold,
+                size: deskS * 0.32,
+              ),
             ),
           ),
         ],

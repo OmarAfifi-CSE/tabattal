@@ -362,11 +362,11 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1000),
+            constraints: BoxConstraints(maxWidth: 1000.w),
             child: Column(
               children: [
                 _buildHeader(context),
-                const SizedBox(height: 10),
+                SizedBox(height: 10.h),
                 Expanded(child: _buildBody()),
               ],
             ),
@@ -425,6 +425,7 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
             Expanded(
               child: TextField(
                 controller: _searchController,
+                textAlignVertical: TextAlignVertical.center,
                 style: TextStyle(
                   fontSize: 18.sp,
                   color: AppColors.textPrimary,
@@ -440,7 +441,8 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
                     fontSize: 18.sp,
                   ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.only(bottom: 8.h),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(vertical: 12.h),
                 ),
               ),
             ),
@@ -1015,8 +1017,8 @@ class _QuranSearchScreenTabletState extends State<QuranSearchScreenTablet> {
         onTap: onTap,
         contentPadding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
         leading: Container(
-          width: 52.w,
-          height: 52.w,
+          width: 52.r,
+          height: 52.r,
           decoration: BoxDecoration(
             color: AppColors.accentGold.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(14.r),

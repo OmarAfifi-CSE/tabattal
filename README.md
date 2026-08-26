@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/images/app_icon.png" width="130" height="130" style="border-radius: 50%;" alt="Tabattal App Icon"/>
+<img src="assets/images/app_icon_rounded.png" width="130" height="130" alt="Tabattal App Icon"/>
 
 <br/>
 
@@ -350,10 +350,8 @@ Tabattal is an **ad-free, open-source passion project** built as a Sadaqa Jariya
 
 ### ⭐ Star this repo to support the project
 
-<img src="https://img.shields.io/github/stars/OmarAfifi-CSE/tabattal?style=social" alt="Stars"/>
-
 <br/>
 
 *Made with dedication to the Book of Allah* 🕌
 
-</div>
+</div>

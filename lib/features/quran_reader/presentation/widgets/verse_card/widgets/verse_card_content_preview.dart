@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
@@ -49,7 +48,6 @@ class VerseCardContentPreview extends StatelessWidget {
         : QuranMetadata.getSurahName(surahNumber);
     final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.sizeOf(context).width;
-    const isWeb = kIsWeb;
 
     final bool showBismillah =
         startAyah == 1 && surahNumber != 9 && surahNumber != 1;
@@ -57,17 +55,17 @@ class VerseCardContentPreview extends StatelessWidget {
     return Container(
       width: screenWidth,
       color: theme.backgroundColor,
-      padding: EdgeInsets.all(isWeb ? 14 : 12.r),
+      padding: EdgeInsets.all(12.r),
       child: Container(
         width: screenWidth,
         decoration: BoxDecoration(
           color: theme.cardBackground,
-          borderRadius: BorderRadius.circular(isWeb ? 16 : 16.r),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(color: theme.borderColor, width: 1.5),
         ),
         padding: EdgeInsets.symmetric(
-          horizontal: isWeb ? 20 : 16.w,
-          vertical: isWeb ? 22 : 18.h,
+          horizontal: 16.w,
+          vertical: 18.h,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -80,23 +78,23 @@ class VerseCardContentPreview extends StatelessWidget {
                 children: [
                   Container(
                     height: 1,
-                    width: isWeb ? 35 : 30.w,
+                    width: 30.w,
                     color: theme.accentColor.withValues(alpha: 0.6),
                   ),
-                  SizedBox(width: isWeb ? 10 : 8.w),
+                  SizedBox(width: 8.w),
                   Text(
                     'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
                     style: TextStyle(
                       fontFamily: 'Amiri',
-                      fontSize: isWeb ? 15 : 14.sp,
+                      fontSize: 14.sp,
                       color: theme.accentColor,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(width: isWeb ? 10 : 8.w),
+                  SizedBox(width: 8.w),
                   Container(
                     height: 1,
-                    width: isWeb ? 35 : 30.w,
+                    width: 30.w,
                     color: theme.accentColor.withValues(alpha: 0.6),
                   ),
                 ],
@@ -107,25 +105,25 @@ class VerseCardContentPreview extends StatelessWidget {
                 children: [
                   Container(
                     height: 1,
-                    width: isWeb ? 45 : 38.w,
+                    width: 38.w,
                     color: theme.accentColor.withValues(alpha: 0.4),
                   ),
-                  SizedBox(width: isWeb ? 8 : 6.w),
+                  SizedBox(width: 6.w),
                   Icon(
                     Icons.star_rate_rounded,
-                    size: isWeb ? 11 : 10.r,
+                    size: 10.r,
                     color: theme.accentColor.withValues(alpha: 0.7),
                   ),
-                  SizedBox(width: isWeb ? 8 : 6.w),
+                  SizedBox(width: 6.w),
                   Container(
                     height: 1,
-                    width: isWeb ? 45 : 38.w,
+                    width: 38.w,
                     color: theme.accentColor.withValues(alpha: 0.4),
                   ),
                 ],
               ),
 
-            SizedBox(height: isWeb ? 18 : 14.h),
+            SizedBox(height: 14.h),
 
             // Quran Verse Text
             AnimatedSize(
@@ -133,9 +131,7 @@ class VerseCardContentPreview extends StatelessWidget {
               curve: Curves.easeOutCubic,
               child: isLoadingText && verseTextUthmani.isEmpty
                   ? Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: isWeb ? 20 : 16.h,
-                      ),
+                      padding: EdgeInsets.symmetric(vertical: 16.h),
                       child: CupertinoActivityIndicator(
                         color: theme.accentColor,
                         radius: 12.r,
@@ -164,13 +160,13 @@ class VerseCardContentPreview extends StatelessWidget {
                     ),
             ),
 
-            SizedBox(height: isWeb ? 16 : 14.h),
+            SizedBox(height: 14.h),
 
             // Surah Name Badge
             Container(
               padding: EdgeInsets.symmetric(
-                horizontal: isWeb ? 14 : 12.w,
-                vertical: isWeb ? 5 : 4.h,
+                horizontal: 12.w,
+                vertical: 4.h,
               ),
               decoration: BoxDecoration(
                 color: theme.accentColor.withValues(alpha: 0.15),
@@ -189,7 +185,7 @@ class VerseCardContentPreview extends StatelessWidget {
                           ? 'Surah $surahCleanName • Ayahs $startAyah-$endAyah'
                           : 'سورة $surahCleanName • الآيات ($startAyah - $endAyah)'),
                 style: TextStyle(
-                  fontSize: isWeb ? 13 : 12.sp,
+                  fontSize: 12.sp,
                   fontWeight: FontWeight.bold,
                   color: theme.accentColor,
                 ),
@@ -198,10 +194,10 @@ class VerseCardContentPreview extends StatelessWidget {
 
             // Optional Tafsir Box
             if (includeTafsir) ...[
-              SizedBox(height: isWeb ? 14 : 12.h),
+              SizedBox(height: 12.h),
               Container(
                 width: screenWidth,
-                padding: EdgeInsets.all(isWeb ? 14 : 12.r),
+                padding: EdgeInsets.all(12.r),
                 decoration: BoxDecoration(
                   color: theme.cardBackground,
                   borderRadius: BorderRadius.circular(12.r),
@@ -228,7 +224,7 @@ class VerseCardContentPreview extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.menu_book_outlined,
-                                  size: isWeb ? 13 : 12.r,
+                                  size: 12.r,
                                   color: theme.accentColor,
                                 ),
                                 SizedBox(width: 5.w),
@@ -236,7 +232,7 @@ class VerseCardContentPreview extends StatelessWidget {
                                   l10n.verseCardTafsirBadge,
                                   style: TextStyle(
                                     fontFamily: isEn ? null : 'Amiri',
-                                    fontSize: isWeb ? 12 : 11.sp,
+                                    fontSize: 11.sp,
                                     fontWeight: FontWeight.bold,
                                     color: theme.accentColor,
                                   ),
@@ -249,7 +245,7 @@ class VerseCardContentPreview extends StatelessWidget {
                             text: tafsirText.trim(),
                             style: TextStyle(
                               fontFamily: 'Amiri',
-                              fontSize: isWeb ? 13 : 12.sp,
+                              fontSize: 12.sp,
                               height: 1.6,
                               color: theme.secondaryTextColor,
                             ),
@@ -261,10 +257,10 @@ class VerseCardContentPreview extends StatelessWidget {
 
             // Optional Translation Box
             if (includeTranslation) ...[
-              SizedBox(height: isWeb ? 14 : 12.h),
+              SizedBox(height: 12.h),
               Container(
                 width: screenWidth,
-                padding: EdgeInsets.all(isWeb ? 14 : 12.r),
+                padding: EdgeInsets.all(12.r),
                 decoration: BoxDecoration(
                   color: theme.cardBackground,
                   borderRadius: BorderRadius.circular(12.r),
@@ -291,7 +287,7 @@ class VerseCardContentPreview extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.g_translate_outlined,
-                                  size: isWeb ? 13 : 12.r,
+                                  size: 12.r,
                                   color: theme.accentColor,
                                 ),
                                 SizedBox(width: 5.w),
@@ -299,7 +295,7 @@ class VerseCardContentPreview extends StatelessWidget {
                                   l10n.verseCardTranslationBadge,
                                   style: TextStyle(
                                     fontFamily: isEn ? null : 'Amiri',
-                                    fontSize: isWeb ? 12 : 11.sp,
+                                    fontSize: 11.sp,
                                     fontWeight: FontWeight.bold,
                                     color: theme.accentColor,
                                   ),
@@ -311,7 +307,7 @@ class VerseCardContentPreview extends StatelessWidget {
                           MixedDirectionText(
                             text: translationText.trim(),
                             style: TextStyle(
-                              fontSize: isWeb ? 13 : 12.sp,
+                              fontSize: 12.sp,
                               height: 1.5,
                               fontStyle: FontStyle.italic,
                               color: theme.secondaryTextColor,
@@ -323,21 +319,21 @@ class VerseCardContentPreview extends StatelessWidget {
             ],
 
             // Footer Branding Watermark
-            SizedBox(height: isWeb ? 16 : 14.h),
+            SizedBox(height: 14.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
                   Icons.auto_stories_rounded,
-                  size: isWeb ? 14 : 12.r,
+                  size: 12.r,
                   color: theme.accentColor,
                 ),
-                SizedBox(width: isWeb ? 8 : 6.w),
+                SizedBox(width: 6.w),
                 Text(
                   'تَـبَـتَّـلْ • Tabattal',
                   style: TextStyle(
                     fontFamily: 'Amiri',
-                    fontSize: isWeb ? 14 : 13.sp,
+                    fontSize: 13.sp,
                     fontWeight: FontWeight.bold,
                     color: theme.secondaryTextColor.withValues(alpha: 0.85),
                     letterSpacing: 0.5,

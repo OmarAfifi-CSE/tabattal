@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../quran_video_studio/domain/entities/video_theme_preset.dart';
 
@@ -23,19 +24,19 @@ class VideoThemeSelectorTablet extends StatelessWidget {
         Text(
           isEn ? 'Theme & Accent Palette' : 'المظهر والألوان',
           style: TextStyle(
-            fontSize: 11.5,
+            fontSize: 16.0.sp,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 4.0),
+        SizedBox(height: 6.0.h),
         SizedBox(
-          height: 34.0,
+          height: 44.0.h,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             itemCount: VideoThemePreset.allPresets.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 6.0),
+            separatorBuilder: (_, _) => SizedBox(width: 8.0.w),
             itemBuilder: (context, index) {
               final preset = VideoThemePreset.allPresets[index];
               final isSelected = preset.id == selectedPreset.id;
@@ -44,24 +45,24 @@ class VideoThemeSelectorTablet extends StatelessWidget {
                 onTap: () => onThemeSelected(preset),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10.0,
-                    vertical: 4.0,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 14.0.w,
+                    vertical: 6.0.h,
                   ),
                   decoration: BoxDecoration(
                     color: preset.gradientColors.first,
-                    borderRadius: BorderRadius.circular(10.0),
+                    borderRadius: BorderRadius.circular(12.0.r),
                     border: Border.all(
                       color: isSelected
                           ? AppColors.accentGold
                           : preset.borderColor,
-                      width: isSelected ? 2.0 : 1,
+                      width: isSelected ? 2.0.w : 1.w,
                     ),
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
                               color: AppColors.accentGold.withValues(alpha: 0.3),
-                              blurRadius: 6,
+                              blurRadius: 6.r,
                             ),
                           ]
                         : null,
@@ -70,23 +71,23 @@ class VideoThemeSelectorTablet extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 10.0,
-                        height: 10.0,
+                        width: 13.0.r,
+                        height: 13.0.r,
                         decoration: BoxDecoration(
                           color: preset.accentColor,
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: 5.0),
+                      SizedBox(width: 8.0.w),
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
                           isEn ? preset.nameEnglish : preset.nameArabic,
                           style: TextStyle(
-                            fontSize: 10.0,
+                            fontSize: 14.0.sp,
                             fontWeight: isSelected
                                 ? FontWeight.bold
-                                : FontWeight.normal,
+                                : FontWeight.w500,
                             color: preset.primaryTextColor,
                             height: 1.15,
                           ),

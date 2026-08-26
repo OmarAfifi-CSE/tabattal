@@ -119,12 +119,17 @@ class _SurahListTabState extends State<_SurahListTab>
       textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
       child: isLandscape
           ? GridView.builder(
-              padding: EdgeInsets.all(16.r),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              padding: EdgeInsets.fromLTRB(
+                16.w,
+                16.h,
+                16.w,
+                16.h + MediaQuery.paddingOf(context).bottom,
+              ),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 childAspectRatio: 4.2,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 16,
+                mainAxisSpacing: 8.h,
+                crossAxisSpacing: 16.w,
               ),
               itemCount: 114,
               itemBuilder: (context, index) {
@@ -154,7 +159,12 @@ class _SurahListTabState extends State<_SurahListTab>
               },
             )
           : ListView.separated(
-              padding: EdgeInsets.all(16.r),
+              padding: EdgeInsets.fromLTRB(
+                16.w,
+                16.h,
+                16.w,
+                16.h + MediaQuery.paddingOf(context).bottom,
+              ),
               itemCount: 114,
               separatorBuilder: (context, index) =>
                   Divider(color: AppColors.divider, height: 1.h),
@@ -204,14 +214,14 @@ class _IndexSurahTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       contentPadding: EdgeInsets.symmetric(
-        horizontal: isLandscape ? 12.0 : 16.w,
-        vertical: isLandscape ? 4.0 : 8.h,
+        horizontal: (isLandscape ? 12.0 : 16.0).w,
+        vertical: (isLandscape ? 4.0 : 8.0).h,
       ),
       leading: _IndexNumberBadge(label: '$surahNum', filled: true),
       title: Text(
         l10n.surahListItem(surahName),
         style: TextStyle(
-          fontSize: isLandscape ? 15.5 : 21.sp,
+          fontSize: (isLandscape ? 15.5 : 21.0).sp,
           fontWeight: FontWeight.bold,
           color: AppColors.textPrimary,
         ),
@@ -221,7 +231,7 @@ class _IndexSurahTile extends StatelessWidget {
           isEn ? startPage.toString() : startPage.toArabicDigits,
         ),
         style: TextStyle(
-          fontSize: isLandscape ? 13.0 : 16.5.sp,
+          fontSize: (isLandscape ? 13.0 : 16.5).sp,
           color: AppColors.textPrimary.withValues(alpha: 0.6),
         ),
       ),
@@ -259,12 +269,17 @@ class _JuzListTabState extends State<_JuzListTab>
       textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
       child: isLandscape
           ? GridView.builder(
-              padding: EdgeInsets.all(16.r),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              padding: EdgeInsets.fromLTRB(
+                16.w,
+                16.h,
+                16.w,
+                16.h + MediaQuery.paddingOf(context).bottom,
+              ),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 childAspectRatio: 4.2,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 16,
+                mainAxisSpacing: 8.h,
+                crossAxisSpacing: 16.w,
               ),
               itemCount: 30,
               itemBuilder: (context, index) {
@@ -290,7 +305,12 @@ class _JuzListTabState extends State<_JuzListTab>
               },
             )
           : ListView.separated(
-              padding: EdgeInsets.all(16.r),
+              padding: EdgeInsets.fromLTRB(
+                16.w,
+                16.h,
+                16.w,
+                16.h + MediaQuery.paddingOf(context).bottom,
+              ),
               itemCount: 30,
               separatorBuilder: (context, index) =>
                   Divider(color: AppColors.divider, height: 1.h),
@@ -334,8 +354,8 @@ class _IndexJuzTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       contentPadding: EdgeInsets.symmetric(
-        horizontal: isLandscape ? 12.0 : 16.w,
-        vertical: isLandscape ? 4.0 : 8.h,
+        horizontal: (isLandscape ? 12.0 : 16.0).w,
+        vertical: (isLandscape ? 4.0 : 8.0).h,
       ),
       leading: _IndexNumberBadge(label: '$juzNum', filled: false),
       title: Text(
@@ -343,7 +363,7 @@ class _IndexJuzTile extends StatelessWidget {
           isEn ? juzNum.toString() : QuranMetadata.getJuzName(juzNum),
         ),
         style: TextStyle(
-          fontSize: isLandscape ? 15.5 : 21.sp,
+          fontSize: (isLandscape ? 15.5 : 21.0).sp,
           fontWeight: FontWeight.bold,
           color: AppColors.textPrimary,
         ),
@@ -353,7 +373,7 @@ class _IndexJuzTile extends StatelessWidget {
           isEn ? startPage.toString() : startPage.toArabicDigits,
         ),
         style: TextStyle(
-          fontSize: isLandscape ? 13.0 : 16.5.sp,
+          fontSize: (isLandscape ? 13.0 : 16.5).sp,
           color: AppColors.textPrimary.withValues(alpha: 0.6),
         ),
       ),
@@ -373,8 +393,8 @@ class _IndexNumberBadge extends StatelessWidget {
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     return Container(
-      width: isLandscape ? 34.0 : 46.r,
-      height: isLandscape ? 34.0 : 46.r,
+      width: (isLandscape ? 34.0 : 46.0).r,
+      height: (isLandscape ? 34.0 : 46.0).r,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.accentGold.withValues(alpha: filled ? 0.12 : 0.1),
@@ -382,14 +402,14 @@ class _IndexNumberBadge extends StatelessWidget {
         border: filled
             ? Border.all(
                 color: AppColors.accentGold.withValues(alpha: 0.4),
-                width: isLandscape ? 0.8 : 1.w,
+                width: (isLandscape ? 0.8 : 1.0).w,
               )
             : null,
       ),
       child: Text(
         label,
         style: TextStyle(
-          fontSize: isLandscape ? 13.0 : 16.sp,
+          fontSize: (isLandscape ? 13.0 : 16.0).sp,
           fontWeight: FontWeight.bold,
           color: AppColors.accentGold,
         ),

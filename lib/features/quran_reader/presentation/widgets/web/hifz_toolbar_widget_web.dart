@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../bloc/hifz/hifz_bloc.dart';
 import '../../../bloc/hifz/hifz_event.dart';
 import '../../../bloc/hifz/hifz_state.dart';
 
-class HifzToolbarWidget extends StatefulWidget {
-  const HifzToolbarWidget({super.key});
+class HifzToolbarWidgetWeb extends StatefulWidget {
+  const HifzToolbarWidgetWeb({super.key});
 
   @override
-  State<HifzToolbarWidget> createState() => _HifzToolbarWidgetState();
+  State<HifzToolbarWidgetWeb> createState() => _HifzToolbarWidgetWebState();
 }
 
-class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
+class _HifzToolbarWidgetWebState extends State<HifzToolbarWidgetWeb> {
   double? _top;
   double? _left;
   bool _isMinimized = false;
@@ -31,18 +30,17 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
         if (!state.isHifzModeActive) return const SizedBox.shrink();
 
         final screenSize = MediaQuery.sizeOf(context);
-        final double bubbleSize = 42.r;
-        final double toolbarHeight = 42.r;
-        final double minMargin = 8.w;
-        final double maxTop = (screenSize.height - toolbarHeight - 110.h).clamp(4.0, screenSize.height);
+        const double bubbleSize = 46.0;
+        const double toolbarHeight = 46.0;
+        const double minMargin = 10.0;
+        final double maxTop = (screenSize.height - toolbarHeight - 70.0).clamp(4.0, screenSize.height);
 
-        // Default position at VERY TOP LEFT
-        _top ??= 4.h.clamp(4.0, maxTop);
+        _top ??= 6.0.clamp(4.0, maxTop);
         _left ??= minMargin;
 
         return Builder(
           builder: (builderContext) {
-            final double maxLeft = (screenSize.width - (_isMinimized ? bubbleSize : 340.w) - minMargin).clamp(minMargin, screenSize.width);
+            final double maxLeft = (screenSize.width - (_isMinimized ? bubbleSize : 340.0) - minMargin).clamp(minMargin, screenSize.width);
             final bool isOnRightHalf = (_left! + bubbleSize / 2) > (screenSize.width / 2);
             final Alignment transitionAlignment = isOnRightHalf ? Alignment.centerRight : Alignment.centerLeft;
 
@@ -110,7 +108,7 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
                                 child: Icon(
                                   Icons.auto_stories_rounded,
                                   color: AppColors.accentGold,
-                                  size: 20.sp,
+                                  size: 22,
                                 ),
                               ),
                             ),
@@ -123,9 +121,9 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
                           borderRadius: BorderRadius.circular(toolbarHeight / 2),
                           child: Container(
                             height: toolbarHeight,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 10.w,
-                              vertical: 3.h,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.background.withValues(alpha: 0.95),
@@ -149,38 +147,38 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
                                 Icon(
                                   Icons.drag_indicator_rounded,
                                   color: AppColors.textSecondary.withValues(alpha: 0.8),
-                                  size: 20.sp,
+                                  size: 22,
                                 ),
-                                SizedBox(width: 6.w),
-                                _HifzTypeChip(
+                                const SizedBox(width: 8),
+                                _WebHifzTypeChip(
                                   type: HifzMaskingType.fullVerse,
                                   label: l10n.hifzMaskFull,
                                   isSelected: state.maskingType == HifzMaskingType.fullVerse,
                                 ),
-                                SizedBox(width: 5.w),
-                                _HifzTypeChip(
+                                const SizedBox(width: 6),
+                                _WebHifzTypeChip(
                                   type: HifzMaskingType.wordByWord,
                                   label: l10n.hifzMaskWord,
                                   isSelected: state.maskingType == HifzMaskingType.wordByWord,
                                 ),
-                                SizedBox(width: 10.w),
-                                _HifzActionIcon(
+                                const SizedBox(width: 12),
+                                _WebHifzActionIcon(
                                   icon: Icons.refresh_rounded,
                                   color: AppColors.accentGold,
                                   onTap: () {
                                     context.read<HifzBloc>().add(const ClearRevealedItems());
                                   },
                                 ),
-                                SizedBox(width: 3.w),
-                                _HifzActionIcon(
+                                const SizedBox(width: 4),
+                                _WebHifzActionIcon(
                                   icon: Icons.unfold_less_rounded,
                                   color: AppColors.textSecondary,
                                   onTap: () {
                                     setState(() => _isMinimized = true);
                                   },
                                 ),
-                                SizedBox(width: 3.w),
-                                _HifzActionIcon(
+                                const SizedBox(width: 4),
+                                _WebHifzActionIcon(
                                   icon: Icons.close_rounded,
                                   color: Colors.redAccent,
                                   onTap: () {
@@ -203,12 +201,12 @@ class _HifzToolbarWidgetState extends State<HifzToolbarWidget> {
   }
 }
 
-class _HifzActionIcon extends StatelessWidget {
+class _WebHifzActionIcon extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
 
-  const _HifzActionIcon({
+  const _WebHifzActionIcon({
     required this.icon,
     required this.color,
     required this.onTap,
@@ -218,28 +216,28 @@ class _HifzActionIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16.r),
+      borderRadius: BorderRadius.circular(16),
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: 5.w,
-          vertical: 4.h,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 6,
+          vertical: 5,
         ),
         child: Icon(
           icon,
           color: color,
-          size: 18.sp,
+          size: 19,
         ),
       ),
     );
   }
 }
 
-class _HifzTypeChip extends StatelessWidget {
+class _WebHifzTypeChip extends StatelessWidget {
   final HifzMaskingType type;
   final String label;
   final bool isSelected;
 
-  const _HifzTypeChip({
+  const _WebHifzTypeChip({
     required this.type,
     required this.label,
     required this.isSelected,
@@ -251,22 +249,22 @@ class _HifzTypeChip extends StatelessWidget {
       onTap: () {
         context.read<HifzBloc>().add(SetHifzMaskingType(type));
       },
-      borderRadius: BorderRadius.circular(20.r),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: 10.w,
-          vertical: 4.h,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 11,
+          vertical: 4.5,
         ),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.accentGold
               : AppColors.cardBackground.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(20.r),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 11.5.sp,
+            fontSize: 12,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             color: isSelected ? Colors.white : AppColors.textSecondary,
           ),

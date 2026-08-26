@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../core/theme/app_colors.dart';
@@ -38,7 +37,6 @@ class VerseCardActionButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    const isWeb = kIsWeb;
 
     Widget buildButtons() {
       switch (selectedFormat) {
@@ -56,9 +54,7 @@ class VerseCardActionButtons extends StatelessWidget {
                         AppColors.accentGold.withValues(alpha: 0.85),
                     disabledForegroundColor:
                         Colors.white.withValues(alpha: 0.9),
-                    padding: EdgeInsets.symmetric(
-                      vertical: isWeb ? 14 : 12.h,
-                    ),
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14.r),
                     ),
@@ -66,14 +62,14 @@ class VerseCardActionButtons extends StatelessWidget {
                   ),
                   icon: isExportingVideo
                       ? CupertinoActivityIndicator(
-                          radius: isWeb ? 8 : 8.r,
+                          radius: 8.r,
                           color: Colors.white,
                         )
                       : const Icon(Icons.share_rounded),
                   label: Text(
                     'مشاركة الفيديو',
                     style: TextStyle(
-                      fontSize: isWeb ? 15 : 14.sp,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -93,23 +89,21 @@ class VerseCardActionButtons extends StatelessWidget {
                       ),
                       width: 1.5,
                     ),
-                    padding: EdgeInsets.symmetric(
-                      vertical: isWeb ? 14 : 12.h,
-                    ),
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14.r),
                     ),
                   ),
                   icon: isExportingVideo
                       ? CupertinoActivityIndicator(
-                          radius: isWeb ? 8 : 8.r,
+                          radius: 8.r,
                           color: AppColors.accentGold,
                         )
                       : const Icon(Icons.download_rounded),
                   label: Text(
                     'حفظ الفيديو',
                     style: TextStyle(
-                      fontSize: isWeb ? 15 : 14.sp,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -132,9 +126,7 @@ class VerseCardActionButtons extends StatelessWidget {
                         AppColors.accentGold.withValues(alpha: 0.85),
                     disabledForegroundColor:
                         Colors.white.withValues(alpha: 0.9),
-                    padding: EdgeInsets.symmetric(
-                      vertical: isWeb ? 14 : 12.h,
-                    ),
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14.r),
                     ),
@@ -142,14 +134,14 @@ class VerseCardActionButtons extends StatelessWidget {
                   ),
                   icon: isSharing
                       ? CupertinoActivityIndicator(
-                          radius: isWeb ? 8 : 8.r,
+                          radius: 8.r,
                           color: Colors.white,
                         )
                       : const Icon(Icons.share_rounded),
                   label: Text(
                     l10n.verseCardShareImage,
                     style: TextStyle(
-                      fontSize: isWeb ? 15 : 14.sp,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -169,23 +161,21 @@ class VerseCardActionButtons extends StatelessWidget {
                       ),
                       width: 1.5,
                     ),
-                    padding: EdgeInsets.symmetric(
-                      vertical: isWeb ? 14 : 12.h,
-                    ),
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14.r),
                     ),
                   ),
                   icon: isSaving
                       ? CupertinoActivityIndicator(
-                          radius: isWeb ? 8 : 8.r,
+                          radius: 8.r,
                           color: AppColors.accentGold,
                         )
                       : const Icon(Icons.download_rounded),
                   label: Text(
                     l10n.verseCardSaveImage,
                     style: TextStyle(
-                      fontSize: isWeb ? 15 : 14.sp,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -202,9 +192,7 @@ class VerseCardActionButtons extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accentGold,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(
-                  vertical: isWeb ? 14 : 12.h,
-                ),
+                padding: EdgeInsets.symmetric(vertical: 12.h),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14.r),
                 ),
@@ -214,7 +202,7 @@ class VerseCardActionButtons extends StatelessWidget {
               label: Text(
                 l10n.verseCardCopyText,
                 style: TextStyle(
-                  fontSize: isWeb ? 15 : 14.sp,
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),

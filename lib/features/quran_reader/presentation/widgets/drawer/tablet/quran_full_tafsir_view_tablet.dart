@@ -736,15 +736,15 @@ class _QuranFullTafsirViewTabletState extends State<QuranFullTafsirViewTablet> {
                                       color: isActive
                                           ? AppColors.accentGold
                                           : AppColors.borderLight,
-                                      width: isActive ? 2 : 1,
+                                      width: isActive ? 2.w : 1.w,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
                                         color: AppColors.textPrimary.withValues(
                                           alpha: 0.04,
                                         ),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 3),
+                                        blurRadius: 8.r,
+                                        offset: Offset(0, 3.h),
                                       ),
                                     ],
                                   ),
@@ -892,7 +892,7 @@ class _QuranFullTafsirViewTabletState extends State<QuranFullTafsirViewTablet> {
                                               border: Border.all(
                                                 color: AppColors.accentGold
                                                     .withValues(alpha: 0.3),
-                                                width: 1,
+                                                width: 1.w,
                                               ),
                                             ),
                                             child: Row(

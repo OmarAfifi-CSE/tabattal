@@ -18,7 +18,7 @@ import '../../../bloc/bookmark/bookmark_bloc.dart';
 import '../../../bloc/bookmark/bookmark_state.dart';
 import '../../../domain/repositories/quran_repository.dart';
 import 'quran_page_frame_mobile.dart';
-import '../verse_action_menu.dart';
+import 'verse_action_menu_mobile.dart';
 import '../../../../../core/constants/quran_metadata.dart';
 import 'surah_header_widget_mobile.dart';
 import '../../../../settings/bloc/settings_bloc.dart';
