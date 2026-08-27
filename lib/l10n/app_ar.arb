@@ -485,6 +485,36 @@
   "videoStudioProgressGeneratingOverlays": "جاري إعداد النصوص والمشاهد...",
   "videoStudioProgressEncoding": "جاري تصدير ومعالجة مقطع الفيديو...",
   "videoStudioExportPreparing": "جاري بدء إعداد مقطع الفيديو...",
+  "videoStudioProgressReadingTimings": "جاري قراءة توقيتات كلمات الآية ({ayah})...",
+  "@videoStudioProgressReadingTimings": {
+    "placeholders": {
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioProgressCreatingBaseFrame": "جاري إنشاء الإطار الأساسي للبطاقة...",
+  "videoStudioProgressRenderingLine": "جاري رسم وتجهيز السطر ({currentLine} من {totalLines}) للآية ({ayah})...",
+  "@videoStudioProgressRenderingLine": {
+    "placeholders": {
+      "currentLine": { "type": "int" },
+      "totalLines": { "type": "int" },
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioProgressRenderingVerse": "جاري رسم وتجهيز الآية ({ayah})...",
+  "@videoStudioProgressRenderingVerse": {
+    "placeholders": {
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioProgressUploadingPayload": "جاري رفع بيانات المقطع ({percent}%)...",
+  "@videoStudioProgressUploadingPayload": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "videoStudioProgressServerMuxing": "جاري دمج التلاوة ومونتاج مقطع الفيديو على السيرفر...",
+  "videoStudioProgressPreparingDownload": "جاري تحضير ملف الفيديو للتحميل...",
+  "videoStudioProgressConcatenating": "جاري تجميع وحفظ الفيديو النهائي...",
   "audioDownloadPause": "إيقاف التحميل",
   "audioDownloadPaused": "تم إيقاف التحميل مؤقتًا",
   "audioDownloadStartingAll": "جاري بدء تحميل جميع السور...",

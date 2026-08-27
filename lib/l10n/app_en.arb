@@ -486,6 +486,36 @@
   "videoStudioProgressGeneratingOverlays": "Preparing verse animations...",
   "videoStudioProgressEncoding": "Encoding and rendering video...",
   "videoStudioExportPreparing": "Starting video generation...",
+  "videoStudioProgressReadingTimings": "Reading word timings for Ayah ({ayah})...",
+  "@videoStudioProgressReadingTimings": {
+    "placeholders": {
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioProgressCreatingBaseFrame": "Creating static base card frame...",
+  "videoStudioProgressRenderingLine": "Rendering line ({currentLine} of {totalLines}) for Ayah ({ayah})...",
+  "@videoStudioProgressRenderingLine": {
+    "placeholders": {
+      "currentLine": { "type": "int" },
+      "totalLines": { "type": "int" },
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioProgressRenderingVerse": "Rendering Ayah ({ayah})...",
+  "@videoStudioProgressRenderingVerse": {
+    "placeholders": {
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioProgressUploadingPayload": "Uploading video data ({percent}%)...",
+  "@videoStudioProgressUploadingPayload": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "videoStudioProgressServerMuxing": "Encoding and muxing video on cloud server...",
+  "videoStudioProgressPreparingDownload": "Preparing video file for download...",
+  "videoStudioProgressConcatenating": "Muxing and saving final video file...",
   "audioDownloadPause": "Pause Download",
   "audioDownloadPaused": "Download paused",
   "audioDownloadStartingAll": "Starting download for all surahs...",

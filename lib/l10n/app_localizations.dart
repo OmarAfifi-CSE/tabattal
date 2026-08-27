@@ -1818,6 +1818,58 @@ abstract class AppLocalizations {
   /// **'جاري بدء إعداد مقطع الفيديو...'**
   String get videoStudioExportPreparing;
 
+  /// No description provided for @videoStudioProgressReadingTimings.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري قراءة توقيتات كلمات الآية ({ayah})...'**
+  String videoStudioProgressReadingTimings(int ayah);
+
+  /// No description provided for @videoStudioProgressCreatingBaseFrame.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري إنشاء الإطار الأساسي للبطاقة...'**
+  String get videoStudioProgressCreatingBaseFrame;
+
+  /// No description provided for @videoStudioProgressRenderingLine.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري رسم وتجهيز السطر ({currentLine} من {totalLines}) للآية ({ayah})...'**
+  String videoStudioProgressRenderingLine(
+    int currentLine,
+    int totalLines,
+    int ayah,
+  );
+
+  /// No description provided for @videoStudioProgressRenderingVerse.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري رسم وتجهيز الآية ({ayah})...'**
+  String videoStudioProgressRenderingVerse(int ayah);
+
+  /// No description provided for @videoStudioProgressUploadingPayload.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري رفع بيانات المقطع ({percent}%)...'**
+  String videoStudioProgressUploadingPayload(int percent);
+
+  /// No description provided for @videoStudioProgressServerMuxing.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري دمج التلاوة ومونتاج مقطع الفيديو على السيرفر...'**
+  String get videoStudioProgressServerMuxing;
+
+  /// No description provided for @videoStudioProgressPreparingDownload.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري تحضير ملف الفيديو للتحميل...'**
+  String get videoStudioProgressPreparingDownload;
+
+  /// No description provided for @videoStudioProgressConcatenating.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري تجميع وحفظ الفيديو النهائي...'**
+  String get videoStudioProgressConcatenating;
+
   /// No description provided for @audioDownloadPause.
   ///
   /// In ar, this message translates to:

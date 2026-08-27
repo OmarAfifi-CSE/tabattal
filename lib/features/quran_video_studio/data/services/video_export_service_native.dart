@@ -98,8 +98,9 @@ class VideoExportService implements IVideoExportService {
           final audioProgress = 0.05 + ((i + 1) / verses.length) * 0.05;
           controller.add(VideoRenderProgress(
             phase: VideoRenderPhase.downloadingAudio,
+            step: VideoProgressStep.downloadingAudio,
             progress: audioProgress.clamp(0.05, 0.10),
-            statusMessage: 'جاري تجهيز تلاوة الآية (${v.verseNumber})...',
+            ayahNumber: v.verseNumber,
           ));
         }
 
@@ -204,7 +205,7 @@ class VideoExportService implements IVideoExportService {
         // Render each unit (Overlay -> Video Segment)
         for (int u = 0; u < totalUnits; u++) {
           if (_isCancelled) {
-            controller.add(const VideoRenderProgress(phase: VideoRenderPhase.cancelled));
+            controller.add(const VideoRenderProgress(phase: VideoRenderPhase.cancelled, step: VideoProgressStep.cancelled));
             await controller.close();
             return;
           }
@@ -239,10 +240,11 @@ class VideoExportService implements IVideoExportService {
           final overlayProgress = 0.10 + ((u + 1) / totalUnits) * 0.10;
           controller.add(VideoRenderProgress(
             phase: VideoRenderPhase.generatingOverlays,
+            step: isLineByLine ? VideoProgressStep.renderingLine : VideoProgressStep.renderingVerse,
             progress: overlayProgress.clamp(0.10, 0.20),
-            statusMessage: isLineByLine
-                ? 'جاري إعداد سطر (${unit['currentLine']}/${unit['lineCount']}) للآية (${verse.verseNumber})...'
-                : 'جاري إعداد الآية (${verse.verseNumber})...',
+            ayahNumber: verse.verseNumber,
+            currentLine: isLineByLine ? (unit['currentLine'] as int) : 1,
+            totalLines: isLineByLine ? (unit['lineCount'] as int) : 1,
           ));
 
           // Video encoding per segment
@@ -276,10 +278,11 @@ class VideoExportService implements IVideoExportService {
           final initialProgress = 0.20 + (completedDurationMs / totalDurationMs) * 0.74;
           controller.add(VideoRenderProgress(
             phase: VideoRenderPhase.encodingVideo,
+            step: isLineByLine ? VideoProgressStep.renderingLine : VideoProgressStep.renderingVerse,
             progress: initialProgress.clamp(0.20, 0.94),
-            statusMessage: isLineByLine
-                ? 'جاري معالجة مقطع (${u + 1}/$totalUnits)...'
-                : 'جاري معالجة الآية (${verse.verseNumber})...',
+            ayahNumber: verse.verseNumber,
+            currentLine: isLineByLine ? (unit['currentLine'] as int) : 1,
+            totalLines: isLineByLine ? (unit['lineCount'] as int) : 1,
           ));
 
           await FFmpegKit.executeAsync(
@@ -298,10 +301,11 @@ class VideoExportService implements IVideoExportService {
 
               controller.add(VideoRenderProgress(
                 phase: VideoRenderPhase.encodingVideo,
+                step: isLineByLine ? VideoProgressStep.renderingLine : VideoProgressStep.renderingVerse,
                 progress: realProgress,
-                statusMessage: isLineByLine
-                    ? 'جاري معالجة مقطع (${u + 1}/$totalUnits)...'
-                    : 'جاري معالجة الآية (${verse.verseNumber})...',
+                ayahNumber: verse.verseNumber,
+                currentLine: isLineByLine ? (unit['currentLine'] as int) : 1,
+                totalLines: isLineByLine ? (unit['lineCount'] as int) : 1,
               ));
             },
           );
@@ -319,8 +323,8 @@ class VideoExportService implements IVideoExportService {
         // Concatenate all video segments and mux with 100% continuous audio stream
         controller.add(const VideoRenderProgress(
           phase: VideoRenderPhase.encodingVideo,
+          step: VideoProgressStep.concatenatingSegments,
           progress: 0.95,
-          statusMessage: 'جاري تجميع وحفظ الفيديو النهائي...',
         ));
 
         final rawVideoFile = File('${sessionDir.path}/raw_video.mp4');

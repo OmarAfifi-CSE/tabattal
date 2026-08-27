@@ -1,10 +1,8 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
-import '../../../domain/entities/video_enums.dart';
 import '../../../domain/entities/video_render_progress.dart';
 
 class VideoExportProgressDialog extends StatelessWidget {
@@ -22,7 +20,7 @@ class VideoExportProgressDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isIndeterminate = progress.progress < 0.0 || (kIsWeb && progress.progress < 1.0);
+    final isIndeterminate = progress.progress < 0.0;
 
     return PopScope(
       canPop: progress.isCompleted || progress.isFailed,
@@ -81,7 +79,7 @@ class VideoExportProgressDialog extends StatelessWidget {
                     width: 44.r,
                     height: 44.r,
                     child: CircularProgressIndicator(
-                      value: progress.progress > 0 ? progress.progress : null,
+                      value: progress.progress > 0 ? progress.progress.clamp(0.0, 1.0) : null,
                       strokeWidth: 3.5,
                       color: AppColors.accentGold,
                       backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
@@ -112,26 +110,30 @@ class VideoExportProgressDialog extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12.sp,
                     color: AppColors.textSecondary,
+                    height: 1.4,
                   ),
                 ),
 
                 if (progress.isRendering) ...[
                   SizedBox(height: 14.h),
                   LinearProgressIndicator(
-                    value: isIndeterminate ? null : progress.progress,
+                    value: isIndeterminate ? null : progress.progress.clamp(0.0, 1.0),
                     minHeight: 6.h,
                     borderRadius: BorderRadius.circular(8.r),
                     color: AppColors.accentGold,
                     backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
                   ),
                   if (!isIndeterminate) ...[
-                    SizedBox(height: 6.h),
-                    Text(
-                      '${(progress.progress * 100).toInt()}%',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.accentGold,
+                    SizedBox(height: 8.h),
+                    Center(
+                      child: Text(
+                        '${(progress.progress.clamp(0.0, 1.0) * 100).toInt()}%',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.accentGold,
+                          fontFamily: 'Outfit',
+                        ),
                       ),
                     ),
                   ],
@@ -171,28 +173,42 @@ class VideoExportProgressDialog extends StatelessWidget {
   String _getLocalizedStatusMessage(
       BuildContext context, VideoRenderProgress progress) {
     final l10n = AppLocalizations.of(context)!;
-    if (progress.statusMessage.isNotEmpty && !progress.isRendering) {
-      return progress.statusMessage;
-    }
-    switch (progress.phase) {
-      case VideoRenderPhase.downloadingAudio:
+    switch (progress.step) {
+      case VideoProgressStep.readingTimings:
+        return l10n.videoStudioProgressReadingTimings(progress.ayahNumber ?? 1);
+      case VideoProgressStep.creatingBaseFrame:
+        return l10n.videoStudioProgressCreatingBaseFrame;
+      case VideoProgressStep.renderingLine:
+        return l10n.videoStudioProgressRenderingLine(
+          progress.currentLine ?? 1,
+          progress.totalLines ?? 1,
+          progress.ayahNumber ?? 1,
+        );
+      case VideoProgressStep.renderingVerse:
+        return l10n.videoStudioProgressRenderingVerse(progress.ayahNumber ?? 1);
+      case VideoProgressStep.uploadingPayload:
+        return l10n.videoStudioProgressUploadingPayload(progress.uploadPercent ?? 0);
+      case VideoProgressStep.serverEncoding:
+        return l10n.videoStudioProgressServerMuxing;
+      case VideoProgressStep.preparingDownload:
+        return l10n.videoStudioProgressPreparingDownload;
+      case VideoProgressStep.concatenatingSegments:
+        return l10n.videoStudioProgressConcatenating;
+      case VideoProgressStep.downloadingAudio:
         return l10n.videoStudioProgressDownloadingAudio;
-      case VideoRenderPhase.generatingOverlays:
-        return l10n.videoStudioProgressGeneratingOverlays;
-      case VideoRenderPhase.encodingVideo:
-        return l10n.videoStudioProgressEncoding;
-      case VideoRenderPhase.completed:
+      case VideoProgressStep.completed:
         return l10n.videoStudioProgressCompleted;
-      case VideoRenderPhase.failed:
+      case VideoProgressStep.failed:
         return progress.statusMessage.isNotEmpty
             ? progress.statusMessage
             : l10n.videoStudioProgressFailed;
-      case VideoRenderPhase.cancelled:
+      case VideoProgressStep.cancelled:
         return l10n.videoStudioCancelExport;
-      case VideoRenderPhase.idle:
-        return progress.statusMessage.isNotEmpty
-            ? progress.statusMessage
-            : l10n.videoStudioExportPreparing;
+      case VideoProgressStep.initial:
+        if (progress.statusMessage.isNotEmpty) {
+          return progress.statusMessage;
+        }
+        return l10n.videoStudioExportPreparing;
     }
   }
 }

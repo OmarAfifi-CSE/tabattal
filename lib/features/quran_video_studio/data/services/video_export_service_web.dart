@@ -90,6 +90,13 @@ class VideoExportService implements IVideoExportService {
               ? verseDurations[i]
               : const Duration(seconds: 4);
 
+          controller.add(VideoRenderProgress(
+            phase: VideoRenderPhase.downloadingAudio,
+            step: VideoProgressStep.readingTimings,
+            progress: 0.02 + ((i + 1) / verses.length) * 0.08,
+            ayahNumber: verse.verseNumber,
+          ));
+
           final timings = await wordTimingService.getWordTimings(
             surahNumber: config.surahNumber,
             verse: verse,
@@ -140,7 +147,13 @@ class VideoExportService implements IVideoExportService {
 
         final totalUnits = unitConfigs.length;
 
-        // Phase 2: Generating HD Base Frame and Transparent Overlays (10% -> 30%)
+        // Phase 2: Generating HD Base Frame and Transparent Overlays (10% -> 50%)
+        controller.add(const VideoRenderProgress(
+          phase: VideoRenderPhase.generatingOverlays,
+          step: VideoProgressStep.creatingBaseFrame,
+          progress: 0.12,
+        ));
+
         final baseFrameBytes = await _overlayGenerator.generateStaticBaseFramePng(
           config: config,
           verse: verses.first,
@@ -155,7 +168,7 @@ class VideoExportService implements IVideoExportService {
 
         for (int u = 0; u < totalUnits; u++) {
           if (_isCancelled) {
-            controller.add(const VideoRenderProgress(phase: VideoRenderPhase.cancelled));
+            controller.add(const VideoRenderProgress(phase: VideoRenderPhase.cancelled, step: VideoProgressStep.cancelled));
             await controller.close();
             return;
           }
@@ -185,21 +198,23 @@ class VideoExportService implements IVideoExportService {
 
           overlayBytesList.add(overlayBytes);
 
-          final overlayProgress = 0.10 + ((u + 1) / totalUnits) * 0.20;
+          final overlayProgress = 0.12 + ((u + 1) / totalUnits) * 0.38;
           controller.add(VideoRenderProgress(
             phase: VideoRenderPhase.generatingOverlays,
-            progress: overlayProgress.clamp(0.10, 0.30),
-            statusMessage: isLineByLine
-                ? 'جاري إعداد سطر (${unit['currentLine']}/${unit['lineCount']}) للآية (${verse.verseNumber})...'
-                : 'جاري إعداد الآية (${verse.verseNumber})...',
+            step: isLineByLine ? VideoProgressStep.renderingLine : VideoProgressStep.renderingVerse,
+            progress: overlayProgress.clamp(0.12, 0.50),
+            ayahNumber: verse.verseNumber,
+            currentLine: isLineByLine ? (unit['currentLine'] as int) : 1,
+            totalLines: isLineByLine ? (unit['lineCount'] as int) : 1,
           ));
         }
 
-        // Phase 3: Uploading to Cloud FFmpeg Video Service (30% -> 95%)
+        // Phase 3: Uploading to Cloud FFmpeg Video Service (50% -> 85%)
         controller.add(const VideoRenderProgress(
           phase: VideoRenderPhase.encodingVideo,
-          progress: -1.0,
-          statusMessage: 'جاري إرسال البيانات ومعالجة الفيديو سحابيًا...',
+          step: VideoProgressStep.uploadingPayload,
+          progress: 0.50,
+          uploadPercent: 0,
         ));
 
         final formData = html.FormData();
@@ -235,17 +250,21 @@ class VideoExportService implements IVideoExportService {
         request.upload.onProgress.listen((html.ProgressEvent event) {
           if (event.lengthComputable && event.total != null && event.total! > 0) {
             final double uploadFraction = (event.loaded! / event.total!).clamp(0.0, 1.0);
+            final double uploadProgress = 0.50 + (uploadFraction * 0.35);
+            final int percent = (uploadFraction * 100).toInt();
+
             if (uploadFraction < 1.0) {
-              controller.add(const VideoRenderProgress(
+              controller.add(VideoRenderProgress(
                 phase: VideoRenderPhase.encodingVideo,
-                progress: -1.0,
-                statusMessage: 'جاري إرسال البيانات لخادم التصدير...',
+                step: VideoProgressStep.uploadingPayload,
+                progress: uploadProgress.clamp(0.50, 0.85),
+                uploadPercent: percent,
               ));
             } else {
               controller.add(const VideoRenderProgress(
                 phase: VideoRenderPhase.encodingVideo,
-                progress: -1.0,
-                statusMessage: 'جاري دمج الصوت ومعالجة مقطع الفيديو، يرجى الانتظار...',
+                step: VideoProgressStep.serverEncoding,
+                progress: 0.88,
               ));
             }
           }
@@ -255,6 +274,11 @@ class VideoExportService implements IVideoExportService {
           if (request.status == 200) {
             final dynamic responseBlob = request.response;
             if (responseBlob is html.Blob) {
+              controller.add(const VideoRenderProgress(
+                phase: VideoRenderPhase.encodingVideo,
+                step: VideoProgressStep.preparingDownload,
+                progress: 0.96,
+              ));
               requestCompleter.complete(responseBlob);
             } else {
               requestCompleter.completeError('Invalid response received from video export server.');
@@ -288,12 +312,6 @@ class VideoExportService implements IVideoExportService {
         });
 
         request.send(formData);
-
-        controller.add(const VideoRenderProgress(
-          phase: VideoRenderPhase.encodingVideo,
-          progress: 0.75,
-          statusMessage: 'جاري معالجة ودمج الصوت والفيديو عبر FFmpeg...',
-        ));
 
         final mp4Blob = await requestCompleter.future;
 

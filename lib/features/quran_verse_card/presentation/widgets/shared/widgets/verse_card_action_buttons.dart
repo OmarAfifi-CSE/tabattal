@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -41,6 +42,44 @@ class VerseCardActionButtons extends StatelessWidget {
     Widget buildButtons() {
       switch (selectedFormat) {
         case ShareFormat.video:
+          if (kIsWeb) {
+            return Row(
+              key: const ValueKey('video_action_buttons_web'),
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: isExportingVideo ? null : onSaveVideo,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accentGold,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor:
+                          AppColors.accentGold.withValues(alpha: 0.85),
+                      disabledForegroundColor:
+                          Colors.white.withValues(alpha: 0.9),
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.r),
+                      ),
+                      elevation: 2,
+                    ),
+                    icon: isExportingVideo
+                        ? CupertinoActivityIndicator(
+                            radius: 8.r,
+                            color: Colors.white,
+                          )
+                        : const Icon(Icons.download_rounded),
+                    label: Text(
+                      l10n.videoStudioDownloadVideo,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
           return Row(
             key: const ValueKey('video_action_buttons'),
             children: [

@@ -2306,7 +2306,7 @@ class _VerseCardActionButtonsWeb extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: isExportingVideo ? null : onShareVideo,
+                  onPressed: isExportingVideo ? null : onSaveVideo,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.accentGold,
                     foregroundColor: Colors.white,
@@ -2323,36 +2323,6 @@ class _VerseCardActionButtonsWeb extends StatelessWidget {
                       ? CupertinoActivityIndicator(
                           radius: isLandscape ? 9.0 : 11.0,
                           color: Colors.white,
-                        )
-                      : Icon(Icons.share_rounded, size: iconSize),
-                  label: Text(
-                    l10n.videoStudioShare,
-                    style: labelStyle,
-                  ),
-                ),
-              ),
-              SizedBox(width: buttonSpacing),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: isExportingVideo ? null : onSaveVideo,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.accentGold,
-                    disabledForegroundColor:
-                        AppColors.accentGold.withValues(alpha: 0.85),
-                    side: BorderSide(
-                      color: AppColors.accentGold.withValues(
-                        alpha: isExportingVideo ? 0.85 : 1.0,
-                      ),
-                      width: 1.5,
-                    ),
-                    minimumSize: buttonMinSize,
-                    padding: buttonPadding,
-                    shape: buttonShape,
-                  ),
-                  icon: isExportingVideo
-                      ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 9.0 : 11.0,
-                          color: AppColors.accentGold,
                         )
                       : Icon(Icons.download_rounded, size: iconSize),
                   label: Text(

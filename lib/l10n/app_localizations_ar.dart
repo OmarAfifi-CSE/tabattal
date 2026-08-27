@@ -943,6 +943,46 @@ class AppLocalizationsAr extends AppLocalizations {
   String get videoStudioExportPreparing => 'جاري بدء إعداد مقطع الفيديو...';
 
   @override
+  String videoStudioProgressReadingTimings(int ayah) {
+    return 'جاري قراءة توقيتات كلمات الآية ($ayah)...';
+  }
+
+  @override
+  String get videoStudioProgressCreatingBaseFrame =>
+      'جاري إنشاء الإطار الأساسي للبطاقة...';
+
+  @override
+  String videoStudioProgressRenderingLine(
+    int currentLine,
+    int totalLines,
+    int ayah,
+  ) {
+    return 'جاري رسم وتجهيز السطر ($currentLine من $totalLines) للآية ($ayah)...';
+  }
+
+  @override
+  String videoStudioProgressRenderingVerse(int ayah) {
+    return 'جاري رسم وتجهيز الآية ($ayah)...';
+  }
+
+  @override
+  String videoStudioProgressUploadingPayload(int percent) {
+    return 'جاري رفع بيانات المقطع ($percent%)...';
+  }
+
+  @override
+  String get videoStudioProgressServerMuxing =>
+      'جاري دمج التلاوة ومونتاج مقطع الفيديو على السيرفر...';
+
+  @override
+  String get videoStudioProgressPreparingDownload =>
+      'جاري تحضير ملف الفيديو للتحميل...';
+
+  @override
+  String get videoStudioProgressConcatenating =>
+      'جاري تجميع وحفظ الفيديو النهائي...';
+
+  @override
   String get audioDownloadPause => 'إيقاف التحميل';
 
   @override

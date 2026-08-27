@@ -60,10 +60,9 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="manifest" href="manifest.json">
 
-  <!-- High-Priority Network Preloads for Maximum Concurrent Startup -->
+  <!-- High-Priority Network Preloads for Web Startup -->
   <link rel="preload" href="flutter_bootstrap.js" as="script">
   <link rel="preload" href="canvaskit/canvaskit.wasm" as="fetch" crossorigin>
-  <link rel="preload" href="assets/assets/data/quran.db" as="fetch" crossorigin>
 
   <!-- Google Fonts Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -283,14 +282,12 @@
       width: 100%;
       font-size: 0.8rem;
       color: var(--text-muted);
-      direction: rtl;
     }
 
     #progress-percent {
       color: var(--gold-color);
       font-weight: 700;
       font-family: 'Outfit', sans-serif;
-      direction: ltr;
     }
 
     #progress-status {
@@ -349,9 +346,9 @@
       </div>
       
       <!-- Percentage & Status Info -->
-      <div class="progress-info">
-        <span id="progress-percent">0%</span>
+      <div id="progress-info-box" class="progress-info">
         <span id="progress-status">Loading Tabattal...</span>
+        <span id="progress-percent">0%</span>
       </div>
     </div>
   </div>
@@ -437,7 +434,12 @@
       const fill = document.getElementById('progress-bar-fill');
       const percentText = document.getElementById('progress-percent');
       const statusText = document.getElementById('progress-status');
+      const infoBox = document.getElementById('progress-info-box');
       const loader = document.getElementById('tabattal-loader');
+
+      if (infoBox) {
+        infoBox.dir = isArabic ? 'rtl' : 'ltr';
+      }
 
       // Cold start expected payload: ~24.5 MB
       const EXPECTED_TOTAL_BYTES = 24.5 * 1024 * 1024;
@@ -456,7 +458,12 @@
         }
         if (fill) fill.style.width = highestPercentage + '%';
         if (percentText) percentText.textContent = highestPercentage + '%';
-        if (customStatus) setStatus(customStatus);
+        
+        if (customStatus) {
+          setStatus(customStatus);
+        } else if (highestPercentage >= 95) {
+          setStatus(isArabic ? 'جاري تهيئة قاعدة بيانات المصحف...' : 'Initializing Quran database & storage...');
+        }
       }
 
       setStatus(isArabic ? 'جاري تحضير المصحف الشريف...' : 'Preparing the Holy Quran...');

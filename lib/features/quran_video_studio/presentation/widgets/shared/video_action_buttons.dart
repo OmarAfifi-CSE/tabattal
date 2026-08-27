@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -86,72 +87,114 @@ class VideoActionButtons extends StatelessWidget {
         ),
 
         // Action Buttons Row
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: isExporting ? null : onShareVideo,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accentGold,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppColors.accentGold.withValues(alpha: 0.85),
-                  disabledForegroundColor: Colors.white.withValues(alpha: 0.9),
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14.r),
-                  ),
-                  elevation: 2,
-                ),
-                icon: isExporting
-                    ? CupertinoActivityIndicator(
-                        radius: 8.r,
-                        color: Colors.white,
-                      )
-                    : const Icon(Icons.share_rounded),
-                label: Text(
-                  l10n.videoStudioShare,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(width: 10.w),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: isExporting ? null : onSaveVideo,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.accentGold,
-                  disabledForegroundColor: AppColors.accentGold.withValues(alpha: 0.85),
-                  side: BorderSide(
-                    color: AppColors.accentGold.withValues(
-                      alpha: isExporting ? 0.85 : 1.0,
+        if (kIsWeb)
+          Row(
+            key: const ValueKey('video_action_buttons_web'),
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: isExporting ? null : onSaveVideo,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accentGold,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        AppColors.accentGold.withValues(alpha: 0.85),
+                    disabledForegroundColor:
+                        Colors.white.withValues(alpha: 0.9),
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.r),
                     ),
-                    width: 1.5,
+                    elevation: 2,
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14.r),
-                  ),
-                ),
-                icon: isExporting
-                    ? CupertinoActivityIndicator(
-                        radius: 8.r,
-                        color: AppColors.accentGold,
-                      )
-                    : const Icon(Icons.download_rounded),
-                label: Text(
-                  l10n.videoStudioSave,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
+                  icon: isExporting
+                      ? CupertinoActivityIndicator(
+                          radius: 8.r,
+                          color: Colors.white,
+                        )
+                      : const Icon(Icons.download_rounded),
+                  label: Text(
+                    l10n.videoStudioDownloadVideo,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          )
+        else
+          Row(
+            key: const ValueKey('video_action_buttons_native'),
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: isExporting ? null : onShareVideo,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accentGold,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        AppColors.accentGold.withValues(alpha: 0.85),
+                    disabledForegroundColor:
+                        Colors.white.withValues(alpha: 0.9),
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                    elevation: 2,
+                  ),
+                  icon: isExporting
+                      ? CupertinoActivityIndicator(
+                          radius: 8.r,
+                          color: Colors.white,
+                        )
+                      : const Icon(Icons.share_rounded),
+                  label: Text(
+                    l10n.videoStudioShare,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: isExporting ? null : onSaveVideo,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.accentGold,
+                    disabledForegroundColor:
+                        AppColors.accentGold.withValues(alpha: 0.85),
+                    side: BorderSide(
+                      color: AppColors.accentGold.withValues(
+                        alpha: isExporting ? 0.85 : 1.0,
+                      ),
+                      width: 1.5,
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                  ),
+                  icon: isExporting
+                      ? CupertinoActivityIndicator(
+                          radius: 8.r,
+                          color: AppColors.accentGold,
+                        )
+                      : const Icon(Icons.download_rounded),
+                  label: Text(
+                    l10n.videoStudioSave,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
       ],
     );
   }

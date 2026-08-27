@@ -945,6 +945,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoStudioExportPreparing => 'Starting video generation...';
 
   @override
+  String videoStudioProgressReadingTimings(int ayah) {
+    return 'Reading word timings for Ayah ($ayah)...';
+  }
+
+  @override
+  String get videoStudioProgressCreatingBaseFrame =>
+      'Creating static base card frame...';
+
+  @override
+  String videoStudioProgressRenderingLine(
+    int currentLine,
+    int totalLines,
+    int ayah,
+  ) {
+    return 'Rendering line ($currentLine of $totalLines) for Ayah ($ayah)...';
+  }
+
+  @override
+  String videoStudioProgressRenderingVerse(int ayah) {
+    return 'Rendering Ayah ($ayah)...';
+  }
+
+  @override
+  String videoStudioProgressUploadingPayload(int percent) {
+    return 'Uploading video data ($percent%)...';
+  }
+
+  @override
+  String get videoStudioProgressServerMuxing =>
+      'Encoding and muxing video on cloud server...';
+
+  @override
+  String get videoStudioProgressPreparingDownload =>
+      'Preparing video file for download...';
+
+  @override
+  String get videoStudioProgressConcatenating =>
+      'Muxing and saving final video file...';
+
+  @override
   String get audioDownloadPause => 'Pause Download';
 
   @override
