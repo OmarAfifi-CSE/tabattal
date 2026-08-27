@@ -149802,7 +149802,7 @@ c9=new XMLHttpRequest()
 c9.toString
 b7=c9
 c8.d=b7
-J.c0e(b7,"POST","http://localhost:8080/api/export-video")
+J.c0e(b7,"POST","https://tabattal-video-export-766905975866.europe-west1.run.app/api/export-video")
 b7.responseType="blob"
 c8=b7.upload
 c8.toString

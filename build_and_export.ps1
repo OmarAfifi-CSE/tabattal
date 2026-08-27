@@ -35,6 +35,22 @@ function Get-AppVersion {
     return "1.0.0"
 }
 
+function Get-EnvVariable {
+    param ([string]$key, [string]$defaultVal = "")
+    if (Test-Path ".env") {
+        $lines = Get-Content ".env"
+        foreach ($line in $lines) {
+            $trimmed = $line.Trim()
+            if ($trimmed.StartsWith("#") -or [string]::IsNullOrWhiteSpace($trimmed)) { continue }
+            $parts = $trimmed.Split("=", 2)
+            if ($parts.Length -eq 2 -and $parts[0].Trim() -eq $key) {
+                return $parts[1].Trim().Trim('"').Trim("'")
+            }
+        }
+    }
+    return $defaultVal
+}
+
 $appName = Get-AppName
 $version = Get-AppVersion
 $androidOutputFolder = "..\B- Releases\Tabattal"
@@ -138,8 +154,15 @@ if ($buildAab) {
 
 # --- Build Web ---
 if ($buildWeb) {
+    $videoExportApiUrl = Get-EnvVariable "VIDEO_EXPORT_API_URL" "http://localhost:8080/api/export-video"
     Write-Host "`n[BUILD] Building Flutter Web (Release for '$webBaseHref')..." -ForegroundColor Cyan
-    flutter build web --release --base-href "$webBaseHref"
+    
+    if ($videoExportApiUrl -and $videoExportApiUrl -ne "http://localhost:8080/api/export-video") {
+        Write-Host "[ENV] Injected Video Export API: $videoExportApiUrl" -ForegroundColor Green
+        flutter build web --release --base-href "$webBaseHref" --dart-define=VIDEO_EXPORT_API_URL="$videoExportApiUrl"
+    } else {
+        flutter build web --release --base-href "$webBaseHref"
+    }
     Check-CommandSuccess "Flutter Build Web"
 
     Write-Host "Deploying web release to '$docsAppFolder'..." -ForegroundColor Cyan

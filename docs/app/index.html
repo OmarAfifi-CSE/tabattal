@@ -60,6 +60,11 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="manifest" href="manifest.json">
 
+  <!-- High-Priority Network Preloads for Maximum Concurrent Startup -->
+  <link rel="preload" href="flutter_bootstrap.js" as="script">
+  <link rel="preload" href="canvaskit/canvaskit.wasm" as="fetch" crossorigin>
+  <link rel="preload" href="assets/assets/data/quran.db" as="fetch" crossorigin>
+
   <!-- Google Fonts Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -209,7 +214,7 @@
       justify-content: space-between;
     }
 
-    /* Luxury Loading Animation for Core Web Vitals */
+    /* Luxury Loading Animation with Real Progress Bar */
     #tabattal-loader {
       position: fixed;
       inset: 0;
@@ -222,35 +227,79 @@
       transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
     }
 
-    .loader-ring {
-      width: 80px;
-      height: 80px;
-      border: 3px solid rgba(212, 175, 55, 0.15);
-      border-top-color: var(--gold-color);
-      border-radius: 50%;
-      animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-      margin-bottom: 24px;
+    .loader-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 90%;
+      max-width: 320px;
+      text-align: center;
     }
 
     .loader-brand {
       font-family: 'Amiri', serif;
-      font-size: 2.2rem;
+      font-size: 2.8rem;
       font-weight: 700;
       color: var(--gold-color);
       letter-spacing: 2px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+      text-shadow: 0 0 25px rgba(212, 175, 55, 0.4);
     }
 
     .loader-subtitle {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
       letter-spacing: 3px;
       text-transform: uppercase;
+      margin-bottom: 28px;
     }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+      margin-bottom: 12px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #D4AF37, #F3D268);
+      border-radius: 999px;
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
+      transition: width 0.15s ease-out;
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      direction: rtl;
+    }
+
+    #progress-percent {
+      color: var(--gold-color);
+      font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      direction: ltr;
+    }
+
+    #progress-status {
+      font-size: 0.75rem;
+      color: #A0AEC0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
     }
 
     /* Semantic SEO Content Container (Accessible to search engine crawlers) */
@@ -288,11 +337,23 @@
 </head>
 <body>
 
-  <!-- Instant Visual Loader Shell -->
+  <!-- Instant Visual Loader Shell with Real Progress Bar -->
   <div id="tabattal-loader" aria-hidden="true">
-    <div class="loader-ring"></div>
-    <div class="loader-brand">تَبَتَّلْ</div>
-    <div class="loader-subtitle">TABATTAL QURAN APP</div>
+    <div class="loader-content">
+      <div class="loader-brand">تَبَتَّلْ</div>
+      <div class="loader-subtitle">TABATTAL QURAN APP</div>
+      
+      <!-- Progress Bar Track & Glow -->
+      <div class="progress-track">
+        <div id="progress-bar-fill" class="progress-fill"></div>
+      </div>
+      
+      <!-- Percentage & Status Info -->
+      <div class="progress-info">
+        <span id="progress-percent">0%</span>
+        <span id="progress-status">Loading Tabattal...</span>
+      </div>
+    </div>
   </div>
 
   <!-- Semantic Prerendered HTML for Googlebot / Bingbot / AI Crawlers -->
@@ -368,19 +429,109 @@
     </div>
   </noscript>
 
-  <!-- Flutter Web Bootstrapper -->
+  <!-- Real Network Byte Tracking Controller & Flutter Web Bootstrapper -->
   <script>
-    // Smoothly remove the visual preloader when Flutter finishes initial frame rendering
-    window.addEventListener('flutter-first-frame', function () {
-      var loader = document.getElementById('tabattal-loader');
-      if (loader) {
-        loader.style.opacity = '0';
-        loader.style.visibility = 'hidden';
-        setTimeout(function () {
-          loader.remove();
-        }, 500);
+    (function () {
+      const isArabic = (navigator.language || navigator.userLanguage || '').toLowerCase().startsWith('ar');
+
+      const fill = document.getElementById('progress-bar-fill');
+      const percentText = document.getElementById('progress-percent');
+      const statusText = document.getElementById('progress-status');
+      const loader = document.getElementById('tabattal-loader');
+
+      // Cold start expected payload: ~24.5 MB
+      const EXPECTED_TOTAL_BYTES = 24.5 * 1024 * 1024;
+      let totalBytesTransferred = 0;
+      let highestPercentage = 8;
+      let isCompleted = false;
+
+      function setStatus(text) {
+        if (statusText && text) statusText.textContent = text;
       }
-    });
+
+      function updateProgress(percentage, customStatus) {
+        if (isCompleted) return;
+        if (percentage > highestPercentage) {
+          highestPercentage = Math.min(98, percentage);
+        }
+        if (fill) fill.style.width = highestPercentage + '%';
+        if (percentText) percentText.textContent = highestPercentage + '%';
+        if (customStatus) setStatus(customStatus);
+      }
+
+      setStatus(isArabic ? 'جاري تحضير المصحف الشريف...' : 'Preparing the Holy Quran...');
+
+      // 1. Native Real-time Network Observer (Resource Timing API)
+      if (window.PerformanceObserver) {
+        try {
+          const observer = new PerformanceObserver(function (list) {
+            for (const entry of list.getEntries()) {
+              const name = entry.name || '';
+              const size = entry.encodedBodySize || entry.transferSize || entry.decodedBodySize || 0;
+
+              if (size > 0) {
+                totalBytesTransferred += size;
+              }
+
+              let stageMessage = '';
+              if (name.includes('canvaskit') || name.includes('skwasm')) {
+                stageMessage = isArabic ? 'جاري تحميل محرّك الرسوم (CanvasKit)...' : 'Loading graphics engine (CanvasKit)...';
+              } else if (name.includes('main.dart.js')) {
+                stageMessage = isArabic ? 'جاري تحميل كود التطبيق...' : 'Loading application bundle...';
+              } else if (name.includes('quran.db')) {
+                stageMessage = isArabic ? 'جاري تحميل وتجهيز قاعدة بيانات المصحف...' : 'Loading Quran database...';
+              } else if (name.includes('.ttf') || name.includes('fonts')) {
+                stageMessage = isArabic ? 'جاري تحميل خطوط المصحف...' : 'Loading Mushaf fonts...';
+              }
+
+              const calculatedPercent = Math.round((totalBytesTransferred / EXPECTED_TOTAL_BYTES) * 100);
+              updateProgress(calculatedPercent, stageMessage);
+            }
+          });
+
+          observer.observe({ type: 'resource', buffered: true });
+        } catch (e) {
+          console.warn('Resource observer note:', e);
+        }
+      }
+
+      // 2. Continuous byte poll & smooth incremental progress
+      const pollInterval = setInterval(function () {
+        if (isCompleted) return;
+        try {
+          const entries = performance.getEntriesByType('resource');
+          let currentBytes = 0;
+          for (let i = 0; i < entries.length; i++) {
+            const e = entries[i];
+            const sz = e.encodedBodySize || e.transferSize || e.decodedBodySize || 0;
+            currentBytes += sz;
+          }
+          if (currentBytes > totalBytesTransferred) {
+            totalBytesTransferred = currentBytes;
+          }
+          const calculatedPercent = Math.max(highestPercentage, Math.round((totalBytesTransferred / EXPECTED_TOTAL_BYTES) * 100));
+          updateProgress(calculatedPercent);
+        } catch (_) {}
+      }, 100);
+
+      // 3. Handle Flutter first frame render event
+      window.addEventListener('flutter-first-frame', function () {
+        isCompleted = true;
+        clearInterval(pollInterval);
+        if (fill) fill.style.width = '100%';
+        if (percentText) percentText.textContent = '100%';
+        setStatus(isArabic ? 'اكتمل التحميل، مرحبًا بك...' : 'Ready, welcome...');
+        setTimeout(function () {
+          if (loader) {
+            loader.style.opacity = '0';
+            loader.style.visibility = 'hidden';
+            setTimeout(function () {
+              loader.remove();
+            }, 500);
+          }
+        }, 350);
+      });
+    })();
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
