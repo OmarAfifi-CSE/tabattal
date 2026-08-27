@@ -420,6 +420,13 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         endAyah: state.config.endAyah,
       );
 
+      final effectiveVerses = verses.isNotEmpty ? verses : state.verses;
+
+      // Immediately sync verses into state to prevent stale range if export starts
+      if (!emit.isDone && effectiveVerses.isNotEmpty) {
+        emit(state.copyWith(verses: effectiveVerses));
+      }
+
       final paths = await repository.prepareVerseAudioFiles(
         reciterPath: state.config.reciterPath,
         surahNumber: state.config.surahNumber,
@@ -428,8 +435,6 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       );
 
       final durations = await repository.measureVerseDurations(audioFilePaths: paths);
-
-      final effectiveVerses = verses.isNotEmpty ? verses : state.verses;
       final Map<int, List<WordTimingSegment>> timingsMap = {};
 
       for (int i = 0; i < effectiveVerses.length; i++) {
@@ -498,12 +503,18 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       ),
     ));
 
-    // Ensure verses and audio files are available
+    // Strictly ensure all verses and audio files for the exact selected range are loaded
+    final expectedCount = state.config.endAyah - state.config.startAyah + 1;
     var currentVerses = state.verses;
     var currentAudios = state.audioFilePaths;
     var currentDurations = state.verseDurations;
 
-    if (currentVerses.isEmpty) {
+    final isVersesStale = currentVerses.length != expectedCount ||
+        (currentVerses.isNotEmpty &&
+            (currentVerses.first.verseNumber != state.config.startAyah ||
+                currentVerses.last.verseNumber != state.config.endAyah));
+
+    if (isVersesStale || currentVerses.isEmpty) {
       currentVerses = await repository.loadVersesForSpan(
         surahNumber: state.config.surahNumber,
         startAyah: state.config.startAyah,
@@ -511,7 +522,8 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       );
     }
 
-    if (currentAudios.isEmpty) {
+    final isAudiosStale = currentAudios.length != expectedCount;
+    if (isAudiosStale || currentAudios.isEmpty) {
       currentAudios = await repository.prepareVerseAudioFiles(
         reciterPath: state.config.reciterPath,
         surahNumber: state.config.surahNumber,

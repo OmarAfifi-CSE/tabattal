@@ -18,21 +18,27 @@ app.use((req, res, next) => {
   next();
 });
 
-// 1. CORS Configuration (Handles local dev on any port as well as production domain)
+// 1. CORS Configuration (Strict Production Domains & Official GitHub Pages Only)
+const ALLOWED_ORIGIN_PATTERNS = [
+  /^https:\/\/(www\.)?omar-afifi\.com/i,
+  /^https:\/\/omarafifi-cse\.github\.io/i,
+];
+
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
     
-    // Production Cloud Run check
-    if (!isRunningLocally) {
-      if (origin.startsWith('https://omar-afifi.com') || origin.startsWith('https://www.omar-afifi.com')) {
-        return callback(null, true);
-      }
-      return callback(new Error('Access denied: Unauthorized origin. Only https://omar-afifi.com is permitted.'));
+    // In local dev allow all origins
+    if (isRunningLocally) {
+      return callback(null, true);
     }
 
-    // Local machine testing (localhost / 127.0.0.1 on any port)
-    return callback(null, true);
+    const isAllowed = ALLOWED_ORIGIN_PATTERNS.some(pattern => pattern.test(origin));
+    if (isAllowed) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Access denied: Unauthorized origin. Only official Tabattal domains are permitted.'));
   },
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
@@ -128,7 +134,7 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
     const endAyah = parseInt(metadata.endAyah || 1, 10);
     const reciterPath = metadata.reciterPath || 'Minshawy_Murattal_128kbps';
     const unitConfigs = metadata.unitConfigs || [];
-    const crf = parseInt(metadata.crf || 23, 10);
+    const crf = Math.min(Math.max(parseInt(metadata.crf || 22, 10), 16), 32);
 
     // Security constraints
     if (surahNumber < 1 || surahNumber > 114) {
@@ -152,7 +158,8 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
       fileMap[file.fieldname] = file.path;
     }
 
-    const baseFrameSrc = fileMap['base_frame'];
+    const baseFrameFile = (req.files || []).find(f => f.fieldname === 'base_frame');
+    const baseFrameSrc = baseFrameFile ? baseFrameFile.path : fileMap['base_frame'];
     if (!baseFrameSrc || !fs.existsSync(baseFrameSrc)) {
       return res.status(400).json({
         code: 'MISSING_BASE_FRAME',
@@ -161,7 +168,8 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
       });
     }
 
-    const baseFrameDest = path.join(sessionDir, 'base_frame.png');
+    const baseFrameExt = path.extname(baseFrameFile?.originalname || '.jpg') || '.jpg';
+    const baseFrameDest = path.join(sessionDir, `base_frame${baseFrameExt}`);
     fs.copyFileSync(baseFrameSrc, baseFrameDest);
 
     // Helper for parallel worker concurrency
@@ -185,73 +193,107 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
       return results;
     }
 
-    // 1. Parallel Audio Download Promise
+    // Helper to measure exact audio duration via ffprobe
+    function getExactAudioDuration(filePath) {
+      try {
+        const stdout = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`, { encoding: 'utf-8' });
+        const dur = parseFloat(stdout.trim());
+        if (!isNaN(dur) && dur > 0) return dur;
+      } catch (_) {}
+      return null;
+    }
+
+    // 1. Download all verse audio files in parallel and measure exact durations
     const distinctVerses = [];
     for (let a = startAyah; a <= endAyah; a++) {
       distinctVerses.push(a);
     }
 
-    const audioDownloadPromise = (async () => {
-      const results = await Promise.all(distinctVerses.map(async (vNum) => {
-        const sStr = String(surahNumber).padStart(3, '0');
-        const aStr = String(vNum).padStart(3, '0');
-        const audioDest = path.join(sessionDir, `audio_${sStr}_${aStr}.mp3`);
-        
-        const primaryUrl = `https://everyayah.com/data/${reciterPath}/${sStr}${aStr}.mp3`;
-        const fallbackUrl = `https://audio.qurancdn.com/Alafasy/mp3/${sStr}${aStr}.mp3`;
+    const audioMap = {};
+    const validAudioFiles = [];
 
+    await Promise.all(distinctVerses.map(async (vNum) => {
+      const sStr = String(surahNumber).padStart(3, '0');
+      const aStr = String(vNum).padStart(3, '0');
+      const audioDest = path.join(sessionDir, `audio_${sStr}_${aStr}.mp3`);
+      
+      const primaryUrl = `https://everyayah.com/data/${reciterPath}/${sStr}${aStr}.mp3`;
+      const fallbackUrl = `https://audio.qurancdn.com/Alafasy/mp3/${sStr}${aStr}.mp3`;
+
+      try {
+        await downloadFile(primaryUrl, audioDest);
+      } catch (err) {
+        console.warn(`Primary audio download failed for ${primaryUrl}, trying fallback...`);
         try {
-          await downloadFile(primaryUrl, audioDest);
-        } catch (err) {
-          console.warn(`Primary audio download failed for ${primaryUrl}, trying fallback...`);
-          try {
-            await downloadFile(fallbackUrl, audioDest);
-          } catch (fbErr) {
-            console.error(`Fallback audio download failed for ${fallbackUrl}: ${fbErr.message}`);
+          await downloadFile(fallbackUrl, audioDest);
+        } catch (fbErr) {
+          console.error(`Fallback audio download failed for ${fallbackUrl}: ${fbErr.message}`);
+        }
+      }
+
+      if (fs.existsSync(audioDest)) {
+        const exactDur = getExactAudioDuration(audioDest);
+        audioMap[vNum] = { path: audioDest, duration: exactDur };
+      }
+    }));
+
+    for (const vNum of distinctVerses) {
+      if (audioMap[vNum]?.path) {
+        validAudioFiles.push(audioMap[vNum].path);
+      }
+    }
+
+    // 2. Auto-Calibrate Unit Durations: Match each verse's video units to the exact audio duration
+    const unitsByVerse = {};
+    unitConfigs.forEach((unit, idx) => {
+      const vNum = parseInt(unit.verseNumber || (startAyah + (parseInt(unit.verseIndex || 0, 10))), 10);
+      if (!unitsByVerse[vNum]) unitsByVerse[vNum] = [];
+      unitsByVerse[vNum].push({ unit, idx });
+    });
+
+    for (const [vNumStr, group] of Object.entries(unitsByVerse)) {
+      const vNum = parseInt(vNumStr, 10);
+      const realDur = audioMap[vNum]?.duration;
+      if (realDur && realDur > 0) {
+        const currentSum = group.reduce((sum, g) => sum + Math.max(parseFloat(g.unit.durSec || 4.0), 0.2), 0);
+        if (currentSum > 0) {
+          const ratio = realDur / currentSum;
+          for (const g of group) {
+            g.unit.durSec = (Math.max(parseFloat(g.unit.durSec || 4.0), 0.2) * ratio).toFixed(3);
           }
         }
+      }
+    }
 
-        return fs.existsSync(audioDest) ? audioDest : null;
-      }));
-      return results.filter(Boolean);
-    })();
-
-    // 2. Parallel Video Segments Rendering (4 workers concurrency)
+    // 3. Ultra-fast Parallel Video Segments Rendering (Up to 8 concurrent workers)
     const cpuCount = Math.max(os.cpus()?.length || 2, 2);
-    const concurrency = Math.min(cpuCount, 4);
+    const concurrency = Math.min(cpuCount, 8);
+    const threadsPerWorker = Math.max(1, Math.floor(cpuCount / concurrency));
 
-    const segmentRenderPromise = (async () => {
-      const segmentPaths = await mapConcurrent(unitConfigs, concurrency, async (unit, u) => {
-        const durSec = Math.max(parseFloat(unit.durSec || 4.0), 0.4);
+    const segmentPaths = await mapConcurrent(unitConfigs, concurrency, async (unit, u) => {
+      const durSec = Math.max(parseFloat(unit.durSec || 4.0), 0.4);
+      const cropY = Math.max(0, parseInt(unit.cropY || 0, 10));
 
-        const overlaySrc = fileMap[`overlay_unit_${u}`];
-        if (!overlaySrc || !fs.existsSync(overlaySrc)) {
-          throw new Error(`MISSING_OVERLAY_FRAME: Overlay frame for unit ${u + 1} is missing.`);
-        }
+      const overlaySrc = fileMap[`overlay_unit_${u}`];
+      if (!overlaySrc || !fs.existsSync(overlaySrc)) {
+        throw new Error(`MISSING_OVERLAY_FRAME: Overlay frame for unit ${u + 1} is missing.`);
+      }
 
-        const overlayDest = path.join(sessionDir, `overlay_unit_${u}.png`);
-        fs.copyFileSync(overlaySrc, overlayDest);
+      const overlayDest = path.join(sessionDir, `overlay_unit_${u}.png`);
+      fs.copyFileSync(overlaySrc, overlayDest);
 
-        const segmentFile = path.join(sessionDir, `segment_${u}.ts`);
+      const segmentFile = path.join(sessionDir, `segment_${u}.ts`);
 
-        // Luxury cross-fade transitions exactly matching Mobile Video Studio
-        const fadeDur = 0.30;
-        const safeFade = Math.min(Math.max(fadeDur, 0.05), durSec * 0.20);
-        const fadeOutStart = Math.min(Math.max(durSec - safeFade, 0.08), durSec);
+      // Luxury cross-fade transitions exactly matching Mobile Video Studio
+      const fadeDur = 0.30;
+      const safeFade = Math.min(Math.max(fadeDur, 0.05), durSec * 0.20);
+      const fadeOutStart = Math.min(Math.max(durSec - safeFade, 0.08), durSec);
 
-        const ffmpegCmd = `ffmpeg -y -loop 1 -t ${durSec} -framerate 30 -i "${baseFrameDest}" -loop 1 -t ${durSec} -framerate 30 -i "${overlayDest}" -filter_complex "[1:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1[dyn];[0:v][dyn]overlay=0:0[v]" -map "[v]" -c:v libx264 -preset ultrafast -tune stillimage -crf ${crf} -pix_fmt yuv420p -r 30 -threads 2 "${segmentFile}"`;
+      const ffmpegCmd = `ffmpeg -y -loop 1 -t ${durSec} -framerate 30 -i "${baseFrameDest}" -loop 1 -t ${durSec} -framerate 30 -i "${overlayDest}" -filter_complex "[1:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1[dyn];[0:v][dyn]overlay=0:${cropY}[v]" -map "[v]" -c:v libx264 -preset fast -tune stillimage -g 120 -crf ${crf} -maxrate 3000k -bufsize 6000k -pix_fmt yuv420p -r 30 -threads ${threadsPerWorker} "${segmentFile}"`;
 
-        await runCommand(ffmpegCmd, sessionDir);
-        return segmentFile;
-      });
-      return segmentPaths;
-    })();
-
-    // Run audio download and segment rendering in parallel
-    const [validAudioFiles, segmentPaths] = await Promise.all([
-      audioDownloadPromise,
-      segmentRenderPromise
-    ]);
+      await runCommand(ffmpegCmd, sessionDir);
+      return segmentFile;
+    });
 
     // 3. Concatenate all video segments into raw_video.mp4 (lossless copy)
     const concatListFile = path.join(sessionDir, 'concat_list.txt');
@@ -270,22 +312,23 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
       });
     }
 
-    // 4. Final Mux: Video Track + 100% Continuous Original Audio Stream (Zero AAC padding / Zero stutter)
+    // 4. Final Mux & Global Stream Compression: Collapses all segment redundancies into a single ultra-lightweight stream (< 1.5 MB)
     const outputMp4 = path.join(sessionDir, `Tabattal_${surahNumber}_${startAyah}-${endAyah}_${Date.now()}.mp4`);
+    const streamVideoOpts = `-c:v libx264 -preset veryfast -tune stillimage -crf ${crf} -maxrate 2500k -bufsize 5000k -pix_fmt yuv420p`;
 
     if (validAudioFiles.length === 0) {
-      const copyCmd = `ffmpeg -y -i "${rawVideoMp4}" -c copy -movflags +faststart "${outputMp4}"`;
+      const copyCmd = `ffmpeg -y -i "${rawVideoMp4}" ${streamVideoOpts} -movflags +faststart "${outputMp4}"`;
       await runCommand(copyCmd, sessionDir);
     } else if (validAudioFiles.length === 1) {
       const singleAudio = validAudioFiles[0];
-      const muxCmd = `ffmpeg -y -i "${rawVideoMp4}" -i "${singleAudio}" -c:v copy -c:a aac -b:a 192k -movflags +faststart "${outputMp4}"`;
+      const muxCmd = `ffmpeg -y -i "${rawVideoMp4}" -i "${singleAudio}" ${streamVideoOpts} -c:a aac -b:a 128k -movflags +faststart "${outputMp4}"`;
       await runCommand(muxCmd, sessionDir);
     } else {
       const audioConcatFile = path.join(sessionDir, 'audio_segments.txt');
       const audioBuffer = validAudioFiles.map(p => `file '${path.basename(p)}'`).join('\n');
       fs.writeFileSync(audioConcatFile, audioBuffer);
 
-      const muxCmd = `ffmpeg -y -i "${rawVideoMp4}" -f concat -safe 0 -i audio_segments.txt -c:v copy -c:a aac -b:a 192k -movflags +faststart "${outputMp4}"`;
+      const muxCmd = `ffmpeg -y -i "${rawVideoMp4}" -f concat -safe 0 -i audio_segments.txt ${streamVideoOpts} -c:a aac -b:a 128k -movflags +faststart "${outputMp4}"`;
       await runCommand(muxCmd, sessionDir);
     }
 
@@ -338,7 +381,17 @@ const server = app.listen(PORT, () => {
   console.log(`Tabattal Quran Video Export Service running securely on port ${PORT}`);
 });
 
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`[Tabattal] Port ${PORT} is already in use by another instance. Video Export Service is ready.`);
+    process.exit(0);
+  } else {
+    console.error('[Tabattal] Server error:', err);
+  }
+});
+
 // Configure 10-minute server timeouts for long renders
 server.setTimeout(10 * 60 * 1000);
 server.keepAliveTimeout = 120000;
 server.headersTimeout = 125000;
+

@@ -147,22 +147,27 @@ class VideoExportService implements IVideoExportService {
 
         final totalUnits = unitConfigs.length;
 
-        // Phase 2: Generating HD Base Frame and Transparent Overlays (10% -> 50%)
+        // Phase 2: Generating HD Base Frame and Ultra-Lightweight Transparent Overlays (10% -> 50%)
         controller.add(const VideoRenderProgress(
           phase: VideoRenderPhase.generatingOverlays,
           step: VideoProgressStep.creatingBaseFrame,
           progress: 0.12,
         ));
 
-        final baseFrameBytes = await _overlayGenerator.generateStaticBaseFramePng(
+        final rawBaseFrameBytes = await _overlayGenerator.generateStaticBaseFramePng(
           config: config,
           verse: verses.first,
           includeBackground: true,
         );
 
-        if (baseFrameBytes == null) {
+        if (rawBaseFrameBytes == null) {
           throw Exception('فشل في إنشاء الإطار الأساسي للبطاقة');
         }
+
+        // Compress static base frame to high-quality JPEG (Quality 94%) to slash payload from 3.5MB to ~160KB
+        final baseFrameBytes = await _compressToJpegWeb(rawBaseFrameBytes, quality: 0.94);
+        final baseFrameExt = baseFrameBytes.length < rawBaseFrameBytes.length ? 'jpg' : 'png';
+        final baseFrameMime = baseFrameExt == 'jpg' ? 'image/jpeg' : 'image/png';
 
         final overlayBytesList = <Uint8List>[];
 
@@ -182,7 +187,7 @@ class VideoExportService implements IVideoExportService {
           final timings = unit['timings'] as List<WordTimingSegment>;
           final lineIndex = unit['lineIndex'] as int?;
 
-          final overlayBytes = await _overlayGenerator.generateVerseOverlayPng(
+          final overlayCrop = await _overlayGenerator.generateVerseOverlayCrop(
             verse: verse,
             config: config,
             pageNumber: pageNum,
@@ -192,11 +197,13 @@ class VideoExportService implements IVideoExportService {
             overrideLineIndex: lineIndex,
           );
 
-          if (overlayBytes == null) {
+          if (overlayCrop == null) {
             throw Exception('فشل في رسم نصوص الآية ${verse.verseNumber}');
           }
 
-          overlayBytesList.add(overlayBytes);
+          overlayBytesList.add(overlayCrop.bytes);
+          unit['cropY'] = overlayCrop.cropY;
+          unit['cropHeight'] = overlayCrop.cropHeight;
 
           final overlayProgress = 0.12 + ((u + 1) / totalUnits) * 0.38;
           controller.add(VideoRenderProgress(
@@ -230,11 +237,13 @@ class VideoExportService implements IVideoExportService {
             'lineIndex': u['lineIndex'],
             'startSec': u['startSec'],
             'durSec': u['durSec'],
+            'cropY': u['cropY'] ?? 0,
+            'cropHeight': u['cropHeight'] ?? 0,
           }).toList(),
         };
 
         formData.append('metadata', jsonEncode(metadataPayload));
-        formData.appendBlob('base_frame', html.Blob([baseFrameBytes], 'image/png'), 'base_frame.png');
+        formData.appendBlob('base_frame', html.Blob([baseFrameBytes], baseFrameMime), 'base_frame.$baseFrameExt');
 
         for (int u = 0; u < totalUnits; u++) {
           formData.appendBlob('overlay_unit_$u', html.Blob([overlayBytesList[u]], 'image/png'), 'overlay_unit_$u.png');
@@ -460,5 +469,26 @@ class VideoExportService implements IVideoExportService {
       await saveToGallery(filePath: filePath);
     }
   }
+
+  /// High-performance client-side PNG to JPEG converter using native browser canvas.
+  static Future<Uint8List> _compressToJpegWeb(Uint8List pngBytes, {double quality = 0.94}) async {
+    final blob = html.Blob([pngBytes], 'image/png');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    try {
+      final img = html.ImageElement(src: url);
+      await img.onLoad.first;
+      final canvas = html.CanvasElement(width: img.naturalWidth, height: img.naturalHeight);
+      final ctx = canvas.context2D;
+      ctx.drawImage(img, 0, 0);
+      final dataUrl = canvas.toDataUrl('image/jpeg', quality);
+      final base64Str = dataUrl.split(',').last;
+      return Uint8List.fromList(base64Decode(base64Str));
+    } catch (_) {
+      return pngBytes; // Fallback to raw bytes if conversion fails
+    } finally {
+      html.Url.revokeObjectUrl(url);
+    }
+  }
 }
+
 

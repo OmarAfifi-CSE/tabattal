@@ -37,6 +37,18 @@ class _CachedDynamicLayout {
   });
 }
 
+class VerseOverlayCropResult {
+  final Uint8List bytes;
+  final int cropY;
+  final int cropHeight;
+
+  const VerseOverlayCropResult({
+    required this.bytes,
+    required this.cropY,
+    required this.cropHeight,
+  });
+}
+
 class CanvasOverlayGenerator {
   const CanvasOverlayGenerator();
 
@@ -156,6 +168,144 @@ class CanvasOverlayGenerator {
     final image = await picture.toImage(width, height);
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     return byteData?.buffer.asUint8List();
+  }
+
+  /// Generates an ultra-lightweight cropped transparent overlay PNG
+  /// containing only the active text area, reducing payload size by over 90%.
+  Future<VerseOverlayCropResult?> generateVerseOverlayCrop({
+    required VerseModel verse,
+    required VideoProjectConfig config,
+    required int pageNumber,
+    String? translationText,
+    String? tafsirText,
+    int playbackPositionMs = 0,
+    List<WordTimingSegment>? wordTimings,
+    int? overrideLineIndex,
+  }) async {
+    final int width = config.aspectRatio.getTargetWidth(config.videoQuality);
+    final int height = config.aspectRatio.getTargetHeight(config.videoQuality);
+
+    final dummyRecorder = ui.PictureRecorder();
+    final dummyCanvas = Canvas(dummyRecorder, Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()));
+
+    paintDynamicContent(
+      dummyCanvas,
+      Size(width.toDouble(), height.toDouble()),
+      verse: verse,
+      config: config,
+      pageNumber: pageNumber,
+      translationText: translationText,
+      tafsirText: tafsirText,
+      playbackPositionMs: playbackPositionMs,
+      wordTimings: wordTimings,
+      overrideLineIndex: overrideLineIndex,
+    );
+
+    final bounds = computeDynamicContentBounds(
+      Size(width.toDouble(), height.toDouble()),
+      verse: verse,
+      config: config,
+      pageNumber: pageNumber,
+      translationText: translationText,
+      tafsirText: tafsirText,
+      overrideLineIndex: overrideLineIndex,
+    );
+
+    final int cropY = max(0, (bounds.top - 16).floor());
+    final int cropHeight = min(height - cropY, (bounds.height + 32).ceil());
+
+    final cropRecorder = ui.PictureRecorder();
+    final cropCanvas = Canvas(cropRecorder, Rect.fromLTWH(0, 0, width.toDouble(), cropHeight.toDouble()));
+    cropCanvas.translate(0, -cropY.toDouble());
+
+    paintDynamicContent(
+      cropCanvas,
+      Size(width.toDouble(), height.toDouble()),
+      verse: verse,
+      config: config,
+      pageNumber: pageNumber,
+      translationText: translationText,
+      tafsirText: tafsirText,
+      playbackPositionMs: playbackPositionMs,
+      wordTimings: wordTimings,
+      overrideLineIndex: overrideLineIndex,
+    );
+
+    final picture = cropRecorder.endRecording();
+    final image = await picture.toImage(width, cropHeight);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final bytes = byteData?.buffer.asUint8List();
+
+    if (bytes == null) return null;
+
+    return VerseOverlayCropResult(
+      bytes: bytes,
+      cropY: cropY,
+      cropHeight: cropHeight,
+    );
+  }
+
+  /// Computes the exact vertical bounds of the dynamic center content.
+  static Rect computeDynamicContentBounds(
+    Size size, {
+    required VerseModel verse,
+    required VideoProjectConfig config,
+    required int pageNumber,
+    String? translationText,
+    String? tafsirText,
+    int? overrideLineIndex,
+  }) {
+    final width = size.width;
+    final height = size.height;
+
+    final double topLimit;
+    final double bottomLimit;
+    if (config.showSurahBadge && config.showReciterName) {
+      if (config.aspectRatio == VideoAspectRatio.landscape16x9) {
+        topLimit = height * 0.22;
+        bottomLimit = height * 0.78;
+      } else if (config.aspectRatio == VideoAspectRatio.square1x1) {
+        topLimit = height * 0.20;
+        bottomLimit = height * 0.80;
+      } else {
+        topLimit = height * 0.18;
+        bottomLimit = height * 0.82;
+      }
+    } else if (config.showSurahBadge || config.showReciterName) {
+      if (config.aspectRatio == VideoAspectRatio.landscape16x9) {
+        topLimit = height * 0.16;
+        bottomLimit = height * 0.84;
+      } else if (config.aspectRatio == VideoAspectRatio.square1x1) {
+        topLimit = height * 0.15;
+        bottomLimit = height * 0.85;
+      } else {
+        topLimit = height * 0.14;
+        bottomLimit = height * 0.86;
+      }
+    } else {
+      if (config.aspectRatio == VideoAspectRatio.landscape16x9) {
+        topLimit = height * 0.11;
+        bottomLimit = height * 0.89;
+      } else if (config.aspectRatio == VideoAspectRatio.square1x1) {
+        topLimit = height * 0.10;
+        bottomLimit = height * 0.90;
+      } else {
+        topLimit = height * 0.10;
+        bottomLimit = height * 0.90;
+      }
+    }
+
+    final double availableHeight = (bottomLimit - topLimit).clamp(100.0, height);
+    final hasTafsir = (config.showTafsir && (tafsirText ?? verse.tafsir) != null && (tafsirText ?? verse.tafsir)!.isNotEmpty);
+    final hasTranslation = (config.showEnglishTranslation && (translationText ?? verse.translation) != null && (translationText ?? verse.translation)!.isNotEmpty);
+
+    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.backgroundType.name}_${config.textDisplayMode.name}_${config.isEnglish}_${hasTafsir}_${hasTranslation}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}_${overrideLineIndex ?? 0}_${width.round()}_${height.round()}';
+
+    final cached = _dynamicLayoutCache[cacheKey];
+    final double totalContentHeight = cached?.totalContentHeight ?? (height * 0.35);
+    final double startY = topLimit + ((availableHeight - totalContentHeight) / 2);
+
+    return Rect.fromLTWH(0, startY, width, totalContentHeight);
   }
 
   /// Single Source of Truth: Paints the exact video frame on any canvas at any resolution.

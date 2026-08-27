@@ -63,3 +63,13 @@ body {
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
+
+/* Prevent FOUC (Flash of Unanimated Content) on initial load */
+.hero-content h1,
+.hero-content p,
+.hero-content .magnetic-btn,
+.hero-device {
+    opacity: 0;
+    will-change: transform, opacity;
+}
+

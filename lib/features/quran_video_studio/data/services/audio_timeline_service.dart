@@ -117,22 +117,32 @@ class AudioTimelineService {
     }
   }
 
-  /// Measures exact duration of each audio file using an isolated audio player instance.
+  /// Measures exact duration of each audio file using isolated audio player checks to prevent web abort collisions.
   Future<List<Duration>> measureDurations({
     required List<String> audioFilePaths,
   }) async {
-    final player = AudioPlayer();
     final List<Duration> durations = [];
 
-    try {
-      for (final path in audioFilePaths) {
-        final duration = path.startsWith('http') || kIsWeb
-            ? await player.setUrl(path)
-            : await player.setFilePath(path);
-        durations.add(duration ?? const Duration(seconds: 4));
+    for (final path in audioFilePaths) {
+      Duration? d;
+      final player = AudioPlayer();
+      try {
+        if (path.startsWith('http') || kIsWeb) {
+          d = await player.setUrl(path).timeout(const Duration(seconds: 10));
+          d ??= player.duration;
+        } else {
+          d = await player.setFilePath(path).timeout(const Duration(seconds: 5));
+          d ??= player.duration;
+        }
+      } catch (_) {
+        d = null;
+      } finally {
+        try {
+          await player.dispose();
+        } catch (_) {}
       }
-    } finally {
-      await player.dispose();
+
+      durations.add(d ?? const Duration(seconds: 4));
     }
 
     return durations;

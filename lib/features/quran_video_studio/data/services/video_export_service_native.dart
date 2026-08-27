@@ -129,8 +129,8 @@ class VideoExportService implements IVideoExportService {
         final quality = config.videoQuality;
         final crfArg = '-crf ${quality.crf}';
         final presetArg = isCustomVideo
-            ? '-preset ultrafast -threads 0'
-            : '-preset ultrafast -tune stillimage -threads 0';
+            ? '-preset fast -threads 0'
+            : '-preset fast -tune stillimage -threads 0';
         final targetW = config.aspectRatio.getTargetWidth(config.videoQuality);
         final targetH = config.aspectRatio.getTargetHeight(config.videoQuality);
         final bgVideoPath = isCustomVideo
@@ -362,12 +362,21 @@ class VideoExportService implements IVideoExportService {
           }
         }
 
+        final videoMuxOpts = isCustomVideo
+            ? '-c:v copy'
+            : '-c:v libx264 -preset veryfast -tune stillimage $crfArg -maxrate 2500k -bufsize 5000k -pix_fmt yuv420p';
+
         if (validAudioFiles.isEmpty) {
-          final copyCmd = '-y -i "$rawVideoPath" -c copy -movflags +faststart "$outputPath"';
-          await FFmpegKit.execute(copyCmd);
+          final copyCmd = '-y -i "$rawVideoPath" $videoMuxOpts -movflags +faststart "$outputPath"';
+          final session = await FFmpegKit.execute(copyCmd);
+          final code = await session.getReturnCode();
+          if (!ReturnCode.isSuccess(code)) {
+            final logs = await session.getAllLogsAsString();
+            throw Exception('تعذر تصدير الفيديو: $logs');
+          }
         } else if (validAudioFiles.length == 1) {
           final singleAudio = validAudioFiles.first;
-          final muxCmd = '-y -i "$rawVideoPath" -i "$singleAudio" -c:v copy -c:a aac -b:a 192k -movflags +faststart "$outputPath"';
+          final muxCmd = '-y -i "$rawVideoPath" -i "$singleAudio" $videoMuxOpts -c:a aac -b:a 128k -movflags +faststart "$outputPath"';
           final muxSession = await FFmpegKit.execute(muxCmd);
           final muxReturnCode = await muxSession.getReturnCode();
           if (!ReturnCode.isSuccess(muxReturnCode)) {
@@ -383,7 +392,7 @@ class VideoExportService implements IVideoExportService {
           await audioConcatFile.writeAsString(audioBuffer.toString());
           final audioConcatInput = audioConcatFile.path.replaceAll(r'\', '/');
 
-          final muxCmd = '-y -i "$rawVideoPath" -f concat -safe 0 -i "$audioConcatInput" -c:v copy -c:a aac -b:a 192k -movflags +faststart "$outputPath"';
+          final muxCmd = '-y -i "$rawVideoPath" -f concat -safe 0 -i "$audioConcatInput" $videoMuxOpts -c:a aac -b:a 128k -movflags +faststart "$outputPath"';
           final muxSession = await FFmpegKit.execute(muxCmd);
           final muxReturnCode = await muxSession.getReturnCode();
           if (!ReturnCode.isSuccess(muxReturnCode)) {

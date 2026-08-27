@@ -22,24 +22,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
     tl.fromTo('.hero-content h1', 
-        { y: 50, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 1, delay: 0.2 }
+        { y: 40, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.9, delay: 0.05 }
     )
     .fromTo('.hero-content p', 
-        { y: 30, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 1 }, 
-        '-=0.8'
+        { y: 25, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.9 }, 
+        '-=0.7'
     )
     .fromTo('.hero-content .magnetic-btn', 
         { y: 20, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 0.8, stagger: 0.2 }, 
+        { y: 0, opacity: 1, duration: 0.7, stagger: 0.15 }, 
         '-=0.6'
     )
     // Device floating in
     .fromTo('.hero-device', 
-        { x: 100, opacity: 0, rotationY: -25, rotationX: 10 }, 
-        { x: 0, opacity: 1, rotationY: -15, rotationX: 5, duration: 1.5, ease: 'expo.out' }, 
-        '-=1.2'
+        { x: 60, opacity: 0, rotationY: -20, rotationX: 8 }, 
+        { x: 0, opacity: 1, rotationY: -15, rotationX: 5, duration: 1.2, ease: 'expo.out' }, 
+        '-=0.9'
     );
 
     // Continuous floating animation for the device

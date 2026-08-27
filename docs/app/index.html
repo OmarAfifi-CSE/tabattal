@@ -1,13 +1,30 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="notranslate" translate="no">
 <head>
   <!-- Base HREF for Flutter routing -->
   <base href="/tabattal/app/">
 
-  <!-- Core Meta Tags -->
+  <!-- Core Meta Tags & Disable Auto-Translation -->
   <meta charset="UTF-8">
+  <meta name="google" content="notranslate">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+
+  <!-- Dynamic Saved Locale & Direction Sync -->
+  <script>
+    (function() {
+      try {
+        var locale = localStorage.getItem('flutter.app_locale') || localStorage.getItem('app_locale');
+        if (locale && (locale.indexOf('en') !== -1 || locale === '"en"')) {
+          document.documentElement.setAttribute('lang', 'en');
+          document.documentElement.setAttribute('dir', 'ltr');
+        } else {
+          document.documentElement.setAttribute('lang', 'ar');
+          document.documentElement.setAttribute('dir', 'rtl');
+        }
+      } catch (e) {}
+    })();
+  </script>
   
   <!-- Primary SEO Meta Tags -->
   <title>تبتل | المصحف الرقمي وصانع فيديوهات وريلز القرآن الكريم - Tabattal Quran App & Studio</title>
@@ -464,12 +481,13 @@
         if (percentage > highestPercentage) {
           highestPercentage = Math.min(98, percentage);
         }
-        if (fill) fill.style.width = highestPercentage + '%';
-        if (percentText) percentText.textContent = highestPercentage + '%';
+        const displayPercent = Math.floor(highestPercentage);
+        if (fill) fill.style.width = highestPercentage.toFixed(1) + '%';
+        if (percentText) percentText.textContent = displayPercent + '%';
         
         if (customStatus) {
           setStatus(customStatus, statusRank);
-        } else if (highestPercentage >= 95) {
+        } else if (highestPercentage >= 78) {
           setStatus(isArabic ? 'جاري تهيئة قاعدة بيانات المصحف...' : 'Initializing Quran database & storage...', 5);
         }
       }
@@ -501,7 +519,9 @@
                 stageRank = 4;
               }
 
-              const calculatedPercent = Math.round((totalBytesTransferred / EXPECTED_TOTAL_BYTES) * 100);
+              // Network download phase maps smoothly from 8% to 78%
+              const networkRatio = Math.min(1.0, totalBytesTransferred / EXPECTED_TOTAL_BYTES);
+              const calculatedPercent = Math.round(8 + (networkRatio * 70));
               updateProgress(calculatedPercent, stageMessage, stageRank);
             }
           });
@@ -512,7 +532,7 @@
         }
       }
 
-      // 2. Continuous byte poll & smooth incremental progress
+      // 2. Continuous byte poll & smooth incremental progress for DB & Shader initialization
       const pollInterval = setInterval(function () {
         if (isCompleted) return;
         try {
@@ -526,8 +546,17 @@
           if (currentBytes > totalBytesTransferred) {
             totalBytesTransferred = currentBytes;
           }
-          const calculatedPercent = Math.max(highestPercentage, Math.round((totalBytesTransferred / EXPECTED_TOTAL_BYTES) * 100));
-          updateProgress(calculatedPercent);
+          const networkRatio = Math.min(1.0, totalBytesTransferred / EXPECTED_TOTAL_BYTES);
+          const networkPercent = 8 + (networkRatio * 70);
+
+          if (highestPercentage < networkPercent) {
+            highestPercentage = networkPercent;
+          } else if (highestPercentage >= 78) {
+            // Smoothly and continuously increment during DB & WASM initialization (78% -> 97%)
+            const step = Math.max(0.12, (97.5 - highestPercentage) * 0.035);
+            highestPercentage = Math.min(97.5, highestPercentage + step);
+          }
+          updateProgress(highestPercentage);
         } catch (_) {}
       }, 100);
 
