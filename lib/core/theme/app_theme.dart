@@ -1,9 +1,23 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/settings/presentation/bloc/settings_bloc.dart';
 import 'app_colors.dart';
+
+/// Global scroll behavior enabling mouse dragging across all platforms (Web, Desktop, Mobile).
+class AppScrollBehavior extends MaterialScrollBehavior {
+  const AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.trackpad,
+      };
+}
 
 ThemeData appTheme() {
   return ThemeData(

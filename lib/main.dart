@@ -123,6 +123,7 @@ class TabattalApp extends StatelessWidget {
                           title: 'Tabattal - تبتل',
                           debugShowCheckedModeBanner: false,
                           locale: locale,
+                          scrollBehavior: const AppScrollBehavior(),
                           supportedLocales: AppLocalizations.supportedLocales,
                           localizationsDelegates: const [
                             AppLocalizations.delegate,
@@ -155,6 +156,7 @@ class TabattalApp extends StatelessWidget {
                           title: 'Tabattal - تبتل',
                           debugShowCheckedModeBanner: false,
                           locale: locale,
+                          scrollBehavior: const AppScrollBehavior(),
                           supportedLocales: AppLocalizations.supportedLocales,
                           localizationsDelegates: const [
                             AppLocalizations.delegate,
@@ -185,6 +187,7 @@ class TabattalApp extends StatelessWidget {
                           title: 'Tabattal - تبتل',
                           debugShowCheckedModeBanner: false,
                           locale: locale,
+                          scrollBehavior: const AppScrollBehavior(),
                           supportedLocales: AppLocalizations.supportedLocales,
                           localizationsDelegates: const [
                             AppLocalizations.delegate,
@@ -210,6 +213,7 @@ class TabattalApp extends StatelessWidget {
                       title: 'Tabattal - تبتل',
                       debugShowCheckedModeBanner: false,
                       locale: locale,
+                      scrollBehavior: const AppScrollBehavior(),
                       supportedLocales: AppLocalizations.supportedLocales,
                       localizationsDelegates: const [
                         AppLocalizations.delegate,

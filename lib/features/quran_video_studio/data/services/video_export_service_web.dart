@@ -246,6 +246,38 @@ class VideoExportService implements IVideoExportService {
 
         request.open('POST', serverApiUrl);
         request.responseType = 'blob';
+        request.timeout = 300000; // 5 minutes timeout
+
+        Timer? serverPulseTimer;
+        double currentServerProgress = 0.88;
+        bool serverPulseStarted = false;
+
+        void startServerPulse() {
+          if (serverPulseStarted) return;
+          serverPulseStarted = true;
+          serverPulseTimer?.cancel();
+          currentServerProgress = 0.88;
+          controller.add(VideoRenderProgress(
+            phase: VideoRenderPhase.encodingVideo,
+            step: VideoProgressStep.serverEncoding,
+            progress: currentServerProgress,
+          ));
+
+          serverPulseTimer = Timer.periodic(const Duration(milliseconds: 750), (timer) {
+            if (_isCancelled) {
+              timer.cancel();
+              return;
+            }
+            if (currentServerProgress < 0.955) {
+              currentServerProgress += (0.96 - currentServerProgress) * 0.05;
+              controller.add(VideoRenderProgress(
+                phase: VideoRenderPhase.encodingVideo,
+                step: VideoProgressStep.serverEncoding,
+                progress: double.parse(currentServerProgress.toStringAsFixed(3)),
+              ));
+            }
+          });
+        }
 
         request.upload.onProgress.listen((html.ProgressEvent event) {
           if (event.lengthComputable && event.total != null && event.total! > 0) {
@@ -261,23 +293,24 @@ class VideoExportService implements IVideoExportService {
                 uploadPercent: percent,
               ));
             } else {
-              controller.add(const VideoRenderProgress(
-                phase: VideoRenderPhase.encodingVideo,
-                step: VideoProgressStep.serverEncoding,
-                progress: 0.88,
-              ));
+              startServerPulse();
             }
           }
         });
 
+        request.upload.onLoadEnd.listen((_) {
+          startServerPulse();
+        });
+
         request.onLoad.listen((event) async {
+          serverPulseTimer?.cancel();
           if (request.status == 200) {
             final dynamic responseBlob = request.response;
             if (responseBlob is html.Blob) {
               controller.add(const VideoRenderProgress(
                 phase: VideoRenderPhase.encodingVideo,
                 step: VideoProgressStep.preparingDownload,
-                progress: 0.96,
+                progress: 0.97,
               ));
               requestCompleter.complete(responseBlob);
             } else {
@@ -306,8 +339,16 @@ class VideoExportService implements IVideoExportService {
         });
 
         request.onError.listen((event) {
+          serverPulseTimer?.cancel();
           requestCompleter.completeError(
             'تعذر الاتصال بخادم تصدير الفيديو. يرجى التأكد من تشغيل خادم التصدير أو التحقق من الاتصال.',
+          );
+        });
+
+        request.onTimeout.listen((event) {
+          serverPulseTimer?.cancel();
+          requestCompleter.completeError(
+            'استغرقت معالجة الفيديو وقتًا أطول من المتوقع على السيرفر. يرجى المحاولة مرة أخرى أو تقليل عدد الآيات.',
           );
         });
 

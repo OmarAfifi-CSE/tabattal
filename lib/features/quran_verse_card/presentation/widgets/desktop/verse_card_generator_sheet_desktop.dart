@@ -1767,53 +1767,56 @@ class _VerseCardThemeSelectorDesktop extends StatelessWidget {
               final t = VerseCardTheme.themes[index];
               final isSelected = index == selectedThemeIndex;
 
-              return GestureDetector(
-                onTap: () => onThemeSelected(index),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isLandscape ? 14.0 : 16.0,
-                    vertical: isLandscape ? 6.0 : 8.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: t.backgroundColor,
-                    borderRadius: BorderRadius.circular(12.0),
-                    border: Border.all(
-                      color: isSelected ? AppColors.accentGold : t.borderColor,
-                      width: isSelected ? 2.0 : 1.0,
+              return MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => onThemeSelected(index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isLandscape ? 14.0 : 16.0,
+                      vertical: isLandscape ? 6.0 : 8.0,
                     ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: AppColors.accentGold.withValues(alpha: 0.3),
-                              blurRadius: 6,
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 14.0,
-                        height: 14.0,
-                        decoration: BoxDecoration(
-                          color: t.accentColor,
-                          shape: BoxShape.circle,
-                        ),
+                    decoration: BoxDecoration(
+                      color: t.backgroundColor,
+                      borderRadius: BorderRadius.circular(12.0),
+                      border: Border.all(
+                        color: isSelected ? AppColors.accentGold : t.borderColor,
+                        width: isSelected ? 2.0 : 1.0,
                       ),
-                      SizedBox(width: isLandscape ? 8.0 : 10.0),
-                      Text(
-                        t.getLocalizedName(context),
-                        style: TextStyle(
-                          fontSize: isLandscape ? 14.0.sp : 15.0.sp,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.w500,
-                          color: t.primaryTextColor,
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: AppColors.accentGold.withValues(alpha: 0.3),
+                                blurRadius: 6,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 14.0,
+                          height: 14.0,
+                          decoration: BoxDecoration(
+                            color: t.accentColor,
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      ),
-                    ],
+                        SizedBox(width: isLandscape ? 8.0 : 10.0),
+                        Text(
+                          t.getLocalizedName(context),
+                          style: TextStyle(
+                            fontSize: isLandscape ? 14.0.sp : 15.0.sp,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                            color: t.primaryTextColor,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

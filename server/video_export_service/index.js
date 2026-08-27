@@ -164,71 +164,96 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
     const baseFrameDest = path.join(sessionDir, 'base_frame.png');
     fs.copyFileSync(baseFrameSrc, baseFrameDest);
 
-    // Download continuous audio files for distinct verses
+    // Helper for parallel worker concurrency
+    async function mapConcurrent(items, concurrency, fn) {
+      const results = new Array(items.length);
+      let currentIndex = 0;
+
+      async function worker() {
+        while (currentIndex < items.length) {
+          const index = currentIndex++;
+          results[index] = await fn(items[index], index);
+        }
+      }
+
+      const workers = [];
+      const workerCount = Math.min(concurrency, items.length);
+      for (let w = 0; w < workerCount; w++) {
+        workers.push(worker());
+      }
+      await Promise.all(workers);
+      return results;
+    }
+
+    // 1. Parallel Audio Download Promise
     const distinctVerses = [];
     for (let a = startAyah; a <= endAyah; a++) {
       distinctVerses.push(a);
     }
 
-    const validAudioFiles = [];
+    const audioDownloadPromise = (async () => {
+      const results = await Promise.all(distinctVerses.map(async (vNum) => {
+        const sStr = String(surahNumber).padStart(3, '0');
+        const aStr = String(vNum).padStart(3, '0');
+        const audioDest = path.join(sessionDir, `audio_${sStr}_${aStr}.mp3`);
+        
+        const primaryUrl = `https://everyayah.com/data/${reciterPath}/${sStr}${aStr}.mp3`;
+        const fallbackUrl = `https://audio.qurancdn.com/Alafasy/mp3/${sStr}${aStr}.mp3`;
 
-    for (const vNum of distinctVerses) {
-      const sStr = String(surahNumber).padStart(3, '0');
-      const aStr = String(vNum).padStart(3, '0');
-      const audioDest = path.join(sessionDir, `audio_${sStr}_${aStr}.mp3`);
-      
-      const primaryUrl = `https://everyayah.com/data/${reciterPath}/${sStr}${aStr}.mp3`;
-      const fallbackUrl = `https://audio.qurancdn.com/Alafasy/mp3/${sStr}${aStr}.mp3`;
-
-      try {
-        await downloadFile(primaryUrl, audioDest);
-      } catch (err) {
-        console.warn(`Primary audio download failed for ${primaryUrl}, trying fallback...`);
         try {
-          await downloadFile(fallbackUrl, audioDest);
-        } catch (fbErr) {
-          console.error(`Fallback audio download failed for ${fallbackUrl}: ${fbErr.message}`);
+          await downloadFile(primaryUrl, audioDest);
+        } catch (err) {
+          console.warn(`Primary audio download failed for ${primaryUrl}, trying fallback...`);
+          try {
+            await downloadFile(fallbackUrl, audioDest);
+          } catch (fbErr) {
+            console.error(`Fallback audio download failed for ${fallbackUrl}: ${fbErr.message}`);
+          }
         }
-      }
 
-      if (fs.existsSync(audioDest)) {
-        validAudioFiles.push(audioDest);
-      }
-    }
+        return fs.existsSync(audioDest) ? audioDest : null;
+      }));
+      return results.filter(Boolean);
+    })();
 
-    // 1. Render Video Segments with Smooth Mobile Fade Transitions (Video-Only)
-    const segmentPaths = [];
+    // 2. Parallel Video Segments Rendering (4 workers concurrency)
+    const cpuCount = Math.max(os.cpus()?.length || 2, 2);
+    const concurrency = Math.min(cpuCount, 4);
 
-    for (let u = 0; u < unitConfigs.length; u++) {
-      const unit = unitConfigs[u];
-      const durSec = Math.max(parseFloat(unit.durSec || 4.0), 0.4);
+    const segmentRenderPromise = (async () => {
+      const segmentPaths = await mapConcurrent(unitConfigs, concurrency, async (unit, u) => {
+        const durSec = Math.max(parseFloat(unit.durSec || 4.0), 0.4);
 
-      const overlaySrc = fileMap[`overlay_unit_${u}`];
-      if (!overlaySrc || !fs.existsSync(overlaySrc)) {
-        return res.status(400).json({
-          code: 'MISSING_OVERLAY_FRAME',
-          messageAr: `صورة الطبقة للنص رقم (${u + 1}) مفقودة.`,
-          messageEn: `Overlay frame for unit ${u + 1} is missing.`
-        });
-      }
+        const overlaySrc = fileMap[`overlay_unit_${u}`];
+        if (!overlaySrc || !fs.existsSync(overlaySrc)) {
+          throw new Error(`MISSING_OVERLAY_FRAME: Overlay frame for unit ${u + 1} is missing.`);
+        }
 
-      const overlayDest = path.join(sessionDir, `overlay_unit_${u}.png`);
-      fs.copyFileSync(overlaySrc, overlayDest);
+        const overlayDest = path.join(sessionDir, `overlay_unit_${u}.png`);
+        fs.copyFileSync(overlaySrc, overlayDest);
 
-      const segmentFile = path.join(sessionDir, `segment_${u}.ts`);
+        const segmentFile = path.join(sessionDir, `segment_${u}.ts`);
 
-      // Luxury cross-fade transitions exactly matching Mobile Video Studio
-      const fadeDur = 0.30;
-      const safeFade = Math.min(Math.max(fadeDur, 0.05), durSec * 0.20);
-      const fadeOutStart = Math.min(Math.max(durSec - safeFade, 0.08), durSec);
+        // Luxury cross-fade transitions exactly matching Mobile Video Studio
+        const fadeDur = 0.30;
+        const safeFade = Math.min(Math.max(fadeDur, 0.05), durSec * 0.20);
+        const fadeOutStart = Math.min(Math.max(durSec - safeFade, 0.08), durSec);
 
-      const ffmpegCmd = `ffmpeg -y -loop 1 -t ${durSec} -framerate 30 -i "${baseFrameDest}" -loop 1 -t ${durSec} -framerate 30 -i "${overlayDest}" -filter_complex "[1:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1[dyn];[0:v][dyn]overlay=0:0[v]" -map "[v]" -c:v libx264 -preset ultrafast -tune stillimage -crf ${crf} -pix_fmt yuv420p -r 30 "${segmentFile}"`;
+        const ffmpegCmd = `ffmpeg -y -loop 1 -t ${durSec} -framerate 30 -i "${baseFrameDest}" -loop 1 -t ${durSec} -framerate 30 -i "${overlayDest}" -filter_complex "[1:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1[dyn];[0:v][dyn]overlay=0:0[v]" -map "[v]" -c:v libx264 -preset ultrafast -tune stillimage -crf ${crf} -pix_fmt yuv420p -r 30 -threads 2 "${segmentFile}"`;
 
-      await runCommand(ffmpegCmd, sessionDir);
-      segmentPaths.push(segmentFile);
-    }
+        await runCommand(ffmpegCmd, sessionDir);
+        return segmentFile;
+      });
+      return segmentPaths;
+    })();
 
-    // 2. Concatenate all video segments into raw_video.mp4 (lossless copy)
+    // Run audio download and segment rendering in parallel
+    const [validAudioFiles, segmentPaths] = await Promise.all([
+      audioDownloadPromise,
+      segmentRenderPromise
+    ]);
+
+    // 3. Concatenate all video segments into raw_video.mp4 (lossless copy)
     const concatListFile = path.join(sessionDir, 'concat_list.txt');
     const concatContent = segmentPaths.map(p => `file '${path.basename(p)}'`).join('\n');
     fs.writeFileSync(concatListFile, concatContent);
@@ -245,7 +270,7 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
       });
     }
 
-    // 3. Final Mux: Video Track + 100% Continuous Original Audio Stream (Zero AAC padding / Zero stutter)
+    // 4. Final Mux: Video Track + 100% Continuous Original Audio Stream (Zero AAC padding / Zero stutter)
     const outputMp4 = path.join(sessionDir, `Tabattal_${surahNumber}_${startAyah}-${endAyah}_${Date.now()}.mp4`);
 
     if (validAudioFiles.length === 0) {
@@ -302,13 +327,18 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
 
     res.status(500).json({ 
       code: 'SERVER_ERROR',
-      messageAr: 'حدث خطأ غير متوقع أثناء معالجة الفيديو في السيرفر.',
-      messageEn: 'An unexpected error occurred while processing the video on the server.',
+      messageAr: 'حدث خطأ أثناء معالجة الفيديو في السيرفر.',
+      messageEn: 'An error occurred while processing the video on the server.',
       details: error.message 
     });
   }
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Tabattal Quran Video Export Service running securely on port ${PORT}`);
 });
+
+// Configure 10-minute server timeouts for long renders
+server.setTimeout(10 * 60 * 1000);
+server.keepAliveTimeout = 120000;
+server.headersTimeout = 125000;

@@ -42,52 +42,55 @@ class VerseCardThemeSelector extends StatelessWidget {
               final t = VerseCardTheme.themes[index];
               final isSelected = index == selectedThemeIndex;
 
-              return GestureDetector(
-                onTap: () => onThemeSelected(index),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 14.w,
-                    vertical: 6.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: t.backgroundColor,
-                    borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(
-                      color: isSelected ? AppColors.accentGold : t.borderColor,
-                      width: isSelected ? 2.5 : 1,
+              return MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => onThemeSelected(index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 14.w,
+                      vertical: 6.h,
                     ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: AppColors.accentGold.withValues(alpha: 0.3),
-                              blurRadius: 6,
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 14.r,
-                        height: 14.r,
-                        decoration: BoxDecoration(
-                          color: t.accentColor,
-                          shape: BoxShape.circle,
-                        ),
+                    decoration: BoxDecoration(
+                      color: t.backgroundColor,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: isSelected ? AppColors.accentGold : t.borderColor,
+                        width: isSelected ? 2.5 : 1,
                       ),
-                      SizedBox(width: 6.w),
-                      Text(
-                        t.getLocalizedName(context),
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          color: t.primaryTextColor,
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: AppColors.accentGold.withValues(alpha: 0.3),
+                                blurRadius: 6,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 14.r,
+                          height: 14.r,
+                          decoration: BoxDecoration(
+                            color: t.accentColor,
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      ),
-                    ],
+                        SizedBox(width: 6.w),
+                        Text(
+                          t.getLocalizedName(context),
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: t.primaryTextColor,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

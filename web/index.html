@@ -446,12 +446,20 @@
       let totalBytesTransferred = 0;
       let highestPercentage = 8;
       let isCompleted = false;
+      let currentStageRank = 0;
 
-      function setStatus(text) {
-        if (statusText && text) statusText.textContent = text;
+      function setStatus(text, rank) {
+        if (!statusText || !text) return;
+        if (rank !== undefined) {
+          if (rank < currentStageRank) return; // Prevent backwards regression and flickering
+          currentStageRank = rank;
+        }
+        if (statusText.textContent !== text) {
+          statusText.textContent = text;
+        }
       }
 
-      function updateProgress(percentage, customStatus) {
+      function updateProgress(percentage, customStatus, statusRank) {
         if (isCompleted) return;
         if (percentage > highestPercentage) {
           highestPercentage = Math.min(98, percentage);
@@ -460,13 +468,13 @@
         if (percentText) percentText.textContent = highestPercentage + '%';
         
         if (customStatus) {
-          setStatus(customStatus);
+          setStatus(customStatus, statusRank);
         } else if (highestPercentage >= 95) {
-          setStatus(isArabic ? 'جاري تهيئة قاعدة بيانات المصحف...' : 'Initializing Quran database & storage...');
+          setStatus(isArabic ? 'جاري تهيئة قاعدة بيانات المصحف...' : 'Initializing Quran database & storage...', 5);
         }
       }
 
-      setStatus(isArabic ? 'جاري تحضير المصحف الشريف...' : 'Preparing the Holy Quran...');
+      setStatus(isArabic ? 'جاري تحضير المصحف الشريف...' : 'Preparing the Holy Quran...', 1);
 
       // 1. Native Real-time Network Observer (Resource Timing API)
       if (window.PerformanceObserver) {
@@ -481,18 +489,20 @@
               }
 
               let stageMessage = '';
+              let stageRank = 0;
               if (name.includes('canvaskit') || name.includes('skwasm')) {
                 stageMessage = isArabic ? 'جاري تحميل محرّك الرسوم (CanvasKit)...' : 'Loading graphics engine (CanvasKit)...';
+                stageRank = 2;
               } else if (name.includes('main.dart.js')) {
                 stageMessage = isArabic ? 'جاري تحميل كود التطبيق...' : 'Loading application bundle...';
-              } else if (name.includes('quran.db')) {
-                stageMessage = isArabic ? 'جاري تحميل وتجهيز قاعدة بيانات المصحف...' : 'Loading Quran database...';
-              } else if (name.includes('.ttf') || name.includes('fonts')) {
+                stageRank = 3;
+              } else if (name.includes('.ttf') || name.includes('fonts') || name.includes('.woff')) {
                 stageMessage = isArabic ? 'جاري تحميل خطوط المصحف...' : 'Loading Mushaf fonts...';
+                stageRank = 4;
               }
 
               const calculatedPercent = Math.round((totalBytesTransferred / EXPECTED_TOTAL_BYTES) * 100);
-              updateProgress(calculatedPercent, stageMessage);
+              updateProgress(calculatedPercent, stageMessage, stageRank);
             }
           });
 
@@ -527,7 +537,7 @@
         clearInterval(pollInterval);
         if (fill) fill.style.width = '100%';
         if (percentText) percentText.textContent = '100%';
-        setStatus(isArabic ? 'اكتمل التحميل، مرحبًا بك...' : 'Ready, welcome...');
+        setStatus(isArabic ? 'اكتمل التحميل، مرحبًا بك...' : 'Ready, welcome...', 6);
         setTimeout(function () {
           if (loader) {
             loader.style.opacity = '0';
