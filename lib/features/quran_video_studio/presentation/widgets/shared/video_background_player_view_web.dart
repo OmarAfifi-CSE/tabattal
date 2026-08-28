@@ -1,6 +1,7 @@
 import 'dart:js_interop';
 import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
+import '../../../../../core/theme/app_colors.dart';
 
 /// High-performance Web video background player that renders a native HTML5 `<video>`
 /// element within a Flutter Web platform view for seamless 60/120 FPS playback.
@@ -26,6 +27,7 @@ class VideoBackgroundPlayerViewWeb extends StatefulWidget {
 class _VideoBackgroundPlayerViewWebState
     extends State<VideoBackgroundPlayerViewWeb> {
   web.HTMLVideoElement? _videoElement;
+  bool _isVideoReady = false;
 
   void _configureVideo(web.HTMLVideoElement video) {
     _videoElement = video;
@@ -103,14 +105,23 @@ class _VideoBackgroundPlayerViewWebState
           video.currentTime = 0.001;
         }
       } catch (_) {}
+      if (mounted && !_isVideoReady) {
+        setState(() => _isVideoReady = true);
+      }
       syncPlayback();
     }).toJS;
 
     video.onloadeddata = ((web.Event _) {
+      if (mounted && !_isVideoReady) {
+        setState(() => _isVideoReady = true);
+      }
       syncPlayback();
     }).toJS;
 
     video.oncanplay = ((web.Event _) {
+      if (mounted && !_isVideoReady) {
+        setState(() => _isVideoReady = true);
+      }
       syncPlayback();
     }).toJS;
 
@@ -132,6 +143,7 @@ class _VideoBackgroundPlayerViewWebState
 
     if (_videoElement != null) {
       if (oldWidget.videoPath != widget.videoPath) {
+        setState(() => _isVideoReady = false);
         _videoElement!.src = widget.videoPath;
         _videoElement!.load();
         if (widget.isPlaying) {
@@ -178,22 +190,56 @@ class _VideoBackgroundPlayerViewWebState
       child: Stack(
         fit: StackFit.expand,
         children: [
-          HtmlElementView.fromTagName(
-            tagName: 'video',
-            onElementCreated: (Object element) {
-              if (element.isA<web.HTMLVideoElement>()) {
-                _configureVideo(element as web.HTMLVideoElement);
-              }
-            },
-          ),
-          // Dimming overlay directly over the video stream
-          IgnorePointer(
-            child: Container(
-              color: Colors.black.withValues(
-                alpha: widget.dimming.clamp(0.0, 0.95),
-              ),
+          AnimatedOpacity(
+            opacity: _isVideoReady ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOut,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                HtmlElementView.fromTagName(
+                  tagName: 'video',
+                  onElementCreated: (Object element) {
+                    if (element.isA<web.HTMLVideoElement>()) {
+                      _configureVideo(element as web.HTMLVideoElement);
+                    }
+                  },
+                ),
+                // Dimming overlay directly over the video stream
+                IgnorePointer(
+                  child: Container(
+                    color: Colors.black.withValues(
+                      alpha: widget.dimming.clamp(0.0, 0.95),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
+          if (!_isVideoReady)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withValues(alpha: 0.35),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accentGold.withValues(alpha: 0.20),
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: AppColors.accentGold,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

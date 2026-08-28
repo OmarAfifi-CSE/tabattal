@@ -2574,6 +2574,18 @@ class _VideoPreviewViewportWeb extends StatelessWidget {
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
+                        // 0. Base Theme Layer (Always keeps the active luxury card theme visible underneath)
+                        Positioned.fill(
+                          child: CustomPaint(
+                            key: ValueKey('preview_base_bg_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}'),
+                            painter: VideoStaticFramePainter(
+                              config: config.copyWith(backgroundType: VideoBackgroundType.gradient),
+                              verse: verse,
+                              includeBackground: true,
+                            ),
+                            size: Size.infinite,
+                          ),
+                        ),
                         if (config.backgroundType == VideoBackgroundType.customVideo &&
                             config.customVideoPath != null &&
                             config.customVideoPath!.isNotEmpty)

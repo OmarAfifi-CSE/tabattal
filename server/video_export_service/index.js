@@ -5,7 +5,7 @@ const rateLimit = require('express-rate-limit');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { exec } = require('child_process');
+const { exec, execSync } = require('child_process');
 const axios = require('axios');
 
 const app = express();
@@ -93,17 +93,30 @@ async function downloadFile(url, destPath) {
     method: 'GET',
     url: url,
     responseType: 'stream',
-    timeout: 30000,
+    timeout: 60000,
+    maxRedirects: 10,
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-      'Accept': '*/*'
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      'Accept': 'video/webm,video/ogg,video/*;q=0.9,audio/*;q=0.8,*/*;q=0.5',
+      'Accept-Language': 'en-US,en;q=0.9,ar;q=0.8',
     }
   });
 
   return new Promise((resolve, reject) => {
     const writer = fs.createWriteStream(destPath);
     response.data.pipe(writer);
-    writer.on('finish', resolve);
+    writer.on('finish', () => {
+      // Validate that file actually contains data
+      try {
+        const stats = fs.statSync(destPath);
+        if (stats.size === 0) {
+          return reject(new Error('Downloaded file is empty (0 bytes).'));
+        }
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
     writer.on('error', reject);
   });
 }
@@ -273,8 +286,12 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
         try {
           await downloadFile(metadata.customVideoUrl, customVideoDest);
         } catch (vErr) {
-          console.warn(`Custom video download failed from ${metadata.customVideoUrl}: ${vErr.message}`);
-          customVideoDest = null;
+          console.error(`Custom video download failed from ${metadata.customVideoUrl}: ${vErr.message}`);
+          return res.status(400).json({
+            code: 'CUSTOM_VIDEO_DOWNLOAD_FAILED',
+            messageAr: 'تعذر تنزيل ملف الفيديو المخصص من الرابط المحدد. يرجى التأكد من صلاحية الرابط والمحاولة مجددًا.',
+            messageEn: 'Failed to download custom background video from the provided URL. Please verify the link and try again.'
+          });
         }
       }
     }
@@ -331,8 +348,9 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
         inputs.push(`-loop 1 -t ${cumulativeStartSec.toFixed(3)} -framerate 30 -i "${overlayDest}"`);
       }
 
-      let filter = `[0:v]setpts=PTS-STARTPTS,scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=increase,crop=${targetWidth}:${targetHeight},setsar=1,drawbox=color=black@${backgroundDimming.toFixed(2)}:t=fill[bg];`;
-      filter += `[bg][1:v]overlay=0:0[canvas0];`;
+      const filterChains = [];
+      filterChains.push(`[0:v]setpts=PTS-STARTPTS,scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=increase,crop=${targetWidth}:${targetHeight},setsar=1,drawbox=color=black@${backgroundDimming.toFixed(2)}:t=fill[bg]`);
+      filterChains.push(`[bg][1:v]overlay=0:0[canvas0]`);
       let currentCanvas = 'canvas0';
 
       for (let u = 0; u < unitConfigs.length; u++) {
@@ -345,11 +363,12 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
         const nextCanvas = (u === unitConfigs.length - 1) ? 'v' : `canvas${u + 1}`;
         const cropY = Math.max(0, parseInt(unitConfigs[u].cropY || 0, 10));
 
-        filter += `[${u + 2}:v]setpts=PTS-STARTPTS+${segStart.toFixed(3)}/TB,fade=t=in:st=${segStart.toFixed(3)}:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${(segStart + fadeOutStart).toFixed(3)}:d=${safeFade.toFixed(2)}:alpha=1[ov${u}];`;
-        filter += `[${currentCanvas}][ov${u}]overlay=0:${cropY}:enable='between(t,${segStart.toFixed(3)},${segEnd.toFixed(3)})'[${nextCanvas}];`;
+        filterChains.push(`[${u + 2}:v]setpts=PTS-STARTPTS+${segStart.toFixed(3)}/TB,fade=t=in:st=${segStart.toFixed(3)}:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${(segStart + fadeOutStart).toFixed(3)}:d=${safeFade.toFixed(2)}:alpha=1[ov${u}]`);
+        filterChains.push(`[${currentCanvas}][ov${u}]overlay=0:${cropY}:enable='between(t,${segStart.toFixed(3)},${segEnd.toFixed(3)})'[${nextCanvas}]`);
         currentCanvas = nextCanvas;
       }
 
+      const filter = filterChains.join(';');
       const ffmpegSinglePassCmd = `ffmpeg -y ${inputs.join(' ')} -filter_complex "${filter}" -map "[v]" -t ${cumulativeStartSec.toFixed(3)} -c:v libx264 -preset fast -g 60 -crf ${crf} -maxrate 4000k -bufsize 8000k -pix_fmt yuv420p -r 30 -threads ${cpuCount} "${rawVideoMp4}"`;
       await runCommand(ffmpegSinglePassCmd, sessionDir);
     } else {
