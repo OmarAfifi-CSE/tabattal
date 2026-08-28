@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
 
 /// A reusable, styled selector dropdown button with auto-scroll and centering
@@ -56,7 +57,7 @@ class AudioSelectorButton<T> extends StatelessWidget {
             maxHeight: maxH,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
             side: BorderSide(
               color: AppColors.accentGold.withValues(alpha: 0.15),
             ),
@@ -84,10 +85,10 @@ class AudioSelectorButton<T> extends StatelessWidget {
           child: Container(
             constraints: BoxConstraints(minHeight: height),
             width: MediaQuery.sizeOf(context).width,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
             decoration: BoxDecoration(
               color: AppColors.surfaceCream,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(10.r),
               border: Border.all(
                 color: AppColors.accentGold.withValues(alpha: 0.4),
               ),
@@ -95,7 +96,7 @@ class AudioSelectorButton<T> extends StatelessWidget {
             child: Row(
               children: [
                 Icon(icon, color: AppColors.accentGold, size: iconSize),
-                const SizedBox(width: 8),
+                SizedBox(width: 8.w),
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -127,7 +128,7 @@ class AudioSelectorButton<T> extends StatelessWidget {
                 Icon(
                   Icons.keyboard_arrow_down_rounded,
                   color: AppColors.accentGold,
-                  size: 20,
+                  size: 20.r,
                 ),
               ],
             ),
@@ -198,8 +199,8 @@ class _PopupMenuScrollableContentState<T>
         controller: _scrollController,
         thumbVisibility:
             widget.items.length * widget.itemHeight > widget.maxHeight,
-        thickness: 4.0,
-        radius: const Radius.circular(8),
+        thickness: 4.0.w,
+        radius: Radius.circular(8.r),
         thumbColor: AppColors.accentGold.withValues(alpha: 0.5),
         child: SingleChildScrollView(
           controller: _scrollController,
@@ -212,7 +213,7 @@ class _PopupMenuScrollableContentState<T>
                 child: Container(
                   width: MediaQuery.sizeOf(context).width,
                   height: widget.itemHeight,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  padding: EdgeInsets.symmetric(horizontal: 14.w),
                   alignment: AlignmentDirectional.centerStart,
                   color: isSelected
                       ? AppColors.accentGold.withValues(alpha: 0.1)
@@ -221,11 +222,11 @@ class _PopupMenuScrollableContentState<T>
                     children: [
                       if (isSelected)
                         Padding(
-                          padding: const EdgeInsetsDirectional.only(end: 8),
+                          padding: EdgeInsetsDirectional.only(end: 8.w),
                           child: Icon(
                             Icons.check_rounded,
                             color: AppColors.accentGold,
-                            size: 15,
+                            size: 15.r,
                           ),
                         ),
                       Expanded(

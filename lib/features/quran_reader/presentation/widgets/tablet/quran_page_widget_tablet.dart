@@ -71,7 +71,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
   // was just opened by a word in the same pointer-up event cycle.
   bool _tapHandledByWord = false;
 
-  static const double _kCanvasWidth = 480.0;
+  static const double _kCanvasWidth = 500.0;
   static const double _kCanvasFontSize = 32.0;
 
   // Cached data for O(1) lookups and avoiding re-parsing per frame
@@ -375,17 +375,17 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
     if (nextSurah != null) {
       final (:ayah1Line, :surahId) = nextSurah;
       final header = Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2.0),
+        padding: EdgeInsets.symmetric(vertical: 2.0.h),
         child: SurahHeaderWidgetTablet(surahNumber: surahId),
       );
       final basmala = Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        padding: EdgeInsets.symmetric(vertical: 8.0.h),
         child: Center(
           child: Text(
             '1 2 3',
             style: TextStyle(
               fontFamily: 'QCF_BSML',
-              fontSize: 26.0,
+              fontSize: 26.0.sp,
               color: mushafTheme.textColor,
               height: 1.0,
             ),
@@ -397,7 +397,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
       if (surahId == 9 || surahId == 1) {
         return lineNumber == ayah1Line - 1
             ? header
-            : const SizedBox(height: 45.0);
+            : SizedBox(height: 45.0.h);
       }
 
       // Determine whether the header should appear on this line or one earlier
@@ -422,7 +422,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
       } else if (lineNumber == ayah1Line - 2 && !mustSquashBothOnLineMinus1) {
         return header;
       }
-      return const SizedBox(height: 45.0);
+      return SizedBox(height: 45.0.h);
     }
 
     // ── Case B: Trailing empty lines at end of page ────────────────────────
@@ -436,7 +436,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
       if (upcomingSurahId <= 114) {
         final emptyLinesBefore = _countEmptyLinesBefore(lineNumber);
         final header = Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2.0),
+          padding: EdgeInsets.symmetric(vertical: 2.0.h),
           child: SurahHeaderWidgetTablet(surahNumber: upcomingSurahId),
         );
         final basmala = Center(
@@ -444,7 +444,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
             '1 2 3',
             style: TextStyle(
               fontFamily: 'QCF_BSML',
-              fontSize: 26.0,
+              fontSize: 26.0.sp,
               color: mushafTheme.textColor,
               height: 1.0,
             ),
@@ -456,7 +456,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
       }
     }
 
-    return const SizedBox(height: 45.0);
+    return SizedBox(height: 45.0.h);
   }
 
   // ---------------------------------------------------------------------------
@@ -611,7 +611,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
     final customFontFamily = 'QCF_P$pageStr';
     final wordTextStyle = AppTextStyles.quranText.copyWith(
       fontFamily: customFontFamily,
-      fontSize: _kCanvasFontSize,
+      fontSize: _kCanvasFontSize.sp,
       height: 1.45,
     );
     final transparentWordStyle = wordTextStyle.copyWith(
@@ -619,7 +619,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
     );
     final maskDecoration = BoxDecoration(
       color: mushafTheme.textColor.withValues(alpha: 0.18),
-      borderRadius: BorderRadius.circular(4.0),
+      borderRadius: BorderRadius.circular(4.0.r),
     );
 
     int i = 0;
@@ -642,16 +642,16 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
                 onTap: () {},
                 onLongPress: () {},
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  padding: EdgeInsets.symmetric(horizontal: 4.0.w),
                   child: Container(
                     margin: EdgeInsets.zero,
                     padding: EdgeInsets.zero,
                     decoration: maskDecoration,
-                    child: const Text(
+                    child: Text(
                       '1 2 3',
                       style: TextStyle(
                         fontFamily: 'QCF_BSML',
-                        fontSize: 26.0,
+                        fontSize: 26.0.sp,
                         color: Colors.transparent,
                         height: 1.0,
                       ),
@@ -689,7 +689,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
                   '1 2 3',
                   style: TextStyle(
                     fontFamily: 'QCF_BSML',
-                    fontSize: 26.0,
+                    fontSize: 26.0.sp,
                     color: textColor,
                     height: 1.0,
                   ),
@@ -707,7 +707,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
                 '1 2 3',
                 style: TextStyle(
                   fontFamily: 'QCF_BSML',
-                  fontSize: 26.0,
+                  fontSize: 26.0.sp,
                   color: textColor,
                   height: 1.0,
                 ),
@@ -732,7 +732,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
               onTap: () {},
               onLongPress: () {},
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                padding: EdgeInsets.symmetric(horizontal: 4.0.w),
                 child: basmala,
               ),
             ),
@@ -820,7 +820,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      padding: EdgeInsets.symmetric(vertical: 2.0.h),
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: Row(
@@ -972,10 +972,10 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
                             final availW = constraints.maxWidth;
                             final availH = constraints.maxHeight;
 
-                            const canvasW = _kCanvasWidth;
+                            final canvasW = _kCanvasWidth.w;
                             final canvasH = availW > 0
                                 ? (availH * canvasW / availW)
-                                : 800.0;
+                                : 800.0.h;
 
                             return FittedBox(
                               fit: BoxFit.contain,
@@ -985,8 +985,8 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
                                 height: canvasH,
                                 child: Padding(
                                   padding: EdgeInsets.only(
-                                    top: canvasH * 0.042,
-                                    bottom: canvasH * 0.048,
+                                    top: canvasH * 0.057,
+                                    bottom: canvasH * 0.053,
                                   ),
                                   child: Column(
                                     key: _pageColumnKey,

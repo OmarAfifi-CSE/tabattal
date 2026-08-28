@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:in_app_update/in_app_update.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -103,11 +104,11 @@ class UpdateService {
       builder: (ctx) => PopScope(
         canPop: false, // Prevent back button
         child: AlertDialog(
-          title: const Icon(Icons.build_circle, color: Colors.orange, size: 50),
+          title: Icon(Icons.build_circle, color: Colors.orange, size: 50.r),
           content: Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, height: 1.5),
+            style: TextStyle(fontSize: 16.sp, height: 1.5),
           ),
         ),
       ),
@@ -130,7 +131,7 @@ class UpdateService {
         content: Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 14, height: 1.5),
+          style: TextStyle(fontSize: 14.sp, height: 1.5),
         ),
         actionsAlignment: MainAxisAlignment.center,
         actions: [

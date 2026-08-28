@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -486,7 +487,7 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.bold,
-                fontSize: 22,
+                fontSize: 22.sp,
               ),
             ),
             leading: IconButton(
@@ -526,7 +527,7 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
                 ),
                 onSelected: _changeTafsir,
                 itemHeight: 38,
-                itemFontSize: 14,
+                itemFontSize: 14.sp,
               ),
             ],
           ),
@@ -535,28 +536,28 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
               if ((_isDownloading || _downloadError != null) &&
                   _tafsirList.isNotEmpty)
                 Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(12),
+                  margin: EdgeInsets.all(16.r),
+                  padding: EdgeInsets.all(12.r),
                   decoration: BoxDecoration(
                     color: _downloadError != null
                         ? Colors.red.withValues(alpha: 0.1)
                         : AppColors.accentGold.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Row(
                     children: [
                       if (_isDownloading)
                         CupertinoActivityIndicator(
-                          radius: 8,
+                          radius: 8.r,
                           color: AppColors.accentGold,
                         )
                       else
-                        const Icon(
+                        Icon(
                           Icons.error_outline,
-                          size: 16,
+                          size: 16.r,
                           color: Colors.red,
                         ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12.w),
                       Expanded(
                         child: Text(
                           _isDownloading
@@ -565,7 +566,7 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
                                 )
                               : _downloadError!,
                           style: AppTextStyles.menuItemText.copyWith(
-                            fontSize: 12,
+                            fontSize: 12.sp,
                             color: _downloadError != null
                                 ? Colors.red
                                 : AppColors.accentGold,
@@ -580,7 +581,7 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
                     ? Center(
                         child: CupertinoActivityIndicator(
                           color: AppColors.accentGold,
-                          radius: 14,
+                          radius: 14.r,
                         ),
                       )
                     : _tafsirList.isEmpty
@@ -591,42 +592,42 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
                                 children: [
                                   CupertinoActivityIndicator(
                                     color: AppColors.accentGold,
-                                    radius: 16,
+                                    radius: 16.r,
                                   ),
-                                  const SizedBox(height: 16),
+                                  SizedBox(height: 16.h),
                                   Text(
                                     l10n.downloadingTafsir(
                                       (_downloadProgress * 100).toInt(),
                                     ),
                                     style: AppTextStyles.menuItemText.copyWith(
                                       color: AppColors.textPrimary,
-                                      fontSize: 14,
+                                      fontSize: 14.sp,
                                     ),
                                   ),
                                 ],
                               )
                             : (_downloadError != null
                                 ? Padding(
-                                    padding: const EdgeInsets.all(24),
+                                    padding: EdgeInsets.all(24.r),
                                     child: Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        const Icon(
+                                        Icon(
                                           Icons.error_outline,
-                                          size: 36,
+                                          size: 36.r,
                                           color: Colors.red,
                                         ),
-                                        const SizedBox(height: 12),
+                                        SizedBox(height: 12.h),
                                         Text(
                                           _downloadError!,
                                           textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            fontSize: 14,
+                                          style: TextStyle(
+                                            fontSize: 14.sp,
                                             color: Colors.red,
                                           ),
                                         ),
-                                        const SizedBox(height: 16),
+                                        SizedBox(height: 16.h),
                                         ElevatedButton(
                                           onPressed: () =>
                                               _startDownload(_tafsirResourceId),
@@ -643,7 +644,7 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
                                 : Text(
                                     l10n.noLocalData,
                                     style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 16.sp,
                                       color: AppColors.textPrimary,
                                     ),
                                   )),
@@ -653,19 +654,19 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
                         itemPositionsListener: _itemPositionsListener,
                         initialScrollIndex: _initialScrollIndex,
                         initialAlignment: 0.01,
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(16.r),
                         itemCount: _tafsirList.length + 1,
                         separatorBuilder: (context, index) =>
-                            const SizedBox(height: 20),
+                            SizedBox(height: 20.h),
                         itemBuilder: (context, index) {
                           if (index == _tafsirList.length) {
                             return _isLoadingMore
                                 ? Padding(
-                                    padding: const EdgeInsets.all(16),
+                                    padding: EdgeInsets.all(16.r),
                                     child: Center(
                                       child: CupertinoActivityIndicator(
                                         color: AppColors.accentGold,
-                                        radius: 12,
+                                        radius: 12.r,
                                       ),
                                     ),
                                   )
@@ -702,222 +703,222 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
                                 },
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 300),
-                                  padding: const EdgeInsets.all(16),
+                                  padding: EdgeInsets.all(16.r),
                                   decoration: BoxDecoration(
                                     color: isActive
-                                        ? AppColors.accentGold.withValues(
-                                            alpha: 0.08,
-                                          )
-                                        : AppColors.cardCream,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: isActive
-                                          ? AppColors.accentGold
-                                          : AppColors.borderLight,
-                                      width: isActive ? 2 : 1,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.textPrimary.withValues(
-                                          alpha: 0.04,
+                                          ? AppColors.accentGold.withValues(
+                                              alpha: 0.08,
+                                            )
+                                          : AppColors.cardCream,
+                                      borderRadius: BorderRadius.circular(16.r),
+                                      border: Border.all(
+                                        color: isActive
+                                            ? AppColors.accentGold
+                                            : AppColors.borderLight,
+                                        width: isActive ? 2.w : 1.w,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.textPrimary.withValues(
+                                            alpha: 0.04,
+                                          ),
+                                          blurRadius: 8.r,
+                                          offset: const Offset(0, 3),
                                         ),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      // Header row: surah name, ayah number, play button
-                                      Row(
-                                        textDirection: TextDirection.rtl,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.accentGold
-                                                  .withValues(alpha: 0.12),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  Localizations.localeOf(
-                                                            context,
-                                                          ).languageCode ==
-                                                          'en'
-                                                      ? QuranMetadata.getSurahNameEnglish(
-                                                          item.surah,
-                                                        )
-                                                      : QuranMetadata.getSurahNameWithTashkeel(
-                                                          item.surah,
-                                                        ),
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: AppColors.accentGold,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 6),
-                                                Text(
-                                                  Localizations.localeOf(
-                                                            context,
-                                                          ).languageCode ==
-                                                          'en'
-                                                      ? '(${item.ayah})'
-                                                      : '﴿${item.ayah.toArabicDigits}﴾',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: AppColors.accentGold,
-                                                    fontSize: 14,
-                                                    fontFamily: 'Amiri',
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const Spacer(),
-                                          GestureDetector(
-                                            onTap: () {
-                                              if (audioStatus == 1) {
-                                                context.read<AudioBloc>().add(
-                                                  const PauseAudio(),
-                                                );
-                                              } else if (audioStatus == 2) {
-                                                context.read<AudioBloc>().add(
-                                                  const ResumeAudio(),
-                                                );
-                                              } else {
-                                                showAudioSettingsSheet(
-                                                  context,
-                                                  verseId: item.verseId,
-                                                );
-                                              }
-                                            },
-                                            child: Icon(
-                                              audioStatus == 1
-                                                  ? Icons
-                                                        .pause_circle_filled_rounded
-                                                  : Icons
-                                                        .play_circle_fill_rounded,
-                                              color: AppColors.accentGold,
-                                              size: 32,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 14),
-                                      // Quranic text
-                                      Text.rich(
-                                        TextSpan(
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        // Header row: surah name, ayah number, play button
+                                        Row(
+                                          textDirection: TextDirection.rtl,
                                           children: [
-                                            TextSpan(
-                                              text:
-                                                  '${ArabicTextUtils.removeExtendedUthmaniChars(item.textUthmani)} ',
-                                              style: AppTextStyles.quranText
-                                                  .copyWith(
-                                                    fontSize: 23,
-                                                    height: 1.9,
-                                                    color:
-                                                        AppColors.textPrimary,
+                                            Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 10.w,
+                                                vertical: 4.h,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.accentGold
+                                                    .withValues(alpha: 0.12),
+                                                borderRadius:
+                                                    BorderRadius.circular(8.r),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    Localizations.localeOf(
+                                                              context,
+                                                            ).languageCode ==
+                                                            'en'
+                                                        ? QuranMetadata.getSurahNameEnglish(
+                                                            item.surah,
+                                                          )
+                                                        : QuranMetadata.getSurahNameWithTashkeel(
+                                                            item.surah,
+                                                          ),
+                                                    style: TextStyle(
+                                                      fontWeight: FontWeight.bold,
+                                                      color: AppColors.accentGold,
+                                                      fontSize: 16.sp,
+                                                    ),
                                                   ),
+                                                  SizedBox(width: 6.w),
+                                                  Text(
+                                                    Localizations.localeOf(
+                                                              context,
+                                                            ).languageCode ==
+                                                            'en'
+                                                        ? '(${item.ayah})'
+                                                        : '﴿${item.ayah.toArabicDigits}﴾',
+                                                    style: TextStyle(
+                                                      fontWeight: FontWeight.bold,
+                                                      color: AppColors.accentGold,
+                                                      fontSize: 14.sp,
+                                                      fontFamily: 'Amiri',
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                            TextSpan(
-                                              text:
-                                                  '﴿${item.ayah.toArabicDigits}﴾',
-                                              style: AppTextStyles.quranText
-                                                  .copyWith(
-                                                    fontFamily: 'Amiri',
-                                                    fontSize: 21,
-                                                    height: 1.9,
-                                                    color:
-                                                        AppColors.textPrimary,
-                                                  ),
+                                            const Spacer(),
+                                            GestureDetector(
+                                              onTap: () {
+                                                if (audioStatus == 1) {
+                                                  context.read<AudioBloc>().add(
+                                                    const PauseAudio(),
+                                                  );
+                                                } else if (audioStatus == 2) {
+                                                  context.read<AudioBloc>().add(
+                                                    const ResumeAudio(),
+                                                  );
+                                                } else {
+                                                  showAudioSettingsSheet(
+                                                    context,
+                                                    verseId: item.verseId,
+                                                  );
+                                                }
+                                              },
+                                              child: Icon(
+                                                audioStatus == 1
+                                                    ? Icons
+                                                          .pause_circle_filled_rounded
+                                                    : Icons
+                                                          .play_circle_fill_rounded,
+                                                color: AppColors.accentGold,
+                                                size: 32.r,
+                                              ),
                                             ),
                                           ],
                                         ),
-                                        textAlign: TextAlign.right,
-                                        textDirection: TextDirection.rtl,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Divider(color: AppColors.divider),
-                                      const SizedBox(height: 10),
-                                      if (item.groupVerseRange != null) ...[
-                                        Align(
-                                          alignment: isAr
-                                              ? Alignment.centerRight
-                                              : Alignment.centerLeft,
-                                          child: Container(
-                                            margin: const EdgeInsets.only(
-                                              bottom: 10,
-                                            ),
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 5,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.accentGold
-                                                  .withValues(alpha: 0.12),
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              border: Border.all(
-                                                color: AppColors.accentGold
-                                                    .withValues(alpha: 0.3),
-                                                width: 1,
+                                        SizedBox(height: 14.h),
+                                        // Quranic text
+                                        Text.rich(
+                                          TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text:
+                                                    '${ArabicTextUtils.removeExtendedUthmaniChars(item.textUthmani)} ',
+                                                style: AppTextStyles.quranText
+                                                    .copyWith(
+                                                      fontSize: 23.sp,
+                                                      height: 1.9,
+                                                      color:
+                                                          AppColors.textPrimary,
+                                                    ),
                                               ),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  item.isGroupContinuation
-                                                      ? Icons.link_rounded
-                                                      : Icons
-                                                          .collections_bookmark_rounded,
-                                                  size: 14,
-                                                  color: AppColors.accentGold,
+                                              TextSpan(
+                                                text:
+                                                    '﴿${item.ayah.toArabicDigits}﴾',
+                                                style: AppTextStyles.quranText
+                                                    .copyWith(
+                                                      fontFamily: 'Amiri',
+                                                      fontSize: 21.sp,
+                                                      height: 1.9,
+                                                      color:
+                                                          AppColors.textPrimary,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                          textAlign: TextAlign.right,
+                                          textDirection: TextDirection.rtl,
+                                        ),
+                                        SizedBox(height: 12.h),
+                                        Divider(color: AppColors.divider),
+                                        SizedBox(height: 10.h),
+                                        if (item.groupVerseRange != null) ...[
+                                          Align(
+                                            alignment: isAr
+                                                ? Alignment.centerRight
+                                                : Alignment.centerLeft,
+                                            child: Container(
+                                              margin: EdgeInsets.only(
+                                                bottom: 10.h,
+                                              ),
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 10.w,
+                                                vertical: 5.h,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.accentGold
+                                                    .withValues(alpha: 0.12),
+                                                borderRadius:
+                                                    BorderRadius.circular(20.r),
+                                                border: Border.all(
+                                                  color: AppColors.accentGold
+                                                      .withValues(alpha: 0.3),
+                                                  width: 1.w,
                                                 ),
-                                                const SizedBox(width: 6),
-                                                Text(
-                                                  item.isGroupContinuation
-                                                      ? (isAr
-                                                          ? 'تابع تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(item.groupVerseRange!)})'
-                                                          : 'Continuation of Tafsir for Verses (${item.groupVerseRange})')
-                                                      : (isAr
-                                                          ? 'تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(item.groupVerseRange!)})'
-                                                          : 'Tafsir of Verses (${item.groupVerseRange})'),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    item.isGroupContinuation
+                                                        ? Icons.link_rounded
+                                                        : Icons
+                                                            .collections_bookmark_rounded,
+                                                    size: 14.r,
                                                     color: AppColors.accentGold,
                                                   ),
-                                                ),
-                                              ],
+                                                  SizedBox(width: 6.w),
+                                                  Text(
+                                                    item.isGroupContinuation
+                                                        ? (isAr
+                                                            ? 'تابع تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(item.groupVerseRange!)})'
+                                                            : 'Continuation of Tafsir for Verses (${item.groupVerseRange})')
+                                                        : (isAr
+                                                            ? 'تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(item.groupVerseRange!)})'
+                                                            : 'Tafsir of Verses (${item.groupVerseRange})'),
+                                                    style: TextStyle(
+                                                      fontSize: 12.sp,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: AppColors.accentGold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
+                                        ],
+                                        // Tafsir text
+                                        MixedDirectionText(
+                                          text: item.tafsirText,
+                                          style: TextStyle(
+                                            fontSize: 17.sp,
+                                            height: 1.7,
+                                            color: AppColors.textPrimary
+                                                .withValues(alpha: 0.82),
+                                          ),
                                         ),
-                                      ],
-                                      // Tafsir text
-                                      MixedDirectionText(
-                                        text: item.tafsirText,
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          height: 1.7,
-                                          color: AppColors.textPrimary
-                                              .withValues(alpha: 0.82),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
+                                       ],
+                                     ),
+                                   ),
+                               );
                             },
                           );
                         },

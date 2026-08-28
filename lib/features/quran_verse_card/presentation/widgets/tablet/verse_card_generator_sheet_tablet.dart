@@ -940,13 +940,13 @@ class _VerseCardGeneratorSheetTabletContentState
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12.0),
+                          SizedBox(width: 12.0.w),
                           Container(
-                            width: 1,
+                            width: 1.w,
                             color: AppColors.divider,
-                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            margin: EdgeInsets.symmetric(vertical: 4.0.h),
                           ),
-                          const SizedBox(width: 12.0),
+                          SizedBox(width: 12.0.w),
                           // Right Column: Format Selector + Dynamic Options + Action Buttons
                           Expanded(
                             flex: 5,
@@ -1572,7 +1572,7 @@ class _VerseCardFormatSelectorTablet extends StatelessWidget {
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: isLandscape ? 8.0 : 14.h),
+      padding: EdgeInsets.only(bottom: isLandscape ? 8.0.h : 14.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1676,7 +1676,7 @@ class _FormatTileTablet extends StatelessWidget {
               ? [
                   BoxShadow(
                     color: AppColors.accentGold.withValues(alpha: 0.3),
-                    blurRadius: 4,
+                    blurRadius: 4.r,
                   ),
                 ]
               : null,
@@ -1766,11 +1766,11 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
                     ),
-                    elevation: 2,
+                    elevation: 2.r,
                   ),
                   icon: isExportingVideo
                       ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 8.0 : 10.r,
+                          radius: isLandscape ? 8.0.r : 10.r,
                           color: Colors.white,
                         )
                       : Icon(Icons.share_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
@@ -1795,7 +1795,7 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                       color: AppColors.accentGold.withValues(
                         alpha: isExportingVideo ? 0.85 : 1.0,
                       ),
-                      width: 1.5,
+                      width: 1.5.w,
                     ),
                     padding: EdgeInsets.symmetric(
                       vertical: isLandscape ? 12.0.h : 16.0.h,
@@ -1806,7 +1806,7 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                   ),
                   icon: isExportingVideo
                       ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 8.0 : 10.r,
+                          radius: isLandscape ? 8.0.r : 10.r,
                           color: AppColors.accentGold,
                         )
                       : Icon(Icons.download_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
@@ -1842,11 +1842,11 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
                     ),
-                    elevation: 2,
+                    elevation: 2.r,
                   ),
                   icon: isSharing
                       ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 8.0 : 10.r,
+                          radius: isLandscape ? 8.0.r : 10.r,
                           color: Colors.white,
                         )
                       : Icon(Icons.share_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
@@ -1871,7 +1871,7 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                       color: AppColors.accentGold.withValues(
                         alpha: (isSaving || isSharing) ? 0.85 : 1.0,
                       ),
-                      width: 1.5,
+                      width: 1.5.w,
                     ),
                     padding: EdgeInsets.symmetric(
                       vertical: isLandscape ? 12.0.h : 16.0.h,
@@ -1882,7 +1882,7 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                   ),
                   icon: isSaving
                       ? CupertinoActivityIndicator(
-                          radius: isLandscape ? 8.0 : 10.r,
+                          radius: isLandscape ? 8.0.r : 10.r,
                           color: AppColors.accentGold,
                         )
                       : Icon(Icons.download_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
@@ -1912,7 +1912,7 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.0.r),
                 ),
-                elevation: 2,
+                elevation: 2.r,
               ),
               icon: Icon(Icons.copy_rounded, size: isLandscape ? 20.0.sp : 24.0.sp),
               label: Text(
@@ -2030,13 +2030,13 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
     final double previewHeight;
     switch (config.aspectRatio) {
       case VideoAspectRatio.portrait9x16:
-        previewHeight = isLandscape ? 470.0 : 380.h;
+        previewHeight = isLandscape ? 470.0.h : 380.h;
         break;
       case VideoAspectRatio.square1x1:
-        previewHeight = isLandscape ? 380.0 : 290.h;
+        previewHeight = isLandscape ? 380.0.h : 290.h;
         break;
       case VideoAspectRatio.landscape16x9:
-        previewHeight = isLandscape ? 280.0 : 200.h;
+        previewHeight = isLandscape ? 280.0.h : 200.h;
         break;
     }
 
@@ -2046,10 +2046,10 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.only(
-              top: isLandscape ? 4.0 : 14.h,
-              bottom: isLandscape ? 4.0 : 6.h,
-              left: isLandscape ? 8.0 : 16.w,
-              right: isLandscape ? 8.0 : 16.w,
+              top: isLandscape ? 4.0.h : 14.h,
+              bottom: isLandscape ? 4.0.h : 6.h,
+              left: isLandscape ? 8.0.w : 16.w,
+              right: isLandscape ? 8.0.w : 16.w,
             ),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
@@ -2061,12 +2061,12 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                 child: Container(
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(isLandscape ? 12.0 : 16.r),
+                    borderRadius: BorderRadius.circular(isLandscape ? 12.0.r : 16.r),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.16),
-                        blurRadius: 18,
-                        spreadRadius: 1,
+                        blurRadius: 18.r,
+                        spreadRadius: 1.r,
                         offset: const Offset(0, 5),
                       ),
                     ],
@@ -2123,18 +2123,18 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: isLandscape ? 6.0 : 10.h),
+          SizedBox(height: isLandscape ? 6.0.h : 10.h),
           Container(
             padding: EdgeInsets.symmetric(
-              horizontal: isLandscape ? 10.0 : 14.w,
-              vertical: isLandscape ? 4.0 : 8.h,
+              horizontal: isLandscape ? 10.0.w : 14.w,
+              vertical: isLandscape ? 4.0.h : 8.h,
             ),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(isLandscape ? 14.0 : 20.r),
+              borderRadius: BorderRadius.circular(isLandscape ? 14.0.r : 20.r),
               border: Border.all(
                 color: AppColors.accentGold.withValues(alpha: 0.15),
-                width: 1,
+                width: 1.w,
               ),
             ),
             child: FittedBox(
@@ -2148,12 +2148,12 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                       state.verses.isNotEmpty ? state.verses.last.verseNumber : config.endAyah,
                     ),
                     style: TextStyle(
-                      fontSize: isLandscape ? 12.0 : 13.5.sp,
+                      fontSize: isLandscape ? 12.0.sp : 13.5.sp,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  SizedBox(width: isLandscape ? 8.0 : 12.w),
+                  SizedBox(width: isLandscape ? 8.0.w : 12.w),
                   Directionality(
                     textDirection: TextDirection.ltr,
                     child: Row(
@@ -2166,38 +2166,38 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                                 .add(const VideoStudioPlaybackReset());
                           },
                           icon: const Icon(Icons.replay_rounded),
-                          iconSize: isLandscape ? 18.0 : 22.sp,
+                          iconSize: isLandscape ? 18.0.sp : 22.sp,
                           color: AppColors.accentGold,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           tooltip: l10n.videoStudioReplayFromStart,
                         ),
-                        SizedBox(width: isLandscape ? 8.0 : 12.w),
+                        SizedBox(width: isLandscape ? 8.0.w : 12.w),
                         IconButton(
                           onPressed: currentIndex > 0 && onVerseIndexChanged != null
                               ? () => onVerseIndexChanged!(currentIndex - 1)
                               : null,
                           icon: const Icon(Icons.skip_previous_rounded),
-                          iconSize: isLandscape ? 19.0 : 24.sp,
+                          iconSize: isLandscape ? 19.0.sp : 24.sp,
                           color: AppColors.accentGold,
                           disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
-                        SizedBox(width: isLandscape ? 8.0 : 12.w),
+                        SizedBox(width: isLandscape ? 8.0.w : 12.w),
                         InkWell(
                           onTap: onTogglePlay,
-                          borderRadius: BorderRadius.circular(isLandscape ? 14.0 : 20.r),
+                          borderRadius: BorderRadius.circular(isLandscape ? 14.0.r : 20.r),
                           child: Container(
-                            width: isLandscape ? 32.0 : 42.r,
-                            height: isLandscape ? 32.0 : 42.r,
+                            width: isLandscape ? 32.0.r : 42.r,
+                            height: isLandscape ? 32.0.r : 42.r,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: AppColors.accentGold,
                               boxShadow: [
                                 BoxShadow(
                                   color: AppColors.accentGold.withValues(alpha: 0.35),
-                                  blurRadius: 6,
+                                  blurRadius: 6.r,
                                   offset: const Offset(0, 2),
                                 ),
                               ],
@@ -2205,10 +2205,10 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                             child: state.isPreparingAudio
                                 ? Center(
                                     child: SizedBox(
-                                      width: isLandscape ? 14.0 : 18.r,
-                                      height: isLandscape ? 14.0 : 18.r,
-                                      child: const CircularProgressIndicator(
-                                        strokeWidth: 2,
+                                      width: isLandscape ? 14.0.r : 18.r,
+                                      height: isLandscape ? 14.0.r : 18.r,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.w,
                                         color: Colors.white,
                                       ),
                                     ),
@@ -2218,17 +2218,17 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                                         ? Icons.pause_rounded
                                         : Icons.play_arrow_rounded,
                                     color: Colors.white,
-                                    size: isLandscape ? 20.0 : 26.sp,
+                                    size: isLandscape ? 20.0.sp : 26.sp,
                                   ),
                           ),
                         ),
-                        SizedBox(width: isLandscape ? 8.0 : 12.w),
+                        SizedBox(width: isLandscape ? 8.0.w : 12.w),
                         IconButton(
                           onPressed: currentIndex < totalVerses - 1 && onVerseIndexChanged != null
                               ? () => onVerseIndexChanged!(currentIndex + 1)
                               : null,
                           icon: const Icon(Icons.skip_next_rounded),
-                          iconSize: isLandscape ? 19.0 : 24.sp,
+                          iconSize: isLandscape ? 19.0.sp : 24.sp,
                           color: AppColors.accentGold,
                           disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
                           padding: EdgeInsets.zero,
@@ -2238,17 +2238,17 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                     ),
                   ),
                   if (onOpenFullscreen != null) ...[
-                    SizedBox(width: isLandscape ? 8.0 : 12.w),
+                    SizedBox(width: isLandscape ? 8.0.w : 12.w),
                     Container(
-                      width: 1,
-                      height: isLandscape ? 12.0 : 16.h,
+                      width: 1.w,
+                      height: isLandscape ? 12.0.h : 16.h,
                       color: AppColors.accentGold.withValues(alpha: 0.2),
                     ),
-                    SizedBox(width: isLandscape ? 6.0 : 10.w),
+                    SizedBox(width: isLandscape ? 6.0.w : 10.w),
                     IconButton(
                       onPressed: onOpenFullscreen,
                       icon: const Icon(Icons.fullscreen_rounded),
-                      iconSize: isLandscape ? 19.0 : 24.sp,
+                      iconSize: isLandscape ? 19.0.sp : 24.sp,
                       color: AppColors.accentGold,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),

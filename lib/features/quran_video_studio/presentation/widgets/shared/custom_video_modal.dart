@@ -323,7 +323,7 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
                       SizedBox(height: 10.h),
                       ElevatedButton.icon(
                         onPressed: _handleDownloadUrl,
-                        icon: const Icon(Icons.download_rounded, size: 18),
+                        icon: Icon(Icons.download_rounded, size: 18.r),
                         label: Text(l10n.videoStudioApplyVideo),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.accentGold,

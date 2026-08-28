@@ -79,7 +79,7 @@ class VerseCardFullPagePreview extends StatelessWidget {
                   SizedBox(height: 8.h),
                   TextButton.icon(
                     onPressed: onRetryCapture,
-                    icon: const Icon(Icons.refresh_rounded, size: 16),
+                    icon: Icon(Icons.refresh_rounded, size: 16.r),
                     label: Text(AppLocalizations.of(context)!.verseCardRetry),
                   ),
                 ],

@@ -391,7 +391,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
         padding: EdgeInsets.all(10.r),
         decoration: BoxDecoration(
           color: AppColors.borderLight,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
           border: Border.all(color: AppColors.borderMedium, width: 1.w),
         ),
         child: Icon(
@@ -407,7 +407,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
         height: 50.h,
         decoration: BoxDecoration(
           color: AppColors.cardCream,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
           border: Border.all(color: AppColors.borderMedium, width: 1.w),
         ),
         child: Row(
@@ -1003,7 +1003,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
   }) {
     return Card(
       margin: EdgeInsets.only(bottom: 12.h),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.r)),
       color: AppColors.cardCream,
       elevation: 0.r,
       child: ListTile(
@@ -1014,7 +1014,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
           height: 44.h,
           decoration: BoxDecoration(
             color: AppColors.accentGold.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10.r),
           ),
           child: Icon(icon, color: AppColors.accentGold, size: 22.r),
         ),

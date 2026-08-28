@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../l10n/app_localizations.dart';
@@ -122,7 +123,7 @@ class TafsirSelectorMenu extends StatelessWidget {
         maxHeight: maxH,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         side: BorderSide(
           color: AppColors.accentGold.withValues(alpha: 0.2),
         ),
@@ -148,11 +149,11 @@ class TafsirSelectorMenu extends StatelessWidget {
       ],
       child: trigger ??
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(8.0.r),
             child: Icon(
               Icons.tune_rounded,
               color: AppColors.accentGold,
-              size: 22,
+              size: 22.r,
             ),
           ),
     );
@@ -217,8 +218,8 @@ class _TafsirMenuScrollableContentState
         controller: _scrollController,
         thumbVisibility:
             widget.options.length * widget.itemHeight > widget.maxHeight,
-        thickness: 4.0,
-        radius: const Radius.circular(8),
+        thickness: 4.0.w,
+        radius: Radius.circular(8.r),
         thumbColor: AppColors.accentGold.withValues(alpha: 0.5),
         child: SingleChildScrollView(
           controller: _scrollController,
@@ -231,7 +232,7 @@ class _TafsirMenuScrollableContentState
                 child: Container(
                   width: MediaQuery.sizeOf(context).width,
                   height: widget.itemHeight,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: EdgeInsets.symmetric(horizontal: 12.w),
                   alignment: AlignmentDirectional.centerStart,
                   color: isSelected
                       ? AppColors.accentGold.withValues(alpha: 0.12)
@@ -245,11 +246,11 @@ class _TafsirMenuScrollableContentState
                             if (isSelected)
                               Padding(
                                 padding:
-                                    const EdgeInsetsDirectional.only(end: 6),
+                                    EdgeInsetsDirectional.only(end: 6.w),
                                 child: Icon(
                                   Icons.check_rounded,
                                   color: AppColors.accentGold,
-                                  size: 16,
+                                  size: 16.r,
                                 ),
                               ),
                             Expanded(
@@ -282,7 +283,7 @@ class _TafsirMenuScrollableContentState
                       else if (!option.isDownloaded)
                         Icon(
                           Icons.download_rounded,
-                          size: 16,
+                          size: 16.r,
                           color: AppColors.accentGold.withValues(alpha: 0.7),
                         ),
                     ],

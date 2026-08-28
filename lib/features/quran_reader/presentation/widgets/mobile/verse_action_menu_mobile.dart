@@ -551,7 +551,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                         vertical: 12.h,
                                       ),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(24),
+                                        borderRadius: BorderRadius.circular(24.r),
                                       ),
                                     ),
                                     icon: const Icon(Icons.play_arrow_rounded),

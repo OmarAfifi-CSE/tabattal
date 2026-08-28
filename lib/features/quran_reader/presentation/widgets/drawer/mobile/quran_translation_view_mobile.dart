@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_text_styles.dart';
@@ -254,7 +255,7 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.bold,
-                fontSize: 22,
+                fontSize: 22.sp,
               ),
             ),
             leading: IconButton(
@@ -287,7 +288,7 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
               ? Center(
                   child: CupertinoActivityIndicator(
                     color: AppColors.accentGold,
-                    radius: 14,
+                    radius: 14.r,
                   ),
                 )
               : _list.isEmpty
@@ -295,7 +296,7 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                   child: Text(
                     l10n.noLocalTranslation,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 16.sp,
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -305,19 +306,19 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                   itemPositionsListener: _itemPositionsListener,
                   initialScrollIndex: _initialScrollIndex,
                   initialAlignment: 0.01,
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16.r),
                   itemCount: _list.length + 1,
                   separatorBuilder: (context, index) =>
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20.h),
                   itemBuilder: (context, index) {
                     if (index == _list.length) {
                       return _isLoadingMore
                           ? Padding(
-                              padding: const EdgeInsets.all(16),
+                              padding: EdgeInsets.all(16.r),
                               child: Center(
                                 child: CupertinoActivityIndicator(
                                   color: AppColors.accentGold,
-                                  radius: 12,
+                                  radius: 12.r,
                                 ),
                               ),
                             )
@@ -351,12 +352,12 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                           }),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
-                            padding: const EdgeInsets.all(16),
+                            padding: EdgeInsets.all(16.r),
                             decoration: BoxDecoration(
                               color: isPlaying
                                   ? AppColors.accentGold.withValues(alpha: 0.08)
                                   : AppColors.cardCream,
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(16.r),
                               border: Border.all(
                                 color: isPlaying
                                     ? AppColors.accentGold
@@ -380,15 +381,15 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                                   textDirection: TextDirection.rtl,
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10.w,
+                                        vertical: 4.h,
                                       ),
                                       decoration: BoxDecoration(
                                         color: AppColors.accentGold.withValues(
                                           alpha: 0.12,
                                         ),
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(8.r),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -407,10 +408,10 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: AppColors.accentGold,
-                                              fontSize: 16,
+                                              fontSize: 16.sp,
                                             ),
                                           ),
-                                          const SizedBox(width: 6),
+                                          SizedBox(width: 6.w),
                                           Text(
                                             Localizations.localeOf(
                                                       context,
@@ -421,7 +422,7 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: AppColors.accentGold,
-                                              fontSize: 14,
+                                              fontSize: 14.sp,
                                               fontFamily: 'Amiri',
                                             ),
                                           ),
@@ -451,12 +452,12 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                                             ? Icons.pause_circle_filled_rounded
                                             : Icons.play_circle_fill_rounded,
                                         color: AppColors.accentGold,
-                                        size: 32,
+                                        size: 32.r,
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 14),
+                                SizedBox(height: 14.h),
                                 Text.rich(
                                   TextSpan(
                                     children: [
@@ -464,7 +465,7 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                                         text:
                                             '${ArabicTextUtils.removeExtendedUthmaniChars(item.textUthmani)} ',
                                         style: AppTextStyles.quranText.copyWith(
-                                          fontSize: 23,
+                                          fontSize: 23.sp,
                                           height: 1.9,
                                           color: AppColors.textPrimary,
                                         ),
@@ -473,7 +474,7 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                                         text: '﴿${item.ayah.toArabicDigits}﴾',
                                         style: AppTextStyles.quranText.copyWith(
                                           fontFamily: 'Amiri',
-                                          fontSize: 21,
+                                          fontSize: 21.sp,
                                           height: 1.9,
                                           color: AppColors.textPrimary,
                                         ),
@@ -483,15 +484,15 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                                   textAlign: TextAlign.right,
                                   textDirection: TextDirection.rtl,
                                 ),
-                                const SizedBox(height: 12),
+                                SizedBox(height: 12.h),
                                 Divider(color: AppColors.divider),
-                                const SizedBox(height: 10),
+                                SizedBox(height: 10.h),
                                 Text(
                                   item.translationText,
                                   textAlign: TextAlign.left,
                                   textDirection: TextDirection.ltr,
                                   style: TextStyle(
-                                    fontSize: 17,
+                                    fontSize: 17.sp,
                                     height: 1.7,
                                     color: AppColors.textPrimary.withValues(
                                       alpha: 0.82,

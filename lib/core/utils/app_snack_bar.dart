@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_colors.dart';
 
 /// Standardized, premium floating SnackBar for Tabattal app.
@@ -64,7 +65,7 @@ class AppSnackBar {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: EdgeInsets.all(6.r),
                 decoration: BoxDecoration(
                   color: activeColor.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
@@ -72,17 +73,17 @@ class AppSnackBar {
                 child: Icon(
                   effectiveIcon,
                   color: activeColor,
-                  size: 20,
+                  size: 20.r,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               Expanded(
                 child: Text(
                   message,
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                    fontSize: 14.sp,
                   ),
                 ),
               ),
@@ -91,15 +92,15 @@ class AppSnackBar {
         ),
         backgroundColor: AppColors.cardCream,
         behavior: SnackBarBehavior.floating,
-        elevation: 4,
+        elevation: 4.r,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(14.r),
           side: BorderSide(
             color: activeColor.withValues(alpha: 0.4),
-            width: 1.2,
+            width: 1.2.w,
           ),
         ),
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
         duration: duration,
       ),
     );

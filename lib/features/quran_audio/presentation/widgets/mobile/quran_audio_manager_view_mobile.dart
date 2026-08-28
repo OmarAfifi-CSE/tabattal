@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/constants/quran_metadata.dart';
 import '../../../../../core/network/audio_download_manager.dart';
@@ -234,14 +235,14 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
-            fontSize: 20,
+            fontSize: 20.sp,
           ),
         ),
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_rounded,
             color: AppColors.textPrimary,
-            size: 24,
+            size: 24.r,
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -252,17 +253,17 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16.r),
                   decoration: BoxDecoration(
                     color: AppColors.cardCream,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16.r),
                     border: Border.all(color: AppColors.borderLight),
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.textPrimary.withValues(alpha: 0.03),
-                        blurRadius: 8,
+                        blurRadius: 8.r,
                         offset: const Offset(0, 2),
                       ),
                     ],
@@ -273,12 +274,12 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
                       Text(
                         l10n.audioTypeLabel,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 12.sp,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6.h),
                       AudioSelectorButton<String>(
                         icon: Icons.category_rounded,
                         label: l10n.audioTypeLabel,
@@ -297,16 +298,16 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
                           _initializeProgressTrackers();
                         },
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12.h),
                       Text(
                         l10n.audioReciterLabel,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 12.sp,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6.h),
                       AudioSelectorButton<String>(
                         icon: Icons.person_rounded,
                         label: l10n.audioReciterLabel,
@@ -316,9 +317,9 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
                             ReciterLocalization.localize(context, r),
                         onChanged: _onReciterChanged,
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16.h),
                       SizedBox(
-                        height: 46,
+                        height: 46.h,
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isDownloadingAll
@@ -326,7 +327,7 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
                                 : AppColors.accentGold,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(12.r),
                             ),
                             elevation: 0,
                           ),
@@ -343,8 +344,8 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
                             _isDownloadingAll
                                 ? l10n.audioDownloadPause
                                 : l10n.audioDownloadAll,
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: TextStyle(
+                              fontSize: 16.sp,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
@@ -360,18 +361,18 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
             if (_isLoadingStatus)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(32),
+                  padding: EdgeInsets.all(32.r),
                   child: Center(
                     child: CupertinoActivityIndicator(
                       color: AppColors.accentGold,
-                      radius: 14,
+                      radius: 14.r,
                     ),
                   ),
                 ),
               )
             else
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
                 sliver: SliverList.builder(
                   itemCount: 114,
                   itemBuilder: (context, index) {
@@ -416,22 +417,22 @@ class _AudioManagerSurahItemMobile extends StatelessWidget {
         : QuranMetadata.getSurahName(surah);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: EdgeInsets.only(bottom: 10.h),
       decoration: BoxDecoration(
         color: AppColors.cardCream,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: AppColors.borderLight),
         boxShadow: [
           BoxShadow(
             color: AppColors.textPrimary.withValues(alpha: 0.02),
-            blurRadius: 4,
+            blurRadius: 4.r,
             offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         clipBehavior: Clip.antiAlias,
         child: ValueListenableBuilder<double>(
           valueListenable: progressNotifier,
@@ -442,28 +443,28 @@ class _AudioManagerSurahItemMobile extends StatelessWidget {
 
             Widget trailingWidget;
             if (isDownloaded) {
-              trailingWidget = const SizedBox(
-                width: 68,
-                height: 34,
+              trailingWidget = SizedBox(
+                width: 68.w,
+                height: 34.h,
                 child: Center(
                   child: Icon(
                     Icons.check_circle_rounded,
                     color: Colors.green,
-                    size: 26,
+                    size: 26.r,
                   ),
                 ),
               );
             } else if (isActivelyDownloading) {
               trailingWidget = SizedBox(
-                width: 68,
-                height: 34,
+                width: 68.w,
+                height: 34.h,
                 child: Center(
                   child: InkWell(
                     onTap: onCancel,
-                    borderRadius: BorderRadius.circular(17),
+                    borderRadius: BorderRadius.circular(17.r),
                     child: SizedBox(
-                      width: 34,
-                      height: 34,
+                      width: 34.w,
+                      height: 34.h,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
@@ -472,11 +473,11 @@ class _AudioManagerSurahItemMobile extends StatelessWidget {
                             backgroundColor:
                                 AppColors.accentGold.withValues(alpha: 0.15),
                             color: AppColors.accentGold,
-                            strokeWidth: 3,
+                            strokeWidth: 3.w,
                           ),
                           Icon(
                             Icons.pause_rounded,
-                            size: 15,
+                            size: 15.r,
                             color: AppColors.accentGold,
                           ),
                         ],
@@ -487,21 +488,21 @@ class _AudioManagerSurahItemMobile extends StatelessWidget {
               );
             } else if (isPartiallyDownloaded) {
               trailingWidget = SizedBox(
-                width: 58,
-                height: 34,
+                width: 58.w,
+                height: 34.h,
                 child: InkWell(
                   onTap: onDownload,
-                  borderRadius: BorderRadius.circular(17),
+                  borderRadius: BorderRadius.circular(17.r),
                   child: Container(
-                    width: 68,
-                    height: 34,
+                    width: 68.w,
+                    height: 34.h,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: AppColors.accentGold.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(17),
+                      borderRadius: BorderRadius.circular(17.r),
                       border: Border.all(
                         color: AppColors.accentGold.withValues(alpha: 0.4),
-                        width: 1.0,
+                        width: 1.0.w,
                       ),
                     ),
                     child: Row(
@@ -511,15 +512,15 @@ class _AudioManagerSurahItemMobile extends StatelessWidget {
                         Text(
                           '${(progress * 100).toInt()}%',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 11.sp,
                             fontWeight: FontWeight.bold,
                             color: AppColors.accentGold,
                           ),
                         ),
-                        const SizedBox(width: 3),
+                        SizedBox(width: 3.w),
                         Icon(
                           Icons.download_rounded,
-                          size: 14,
+                          size: 14.r,
                           color: AppColors.accentGold,
                         ),
                       ],
@@ -529,11 +530,11 @@ class _AudioManagerSurahItemMobile extends StatelessWidget {
               );
             } else {
               trailingWidget = SizedBox(
-                width: 68,
-                height: 34,
+                width: 68.w,
+                height: 34.h,
                 child: Center(
                   child: IconButton(
-                    icon: const Icon(Icons.download_rounded),
+                    icon: Icon(Icons.download_rounded, size: 24.r),
                     color: AppColors.accentGold,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -544,24 +545,24 @@ class _AudioManagerSurahItemMobile extends StatelessWidget {
             }
 
             return ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 2,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 14.w,
+                vertical: 2.h,
               ),
-              minLeadingWidth: 40,
+              minLeadingWidth: 40.w,
               leading: Container(
-                width: 40,
-                height: 40,
+                width: 40.w,
+                height: 40.h,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: AppColors.accentGold.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Text(
                   '$surah',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: surah >= 100 ? 12 : 14,
+                    fontSize: (surah >= 100 ? 12 : 14).sp,
                     fontWeight: FontWeight.bold,
                     color: AppColors.accentGold,
                   ),
@@ -572,7 +573,7 @@ class _AudioManagerSurahItemMobile extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),

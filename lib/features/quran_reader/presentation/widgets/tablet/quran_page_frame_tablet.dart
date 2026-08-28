@@ -11,12 +11,12 @@ import 'quran_border_painter_tablet.dart';
 /// Calculates the Y-position of a Hizb marker from its line number (1–15),
 /// clamped so the frame cut never overflows the border corners.
 double _calculateHizbMarkerYPosition(int lineNumber, double pageHeight) {
-  final double topPadding = pageHeight * 0.04;
+  final double topPadding = pageHeight * 0.057;
   final double textHeight = pageHeight * 0.89;
-  final double rawY = topPadding + textHeight * ((lineNumber - 0.5) / 15.0);
+  final double rawY = topPadding + textHeight * ((lineNumber - 0.56) / 15.0);
 
-  final minY = pageHeight * 0.02 + pageHeight * 0.095 + pageHeight * 0.01;
-  final maxY = pageHeight * 0.97 - pageHeight * 0.125 - pageHeight * 0.01;
+  final minY = pageHeight * 0.035 + pageHeight * 0.095 + pageHeight * 0.01;
+  final maxY = pageHeight * 0.965 - pageHeight * 0.125 - pageHeight * 0.01;
   if (minY >= maxY) return rawY; // Safeguard against small layout constraints
   return rawY.clamp(minY, maxY);
 }
@@ -33,7 +33,7 @@ List<TextSpan> _buildHizbLabelTextSpans(String text, TextStyle baseStyle) {
         TextSpan(
           text: '\n${match.group(0)}',
           style: baseStyle.copyWith(
-            fontSize: baseStyle.fontSize! * 1.3,
+            fontSize: baseStyle.fontSize! * 1.4,
             fontWeight: FontWeight.w900,
             fontFamily: 'Amiri',
           ),
@@ -141,7 +141,7 @@ class QuranPageFrameTablet extends StatelessWidget {
 
               // Juz Name
               Positioned(
-                top: pageHeight * 0.02,
+                top: pageHeight * 0.035,
                 left: pageWidth * (isLandscape ? 0.088 : 0.088),
                 width: pageWidth * (isLandscape ? 0.334 : 0.334),
                 child: FractionalTranslation(
@@ -192,7 +192,7 @@ class QuranPageFrameTablet extends StatelessWidget {
 
               // Surah Name
               Positioned(
-                top: pageHeight * 0.02,
+                top: pageHeight * 0.035,
                 left: pageWidth * (isLandscape ? 0.468 : 0.468),
                 width: pageWidth * (isLandscape ? 0.314 : 0.314),
                 child: FractionalTranslation(
@@ -244,7 +244,7 @@ class QuranPageFrameTablet extends StatelessWidget {
               // Hamburger Menu
               if (showHeaderMenu)
                 Positioned(
-                  top: pageHeight * 0.02,
+                  top: pageHeight * 0.035,
                   left: pageWidth * (isLandscape ? 0.828 : 0.83),
                   width: pageWidth * (isLandscape ? 0.094 : 0.09),
                   child: FractionalTranslation(
@@ -276,7 +276,7 @@ class QuranPageFrameTablet extends StatelessWidget {
 
               // ── LAYER 4: Page Number (bottom cut) ──────────────────────
               Positioned(
-                bottom: pageHeight * 0.03,
+                bottom: pageHeight * 0.035,
                 left: pageWidth * (isLandscape ? 0.43 : 0.43),
                 width: pageWidth * (isLandscape ? 0.14 : 0.14),
                 child: FractionalTranslation(
@@ -392,9 +392,9 @@ class _TabletHizbMarker extends StatelessWidget {
         marker['line'] as int,
         pageHeight,
       ),
-      left: isLeftPage ? (pageWidth * (isLandscape ? 0.058 : 0.056)) : null,
-      right: !isLeftPage ? (pageWidth * (isLandscape ? 0.042 : 0.044)) : null,
-      width: isLandscape ? 80.0.w : (pageWidth * 0.085),
+      left: isLeftPage ? (pageWidth * 0.061) : null,
+      right: !isLeftPage ? (pageWidth * 0.039) : null,
+      width: 98.0.w,
       child: FractionalTranslation(
         translation: Offset(isLeftPage ? -0.5 : 0.5, -0.5),
         child: Stack(
@@ -402,13 +402,13 @@ class _TabletHizbMarker extends StatelessWidget {
           children: [
             // Ornament glyph from QCF_BSML
             Transform.scale(
-              scaleX: isLandscape ? 0.55 : 0.58,
+              scaleX: 0.64,
               scaleY: 1.0,
               child: Text(
                 '\u00F5',
                 style: TextStyle(
                   fontFamily: 'QCF_BSML',
-                  fontSize: (isLandscape ? 94.0 : 88.0).sp,
+                  fontSize: 116.0.sp,
                   color: mushafTheme.goldColor,
                   height: 1.0,
                 ),
@@ -416,18 +416,16 @@ class _TabletHizbMarker extends StatelessWidget {
             ),
             // Label text centred inside the ornament
             Transform.translate(
-              offset: isLandscape
-                  ? Offset(-6.2.w, 17.0.h)
-                  : Offset(-4.0.w, 12.0.h),
+              offset: Offset(-9.5.w, 25.5.h),
               child: SizedBox(
-                width: isLandscape ? 40.0.w : (pageWidth * 0.060),
+                width: 56.0.w,
                 child: Text.rich(
                   TextSpan(
                     children: _buildHizbLabelTextSpans(
                       (marker['text'] as String).toArabicDigits,
                       TextStyle(
                         fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
-                        fontSize: (isLandscape ? 9.5 : 8.0).sp,
+                        fontSize: 13.0.sp,
                         height: 1.18,
                         color: mushafTheme.textColor,
                         fontWeight: FontWeight.bold,
