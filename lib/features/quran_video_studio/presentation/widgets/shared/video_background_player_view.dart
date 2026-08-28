@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'video_background_player_view_web.dart';
+import 'video_background_player_platform.dart';
 
 /// Lightweight, auto-looping, muted video player widget for previewing
 /// custom background videos behind Quran recitation.

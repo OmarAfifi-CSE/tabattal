@@ -98,9 +98,7 @@ class VerseCardFullPagePreview extends StatelessWidget {
               ),
               SizedBox(width: 6.w),
               Text(
-                Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Tabattal'
-                    : 'تَـبَـتَّـلْ • Tabattal',
+                'تَـبَـتَّـلْ • Tabattal',
                 style: TextStyle(
                   fontFamily: 'Amiri',
                   fontSize: 13.sp,

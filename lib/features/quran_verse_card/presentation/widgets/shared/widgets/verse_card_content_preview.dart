@@ -339,9 +339,9 @@ class VerseCardContentPreview extends StatelessWidget {
                 ),
                 SizedBox(width: 6.w),
                 Text(
-                  isEn ? 'Tabattal' : 'تَـبَـتَّـلْ',
+                  'تَـبَـتَّـلْ • Tabattal',
                   style: TextStyle(
-                    fontFamily: isEn ? null : 'Amiri',
+                    fontFamily: 'Amiri',
                     fontSize: 13.sp,
                     fontWeight: FontWeight.bold,
                     color: theme.secondaryTextColor.withValues(alpha: 0.85),
