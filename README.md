@@ -33,7 +33,11 @@
 
 <br/>
 
-<img src="https://your-image-url/tabattal-banner.gif" alt="Tabattal Banner" width="100%"/>
+**مصحفك كما تعرفه، وأثرٌ يصل أبعد.**
+
+مصحف المدينة، والتلاوة، والتفسير، والحفظ، وصانع مقاطع قرآنية متزامنة — مجانًا وبدون إعلانات أو تتبع.
+
+[Open the Arabic landing page](docs/index.html) · [Read the marketing system](docs/marketing/README.md)
 
 </div>
 
@@ -65,12 +69,12 @@ Sharing is limited to plain text or flat cards → no way to create modern, sync
 
 ### ✅ The Solution
 
-**Tabattal bridges both worlds and pioneers native video creation — with zero compromise.**
+**Tabattal brings an authentic Madani Mushaf and a native Quran video studio into one focused experience.**
 
-- 📖 **Authentic Vector Engine:** Powered by official King Fahd Complex **QCF V2 glyph fonts**, drawing every word with mathematical precision to match the physical Madani Mushaf at 120 FPS.
-- 🎬 **Quran Video & Reels Studio:** Design and export captivating, beautifully animated videos (9:16 / 1:1 / 16:9) with synchronized EveryAyah recitations, authentic line-by-line Madani typography, dynamic video backgrounds, and instant hardware-accelerated rendering.
+- 📖 **Authentic Vector Engine:** Powered by King Fahd Complex **QCF V2 glyph fonts**, preserving the familiar 604-page, 15-line Madani Mushaf layout.
+- 🎬 **Quran Video & Reels Studio:** Design and export synchronized videos in 9:16, 1:1, and 16:9 with recitations, line-by-line Madani typography, and custom image or video backgrounds.
 
-> Infinite sharpness. Zero jank. Real-time media creation. Zero compromises.
+> Read with focus. Understand with context. Share with care.
 
 </td>
 </tr>
@@ -122,7 +126,7 @@ Sharing is limited to plain text or flat cards → no way to create modern, sync
     </td>
     <td width="25%" align="center" valign="top">
         <img src="assets/images/showcase/arabic/08_themes_appearance_language.png" alt="المظهر واللغة وثيمات المصحف"/>
-        <p><b>🎨 المظهر واللغة وثيمات المصحف</b><br/>10 لوحات ألوان ملكية ووضع ليلي حقيقي ودعم اللغتين</p>
+        <p><b>🎨 المظهر واللغة وثيمات المصحف</b><br/>11 مظهرًا ووضع ليلي ودعم للغتين</p>
     </td>
 </tr>
 </table>
@@ -166,7 +170,7 @@ Sharing is limited to plain text or flat cards → no way to create modern, sync
     </td>
     <td width="25%" align="center" valign="top">
         <img src="assets/images/showcase/english/08_themes_appearance_language.png" alt="Themes, Night Mode & Language"/>
-        <p><b>🎨 Themes, Night Mode & Language</b><br/>10 curated palettes, true OLED dark mode & bilingual</p>
+        <p><b>🎨 Themes, Night Mode & Language</b><br/>11 themes, dark mode, and bilingual support</p>
     </td>
 </tr>
 </table>
@@ -193,9 +197,9 @@ Exactly 15 lines per page, matching the physical printed Mushaf — genuine glyp
 </td>
 <td width="33%" valign="top">
 
-**⚡ Zero-Jank Paging**
+**⚡ Responsive Paging**
 
-Physics-driven bidirectional page flip locked at 120 FPS with 0ms switching and zero frame drops.
+Physics-driven bidirectional page navigation with adjacent-page prewarming for a responsive reading experience.
 
 **🚀 Instant Typography**
 
@@ -217,7 +221,7 @@ All 604 page fonts pre-warmed in RAM — no zip extraction, no runtime layout ov
 - **9:16 Vertical Story/Reels** — Tailored for Instagram Reels, TikTok & Shorts
 - **1:1 Square Post** — Designed for WhatsApp Status, Feed & Posts
 - **16:9 Landscape** — Built for YouTube & widescreen displays
-- **Ayah Span Selector** — Choose up to 10 consecutive verses with seamless continuity
+- **Ayah Span Selector** — Choose a consecutive verse range with seamless continuity
 
 </td>
 <td width="50%" valign="top">
@@ -236,7 +240,7 @@ All 604 page fonts pre-warmed in RAM — no zip extraction, no runtime layout ov
 
 ### 🎨 Verse Card Generator & Page Export
 
-- **Custom Sharing Cards** — Stunning high-res cards for single verses or ranges (up to 25 ayahs)
+- **Custom Sharing Cards** — High-resolution cards for single verses or verse ranges
 - **Granular Controls** — Include/exclude Tafsir and English translation independently
 - **Full-Page Snapshot** — Export the entire Mushaf page with Islamic border framing
 - **11 Curated Themes** — Instant gallery sync with Android media store indexing
@@ -319,7 +323,7 @@ All 604 page fonts pre-warmed in RAM — no zip extraction, no runtime layout ov
 | **Framework** | Flutter (Android) |
 | **State Management** | BLoC / Cubit |
 | **Architecture** | Clean Architecture (Domain / Data / Presentation) |
-| **Video & Motion Engine** | Custom 120 FPS Canvas Rasterizer + `ffmpeg_kit_flutter_new_min_gpl` |
+| **Video & Motion Engine** | Custom Canvas Rasterizer + `ffmpeg_kit_flutter_new_min_gpl` |
 | **Audio Pipeline** | `just_audio` + `audio_service` with MediaSession background sync |
 | **Database & Cache** | SQLite (`sqflite`) with indexed word-level spatial lookup |
 | **Typography** | 604 QCF V2 vector font families, natively managed |

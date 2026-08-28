@@ -4,7 +4,8 @@
   "description": "Ultra-fast and Secure Cloud Video Rendering Microservice for Tabattal Quran Video Studio using FFmpeg",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "node --test *.test.js"
   },
   "dependencies": {
     "axios": "^1.7.9",

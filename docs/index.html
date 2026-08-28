@@ -1,684 +1,275 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" class="scroll-smooth notranslate" translate="no">
+<html lang="ar" dir="rtl" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تبتل | المصحف الرقمي وصانع فيديوهات وريلز القرآن الكريم - Tabattal Quran App & Studio</title>
-    <meta name="description" content="تطبيق تبتل (Tabattal): المصحف الرقمي الأصيل برسم مصحف المدينة QCF V2 (15 سطرًا)، وصانع فيديوهات وريلز القرآن الكريم المتزامن مع الصوت بدقة 1080p (9:16, 1:1, 16:9)، بطاقات الآيات، واختبار وتثبيت الحفظ والتفاسير. مجاني 100% وبدون إعلانات تمامًا.">
-    <meta name="keywords" content="تبتل, تطبيق تبتل, Tabattal, Tabattal Quran, مصحف المدينة الرقمي, صانع فيديوهات القرآن, صانع ريلز قرآني, Quran Video Studio, Quran Reels Maker, بطاقات الآيات, اختبار حفظ القرآن, تثبيت الحفظ, غريب القرآن, تفسير القرآن بدون نت, تلاوات صوتية EveryAyah, مصحف بدون إعلانات, تطبيق قرآن مجاني, صدقة جارية, الوضع الليلي للمصحف">
+    <title>تبتل | مصحف المدينة وصانع فيديوهات القرآن</title>
+    <meta name="description" content="تبتل يجمع مصحف المدينة الدقيق مع التلاوة والتفسير والحفظ، وصانع فيديوهات قرآنية متزامنة. مجاني بالكامل، بدون إعلانات أو تتبع.">
+    <meta name="keywords" content="تبتل, تطبيق قرآن, مصحف المدينة, صانع فيديو قرآن, ريلز قرآن, اختبار حفظ القرآن, تفسير القرآن, تطبيق قرآن بدون إعلانات">
     <meta name="author" content="Omar Afifi">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 
-    <!-- Canonical & Language Alternates -->
-    <link rel="canonical" href="https://omar-afifi.com/tabattal/">
-    <link rel="alternate" hreflang="ar" href="https://omar-afifi.com/tabattal/">
-    <link rel="alternate" hreflang="en" href="https://omar-afifi.com/tabattal/">
-    <link rel="alternate" hreflang="x-default" href="https://omar-afifi.com/tabattal/">
+    <link rel="canonical" href="https://tabattal.omar-afifi.com/">
+    <link rel="alternate" hreflang="ar" href="https://tabattal.omar-afifi.com/">
+    <link rel="alternate" hreflang="en" href="https://tabattal.omar-afifi.com/en/">
+    <link rel="alternate" hreflang="x-default" href="https://tabattal.omar-afifi.com/en/">
 
-    <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="تبتل - Tabattal">
-    <meta property="og:url" content="https://omar-afifi.com/tabattal/">
-    <meta property="og:title" content="تبتل | المصحف الرقمي وصانع فيديوهات وريلز القرآن الكريم - Tabattal">
-    <meta property="og:description" content="المصحف الرقمي الأصيل برسم المدينة المنورة، صانع فيديوهات وقصص القرآن المتزامنة مع التلاوة بدقة 1080p، واختبار الحفظ والتفاسير. مجاني 100% بدون إعلانات.">
-    <meta property="og:image" content="https://omar-afifi.com/tabattal/assets/images/hero-mockup.webp">
+    <meta property="og:url" content="https://tabattal.omar-afifi.com/">
+    <meta property="og:title" content="تبتل | مصحفك كما تعرفه، وأثرٌ يصل أبعد">
+    <meta property="og:description" content="مصحف المدينة وصانع مقاطع القرآن في تطبيق مجاني بالكامل وبدون إعلانات أو تتبع.">
+    <meta property="og:image" content="https://tabattal.omar-afifi.com/assets/images/hero-mockup.webp">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="تطبيق تبتل: مصحف المدينة وصانع فيديوهات القرآن">
     <meta property="og:locale" content="ar_AR">
     <meta property="og:locale:alternate" content="en_US">
 
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://omar-afifi.com/tabattal/">
-    <meta name="twitter:title" content="تبتل | المصحف الرقمي وصانع فيديوهات وريلز القرآن الكريم">
-    <meta name="twitter:description" content="تطبيق تبتل للقرآن الكريم: رسم مصحف المدينة QCF V2، صانع ريلز القرآن المتزامن، واختبار الحفظ. مجاني بالكامل بدون إعلانات.">
-    <meta name="twitter:image" content="https://omar-afifi.com/tabattal/assets/images/hero-mockup.webp">
+    <meta name="twitter:url" content="https://tabattal.omar-afifi.com/">
+    <meta name="twitter:title" content="تبتل | مصحف المدينة وصانع فيديوهات القرآن">
+    <meta name="twitter:description" content="اقرأ، استمع، راجع حفظك، واصنع مقاطع قرآنية متزامنة—مجانًا وبدون إعلانات.">
+    <meta name="twitter:image" content="https://tabattal.omar-afifi.com/assets/images/hero-mockup.webp">
 
-    <!-- Favicons -->
     <link rel="icon" href="./assets/images/icons/favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="./assets/images/icons/apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0A0F16">
-    
-    <!-- Google Fonts -->
+    <meta name="theme-color" content="#08120F">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Structured Data: SoftwareApplication & FAQPage -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@graph": [
         {
+          "@type": "WebSite",
+          "@id": "https://tabattal.omar-afifi.com/#website",
+          "name": "تبتل",
+          "alternateName": ["Tabattal", "tabattal.omar-afifi.com"],
+          "url": "https://tabattal.omar-afifi.com/",
+          "inLanguage": ["ar", "en"]
+        },
+        {
           "@type": "SoftwareApplication",
-          "@id": "https://omar-afifi.com/tabattal/#software",
+          "@id": "https://tabattal.omar-afifi.com/#software",
           "name": "تبتل - Tabattal",
-          "alternateName": ["Tabattal", "تطبيق تبتل", "Tabattal Quran", "تبتل للقرآن الكريم"],
-          "operatingSystem": "Android, Web, iOS, Windows, macOS, Linux",
-          "applicationCategory": "Religious, Books & Reference, MultimediaApplication",
-          "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD",
-            "availability": "https://schema.org/InStock"
-          },
-          "description": "تطبيق تبتل للقرآن الكريم: المصحف الرقمي بالرسم العثماني لمصحف المدينة (QCF V2)، وصانع فيديوهات وريلز القرآن الكريم (9:16 / 1:1 / 16:9) مع تزامن التلاوة EveryAyah، وبطاقات الآيات، واختبار وتثبيت الحفظ، والتفاسير وغريب القرآن. مجاني 100% وبدون إعلانات تمامًا.",
+          "alternateName": ["Tabattal", "تطبيق تبتل", "تبتل للقرآن الكريم"],
+          "operatingSystem": "Android, Web",
+          "applicationCategory": "ReligiousApplication",
+          "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+          "description": "مصحف المدينة مع التلاوة والتفسير والحفظ وصانع فيديوهات القرآن، مجاني بالكامل وبدون إعلانات أو تتبع.",
           "softwareVersion": "1.3.0",
-          "inLanguage": ["ar", "en"],
-          "author": {
-            "@type": "Person",
-            "name": "Omar Afifi",
-            "url": "https://github.com/OmarAfifi-CSE"
-          },
-          "screenshot": "https://omar-afifi.com/tabattal/assets/images/hero-mockup.webp",
-          "url": "https://omar-afifi.com/tabattal/",
-          "installUrl": "https://play.google.com/store/apps/details?id=com.omarafifi.tabattal",
-          "downloadUrl": "https://play.google.com/store/apps/details?id=com.omarafifi.tabattal"
+          "inLanguage": "ar",
+          "author": {"@type": "Person", "name": "Omar Afifi", "url": "https://github.com/OmarAfifi-CSE"},
+          "screenshot": "https://tabattal.omar-afifi.com/assets/images/hero-mockup.webp",
+          "url": "https://tabattal.omar-afifi.com/",
+          "installUrl": "https://play.google.com/store/apps/details?id=com.omarafifi.tabattal"
         },
         {
           "@type": "FAQPage",
-          "@id": "https://omar-afifi.com/tabattal/#faq",
           "mainEntity": [
             {
               "@type": "Question",
-              "name": "ما هو تطبيق تبتل (Tabattal) للقرآن الكريم؟",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "تبتل هو تطبيق قرآني متكامل يجمع بين القراءة برسم مصحف المدينة الأصيل 15 سطرًا، واستوديو فيديو مدمج لصناعة ريلز القرآن المتزامنة مع الصوت، وأدوات الحفظ والتفسير والتلاوات بدون إعلانات."
-              }
+              "name": "هل تبتل مجاني وبدون إعلانات؟",
+              "acceptedAnswer": {"@type": "Answer", "text": "نعم. تبتل مجاني بالكامل، ولا يحتوي على إعلانات أو اشتراك إجباري أو أدوات تتبع للمستخدم."}
             },
             {
               "@type": "Question",
-              "name": "كيف أصنع فيديوهات وريلز قرآنية عبر تبتل؟",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "عبر استوديو الفيديو الداخلي (Quran Video Studio)، يمكنك اختيار الآيات ومقاس الفيديو (9:16 أو 1:1 أو 16:9) مع تزامن الخط العثماني مع صوت القارئ وتصدير فيديو عالي الجودة 1080p لمشاركته على تيك توك وانستغرام وواتساب."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "هل تطبيق تبتل مجاني بالكامل وبدون إعلانات؟",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "نعم، تبتل مجاني 100% كـ صدقة جارية، لا يحتوي على إعلانات أو تتبع أو اشتراكات، ويعمل دون اتصال بالإنترنت بعد تحميل المحتوى."
-              }
+              "name": "هل يمكن صناعة فيديوهات القرآن من تبتل؟",
+              "acceptedAnswer": {"@type": "Answer", "text": "يمكن اختيار الآيات والقارئ والخلفية ومقاس الفيديو، ثم معاينة المقطع وتصديره بمقاسات 9:16 و1:1 و16:9."}
             }
           ]
-        },
-        {
-          "@type": "WebSite",
-          "@id": "https://omar-afifi.com/tabattal/#website",
-          "name": "تبتل - Tabattal",
-          "url": "https://omar-afifi.com/tabattal/",
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://omar-afifi.com/tabattal/app/?q={search_term_string}",
-            "query-input": "required name=search_term_string"
-          }
         }
       ]
     }
     </script>
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="./assets/css/styles.css">
-    
-    <!-- Font Awesome -->
+
+    <link rel="stylesheet" href="./assets/css/tailwind.generated.css?v=20260829">
+    <link rel="stylesheet" href="./assets/css/styles.css?v=20260829-parallax">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Tailwind CSS (CDN for zero-config build) -->
-    <script data-cfasync="false" src="https://cdn.tailwindcss.com"></script>
-    <script data-cfasync="false">
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            dark: '#0A0F16',     // Deep Rich Black
-                            darker: '#05080b',
-                            light: '#1A2332',
-                            gold: '#D4AF37',     // Premium Gold (verseMarkerGold)
-                            goldHover: '#F3D268',
-                            muted: '#8A97A6'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                        arabic: ['Amiri', 'serif'],
-                    },
-                    backgroundImage: {
-                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-                    }
-                }
-            }
-        }
-    </script>
 </head>
 <body class="bg-brand-dark text-white font-sans antialiased overflow-x-hidden selection:bg-brand-gold selection:text-brand-dark">
+    <a href="#main-content" class="skip-link">انتقل إلى المحتوى</a>
 
-    <!-- Ambient Glow Backgrounds -->
-    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-        <div class="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-brand-gold/10 rounded-full blur-[120px] mix-blend-screen animate-pulse-slow"></div>
-        <div class="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-blue-900/10 rounded-full blur-[150px] mix-blend-screen"></div>
+    <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none" aria-hidden="true">
+        <div class="absolute -top-32 -right-32 w-[46rem] h-[46rem] bg-emerald-900/20 rounded-full blur-[150px]"></div>
+        <div class="absolute -bottom-40 -left-32 w-[42rem] h-[42rem] bg-brand-gold/10 rounded-full blur-[140px]"></div>
+        <div class="mushaf-grid absolute inset-0 opacity-30"></div>
     </div>
 
-    <!-- Navigation -->
-    <nav class="fixed w-full z-50 transition-all duration-300" id="navbar">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center transition-all duration-300" id="navbar-container">
-            <div class="text-2xl font-bold tracking-wider flex items-center gap-2">
-                <span class="text-brand-gold">تبتّل</span> <span class="text-sm font-light tracking-widest text-brand-muted opacity-80 mt-1">| TABATTAL</span>
+    <nav class="fixed w-full z-50 transition-all duration-300" id="navbar" aria-label="التنقل الرئيسي">
+        <div class="max-w-7xl mx-auto px-5 md:px-8 py-4 flex justify-between items-center" id="navbar-container">
+            <a href="#top" class="flex items-center gap-3" aria-label="العودة إلى بداية الصفحة">
+                <img src="./assets/images/icons/icon-192.png" alt="" class="w-10 h-10 rounded-xl shadow-lg">
+                <div class="leading-tight">
+                    <span class="brand-lock block text-xl font-bold text-brand-gold font-arabic" translate="no">تَبَتَّلْ</span>
+                    <span class="block text-[9px] tracking-[0.24em] text-brand-muted" dir="ltr">TABATTAL</span>
+                </div>
+            </a>
+            <div class="hidden lg:flex items-center gap-7 text-sm text-white/80">
+                <a href="#mushaf" class="hover:text-brand-gold transition-colors">المصحف</a>
+                <a href="#studio" class="hover:text-brand-gold transition-colors">صانع المقاطع</a>
+                <a href="#features" class="hover:text-brand-gold transition-colors">الأدوات</a>
+                <a href="#philosophy" class="hover:text-brand-gold transition-colors">عهد <span class="brand-lock" translate="no">تبتل</span></a>
             </div>
-            <div class="hidden md:flex gap-8 text-base font-medium tracking-wide items-center">
-                <a href="#studio" class="text-brand-gold hover:text-brand-goldHover transition-colors flex items-center gap-1.5 font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>Video Studio</a>
-                <a href="#features" class="hover:text-brand-gold transition-colors">Features</a>
-                <a href="#experience" class="hover:text-brand-gold transition-colors">Experience</a>
-                <a href="#philosophy" class="hover:text-brand-gold transition-colors">Philosophy</a>
-            </div>
-            <div class="flex items-center gap-3">
-                <a href="./app/" class="group relative px-5 py-2 rounded-full bg-brand-gold/10 border border-brand-gold/30 hover:border-brand-gold transition-all duration-300 flex items-center gap-2 text-brand-gold hover:text-white">
-                    <i class="fas fa-globe text-sm"></i>
-                    <span class="font-semibold text-sm">Web App</span>
-                </a>
-                <a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank" rel="noopener noreferrer" class="group relative px-6 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md overflow-hidden hover:border-brand-gold/50 transition-all duration-500">
-                    <div class="absolute inset-0 bg-brand-gold/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"></div>
-                    <span class="relative z-10 font-semibold text-base">Get the App</span>
-                </a>
+            <div class="flex items-center gap-2 sm:gap-4">
+                <a href="./en/" class="language-toggle" lang="en" aria-label="Switch to English"><span class="hidden sm:inline">English</span><span class="sm:hidden">EN</span></a>
+                <a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank" rel="noopener noreferrer" class="px-4 md:px-6 py-2.5 rounded-full bg-brand-gold text-brand-dark font-bold text-xs md:text-sm hover:bg-brand-goldHover transition-colors">حمّل التطبيق</a>
             </div>
         </div>
     </nav>
 
-    <!-- Semantic Arabic Crawler Shell for Googlebot & Search Engines -->
-    <div class="sr-only" aria-hidden="true" lang="ar" dir="rtl">
-        <h1>تطبيق تبتل للقرآن الكريم (Tabattal) | المصحف الرقمي الأصيل وصانع مقاطع وريلز القرآن الكريم</h1>
-        <p>تطبيق إسلامي شامل ومجاني 100% بدون إعلانات وبدون أي تتبع، مدفوع النية كـ صدقة جارية، يجمع بين القراءة برسم مصحف المدينة المنورة 15 سطرًا (خطوط QCF V2) وصناعة ومونتاج فيديوهات القرآن الكريم المتزامنة مع الصوت بدقة 1080p.</p>
-        <h2>أبرز ميزات تطبيق تبتل:</h2>
-        <ul>
-            <li>مصحف المدينة الرقمي بنظام 15 سطرًا وخطوط مجمع الملك فهد QCF V2.</li>
-            <li>استوديو صانع فيديوهات وريلز القرآن الكريم (Quran Video Studio) بمقاسات 9:16 و1:1 و16:9 مع تزامن الصوت ومكتبة خلفيات فيديو.</li>
-            <li>تصميم بطاقات ومخطوطات الآيات الفاخرة مع التفسير والترجمة للمشاركة.</li>
-            <li>وضع تثبيت واختبار الحفظ التفاعلي الذكي عبر إخفاء الآيات والكلمات.</li>
-            <li>مكتبة التفسير الشاملة، معاني غريب القرآن، والترجمة الإنجليزية المعتمدة.</li>
-            <li>مدير الصوتيات والتلاوات مع الاستماع والتحميل بدون اتصال بالإنترنت.</li>
-            <li>11 ثيمًا لونيًا ملكيًا ووضع ليلي حقيقي OLED Dark Mode.</li>
-            <li>تطبيق مجاني بالكامل بدون أي إعلانات تجارية وبدون أي تتبع.</li>
-        </ul>
-    </div>
-
-    <!-- Hero Section -->
-    <header class="relative min-h-[100svh] flex flex-col justify-center pt-24 pb-32 md:pb-20 overflow-hidden">
-        <div class="max-w-7xl mx-auto px-6 w-full grid md:grid-cols-2 gap-12 items-center">
-            
-            <!-- Hero Text -->
-            <div class="space-y-8 z-10 hero-content text-center lg:text-left mt-8 lg:mt-0">
-                <div class="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-brand-gold/10 border border-brand-gold/20 text-brand-gold text-xs font-semibold tracking-widest uppercase mb-4">
-                    <span class="w-2 h-2 rounded-full bg-brand-gold animate-pulse"></span>
-                    Sadaqa Jariya Project
-                </div>
-                
-                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
-                    The Purest<br/>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold to-yellow-200">Digital Mushaf</span><br/>
-                    & Video Studio.
-                </h1>
-                
-                <p class="text-lg text-brand-muted max-w-xl mx-auto lg:mx-0 font-light leading-relaxed">
-                    Flawless vector typography, authentic 15-line pagination, and a groundbreaking Quran Video Studio for creating synchronized reels and stories — with zero ads and zero compromises.
-                </p>
-                
-                <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-                    <a href="./app/" class="magnetic-btn px-8 py-4 rounded-2xl bg-brand-gold text-brand-dark font-bold hover:bg-brand-goldHover transition-colors flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(212,175,55,0.3)]">
-                        <i class="fas fa-globe text-lg"></i>
-                        Launch Web App
-                    </a>
-                    <a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank" rel="noopener noreferrer" class="magnetic-btn px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-brand-gold/40 transition-colors flex items-center justify-center gap-2 backdrop-blur-sm">
-                        <svg class="w-5 h-5 text-brand-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.792 12l-10.183 10.186a1.5 1.5 0 01-.19-.71V2.524c0-.26.066-.506.19-.71zM14.542 12.75l2.25 2.25L5.617 21.481l8.925-8.73zm3.197-.881l3.078 1.777a1.5 1.5 0 010 2.596l-3.078 1.777-2.67-2.67 2.67-2.67zM14.542 11.25L5.617 2.519l11.175 6.48-2.25 2.251z"/></svg>
-                        Download for Android
-                    </a>
-                    <a href="https://github.com/OmarAfifi-CSE/tabattal" target="_blank" class="magnetic-btn px-6 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 backdrop-blur-sm text-brand-muted hover:text-white">
-                        <i class="fab fa-github"></i>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Hero 3D Device -->
-            <div class="relative w-full flex justify-center items-center hero-device mt-8 lg:mt-0">
-                <!-- Glowing Orb behind phone -->
-                <div class="absolute w-56 h-56 lg:w-64 lg:h-64 bg-brand-gold/20 rounded-full blur-[80px]"></div>
-                
-                <!-- Phone Mockup Image -->
-                <img src="assets/images/hero-mockup.webp" alt="Tabattal App Screen" class="floating-image relative z-10 w-full max-w-[320px] lg:max-w-[420px] max-h-[75vh] object-contain" />
-            </div>
-        </div>
-        
-        <!-- Scroll indicator -->
-        <div class="absolute bottom-2 md:bottom-6 inset-x-0 flex flex-col items-center justify-center gap-2 opacity-50 animate-bounce pointer-events-none">
-            <span class="text-xs uppercase tracking-widest text-center">Scroll to explore</span>
-            <div class="w-px h-12 bg-gradient-to-b from-brand-gold to-transparent"></div>
-        </div>
-    </header>
-
-    <!-- Detailed Features Grid -->
-    <section id="features" class="min-h-[100svh] flex flex-col justify-center py-16 xl:py-24 relative">
-        <div class="max-w-7xl mx-auto px-6 w-full">
-            <div class="text-center mb-12 xl:mb-20 section-title">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/10 border border-brand-gold/20 text-brand-gold text-xs font-semibold tracking-widest uppercase mb-4">
-                    Masterpiece Engineering
-                </div>
-                <h2 class="text-3xl md:text-5xl font-bold mb-4 xl:mb-6">Everything You Need <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold to-yellow-200">(And More)</span></h2>
-                <p class="text-brand-muted text-base xl:text-lg max-w-2xl mx-auto font-light">Every feature in Tabattal is crafted with uncompromising precision, merging sacred authenticity with modern engineering excellence.</p>
-            </div>
-            
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
-                <!-- Feature: Video Studio (Flagship) -->
-                <div class="feature-card glass p-6 xl:p-8 rounded-3xl border-2 border-brand-gold/40 hover:border-brand-gold transition-all duration-300 group hover:-translate-y-1 relative shadow-[0_0_30px_rgba(212,175,55,0.1)]">
-                    <div class="absolute -top-3 right-6 bg-gradient-to-r from-brand-gold to-yellow-300 text-brand-dark font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full shadow">
-                        Creative Studio
+    <main id="main-content">
+        <header id="top" class="relative min-h-[100svh] flex items-center pt-28 pb-20 overflow-hidden">
+            <div class="max-w-7xl mx-auto px-5 md:px-8 w-full grid lg:grid-cols-[1.02fr_0.98fr] gap-12 lg:gap-6 items-center">
+                <div class="hero-content text-center lg:text-right">
+                    <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-brand-gold/10 border border-brand-gold/25 text-brand-gold text-xs font-semibold mb-7">
+                        <span class="w-2 h-2 rounded-full bg-brand-gold animate-pulse"></span>
+                        مشروع صدقة جارية • مجاني بالكامل
                     </div>
-                    <div class="w-12 h-12 rounded-2xl bg-brand-gold/20 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
-                        <i class="fas fa-film"></i>
+                    <h1 class="font-arabic text-5xl sm:text-6xl lg:text-7xl xl:text-[5.4rem] font-bold leading-[1.18] tracking-tight">
+                        مصحفك كما تعرفه،
+                        <span class="block text-brand-gold mt-2">وأثرٌ يصل أبعد.</span>
+                    </h1>
+                    <p class="mt-7 text-base md:text-lg text-brand-muted max-w-2xl mx-auto lg:mx-0 leading-9"><span class="brand-lock" translate="no">تبتل</span> يجمع مصحف المدينة الدقيق مع التلاوة والتفسير والحفظ، وصانع فيديوهات قرآنية متزامنة—مجانًا وبدون إعلانات أو تتبع.</p>
+                    <div class="mt-9 flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
+                        <a data-testid="primary-android-cta" href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank" rel="noopener noreferrer" class="magnetic-btn px-7 py-4 rounded-2xl bg-brand-gold text-brand-dark font-bold flex items-center justify-center gap-3 shadow-[0_18px_55px_rgba(210,180,95,0.2)] hover:bg-brand-goldHover"><i class="fab fa-google-play" aria-hidden="true"></i>حمّل <span class="brand-lock" translate="no">تبتل</span> للأندرويد</a>
+                        <a data-testid="hero-web-cta" href="./app/" class="magnetic-btn px-7 py-4 rounded-2xl bg-white/5 border border-white/15 font-semibold flex items-center justify-center gap-3 hover:bg-white/10 hover:border-brand-gold/40"><i class="fas fa-play text-brand-gold" aria-hidden="true"></i>جرّب <span class="brand-lock" translate="no">تبتل</span> على الويب</a>
                     </div>
-                    <h3 class="text-lg xl:text-xl font-semibold mb-2 text-white">Quran Video Studio & Reels</h3>
-                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">Turn verses into stunning reels & stories (9:16 / 1:1 / 16:9) with synchronized EveryAyah audio recitation, authentic line-by-line Madani typography, and custom video backgrounds.</p>
-                </div>
-
-                <!-- Feature 1 -->
-                <div class="feature-card glass p-6 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-all duration-300 group hover:-translate-y-1">
-                    <div class="w-12 h-12 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
-                        <i class="fas fa-vector-square"></i>
-                    </div>
-                    <h3 class="text-lg xl:text-xl font-semibold mb-2">Single-Viewport Vector Engine</h3>
-                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">Exact 15-line Madani Mushaf pagination rendered with official QCF V2 glyphs. Single-viewport zero-jank architecture locked at 120 FPS.</p>
-                </div>
-                
-                <!-- Feature 2 -->
-                <div class="feature-card glass p-6 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-all duration-300 group hover:-translate-y-1">
-                    <div class="w-12 h-12 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
-                        <i class="fas fa-palette"></i>
-                    </div>
-                    <h3 class="text-lg xl:text-xl font-semibold mb-2">Verse Card Generator</h3>
-                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">Create stunning, aesthetic sharing cards for single verses, verse ranges, or full Mushaf pages with optional Tafsir and 11 color palettes.</p>
-                </div>
-                
-                <!-- Feature 3 -->
-                <div class="feature-card glass p-6 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-all duration-300 group hover:-translate-y-1">
-                    <div class="w-12 h-12 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
-                        <i class="fas fa-microchip"></i>
-                    </div>
-                    <h3 class="text-lg xl:text-xl font-semibold mb-2">Multi-Platform Fluidity</h3>
-                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">Seamless, tailored responsive layouts for Mobile, Tablet, Desktop, and Web with fluid visual adaptation and instant orientation switching.</p>
-                </div>
-
-                <!-- Feature 4 -->
-                <div class="feature-card glass p-6 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-all duration-300 group hover:-translate-y-1">
-                    <div class="w-12 h-12 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
-                        <i class="fas fa-headphones-simple"></i>
-                    </div>
-                    <h3 class="text-lg xl:text-xl font-semibold mb-2">EveryAyah Audio Recitations</h3>
-                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">Studio-quality recitations from renowned Qaris with interactive background player, verse highlighting, and offline playback.</p>
-                </div>
-
-                <!-- Feature 5 -->
-                <div class="feature-card glass p-6 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-all duration-300 group hover:-translate-y-1">
-                    <div class="w-12 h-12 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
-                        <i class="fas fa-book-open"></i>
-                    </div>
-                    <h3 class="text-lg xl:text-xl font-semibold mb-2">Tafsir & Quran Vocabulary</h3>
-                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">Instant offline meanings for unfamiliar vocabulary (Ghareeb Al-Quran), context-aware multi-verse Tafsir spans, and English translations.</p>
-                </div>
-                <!-- Feature 6 -->
-                <div class="feature-card glass p-6 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-all duration-300 group hover:-translate-y-1">
-                    <div class="w-12 h-12 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <h3 class="text-lg xl:text-xl font-semibold mb-2">Memorization Test Tool</h3>
-                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">Interactive word-by-word and ayah masking with zero-shift tap-to-reveal controls for rigorous memorization revision.</p>
-                </div>
-
-                <!-- Feature 7 -->
-                <div class="feature-card glass p-6 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-all duration-300 group hover:-translate-y-1">
-                    <div class="w-12 h-12 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
-                        <i class="fas fa-sliders-h"></i>
-                    </div>
-                    <h3 class="text-lg xl:text-xl font-semibold mb-2">11 Adaptive Themes</h3>
-                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">Handcrafted palettes (Creamy, Rose Gold, Mint, Olive, Ice Blue, Slate, Emerald, Burgundy, Pure White, OLED Dark) with adaptive system chrome.</p>
-                </div>
-
-                <!-- Feature 8 -->
-                <div class="feature-card glass p-6 xl:p-8 rounded-3xl hover:border-brand-gold/50 transition-all duration-300 group hover:-translate-y-1">
-                    <div class="w-12 h-12 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-xl group-hover:scale-110 transition-transform">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h3 class="text-lg xl:text-xl font-semibold mb-2">100% Private & Ad-Free</h3>
-                    <p class="text-brand-muted text-xs xl:text-sm leading-relaxed">Built as a pure Sadaqa Jariya. Zero advertisements, zero analytics tracking, and full offline-first functionality.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Dedicated Quran Video Studio Showcase Section -->
-    <section id="studio" class="py-16 lg:py-24 xl:py-32 relative overflow-hidden border-t border-brand-gold/20 bg-gradient-to-b from-brand-dark via-brand-darker to-[#05080b]">
-        <!-- Ambient background glow -->
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-gold/10 rounded-full blur-[140px] pointer-events-none -z-10"></div>
-
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16 section-title">
-                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-gold/15 border border-brand-gold/30 text-brand-gold text-xs font-bold tracking-widest uppercase mb-4 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
-                    <i class="fas fa-film"></i> Creative Video & Reels Studio
-                </div>
-                <h2 class="text-3xl md:text-5xl font-bold mb-6">
-                    Quran Video Studio <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold to-yellow-200">& Reels Maker</span>
-                </h2>
-                <p class="text-brand-muted text-base md:text-lg max-w-3xl mx-auto font-light leading-relaxed">
-                    Transform any verse or passage into captivating, beautifully animated video reels for Instagram, TikTok, WhatsApp, and YouTube with synchronized EveryAyah recitation and dynamic backgrounds.
-                </p>
-            </div>
-
-            <!-- Studio Pillars Grid -->
-            <div class="grid lg:grid-cols-3 gap-8 mb-16">
-                <!-- Pillar 1: Multi-Aspect Ratios -->
-                <div class="glass p-8 rounded-3xl border border-white/10 hover:border-brand-gold/50 transition-all duration-300 group flex flex-col justify-between">
-                    <div>
-                        <div class="w-14 h-14 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">
-                            <i class="fas fa-crop-alt"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold mb-3 text-white">3 Aspect Ratios</h3>
-                        <p class="text-brand-muted text-sm leading-relaxed mb-6">Create native content formatted precisely for every major social platform without clipping or distortion.</p>
-                        
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-3 text-xs bg-white/5 p-3 rounded-xl border border-white/5">
-                                <span class="font-bold text-brand-gold w-12">9:16</span>
-                                <span class="text-white/80">Vertical Reels, TikTok & Stories</span>
-                            </div>
-                            <div class="flex items-center gap-3 text-xs bg-white/5 p-3 rounded-xl border border-white/5">
-                                <span class="font-bold text-brand-gold w-12">1:1</span>
-                                <span class="text-white/80">Square WhatsApp Status & Feed Posts</span>
-                            </div>
-                            <div class="flex items-center gap-3 text-xs bg-white/5 p-3 rounded-xl border border-white/5">
-                                <span class="font-bold text-brand-gold w-12">16:9</span>
-                                <span class="text-white/80">Cinematic YouTube & Landscape</span>
-                            </div>
-                        </div>
+                    <div class="mt-8 flex flex-wrap justify-center lg:justify-start gap-x-6 gap-y-3 text-xs text-white/55">
+                        <span><i class="fas fa-check text-brand-gold ml-2"></i>بدون حساب إجباري</span>
+                        <span><i class="fas fa-check text-brand-gold ml-2"></i>بدون إعلانات</span>
+                        <span><i class="fas fa-check text-brand-gold ml-2"></i>مفتوح المصدر</span>
                     </div>
                 </div>
 
-                <!-- Pillar 2: Line-by-Line Madani Typography & Audio Sync -->
-                <div class="glass p-8 rounded-3xl border border-brand-gold/30 hover:border-brand-gold transition-all duration-300 group flex flex-col justify-between relative shadow-[0_0_40px_rgba(212,175,55,0.08)]">
-                    <div class="absolute -top-3 right-6 bg-brand-gold text-brand-dark font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full shadow">
-                        Live Kinetic Sync
-                    </div>
-                    <div>
-                        <div class="w-14 h-14 rounded-2xl bg-brand-gold/15 text-brand-gold flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">
-                            <i class="fas fa-microphone-lines"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold mb-3 text-white">Line-by-Line Audio Sync</h3>
-                        <p class="text-brand-muted text-sm leading-relaxed mb-6">Seamless audio synchronization with high-fidelity reciters from EveryAyah, drawing sacred verses with authentic 15-line Madani Mushaf typography and ornamentation.</p>
-                        
-                        <!-- Mini Verse Display Simulation -->
-                        <div class="bg-brand-darker/90 p-4 rounded-2xl border border-brand-gold/20 text-center font-arabic text-xl leading-loose text-brand-gold">
-                            ﴿ وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا ﴾
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pillar 3: Dynamic Video & Media Engine -->
-                <div class="glass p-8 rounded-3xl border border-white/10 hover:border-brand-gold/50 transition-all duration-300 group flex flex-col justify-between">
-                    <div>
-                        <div class="w-14 h-14 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">
-                            <i class="fas fa-photo-film"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold mb-3 text-white">Video & Photo Engine</h3>
-                        <p class="text-brand-muted text-sm leading-relaxed mb-6">Choose from 11 luxury themes, select custom photos from your gallery, or supply animated video backgrounds with auto-adaptive luminance contrast.</p>
-                        
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-3 text-xs bg-white/5 p-3 rounded-xl border border-white/5">
-                                <i class="fas fa-sun text-brand-gold"></i>
-                                <span class="text-white/80">Smart Luminance Contrast (Pure White / Dark)</span>
-                            </div>
-                            <div class="flex items-center gap-3 text-xs bg-white/5 p-3 rounded-xl border border-white/5">
-                                <i class="fas fa-bolt text-brand-gold"></i>
-                                <span class="text-white/80">Hardware-Accelerated 1080p FFmpeg Export</span>
-                            </div>
+                <div class="hero-device relative min-h-[590px] flex items-center justify-center" aria-label="تبتل من صفحة المصحف إلى مقطع قرآني">
+                    <div class="absolute w-[22rem] h-[22rem] bg-brand-gold/20 rounded-full blur-[100px]" aria-hidden="true"></div>
+                    <img src="assets/images/hero-mockup.webp" alt="صفحة من مصحف تبتل على الهاتف" class="hero-phone-mockup relative z-10 w-[270px] sm:w-[320px] lg:w-[355px] drop-shadow-[0_35px_50px_rgba(0,0,0,0.5)] translate-x-0 sm:translate-x-14">
+                    <div data-testid="hero-verse-card" class="impact-reel absolute z-20 rounded-[2rem] overflow-hidden border border-brand-gold/40 shadow-2xl" aria-hidden="true">
+                        <div class="absolute inset-0 bg-gradient-to-b from-[#183329] via-[#0A1813] to-black"></div>
+                        <div class="absolute inset-0 opacity-30 reel-lines"></div>
+                        <div class="relative h-full p-5 sm:p-6 flex flex-col justify-between text-center">
+                            <div class="text-[9px] text-white/60">سورة المزمل • الآية ٨</div>
+                            <div class="reel-verse" translate="no"><span class="verse-bracket verse-bracket-open">﴿</span><p class="font-arabic text-brand-cream">وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا</p><span class="verse-bracket verse-bracket-close">﴾</span></div>
+                            <div class="flex items-center justify-center gap-1.5 h-5"><span class="audio-bar"></span><span class="audio-bar"></span><span class="audio-bar"></span><span class="audio-bar"></span><span class="audio-bar"></span></div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </header>
 
-    <!-- Showcase Video/Gallery Section -->
-    <section id="experience" class="py-16 lg:py-20 xl:py-32 bg-brand-darker relative border-y border-white/5">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="flex flex-col lg:flex-row items-center gap-16">
-                <div class="w-full lg:w-1/2 space-y-8 showcase-text">
-                    <h2 class="text-4xl md:text-5xl font-bold">Crafted to match your rhythm.</h2>
-                    <div class="space-y-6">
-                        <div class="flex gap-4">
-                            <div class="mt-1 w-8 h-8 rounded-full bg-brand-gold/10 flex items-center justify-center shrink-0 border border-brand-gold/20">
-                                <svg class="w-4 h-4 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                            </div>
-                            <div>
-                                <h4 class="text-xl font-semibold mb-2">11 Curated Visual Themes</h4>
-                                <p class="text-brand-muted text-sm leading-relaxed">From deep OLED blacks for night Qiyam to warm Parchment, Rose Gold, and Mint tones for prolonged daytime reading.</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4">
-                            <div class="mt-1 w-8 h-8 rounded-full bg-brand-gold/10 flex items-center justify-center shrink-0 border border-brand-gold/20">
-                                <svg class="w-4 h-4 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-                            </div>
-                            <div>
-                                <h4 class="text-xl font-semibold mb-2">Fluid Scroll Directions</h4>
-                                <p class="text-brand-muted text-sm leading-relaxed">Prefer scrolling continuously like an article, or flipping pages horizontally like a traditional Madani Mushaf? The choice is yours.</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4">
-                            <div class="mt-1 w-8 h-8 rounded-full bg-brand-gold/10 flex items-center justify-center shrink-0 border border-brand-gold/20">
-                                <svg class="w-4 h-4 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-                            </div>
-                            <div>
-                                <h4 class="text-xl font-semibold mb-2">Offline-First Architecture</h4>
-                                <p class="text-brand-muted text-sm leading-relaxed">Your bookmarks, search indexes, tafsir texts, and downloaded recitations reside on your device, completely accessible without connectivity.</p>
-                            </div>
-                        </div>
+        <section class="border-y border-white/5 bg-black/15" aria-label="وعود تبتل">
+            <div class="max-w-6xl mx-auto px-5 py-7 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                <div><strong class="block text-2xl text-brand-gold">0</strong><span class="text-xs text-brand-muted">إعلانات</span></div>
+                <div><strong class="block text-2xl text-brand-gold">0</strong><span class="text-xs text-brand-muted">أدوات تتبع</span></div>
+                <div><strong class="block text-2xl text-brand-gold">604</strong><span class="text-xs text-brand-muted">صفحات مصحف</span></div>
+                <div><strong class="block text-2xl text-brand-gold">3</strong><span class="text-xs text-brand-muted">مقاسات فيديو</span></div>
+            </div>
+        </section>
+
+        <section id="mushaf" class="py-24 lg:py-32">
+            <div class="max-w-7xl mx-auto px-5 md:px-8 grid lg:grid-cols-2 gap-14 items-center">
+                <div class="showcase-text">
+                    <span class="section-kicker">صحبة يومية</span>
+                    <h2 class="font-arabic text-4xl md:text-6xl font-bold leading-tight mt-5">ليس قارئًا عابرًا.<br><span class="text-brand-gold">إنه مصحفك.</span></h2>
+                    <p class="text-brand-muted leading-9 mt-6 max-w-xl">يفتح <span class="brand-lock" translate="no">تبتل</span> مباشرة على صفحة المصحف، ويحفظ موضعك، ويترك كل أدوات القراءة والاستماع والفهم قريبة دون أن تقف بينك وبين التلاوة.</p>
+                    <div class="mt-9 space-y-5">
+                        <div class="benefit-row"><i class="fas fa-book-quran"></i><div><h3>صفحات مصحف المدينة</h3><p>تخطيط 15 سطرًا وخطوط QCF V2 واضحة على كل شاشة.</p></div></div>
+                        <div class="benefit-row"><i class="fas fa-headphones"></i><div><h3>تلاوة تناسب وردك</h3><p>قراء متعددون، تكرار، تحميل، وتحكم من شاشة القفل.</p></div></div>
+                        <div class="benefit-row"><i class="fas fa-moon"></i><div><h3>قراءة بهدوء</h3><p>وضع ليلي ومظاهر متعددة وتمرير أفقي أو رأسي.</p></div></div>
                     </div>
                 </div>
-                
-                <div class="w-full lg:w-1/2 showcase-visual">
-                    <div class="relative w-full aspect-square rounded-[40px] bg-brand-light border border-white/5 overflow-hidden flex items-center justify-center p-8 group">
-                        <div class="absolute inset-0 bg-gradient-to-tr from-brand-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                        
-                        <!-- Abstract UI representation -->
-                        <div class="w-full max-w-sm space-y-4 transform group-hover:scale-105 transition-transform duration-700 ease-out">
-                            <!-- Toggle switch mockup -->
-                            <div class="bg-brand-dark p-6 rounded-3xl border border-white/10 flex justify-between items-center shadow-2xl">
-                                <span class="font-medium">Scroll Direction</span>
-                                <div class="w-24 h-10 bg-brand-light rounded-full p-1 relative flex">
-                                    <div class="w-1/2 h-full bg-brand-gold rounded-full shadow-md z-10"></div>
-                                    <div class="absolute inset-0 flex text-[10px] font-bold text-white/50 items-center justify-around z-20 pointer-events-none">
-                                        <span class="text-brand-dark">H</span>
-                                        <span>V</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Theme mockup -->
-                            <div class="bg-brand-dark p-6 rounded-3xl border border-white/10 flex justify-between items-center shadow-2xl translate-x-8">
-                                <span class="font-medium">Theme Mode</span>
-                                <div class="flex gap-2">
-                                    <div class="w-10 h-10 rounded-full border-2 border-brand-gold flex items-center justify-center text-brand-gold bg-brand-gold/10">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                                    </div>
-                                    <div class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/50">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div class="showcase-visual relative">
+                    <figure class="mushaf-showcase-frame">
+                        <img data-testid="mushaf-reader-showcase" src="assets/images/mushaf-reader-showcase.webp" alt="لقطة من تطبيق تبتل تعرض مصحف المدينة وأدوات التفسير والاستماع والحفظ والمشاركة" loading="lazy" decoding="async">
+                    </figure>
+                </div>
+            </div>
+        </section>
+
+        <section id="studio" class="py-24 lg:py-32 bg-brand-darker border-y border-white/5 relative overflow-hidden">
+            <div class="max-w-7xl mx-auto px-5 md:px-8 relative">
+                <div class="section-title text-center max-w-3xl mx-auto">
+                    <span class="section-kicker">من التلاوة إلى الأثر</span>
+                    <h2 class="font-arabic text-4xl md:text-6xl font-bold mt-5">اصنع مقطعًا قرآنيًا<br><span class="text-brand-gold">دون أن تصبح محرر فيديو.</span></h2>
+                    <p class="text-brand-muted leading-9 mt-6">اختر الآيات والقارئ والخلفية والمقاس. عاين المقطع متزامنًا، ثم احفظه أو شاركه.</p>
+                </div>
+                <div class="mt-16 grid lg:grid-cols-[0.9fr_1.1fr] gap-12 items-center">
+                    <div class="studio-ratios grid grid-cols-3 gap-4 items-end" dir="ltr" aria-label="مقاسات الفيديو المتاحة">
+                        <div class="ratio-card aspect-[9/16] border-brand-gold/50"><span>9:16</span><small>ريلز وقصص</small></div>
+                        <div class="ratio-card aspect-square mb-10"><span>1:1</span><small>منشور مربع</small></div>
+                        <div class="ratio-card aspect-video mb-16"><span>16:9</span><small>يوتيوب</small></div>
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-5">
+                        <article class="studio-step"><span>اختر</span><h3>الآيات والقارئ</h3><p>حدد نطاق الآيات واختر التلاوة المناسبة للمقطع.</p></article>
+                        <article class="studio-step"><span>صمّم</span><h3>الخلفية والمظهر</h3><p>استخدم مظهرًا جاهزًا أو صورة أو فيديو من جهازك.</p></article>
+                        <article class="studio-step"><span>عاين</span><h3>النص متزامنًا</h3><p>اعرض الآية كاملة أو سطرًا بسطر مع التلاوة.</p></article>
+                        <article class="studio-step"><span>شارك</span><h3>حتى جودة 4K</h3><p>صدّر حسب جهازك ومنصتك، دون علامة مائية إجبارية.</p></article>
                     </div>
                 </div>
+                <div class="mt-12 text-center"><a data-testid="studio-cta" href="./app/?open=video-studio" class="inline-flex items-center gap-3 px-7 py-4 rounded-2xl bg-brand-gold text-brand-dark font-bold hover:bg-brand-goldHover transition-colors"><i class="fas fa-wand-magic-sparkles"></i>اصنع أول مقطع الآن</a></div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- How It Works Section -->
-    <section id="how-it-works" class="py-12 lg:py-16 xl:py-24 bg-[#05080b] relative border-y border-white/5">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-20 section-title">
-                <h2 class="text-3xl md:text-5xl font-bold mb-6">Your Journey in <span class="text-brand-gold">3 Steps</span></h2>
-            </div>
-            
-            <div class="grid md:grid-cols-3 gap-12 relative">
-                <!-- Connecting Line -->
-                <div class="hidden md:block absolute top-12 left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-brand-gold/50 to-transparent"></div>
-                
-                <div class="text-center relative z-10 step-card">
-                    <div class="w-24 h-24 mx-auto rounded-full bg-brand-dark border-2 border-brand-gold/30 flex items-center justify-center text-3xl font-bold text-brand-gold mb-8 shadow-[0_0_30px_rgba(212,175,55,0.15)]">01</div>
-                    <h3 class="text-2xl font-bold mb-4">Install</h3>
-                    <p class="text-brand-muted">Download Tabattal for free with a zero-telemetry, zero-ad promise.</p>
-                </div>
-                
-                <div class="text-center relative z-10 step-card">
-                    <div class="w-24 h-24 mx-auto rounded-full bg-brand-dark border-2 border-brand-gold/30 flex items-center justify-center text-3xl font-bold text-brand-gold mb-8 shadow-[0_0_30px_rgba(212,175,55,0.15)]">02</div>
-                    <h3 class="text-2xl font-bold mb-4">Personalize</h3>
-                    <p class="text-brand-muted">Select your favorite reciter, pick from 11 curated reading themes, and customize your scroll flow.</p>
-                </div>
-                
-                <div class="text-center relative z-10 step-card">
-                    <div class="w-24 h-24 mx-auto rounded-full bg-brand-dark border-2 border-brand-gold/30 flex items-center justify-center text-3xl font-bold text-brand-gold mb-8 shadow-[0_0_30px_rgba(212,175,55,0.15)]">03</div>
-                    <h3 class="text-2xl font-bold mb-4">Reflect & Memorize</h3>
-                    <p class="text-brand-muted">Immerse yourself in flawless Quran recitation, explore thematic insights, and test your memorization seamlessly.</p>
+        <section id="features" class="py-24 lg:py-32">
+            <div class="max-w-7xl mx-auto px-5 md:px-8">
+                <div class="section-title max-w-3xl"><span class="section-kicker">كل أداة في موضعها</span><h2 class="font-arabic text-4xl md:text-6xl font-bold mt-5">للقراءة، والفهم،<br><span class="text-brand-gold">وتثبيت الحفظ.</span></h2></div>
+                <div class="mt-14 grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <article class="feature-card"><i class="fas fa-brain"></i><h3>اختبار الحفظ</h3><p>أخفِ الآيات أو الكلمات واكشفها بلمسة على نفس مواضع صفحة المصحف.</p></article>
+                    <article class="feature-card"><i class="fas fa-book-open"></i><h3>التفسير وغريب القرآن</h3><p>افهم سياق الآيات ومعاني الكلمات من مصادر متعددة داخل التطبيق.</p></article>
+                    <article class="feature-card"><i class="fas fa-magnifying-glass"></i><h3>بحث وموضوعات</h3><p>ابحث بالنص أو السورة أو الجزء أو الصفحة، واستكشف موضوعات القرآن.</p></article>
+                    <article class="feature-card"><i class="fas fa-bookmark"></i><h3>موضعك محفوظ</h3><p>عد إلى آخر صفحة واحفظ الآيات والسور التي تريد الرجوع إليها.</p></article>
+                    <article class="feature-card"><i class="fas fa-share-nodes"></i><h3>أربع طرق للمشاركة</h3><p>فيديو، بطاقة آية، نص قرآني، أو صورة صفحة المصحف كاملة.</p></article>
+                    <article class="feature-card"><i class="fas fa-palette"></i><h3>مظهر يريح عينيك</h3><p>11 مظهرًا مع وضع ليلي حقيقي واتجاه قراءة أفقي أو رأسي.</p></article>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Comparison Section -->
-    <section class="py-16 lg:py-20 xl:py-32 relative">
-        <div class="max-w-5xl mx-auto px-6">
-            <div class="text-center mb-20 section-title">
-                <h2 class="text-3xl md:text-5xl font-bold mb-6">The New <span class="text-brand-gold">Standard</span></h2>
-                <p class="text-brand-muted text-lg max-w-2xl mx-auto">How Tabattal redefines the digital Quran experience compared to traditional apps.</p>
-            </div>
-            
-            <div class="grid md:grid-cols-3 gap-6">
-                <!-- Metrics -->
-                <div class="glass rounded-3xl p-8 flex flex-col justify-center space-y-8 text-lg font-medium text-brand-muted hidden md:flex">
-                    <div class="h-12 flex items-center border-b border-white/5 pb-4">Video & Reels Studio</div>
-                    <div class="h-12 flex items-center border-b border-white/5 pb-4">Typography & Layout</div>
-                    <div class="h-12 flex items-center border-b border-white/5 pb-4">Audio Pipeline</div>
-                    <div class="h-12 flex items-center border-b border-white/5 pb-4">Search & Exploration</div>
-                    <div class="h-12 flex items-center">Privacy & Monetization</div>
-                </div>
-                
-                <!-- Tabattal -->
-                <div class="bg-brand-darker border border-brand-gold/30 rounded-3xl p-8 shadow-[0_0_50px_rgba(212,175,55,0.05)] relative transform md:-translate-y-4">
-                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-brand-gold text-brand-dark font-bold px-4 py-1 rounded-full text-sm">Tabattal</div>
-                    <h3 class="text-2xl font-bold text-center mb-10 text-brand-gold mt-4 font-arabic text-3xl">تَبَتَّلْ</h3>
-                    
-                    <div class="space-y-8 text-center md:text-left text-white font-medium text-sm md:text-base">
-                        <div class="h-12 flex items-center justify-center md:justify-start border-b border-white/5 pb-4"><i class="fas fa-check text-brand-gold mr-3"></i> 9:16 / 1:1 / 16:9 Video Reels Studio</div>
-                        <div class="h-12 flex items-center justify-center md:justify-start border-b border-white/5 pb-4"><i class="fas fa-check text-brand-gold mr-3"></i> QCF V2 Vector (15-line Madani)</div>
-                        <div class="h-12 flex items-center justify-center md:justify-start border-b border-white/5 pb-4"><i class="fas fa-check text-brand-gold mr-3"></i> Reciter Audio Sync + Offline</div>
-                        <div class="h-12 flex items-center justify-center md:justify-start border-b border-white/5 pb-4"><i class="fas fa-check text-brand-gold mr-3"></i> Thematic + Root Normalization</div>
-                        <div class="h-12 flex items-center justify-center md:justify-start"><i class="fas fa-check text-brand-gold mr-3"></i> 100% Free (0 Ads & 0 Trackers)</div>
-                    </div>
-                </div>
-                
-                <!-- Other Apps -->
-                <div class="glass rounded-3xl p-8">
-                    <h3 class="text-2xl font-bold text-center mb-10 text-white mt-4 opacity-50">Other Apps</h3>
-                    
-                    <div class="space-y-8 text-center md:text-left text-brand-muted text-sm md:text-base">
-                        <div class="h-12 flex items-center justify-center md:justify-start border-b border-white/5 pb-4"><i class="fas fa-times opacity-50 mr-3"></i> No Video Studio / Static Only</div>
-                        <div class="h-12 flex items-center justify-center md:justify-start border-b border-white/5 pb-4"><i class="fas fa-times opacity-50 mr-3"></i> Blurry Scans / Broken Lines</div>
-                        <div class="h-12 flex items-center justify-center md:justify-start border-b border-white/5 pb-4"><i class="fas fa-times opacity-50 mr-3"></i> Basic Streaming Without Sync</div>
-                        <div class="h-12 flex items-center justify-center md:justify-start border-b border-white/5 pb-4"><i class="fas fa-times opacity-50 mr-3"></i> Exact-Match Keyword Only</div>
-                        <div class="h-12 flex items-center justify-center md:justify-start"><i class="fas fa-times opacity-50 mr-3"></i> Intrusive Ads & Telemetry</div>
-                    </div>
+        <section id="how-it-works" class="py-24 bg-black/15 border-y border-white/5">
+            <div class="max-w-6xl mx-auto px-5 md:px-8">
+                <div class="section-title text-center"><span class="section-kicker">ابدأ من حاجتك الآن</span><h2 class="font-arabic text-4xl md:text-6xl font-bold mt-5">ثلاثة أبواب، <span class="text-brand-gold">وتطبيق واحد.</span></h2></div>
+                <div class="mt-14 grid md:grid-cols-3 gap-6">
+                    <article class="step-card"><div>اقرأ</div><h3>افتح على المصحف مباشرة</h3><p>لا حساب ولا إعلان ولا شاشة تعطل وردك.</p></article>
+                    <article class="step-card"><div>راجع</div><h3>استمع واختبر حفظك</h3><p>كرر الآيات أو أخفِها واكشفها دون تغيير الصفحة.</p></article>
+                    <article class="step-card"><div>انشر</div><h3>حوّل الآية إلى أثر</h3><p>اصنع فيديو أو بطاقة وشاركها بالصيغة المناسبة.</p></article>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Philosophy Section -->
-    <section id="philosophy" class="py-16 lg:py-20 xl:py-32 relative overflow-hidden">
-        <div class="absolute inset-0 bg-brand-gold/5 mask-radial"></div>
-        <div class="max-w-4xl mx-auto px-6 text-center relative z-10 philosophy-content">
-            <svg class="w-12 h-12 text-brand-gold mx-auto mb-8 opacity-50" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
-            <h2 class="text-3xl md:text-5xl font-bold mb-8">A Pure Intention.</h2>
-            <p class="text-xl text-brand-muted leading-relaxed mb-12">Tabattal is built as a <span class="text-brand-gold">Sadaqa Jariya</span>. It is 100% free, forever. There are no ads, no tracking scripts, and no monetization. Just the pure word of Allah, crafted with modern engineering excellence.</p>
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-white/10 pt-12">
-                <div>
-                    <div class="text-3xl font-bold text-white mb-2">0</div>
-                    <div class="text-sm text-brand-muted uppercase tracking-wider">Ads</div>
-                </div>
-                <div>
-                    <div class="text-3xl font-bold text-white mb-2">0</div>
-                    <div class="text-sm text-brand-muted uppercase tracking-wider">Trackers</div>
-                </div>
-                <div>
-                    <div class="text-3xl font-bold text-brand-gold mb-2">100%</div>
-                    <div class="text-sm text-brand-muted uppercase tracking-wider">Free</div>
-                </div>
-                <div>
-                    <div class="text-3xl font-bold text-white mb-2">Open</div>
-                    <div class="text-sm text-brand-muted uppercase tracking-wider">Source</div>
-                </div>
+        <section id="philosophy" class="py-24 lg:py-32 relative overflow-hidden">
+            <div class="absolute inset-0 bg-brand-gold/5 mask-radial" aria-hidden="true"></div>
+            <div class="philosophy-content max-w-4xl mx-auto px-5 text-center relative">
+                <span class="section-kicker justify-center">وعد المشروع</span>
+                <h2 class="font-arabic text-4xl md:text-6xl font-bold mt-5">عهد <span class="brand-lock" translate="no">تبتل</span></h2>
+                <p class="text-lg md:text-xl text-brand-muted leading-10 mt-7">مجاني بالكامل، بدون إعلانات، بدون تتبع، وبدون حساب إجباري. بُني كصدقة جارية ليبقى القرآن هو مركز التجربة، لا وسيلة لجمع البيانات أو بيع الانتباه.</p>
+                <div class="mt-10 flex flex-wrap justify-center gap-3 text-sm"><span class="trust-chip">مجاني بالكامل</span><span class="trust-chip">بدون إعلانات</span><span class="trust-chip">بدون تتبع</span><span class="trust-chip">مفتوح المصدر</span></div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Download / Footer -->
-    <footer id="download" class="bg-[#05080b] pt-24 pb-12 border-t border-white/5">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="bg-gradient-to-br from-brand-light to-brand-dark rounded-[3rem] p-12 md:p-20 text-center border border-white/5 relative overflow-hidden mb-24 cta-box">
-                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiLz48L3N2Zz4=')] opacity-50"></div>
-                
-                <h2 class="text-4xl md:text-6xl font-bold mb-6 relative z-10">Start your journey.</h2>
-                <p class="text-xl text-brand-muted mb-10 max-w-2xl mx-auto relative z-10">Download Tabattal today and experience the Holy Quran like never before.</p>
-                
-                <div class="flex flex-col sm:flex-row justify-center items-center gap-4 relative z-10">
-                    <a href="./app/" class="px-8 py-4 rounded-2xl bg-brand-gold text-brand-dark font-bold hover:bg-brand-goldHover transition-colors flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(212,175,55,0.25)] w-full sm:w-auto">
-                        <i class="fas fa-globe text-2xl"></i>
-                        <div class="text-left">
-                            <div class="text-xs opacity-70">TRY IN BROWSER</div>
-                            <div class="text-lg leading-tight">Launch Web App</div>
-                        </div>
-                    </a>
-                    <a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank" rel="noopener noreferrer" class="px-8 py-4 rounded-2xl bg-white/10 border border-white/15 text-white font-bold hover:bg-white/20 transition-colors flex items-center justify-center gap-3 w-full sm:w-auto">
-                        <svg class="w-6 h-6 text-brand-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.792 12l-10.183 10.186a1.5 1.5 0 01-.19-.71V2.524c0-.26.066-.506.19-.71zM14.542 12.75l2.25 2.25L5.617 21.481l8.925-8.73zm3.197-.881l3.078 1.777a1.5 1.5 0 010 2.596l-3.078 1.777-2.67-2.67 2.67-2.67zM14.542 11.25L5.617 2.519l11.175 6.48-2.25 2.251z"/></svg>
-                        <div class="text-left">
-                            <div class="text-xs opacity-70">GET IT ON</div>
-                            <div class="text-lg leading-tight">Google Play</div>
-                        </div>
-                    </a>
+        <section id="download" class="px-5 pb-24">
+            <div class="cta-box max-w-6xl mx-auto rounded-[2.5rem] border border-brand-gold/25 p-8 md:p-16 text-center relative overflow-hidden">
+                <div class="absolute inset-0 cta-glow" aria-hidden="true"></div>
+                <div class="relative"><p class="text-brand-gold text-sm font-bold">ابدأ الآن</p><h2 class="font-arabic text-4xl md:text-6xl font-bold mt-4">وردك ينتظرك.<br>وأول مقطع كذلك.</h2><p class="text-brand-muted mt-6">حمّل <span class="brand-lock" translate="no">تبتل</span> للأندرويد أو افتحه مباشرة من المتصفح.</p>
+                    <div class="mt-9 flex flex-col sm:flex-row justify-center gap-4"><a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank" rel="noopener noreferrer" class="px-7 py-4 rounded-2xl bg-brand-gold text-brand-dark font-bold hover:bg-brand-goldHover transition-colors">حمّل من Google Play</a><a href="./app/" class="px-7 py-4 rounded-2xl bg-white/5 border border-white/15 font-bold hover:bg-white/10 transition-colors">افتحه من المتصفح</a></div>
                 </div>
             </div>
-            
-            <div class="flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-brand-muted">
-                <div class="flex items-center gap-2">
-                    <span class="text-brand-gold font-bold text-xl">تبتّل</span>
-                    <span>&copy; 2026 Omar Afifi. All rights reserved.</span>
-                </div>
-                <div class="flex gap-6 items-center flex-wrap justify-center">
-                    <a href="https://ko-fi.com/omarafifi" target="_blank" class="text-brand-gold hover:text-yellow-200 transition-colors flex items-center gap-2 font-medium"><i class="fas fa-coffee"></i> Buy me a coffee</a>
-                    <a href="https://github.com/OmarAfifi-CSE/tabattal/blob/main/PRIVACY_POLICY.md" class="hover:text-white transition-colors">Privacy Policy</a>
-                    <a href="https://github.com/OmarAfifi-CSE/tabattal" target="_blank" class="hover:text-white transition-colors">GitHub</a>
-                    <a href="mailto:tabattal@omar-afifi.com" class="hover:text-white transition-colors">Contact</a>
-                </div>
-            </div>
+        </section>
+    </main>
+
+    <footer class="border-t border-white/5 bg-brand-darker py-10">
+        <div class="max-w-7xl mx-auto px-5 md:px-8 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-brand-muted">
+            <div class="text-center md:text-right"><span class="brand-lock font-arabic text-2xl text-brand-gold font-bold" translate="no">تَبَتَّلْ</span><span class="block mt-1">صُنع بعناية لكتاب الله.</span></div>
+            <div class="flex flex-wrap justify-center gap-5"><a href="https://github.com/OmarAfifi-CSE/tabattal" target="_blank" rel="noopener noreferrer" class="hover:text-white">المصدر المفتوح</a><a href="https://github.com/OmarAfifi-CSE/tabattal/blob/main/PRIVACY_POLICY.md" class="hover:text-white">سياسة الخصوصية</a><a href="https://ko-fi.com/omarafifi" target="_blank" rel="noopener noreferrer" class="hover:text-brand-gold">ادعم المشروع</a><a href="mailto:tabattal@omar-afifi.com" class="hover:text-white">تواصل معنا</a></div>
         </div>
     </footer>
 
-    <!-- GSAP for Animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="assets/js/main.js"></script>
+    <script src="assets/js/main.js?v=20260829-zerofouc"></script>
 </body>
 </html>
-
-
-
-

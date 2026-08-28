@@ -13,10 +13,14 @@
    npm start
    ```
 3. سيعمل السيرفر على: `http://localhost:8080`
+4. شغّل اختبار سياسة CORS قبل النشر:
+   ```bash
+   npm test
+   ```
 
 ---
 
-## ☁️ طريقة الرفع المجاني على Google Cloud Run (أفضل أداء - 2 مليون طلب مجانًا):
+## ☁️ النشر على Google Cloud Run:
 
 ### الخطوات:
 1. ادخل على [Google Cloud Console](https://console.cloud.google.com).
@@ -25,8 +29,15 @@
 4. اختر **Continuously deploy from a repository** (واربط هذا المستودع من GitHub).
 5. حدد مسار الـ Dockerfile: `server/video_export_service/Dockerfile`.
 6. اضغط **Deploy**.
-7. ستمنحك جوجل رابطًا مباشرًا مثل: `https://tabattal-video-export-xxxxx.a.run.app`
-8. ضعه في إعدادات التطبيق!
+7. ستمنحك جوجل رابطًا مباشرًا مثل: `https://tabattal-video-export-xxxxx.a.run.app`.
+8. احتفظ بواجهة التطبيق وخدمة المعالجة منفصلتين، واستخدم نطاق API الخاص ببيئة النشر لديك.
+9. أعد نشر الخدمة بعد أي تعديل في `cors_policy.js` حتى تقبل النسخة الجديدة من الموقع.
+
+قيمة بناء Flutter Web الإنتاجية:
+
+```text
+VIDEO_EXPORT_API_URL=https://YOUR_VIDEO_API_DOMAIN/api/export-video
+```
 
 ---
 

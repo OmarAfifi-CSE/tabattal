@@ -21,6 +21,10 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../settings/presentation/bloc/settings_bloc.dart';
 import '../../../../../core/utils/app_snack_bar.dart';
+import '../../../../../core/utils/web_launch_intent.dart';
+import '../../../../../core/constants/quran_metadata.dart';
+import '../../../data/models/verse_model.dart';
+import '../../../../quran_verse_card/presentation/widgets/web/verse_card_generator_sheet_web.dart';
 
 class QuranWebScreen extends StatefulWidget {
   final int? initialPage;
@@ -42,6 +46,7 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
   int? _highlightTargetPage;
   int _highlightToken = 0;
   bool _isAudioExpanded = true;
+  bool _launchIntentHandled = false;
 
   DateTime _lastPageTurnTime = DateTime.fromMillisecondsSinceEpoch(0);
   double _wheelAccumulator = 0.0;
@@ -59,6 +64,32 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
     }
 
     _prewarmAdjacentPages(_currentPage);
+
+    if (resolveWebLaunchIntent(Uri.base) == WebLaunchIntent.videoStudio) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _openVideoStudioFromLaunchIntent();
+      });
+    }
+  }
+
+  void _openVideoStudioFromLaunchIntent() {
+    if (!mounted || _launchIntentHandled) return;
+    _launchIntentHandled = true;
+
+    final surahNumber = QuranMetadata.getSurahForPage(_currentPage);
+    showVerseCardGeneratorModalWeb(
+      context,
+      verse: VerseModel(
+        id: 0,
+        verseNumber: 1,
+        verseKey: '$surahNumber:1',
+        textUthmani: '',
+        juzNumber: 1,
+        words: const [],
+      ),
+      pageNumber: _currentPage,
+      initialFormat: ShareFormat.video,
+    );
   }
 
   void _prewarmAdjacentPages(int page) {
@@ -234,8 +265,10 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
             listener: _handleAudioStateChange,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final isLandscape = constraints.maxWidth > constraints.maxHeight;
-                final isTwoPageMode = isLandscape && constraints.maxWidth >= 1000;
+                final isLandscape =
+                    constraints.maxWidth > constraints.maxHeight;
+                final isTwoPageMode =
+                    isLandscape && constraints.maxWidth >= 1000;
                 final pageStep = isTwoPageMode ? 2 : 1;
 
                 return Stack(
@@ -253,8 +286,8 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                             state is! AudioIdle && state is! AudioError;
                         final double paddingBottom = isVisible
                             ? (isLandscape
-                                ? 0.0
-                                : (_isAudioExpanded ? 80.h : 30.h))
+                                  ? 0.0
+                                  : (_isAudioExpanded ? 80.h : 30.h))
                             : 0;
                         return AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
@@ -263,15 +296,23 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                           child: Focus(
                             autofocus: true,
                             onKeyEvent: (node, event) {
-                              if (event is! KeyDownEvent) return KeyEventResult.ignored;
-                              if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
-                                  event.logicalKey == LogicalKeyboardKey.pageDown ||
-                                  event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                              if (event is! KeyDownEvent) {
+                                return KeyEventResult.ignored;
+                              }
+                              if (event.logicalKey ==
+                                      LogicalKeyboardKey.arrowLeft ||
+                                  event.logicalKey ==
+                                      LogicalKeyboardKey.pageDown ||
+                                  event.logicalKey ==
+                                      LogicalKeyboardKey.arrowDown) {
                                 _navigateToPage(_currentPage + pageStep);
                                 return KeyEventResult.handled;
-                              } else if (event.logicalKey == LogicalKeyboardKey.arrowRight ||
-                                  event.logicalKey == LogicalKeyboardKey.pageUp ||
-                                  event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                              } else if (event.logicalKey ==
+                                      LogicalKeyboardKey.arrowRight ||
+                                  event.logicalKey ==
+                                      LogicalKeyboardKey.pageUp ||
+                                  event.logicalKey ==
+                                      LogicalKeyboardKey.arrowUp) {
                                 _navigateToPage(_currentPage - pageStep);
                                 return KeyEventResult.handled;
                               }
@@ -318,7 +359,8 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                                                         (p, {verseKey}) =>
                                                             _navigateToPage(
                                                               p,
-                                                              verseKey: verseKey,
+                                                              verseKey:
+                                                                  verseKey,
                                                             ),
                                                     highlightVerseKey:
                                                         (rightPage ==
@@ -345,7 +387,8 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                                           Container(
                                             width: 1.5.w,
                                             margin: EdgeInsets.symmetric(
-                                              vertical: (isLandscape ? 28.0 : 36.0).h,
+                                              vertical:
+                                                  (isLandscape ? 28.0 : 36.0).h,
                                             ),
                                             decoration: BoxDecoration(
                                               gradient: LinearGradient(
@@ -418,18 +461,16 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                                           child: QuranPageWidgetWeb(
                                             key: ValueKey('page_$page'),
                                             pageNumber: page,
-                                            onNavigateToPage:
-                                                (p, {verseKey}) =>
-                                                    _navigateToPage(
-                                                      p,
-                                                      verseKey: verseKey,
-                                                    ),
+                                            onNavigateToPage: (p, {verseKey}) =>
+                                                _navigateToPage(
+                                                  p,
+                                                  verseKey: verseKey,
+                                                ),
                                             highlightVerseKey:
                                                 page == _currentPage
                                                 ? _highlightVerseKey
                                                 : null,
-                                            highlightToken:
-                                                page == _currentPage
+                                            highlightToken: page == _currentPage
                                                 ? _highlightToken
                                                 : 0,
                                           ),
@@ -483,8 +524,8 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                                   isExpanded: _isAudioExpanded,
                                   onToggleExpanded: () {
                                     setState(
-                                      () => _isAudioExpanded =
-                                          !_isAudioExpanded,
+                                      () =>
+                                          _isAudioExpanded = !_isAudioExpanded,
                                     );
                                   },
                                 ),

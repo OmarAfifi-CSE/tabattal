@@ -55,7 +55,7 @@ $appName = Get-AppName
 $version = Get-AppVersion
 $androidOutputFolder = "..\B- Releases\Tabattal"
 $docsAppFolder = "docs\app"
-$webBaseHref = "/tabattal/app/"
+$webBaseHref = "/app/"
 
 Write-Host "================================================================" -ForegroundColor Cyan
 Write-Host " [BUILD SYSTEM] : [$appName] v$version" -ForegroundColor Cyan

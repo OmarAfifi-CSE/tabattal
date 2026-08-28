@@ -58,3 +58,6 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
+
+# Marketing documentation
+docs/marketing/

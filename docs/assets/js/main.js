@@ -1,6 +1,3 @@
-// Initialize GSAP and ScrollTrigger
-gsap.registerPlugin(ScrollTrigger);
-
 document.addEventListener('DOMContentLoaded', () => {
     
     // 1. Navbar blurring effect on scroll
@@ -18,41 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 2. Hero Section Animations
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-
-    tl.fromTo('.hero-content h1', 
-        { y: 40, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 0.9, delay: 0.05 }
-    )
-    .fromTo('.hero-content p', 
-        { y: 25, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 0.9 }, 
-        '-=0.7'
-    )
-    .fromTo('.hero-content .magnetic-btn', 
-        { y: 20, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 0.7, stagger: 0.15 }, 
-        '-=0.6'
-    )
-    // Device floating in
-    .fromTo('.hero-device', 
-        { x: 60, opacity: 0, rotationY: -20, rotationX: 8 }, 
-        { x: 0, opacity: 1, rotationY: -15, rotationX: 5, duration: 1.2, ease: 'expo.out' }, 
-        '-=0.9'
-    );
-
-    // Continuous floating animation for the device
-    gsap.to('.floating-image', {
-        y: -15,
-        duration: 3,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut'
-    });
-
-    // 3. ScrollTrigger for Features
-    gsap.fromTo('.section-title', 
+    // Keep the landing page fully usable if either animation CDN is unavailable.
+    if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+        return;
+    }
+    gsap.registerPlugin(ScrollTrigger);
+    // 2. ScrollTrigger for Features (Hero entrance is handled in Pure CSS to eliminate FOUC)
+    gsap.fromTo('#features .section-title',
         { y: 50, opacity: 0 },
         {
             y: 0, opacity: 1, duration: 1,
@@ -65,11 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Showcase Text and Visual
     gsap.fromTo('.showcase-text > *', 
-        { x: -50, opacity: 0 },
+        { y: 35, opacity: 0 },
         {
-            x: 0, opacity: 1, duration: 0.8, stagger: 0.2,
+            y: 0, opacity: 1, duration: 0.8, stagger: 0.2,
             scrollTrigger: {
-                trigger: '#experience',
+                trigger: '#mushaf',
                 start: 'top 70%',
             }
         }
@@ -80,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         {
             scale: 1, opacity: 1, duration: 1, ease: 'power2.out',
             scrollTrigger: {
-                trigger: '#experience',
+                trigger: '#mushaf',
                 start: 'top 60%',
             }
         }

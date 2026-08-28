@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # Sitemap Index
-Sitemap: https://omar-afifi.com/tabattal/sitemap.xml
+Sitemap: https://tabattal.omar-afifi.com/sitemap.xml

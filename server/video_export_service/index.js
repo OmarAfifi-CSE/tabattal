@@ -7,6 +7,7 @@ const path = require('path');
 const os = require('os');
 const { exec, execSync } = require('child_process');
 const axios = require('axios');
+const { isAllowedOrigin } = require('./cors_policy');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -18,23 +19,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// 1. CORS Configuration (Strict Production Domains & Official GitHub Pages Only)
-const ALLOWED_ORIGIN_PATTERNS = [
-  /^https:\/\/(www\.)?omar-afifi\.com/i,
-  /^https:\/\/omarafifi-cse\.github\.io/i,
-];
-
-app.use(cors({
+// 1. CORS Configuration (exact production origins only)
+const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    
     // In local dev allow all origins
     if (isRunningLocally) {
       return callback(null, true);
     }
 
-    const isAllowed = ALLOWED_ORIGIN_PATTERNS.some(pattern => pattern.test(origin));
-    if (isAllowed) {
+    if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
 
@@ -43,9 +36,10 @@ app.use(cors({
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   credentials: true
-}));
+};
 
-app.options('*', cors());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // 2. Strict Rate Limiting Protection (Prevents automated abuse with Bilingual Error Message)
 const exportLimiter = rateLimit({
@@ -126,7 +120,7 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
     service: 'tabattal-video-export', 
-    domain: 'omar-afifi.com',
+    site: 'https://tabattal.omar-afifi.com',
     cloud: !isRunningLocally,
     timestamp: new Date().toISOString() 
   });
