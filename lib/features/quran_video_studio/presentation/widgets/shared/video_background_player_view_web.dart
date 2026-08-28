@@ -1,0 +1,201 @@
+import 'dart:js_interop';
+import 'package:flutter/material.dart';
+import 'package:web/web.dart' as web;
+
+/// High-performance Web video background player that renders a native HTML5 `<video>`
+/// element within a Flutter Web platform view for seamless 60/120 FPS playback.
+class VideoBackgroundPlayerViewWeb extends StatefulWidget {
+  final String videoPath;
+  final bool isPlaying;
+  final double dimming;
+  final int resetSignal;
+
+  const VideoBackgroundPlayerViewWeb({
+    super.key,
+    required this.videoPath,
+    required this.isPlaying,
+    this.dimming = 0.35,
+    this.resetSignal = 0,
+  });
+
+  @override
+  State<VideoBackgroundPlayerViewWeb> createState() =>
+      _VideoBackgroundPlayerViewWebState();
+}
+
+class _VideoBackgroundPlayerViewWebState
+    extends State<VideoBackgroundPlayerViewWeb> {
+  web.HTMLVideoElement? _videoElement;
+
+  void _configureVideo(web.HTMLVideoElement video) {
+    _videoElement = video;
+    video
+      ..muted = true
+      ..defaultMuted = true
+      ..loop = true
+      ..volume = 0
+      ..controls = false
+      ..preload = 'auto'
+      ..setAttribute('playsinline', 'true')
+      ..setAttribute('webkit-playsinline', 'true')
+      ..setAttribute('muted', 'true')
+      ..setAttribute('loop', 'true')
+      ..src = widget.videoPath
+      ..style.width = '100%'
+      ..style.height = '100%'
+      ..style.objectFit = 'cover'
+      ..style.display = 'block'
+      ..style.position = 'absolute'
+      ..style.top = '0'
+      ..style.left = '0'
+      ..style.border = 'none'
+      ..style.outline = 'none'
+      ..style.backgroundColor = 'transparent'
+      ..style.direction = 'ltr';
+
+    // Prevent Flutter Web RTL platform-view positioning bug by ensuring LTR on parents and slots
+    void alignSlots() {
+      try {
+        web.Element? curr = video.parentElement;
+        while (curr != null) {
+          if (curr.isA<web.HTMLElement>()) {
+            (curr as web.HTMLElement).style.direction = 'ltr';
+          }
+          curr = curr.parentElement;
+        }
+
+        final glassPane = web.document.querySelector('flt-glass-pane');
+        if (glassPane != null) {
+          final shadow = glassPane.shadowRoot;
+          if (shadow != null) {
+            final slots = shadow.querySelectorAll('flt-platform-view-slot');
+            for (var i = 0; i < slots.length; i++) {
+              final slot = slots.item(i);
+              if (slot != null && slot.isA<web.HTMLElement>()) {
+                final htmlSlot = slot as web.HTMLElement;
+                htmlSlot.style.left = '0px';
+                htmlSlot.style.direction = 'ltr';
+              }
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    alignSlots();
+
+    void syncPlayback() {
+      alignSlots();
+      if (widget.isPlaying) {
+        try {
+          video.play();
+        } catch (_) {}
+      } else {
+        try {
+          video.pause();
+        } catch (_) {}
+      }
+    }
+
+    video.onloadedmetadata = ((web.Event _) {
+      try {
+        if (video.currentTime == 0) {
+          video.currentTime = 0.001;
+        }
+      } catch (_) {}
+      syncPlayback();
+    }).toJS;
+
+    video.onloadeddata = ((web.Event _) {
+      syncPlayback();
+    }).toJS;
+
+    video.oncanplay = ((web.Event _) {
+      syncPlayback();
+    }).toJS;
+
+    video.onerror = ((web.Event _) {
+      web.console.warn(
+        'VideoBackgroundPlayerViewWeb: Failed to load video source ${widget.videoPath}'.toJS,
+      );
+    }).toJS;
+
+    try {
+      video.load();
+      syncPlayback();
+    } catch (_) {}
+  }
+
+  @override
+  void didUpdateWidget(covariant VideoBackgroundPlayerViewWeb oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (_videoElement != null) {
+      if (oldWidget.videoPath != widget.videoPath) {
+        _videoElement!.src = widget.videoPath;
+        _videoElement!.load();
+        if (widget.isPlaying) {
+          _videoElement!.play();
+        } else {
+          _videoElement!.currentTime = 0.001;
+          _videoElement!.pause();
+        }
+      }
+
+      if (oldWidget.resetSignal != widget.resetSignal) {
+        _videoElement!.currentTime = 0.001;
+        if (widget.isPlaying) {
+          _videoElement!.play();
+        } else {
+          _videoElement!.pause();
+        }
+      }
+
+      if (oldWidget.isPlaying != widget.isPlaying) {
+        if (widget.isPlaying) {
+          _videoElement!.play();
+        } else {
+          _videoElement!.pause();
+        }
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    try {
+      _videoElement?.pause();
+      _videoElement?.src = '';
+    } catch (_) {}
+    _videoElement = null;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          HtmlElementView.fromTagName(
+            tagName: 'video',
+            onElementCreated: (Object element) {
+              if (element.isA<web.HTMLVideoElement>()) {
+                _configureVideo(element as web.HTMLVideoElement);
+              }
+            },
+          ),
+          // Dimming overlay directly over the video stream
+          IgnorePointer(
+            child: Container(
+              color: Colors.black.withValues(
+                alpha: widget.dimming.clamp(0.0, 0.95),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -93,7 +93,11 @@ async function downloadFile(url, destPath) {
     method: 'GET',
     url: url,
     responseType: 'stream',
-    timeout: 15000,
+    timeout: 30000,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      'Accept': '*/*'
+    }
   });
 
   return new Promise((resolve, reject) => {
@@ -193,14 +197,22 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
       return results;
     }
 
-    // Helper to measure exact audio duration via ffprobe
-    function getExactAudioDuration(filePath) {
+    // Helper to measure exact media duration via ffprobe
+    function getExactMediaDuration(filePath) {
       try {
         const stdout = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`, { encoding: 'utf-8' });
         const dur = parseFloat(stdout.trim());
         if (!isNaN(dur) && dur > 0) return dur;
       } catch (_) {}
       return null;
+    }
+
+    function getExactAudioDuration(filePath) {
+      return getExactMediaDuration(filePath);
+    }
+
+    function getExactVideoDuration(filePath) {
+      return getExactMediaDuration(filePath);
     }
 
     // 1. Download all verse audio files in parallel and measure exact durations
@@ -243,6 +255,34 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
       }
     }
 
+    const hasCustomVideo = Boolean(metadata.hasCustomVideo);
+    const backgroundDimming = parseFloat(metadata.backgroundDimming || 0.35);
+    const targetWidth = parseInt(metadata.targetWidth || 1080, 10);
+    const targetHeight = parseInt(metadata.targetHeight || 1920, 10);
+
+    let customVideoDest = null;
+    const customVideoFile = (req.files || []).find(f => f.fieldname === 'custom_video');
+    const customVideoSrc = customVideoFile ? customVideoFile.path : fileMap['custom_video'];
+
+    if (hasCustomVideo) {
+      if (customVideoSrc && fs.existsSync(customVideoSrc)) {
+        customVideoDest = path.join(sessionDir, 'custom_video.mp4');
+        fs.copyFileSync(customVideoSrc, customVideoDest);
+      } else if (metadata.customVideoUrl && (metadata.customVideoUrl.startsWith('http://') || metadata.customVideoUrl.startsWith('https://'))) {
+        customVideoDest = path.join(sessionDir, 'custom_video.mp4');
+        try {
+          await downloadFile(metadata.customVideoUrl, customVideoDest);
+        } catch (vErr) {
+          console.warn(`Custom video download failed from ${metadata.customVideoUrl}: ${vErr.message}`);
+          customVideoDest = null;
+        }
+      }
+    }
+
+    const customVideoDuration = (customVideoDest && fs.existsSync(customVideoDest))
+      ? (getExactVideoDuration(customVideoDest) || 10.0)
+      : 10.0;
+
     // 2. Auto-Calibrate Unit Durations: Match each verse's video units to the exact audio duration
     const unitsByVerse = {};
     unitConfigs.forEach((unit, idx) => {
@@ -265,44 +305,87 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
       }
     }
 
-    // 3. Ultra-fast Parallel Video Segments Rendering (Up to 8 concurrent workers)
+    let cumulativeStartSec = 0;
+    for (let u = 0; u < unitConfigs.length; u++) {
+      unitConfigs[u].globalStartSec = cumulativeStartSec;
+      cumulativeStartSec += Math.max(parseFloat(unitConfigs[u].durSec || 4.0), 0.4);
+    }
+
+    // 3. Ultra-fast Video Rendering
     const cpuCount = Math.max(os.cpus()?.length || 2, 2);
-    const concurrency = Math.min(cpuCount, 8);
-    const threadsPerWorker = Math.max(1, Math.floor(cpuCount / concurrency));
+    const rawVideoMp4 = path.join(sessionDir, 'raw_video.mp4');
 
-    const segmentPaths = await mapConcurrent(unitConfigs, concurrency, async (unit, u) => {
-      const durSec = Math.max(parseFloat(unit.durSec || 4.0), 0.4);
-      const cropY = Math.max(0, parseInt(unit.cropY || 0, 10));
+    if (customVideoDest && fs.existsSync(customVideoDest)) {
+      // 🌟 Single-Pass Continuous Video Background Pipeline (0 cuts, 0 seek jitter, 100% continuous video flow)
+      const inputs = [];
+      inputs.push(`-stream_loop -1 -t ${cumulativeStartSec.toFixed(3)} -i "${customVideoDest}"`);
+      inputs.push(`-loop 1 -t ${cumulativeStartSec.toFixed(3)} -framerate 30 -i "${baseFrameDest}"`);
 
-      const overlaySrc = fileMap[`overlay_unit_${u}`];
-      if (!overlaySrc || !fs.existsSync(overlaySrc)) {
-        throw new Error(`MISSING_OVERLAY_FRAME: Overlay frame for unit ${u + 1} is missing.`);
+      for (let u = 0; u < unitConfigs.length; u++) {
+        const overlaySrc = fileMap[`overlay_unit_${u}`];
+        if (!overlaySrc || !fs.existsSync(overlaySrc)) {
+          throw new Error(`MISSING_OVERLAY_FRAME: Overlay frame for unit ${u + 1} is missing.`);
+        }
+        const overlayDest = path.join(sessionDir, `overlay_unit_${u}.png`);
+        fs.copyFileSync(overlaySrc, overlayDest);
+        inputs.push(`-loop 1 -t ${cumulativeStartSec.toFixed(3)} -framerate 30 -i "${overlayDest}"`);
       }
 
-      const overlayDest = path.join(sessionDir, `overlay_unit_${u}.png`);
-      fs.copyFileSync(overlaySrc, overlayDest);
+      let filter = `[0:v]setpts=PTS-STARTPTS,scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=increase,crop=${targetWidth}:${targetHeight},setsar=1,drawbox=color=black@${backgroundDimming.toFixed(2)}:t=fill[bg];`;
+      filter += `[bg][1:v]overlay=0:0[canvas0];`;
+      let currentCanvas = 'canvas0';
 
-      const segmentFile = path.join(sessionDir, `segment_${u}.ts`);
+      for (let u = 0; u < unitConfigs.length; u++) {
+        const segStart = unitConfigs[u].globalStartSec;
+        const durSec = parseFloat(unitConfigs[u].durSec || 4.0);
+        const segEnd = segStart + durSec;
+        const fadeDur = 0.30;
+        const safeFade = Math.min(Math.max(fadeDur, 0.05), durSec * 0.20);
+        const fadeOutStart = Math.min(Math.max(durSec - safeFade, 0.08), durSec);
+        const nextCanvas = (u === unitConfigs.length - 1) ? 'v' : `canvas${u + 1}`;
+        const cropY = Math.max(0, parseInt(unitConfigs[u].cropY || 0, 10));
 
-      // Luxury cross-fade transitions exactly matching Mobile Video Studio
-      const fadeDur = 0.30;
-      const safeFade = Math.min(Math.max(fadeDur, 0.05), durSec * 0.20);
-      const fadeOutStart = Math.min(Math.max(durSec - safeFade, 0.08), durSec);
+        filter += `[${u + 2}:v]setpts=PTS-STARTPTS+${segStart.toFixed(3)}/TB,fade=t=in:st=${segStart.toFixed(3)}:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${(segStart + fadeOutStart).toFixed(3)}:d=${safeFade.toFixed(2)}:alpha=1[ov${u}];`;
+        filter += `[${currentCanvas}][ov${u}]overlay=0:${cropY}:enable='between(t,${segStart.toFixed(3)},${segEnd.toFixed(3)})'[${nextCanvas}];`;
+        currentCanvas = nextCanvas;
+      }
 
-      const ffmpegCmd = `ffmpeg -y -loop 1 -t ${durSec} -framerate 30 -i "${baseFrameDest}" -loop 1 -t ${durSec} -framerate 30 -i "${overlayDest}" -filter_complex "[1:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1[dyn];[0:v][dyn]overlay=0:${cropY}[v]" -map "[v]" -c:v libx264 -preset fast -tune stillimage -g 120 -crf ${crf} -maxrate 3000k -bufsize 6000k -pix_fmt yuv420p -r 30 -threads ${threadsPerWorker} "${segmentFile}"`;
+      const ffmpegSinglePassCmd = `ffmpeg -y ${inputs.join(' ')} -filter_complex "${filter}" -map "[v]" -t ${cumulativeStartSec.toFixed(3)} -c:v libx264 -preset fast -g 60 -crf ${crf} -maxrate 4000k -bufsize 8000k -pix_fmt yuv420p -r 30 -threads ${cpuCount} "${rawVideoMp4}"`;
+      await runCommand(ffmpegSinglePassCmd, sessionDir);
+    } else {
+      // Parallel Video Segments Rendering for static luxury backgrounds
+      const concurrency = Math.min(cpuCount, 8);
+      const threadsPerWorker = Math.max(1, Math.floor(cpuCount / concurrency));
 
-      await runCommand(ffmpegCmd, sessionDir);
-      return segmentFile;
-    });
+      const segmentPaths = await mapConcurrent(unitConfigs, concurrency, async (unit, u) => {
+        const durSec = Math.max(parseFloat(unit.durSec || 4.0), 0.4);
+        const cropY = Math.max(0, parseInt(unit.cropY || 0, 10));
 
-    // 3. Concatenate all video segments into raw_video.mp4 (lossless copy)
-    const concatListFile = path.join(sessionDir, 'concat_list.txt');
-    const concatContent = segmentPaths.map(p => `file '${path.basename(p)}'`).join('\n');
-    fs.writeFileSync(concatListFile, concatContent);
+        const overlaySrc = fileMap[`overlay_unit_${u}`];
+        if (!overlaySrc || !fs.existsSync(overlaySrc)) {
+          throw new Error(`MISSING_OVERLAY_FRAME: Overlay frame for unit ${u + 1} is missing.`);
+        }
 
-    const rawVideoMp4 = path.join(sessionDir, 'raw_video.mp4');
-    const concatCmd = `ffmpeg -y -f concat -safe 0 -i concat_list.txt -c copy "${rawVideoMp4}"`;
-    await runCommand(concatCmd, sessionDir);
+        const overlayDest = path.join(sessionDir, `overlay_unit_${u}.png`);
+        fs.copyFileSync(overlaySrc, overlayDest);
+
+        const segmentFile = path.join(sessionDir, `segment_${u}.ts`);
+        const fadeDur = 0.30;
+        const safeFade = Math.min(Math.max(fadeDur, 0.05), durSec * 0.20);
+        const fadeOutStart = Math.min(Math.max(durSec - safeFade, 0.08), durSec);
+
+        const ffmpegCmd = `ffmpeg -y -loop 1 -t ${durSec} -framerate 30 -i "${baseFrameDest}" -loop 1 -t ${durSec} -framerate 30 -i "${overlayDest}" -filter_complex "[1:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1[dyn];[0:v][dyn]overlay=0:${cropY}[v]" -map "[v]" -c:v libx264 -preset fast -tune stillimage -g 120 -crf ${crf} -maxrate 3000k -bufsize 6000k -pix_fmt yuv420p -r 30 -threads ${threadsPerWorker} "${segmentFile}"`;
+        await runCommand(ffmpegCmd, sessionDir);
+        return segmentFile;
+      });
+
+      const concatListFile = path.join(sessionDir, 'concat_list.txt');
+      const concatContent = segmentPaths.map(p => `file '${path.basename(p)}'`).join('\n');
+      fs.writeFileSync(concatListFile, concatContent);
+
+      const concatCmd = `ffmpeg -y -f concat -safe 0 -i concat_list.txt -c copy "${rawVideoMp4}"`;
+      await runCommand(concatCmd, sessionDir);
+    }
 
     if (!fs.existsSync(rawVideoMp4)) {
       return res.status(500).json({
@@ -314,21 +397,23 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
 
     // 4. Final Mux & Global Stream Compression: Collapses all segment redundancies into a single ultra-lightweight stream (< 1.5 MB)
     const outputMp4 = path.join(sessionDir, `Tabattal_${surahNumber}_${startAyah}-${endAyah}_${Date.now()}.mp4`);
-    const streamVideoOpts = `-c:v libx264 -preset veryfast -tune stillimage -crf ${crf} -maxrate 2500k -bufsize 5000k -pix_fmt yuv420p`;
+    const streamVideoOpts = customVideoDest
+      ? `-c:v libx264 -preset veryfast -crf ${crf} -maxrate 4000k -bufsize 8000k -pix_fmt yuv420p`
+      : `-c:v libx264 -preset veryfast -tune stillimage -crf ${crf} -maxrate 2500k -bufsize 5000k -pix_fmt yuv420p`;
 
     if (validAudioFiles.length === 0) {
-      const copyCmd = `ffmpeg -y -i "${rawVideoMp4}" ${streamVideoOpts} -movflags +faststart "${outputMp4}"`;
+      const copyCmd = `ffmpeg -y -i "${rawVideoMp4}" -t ${cumulativeStartSec.toFixed(3)} ${streamVideoOpts} -movflags +faststart "${outputMp4}"`;
       await runCommand(copyCmd, sessionDir);
     } else if (validAudioFiles.length === 1) {
       const singleAudio = validAudioFiles[0];
-      const muxCmd = `ffmpeg -y -i "${rawVideoMp4}" -i "${singleAudio}" ${streamVideoOpts} -c:a aac -b:a 128k -movflags +faststart "${outputMp4}"`;
+      const muxCmd = `ffmpeg -y -i "${rawVideoMp4}" -i "${singleAudio}" ${streamVideoOpts} -c:a aac -b:a 128k -shortest -movflags +faststart "${outputMp4}"`;
       await runCommand(muxCmd, sessionDir);
     } else {
       const audioConcatFile = path.join(sessionDir, 'audio_segments.txt');
       const audioBuffer = validAudioFiles.map(p => `file '${path.basename(p)}'`).join('\n');
       fs.writeFileSync(audioConcatFile, audioBuffer);
 
-      const muxCmd = `ffmpeg -y -i "${rawVideoMp4}" -f concat -safe 0 -i audio_segments.txt ${streamVideoOpts} -c:a aac -b:a 128k -movflags +faststart "${outputMp4}"`;
+      const muxCmd = `ffmpeg -y -i "${rawVideoMp4}" -f concat -safe 0 -i audio_segments.txt ${streamVideoOpts} -c:a aac -b:a 128k -shortest -movflags +faststart "${outputMp4}"`;
       await runCommand(muxCmd, sessionDir);
     }
 

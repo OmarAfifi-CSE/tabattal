@@ -974,7 +974,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoStudioProgressServerMuxing =>
-      'Encoding and muxing video on cloud server...';
+      'Processing and rendering high-quality video...';
 
   @override
   String get videoStudioProgressPreparingDownload =>

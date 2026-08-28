@@ -1855,7 +1855,7 @@ abstract class AppLocalizations {
   /// No description provided for @videoStudioProgressServerMuxing.
   ///
   /// In ar, this message translates to:
-  /// **'جاري دمج التلاوة ومونتاج مقطع الفيديو على السيرفر...'**
+  /// **'جاري معالجة وإنتاج مقطع الفيديو بجودة عالية...'**
   String get videoStudioProgressServerMuxing;
 
   /// No description provided for @videoStudioProgressPreparingDownload.

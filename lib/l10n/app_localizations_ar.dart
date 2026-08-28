@@ -972,7 +972,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get videoStudioProgressServerMuxing =>
-      'جاري دمج التلاوة ومونتاج مقطع الفيديو على السيرفر...';
+      'جاري معالجة وإنتاج مقطع الفيديو بجودة عالية...';
 
   @override
   String get videoStudioProgressPreparingDownload =>

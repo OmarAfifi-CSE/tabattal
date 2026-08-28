@@ -512,7 +512,7 @@
       "percent": { "type": "int" }
     }
   },
-  "videoStudioProgressServerMuxing": "جاري دمج التلاوة ومونتاج مقطع الفيديو على السيرفر...",
+  "videoStudioProgressServerMuxing": "جاري معالجة وإنتاج مقطع الفيديو بجودة عالية...",
   "videoStudioProgressPreparingDownload": "جاري تحضير ملف الفيديو للتحميل...",
   "videoStudioProgressConcatenating": "جاري تجميع وحفظ الفيديو النهائي...",
   "audioDownloadPause": "إيقاف التحميل",

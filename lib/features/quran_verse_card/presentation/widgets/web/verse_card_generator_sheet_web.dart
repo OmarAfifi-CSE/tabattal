@@ -2556,7 +2556,6 @@ class _VideoPreviewViewportWeb extends StatelessWidget {
               child: AspectRatio(
                 aspectRatio: config.aspectRatio.ratio,
                 child: Container(
-                  clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(isLandscape ? 12.0 : 16.r),
                     boxShadow: [
@@ -2568,53 +2567,59 @@ class _VideoPreviewViewportWeb extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      if (config.backgroundType == VideoBackgroundType.customVideo &&
-                          config.customVideoPath != null &&
-                          config.customVideoPath!.isNotEmpty)
-                        RepaintBoundary(
-                          child: VideoBackgroundPlayerView(
-                            videoPath: config.customVideoPath!,
-                            isPlaying: state.isPlaying,
-                            dimming: config.backgroundDimming,
-                            resetSignal: state.playbackResetTrigger,
-                          ),
-                        ),
-                      RepaintBoundary(
-                        child: CustomPaint(
-                          key: ValueKey('static_frame_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}'),
-                          painter: VideoStaticFramePainter(
-                            config: config,
-                            verse: verse,
-                            includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
-                          ),
-                          size: Size.infinite,
-                        ),
-                      ),
-                      StreamBuilder<Duration>(
-                        stream: context.read<VideoStudioBloc>().playbackPositionStream,
-                        builder: (context, snapshot) {
-                          final position = snapshot.data ?? Duration.zero;
-
-                          return RepaintBoundary(
-                            child: CustomPaint(
-                              key: ValueKey('preview_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}'),
-                              painter: VideoDynamicContentPainter(
-                                verse: verse,
-                                config: config,
-                                pageNumber: pageNumber,
-                                tafsirText: verse?.tafsir,
-                                translationText: verse?.translation,
-                                playbackPositionMs: position.inMilliseconds,
-                                wordTimings: state.currentVerseWordTimings,
-                              ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(isLandscape ? 12.0 : 16.r),
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                        if (config.backgroundType == VideoBackgroundType.customVideo &&
+                            config.customVideoPath != null &&
+                            config.customVideoPath!.isNotEmpty)
+                          Positioned.fill(
+                            child: VideoBackgroundPlayerView(
+                              videoPath: config.customVideoPath!,
+                              isPlaying: state.isPlaying,
+                              dimming: config.backgroundDimming,
+                              resetSignal: state.playbackResetTrigger,
                             ),
-                          );
-                        },
+                          ),
+                        Positioned.fill(
+                          child: CustomPaint(
+                            key: ValueKey('static_frame_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}'),
+                            painter: VideoStaticFramePainter(
+                              config: config,
+                              verse: verse,
+                              includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
+                            ),
+                            size: Size.infinite,
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: StreamBuilder<Duration>(
+                            stream: context.read<VideoStudioBloc>().playbackPositionStream,
+                            builder: (context, snapshot) {
+                              final position = snapshot.data ?? Duration.zero;
+
+                              return CustomPaint(
+                                key: ValueKey('preview_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}'),
+                                painter: VideoDynamicContentPainter(
+                                  verse: verse,
+                                  config: config,
+                                  pageNumber: pageNumber,
+                                  tafsirText: verse?.tafsir,
+                                  translationText: verse?.translation,
+                                  playbackPositionMs: position.inMilliseconds,
+                                  wordTimings: state.currentVerseWordTimings,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),

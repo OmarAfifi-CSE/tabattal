@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'video_background_player_view_web.dart';
 
 /// Lightweight, auto-looping, muted video player widget for previewing
 /// custom background videos behind Quran recitation.
@@ -43,6 +44,11 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
           _controller != null &&
           _controller!.value.isInitialized) {
         _controller?.seekTo(Duration.zero);
+        if (widget.isPlaying) {
+          _controller?.play();
+        } else {
+          _controller?.pause();
+        }
       }
       if (oldWidget.isPlaying != widget.isPlaying &&
           _controller != null &&
@@ -120,6 +126,16 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) {
+      return VideoBackgroundPlayerViewWeb(
+        key: ValueKey('web_video_bg_${widget.videoPath}'),
+        videoPath: widget.videoPath,
+        isPlaying: widget.isPlaying,
+        dimming: widget.dimming,
+        resetSignal: widget.resetSignal,
+      );
+    }
+
     final controller = _controller;
 
     return Stack(

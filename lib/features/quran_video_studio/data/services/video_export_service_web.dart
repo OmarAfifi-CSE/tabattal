@@ -154,19 +154,28 @@ class VideoExportService implements IVideoExportService {
           progress: 0.12,
         ));
 
+        final hasCustomVideo = config.hasCustomVideo &&
+            config.customVideoPath != null &&
+            config.customVideoPath!.isNotEmpty;
+
         final rawBaseFrameBytes = await _overlayGenerator.generateStaticBaseFramePng(
           config: config,
           verse: verses.first,
-          includeBackground: true,
+          includeBackground: !hasCustomVideo,
         );
 
         if (rawBaseFrameBytes == null) {
           throw Exception('فشل في إنشاء الإطار الأساسي للبطاقة');
         }
 
-        // Compress static base frame to high-quality JPEG (Quality 94%) to slash payload from 3.5MB to ~160KB
-        final baseFrameBytes = await _compressToJpegWeb(rawBaseFrameBytes, quality: 0.94);
-        final baseFrameExt = baseFrameBytes.length < rawBaseFrameBytes.length ? 'jpg' : 'png';
+        // When custom video is present, base_frame must remain PNG for transparent overlay.
+        // Otherwise compress static base frame to high-quality JPEG (Quality 94%) to slash payload.
+        final baseFrameBytes = hasCustomVideo
+            ? rawBaseFrameBytes
+            : await _compressToJpegWeb(rawBaseFrameBytes, quality: 0.94);
+        final baseFrameExt = hasCustomVideo
+            ? 'png'
+            : (baseFrameBytes.length < rawBaseFrameBytes.length ? 'jpg' : 'png');
         final baseFrameMime = baseFrameExt == 'jpg' ? 'image/jpeg' : 'image/png';
 
         final overlayBytesList = <Uint8List>[];
@@ -205,22 +214,22 @@ class VideoExportService implements IVideoExportService {
           unit['cropY'] = overlayCrop.cropY;
           unit['cropHeight'] = overlayCrop.cropHeight;
 
-          final overlayProgress = 0.12 + ((u + 1) / totalUnits) * 0.38;
+          final overlayProgress = 0.05 + ((u + 1) / totalUnits) * 0.15;
           controller.add(VideoRenderProgress(
             phase: VideoRenderPhase.generatingOverlays,
             step: isLineByLine ? VideoProgressStep.renderingLine : VideoProgressStep.renderingVerse,
-            progress: overlayProgress.clamp(0.12, 0.50),
+            progress: overlayProgress.clamp(0.05, 0.20),
             ayahNumber: verse.verseNumber,
             currentLine: isLineByLine ? (unit['currentLine'] as int) : 1,
             totalLines: isLineByLine ? (unit['lineCount'] as int) : 1,
           ));
         }
 
-        // Phase 3: Uploading to Cloud FFmpeg Video Service (50% -> 85%)
+        // Phase 3: Uploading to Cloud FFmpeg Video Service (20% -> 35%)
         controller.add(const VideoRenderProgress(
           phase: VideoRenderPhase.encodingVideo,
           step: VideoProgressStep.uploadingPayload,
-          progress: 0.50,
+          progress: 0.20,
           uploadPercent: 0,
         ));
 
@@ -232,6 +241,15 @@ class VideoExportService implements IVideoExportService {
           'endAyah': config.endAyah,
           'reciterPath': config.reciterPath,
           'crf': config.videoQuality.crf,
+          'hasCustomVideo': hasCustomVideo,
+          'backgroundDimming': config.backgroundDimming,
+          'targetWidth': config.aspectRatio.targetWidth,
+          'targetHeight': config.aspectRatio.targetHeight,
+          'customVideoUrl': (hasCustomVideo &&
+                  (config.customVideoPath!.startsWith('http://') ||
+                      config.customVideoPath!.startsWith('https://')))
+              ? config.customVideoPath!
+              : null,
           'unitConfigs': unitConfigs.map((u) => {
             'verseNumber': u['verseNumber'],
             'lineIndex': u['lineIndex'],
@@ -244,6 +262,15 @@ class VideoExportService implements IVideoExportService {
 
         formData.append('metadata', jsonEncode(metadataPayload));
         formData.appendBlob('base_frame', html.Blob([baseFrameBytes], baseFrameMime), 'base_frame.$baseFrameExt');
+
+        if (hasCustomVideo &&
+            (config.customVideoPath!.startsWith('blob:') ||
+                config.customVideoPath!.startsWith('data:'))) {
+          final videoBlob = await _fetchBlobFromUrl(config.customVideoPath!);
+          if (videoBlob != null) {
+            formData.appendBlob('custom_video', videoBlob, 'custom_video.mp4');
+          }
+        }
 
         for (int u = 0; u < totalUnits; u++) {
           formData.appendBlob('overlay_unit_$u', html.Blob([overlayBytesList[u]], 'image/png'), 'overlay_unit_$u.png');
@@ -258,47 +285,71 @@ class VideoExportService implements IVideoExportService {
         request.timeout = 300000; // 5 minutes timeout
 
         Timer? serverPulseTimer;
-        double currentServerProgress = 0.88;
+        double currentServerProgress = 0.35;
         bool serverPulseStarted = false;
+
+        // Estimate realistic FFmpeg render time based on total audio duration
+        final double totalRecitationSec = unitConfigs.fold<double>(
+          0.0,
+          (sum, u) => sum + (u['durSec'] as double? ?? 4.0),
+        );
+        final double estRenderSec = hasCustomVideo
+            ? (totalRecitationSec * 1.15).clamp(12.0, 90.0)
+            : (totalRecitationSec * 0.70).clamp(6.0, 60.0);
 
         void startServerPulse() {
           if (serverPulseStarted) return;
           serverPulseStarted = true;
           serverPulseTimer?.cancel();
-          currentServerProgress = 0.88;
+          currentServerProgress = 0.35;
           controller.add(VideoRenderProgress(
             phase: VideoRenderPhase.encodingVideo,
             step: VideoProgressStep.serverEncoding,
             progress: currentServerProgress,
           ));
 
-          serverPulseTimer = Timer.periodic(const Duration(milliseconds: 750), (timer) {
+          final stopwatch = Stopwatch()..start();
+
+          // Smooth real-time progression: maps 35% -> 92% uniformly over the estimated FFmpeg encoding duration
+          serverPulseTimer = Timer.periodic(const Duration(milliseconds: 200), (timer) {
             if (_isCancelled) {
               timer.cancel();
+              stopwatch.stop();
               return;
             }
-            if (currentServerProgress < 0.955) {
-              currentServerProgress += (0.96 - currentServerProgress) * 0.05;
-              controller.add(VideoRenderProgress(
-                phase: VideoRenderPhase.encodingVideo,
-                step: VideoProgressStep.serverEncoding,
-                progress: double.parse(currentServerProgress.toStringAsFixed(3)),
-              ));
+
+            final elapsedSec = stopwatch.elapsedMilliseconds / 1000.0;
+            if (elapsedSec <= estRenderSec) {
+              final fraction = (elapsedSec / estRenderSec).clamp(0.0, 1.0);
+              // Linear-to-smooth progression from 0.35 to 0.92
+              currentServerProgress = 0.35 + (fraction * 0.57);
+            } else if (currentServerProgress < 0.960) {
+              // Gentle ongoing crawl (92% -> 96%) if FFmpeg takes slightly longer than estimated
+              currentServerProgress += 0.001;
+            } else if (currentServerProgress < 0.975) {
+              // Micro-pulse keepalive until response arrives (never exceeds 97.5% before response arrives)
+              currentServerProgress += 0.0002;
             }
+
+            controller.add(VideoRenderProgress(
+              phase: VideoRenderPhase.encodingVideo,
+              step: VideoProgressStep.serverEncoding,
+              progress: double.parse(currentServerProgress.toStringAsFixed(3)),
+            ));
           });
         }
 
         request.upload.onProgress.listen((html.ProgressEvent event) {
           if (event.lengthComputable && event.total != null && event.total! > 0) {
             final double uploadFraction = (event.loaded! / event.total!).clamp(0.0, 1.0);
-            final double uploadProgress = 0.50 + (uploadFraction * 0.35);
+            final double uploadProgress = 0.20 + (uploadFraction * 0.15);
             final int percent = (uploadFraction * 100).toInt();
 
             if (uploadFraction < 1.0) {
               controller.add(VideoRenderProgress(
                 phase: VideoRenderPhase.encodingVideo,
                 step: VideoProgressStep.uploadingPayload,
-                progress: uploadProgress.clamp(0.50, 0.85),
+                progress: uploadProgress.clamp(0.20, 0.35),
                 uploadPercent: percent,
               ));
             } else {
@@ -319,7 +370,7 @@ class VideoExportService implements IVideoExportService {
               controller.add(const VideoRenderProgress(
                 phase: VideoRenderPhase.encodingVideo,
                 step: VideoProgressStep.preparingDownload,
-                progress: 0.97,
+                progress: 0.99,
               ));
               requestCompleter.complete(responseBlob);
             } else {
@@ -488,6 +539,28 @@ class VideoExportService implements IVideoExportService {
     } finally {
       html.Url.revokeObjectUrl(url);
     }
+  }
+
+  /// Fetches an in-memory blob from a local object/blob URL.
+  static Future<html.Blob?> _fetchBlobFromUrl(String blobUrl) async {
+    final completer = Completer<html.Blob?>();
+    try {
+      final xhr = html.HttpRequest();
+      xhr.open('GET', blobUrl);
+      xhr.responseType = 'blob';
+      xhr.onLoad.listen((_) {
+        if (xhr.status == 200 || xhr.status == 0) {
+          completer.complete(xhr.response as html.Blob?);
+        } else {
+          completer.complete(null);
+        }
+      });
+      xhr.onError.listen((_) => completer.complete(null));
+      xhr.send();
+    } catch (_) {
+      completer.complete(null);
+    }
+    return completer.future;
   }
 }
 

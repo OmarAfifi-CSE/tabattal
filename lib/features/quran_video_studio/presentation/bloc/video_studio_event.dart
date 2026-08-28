@@ -158,11 +158,15 @@ class VideoStudioPlaybackReset extends VideoStudioEvent {
 
 class VideoStudioPlaybackStateChanged extends VideoStudioEvent {
   final bool isPlaying;
+  final bool isReset;
 
-  const VideoStudioPlaybackStateChanged(this.isPlaying);
+  const VideoStudioPlaybackStateChanged(
+    this.isPlaying, {
+    this.isReset = false,
+  });
 
   @override
-  List<Object?> get props => [isPlaying];
+  List<Object?> get props => [isPlaying, isReset];
 }
 
 class VideoStudioActiveVerseIndexChanged extends VideoStudioEvent {

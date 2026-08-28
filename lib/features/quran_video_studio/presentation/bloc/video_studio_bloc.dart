@@ -60,7 +60,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       if (playerState.processingState == ProcessingState.completed) {
         _previewPlayer.pause();
         _previewPlayer.seek(Duration.zero, index: 0);
-        add(const VideoStudioPlaybackStateChanged(false));
+        add(const VideoStudioPlaybackStateChanged(false, isReset: true));
       } else {
         final isPlaying = _previewPlayer.playing && playerState.processingState != ProcessingState.completed;
         add(VideoStudioPlaybackStateChanged(isPlaying));
@@ -86,7 +86,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           if (state.isPlaying) {
             _previewPlayer.pause();
             _previewPlayer.seek(Duration.zero, index: 0);
-            add(const VideoStudioPlaybackStateChanged(false));
+            add(const VideoStudioPlaybackStateChanged(false, isReset: true));
           }
         }
       }
@@ -97,7 +97,15 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     VideoStudioPlaybackStateChanged event,
     Emitter<VideoStudioState> emit,
   ) {
-    emit(state.copyWith(isPlaying: event.isPlaying));
+    if (event.isReset) {
+      emit(state.copyWith(
+        isPlaying: event.isPlaying,
+        currentVerseIndex: 0,
+        playbackResetTrigger: state.playbackResetTrigger + 1,
+      ));
+    } else {
+      emit(state.copyWith(isPlaying: event.isPlaying));
+    }
   }
 
   Future<void> _onInitRequested(
@@ -355,7 +363,11 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         if (_previewPlayer.currentIndex != safeIndex) {
           await _previewPlayer.seek(Duration.zero, index: safeIndex);
         }
-        emit(state.copyWith(isPlaying: true));
+        final isBeginning = safeIndex == 0 && _previewPlayer.position <= const Duration(milliseconds: 100);
+        emit(state.copyWith(
+          isPlaying: true,
+          playbackResetTrigger: isBeginning ? state.playbackResetTrigger + 1 : state.playbackResetTrigger,
+        ));
         await _previewPlayer.play();
       } catch (_) {
         emit(state.copyWith(isPlaying: false));

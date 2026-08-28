@@ -513,7 +513,7 @@
       "percent": { "type": "int" }
     }
   },
-  "videoStudioProgressServerMuxing": "Encoding and muxing video on cloud server...",
+  "videoStudioProgressServerMuxing": "Processing and rendering high-quality video...",
   "videoStudioProgressPreparingDownload": "Preparing video file for download...",
   "videoStudioProgressConcatenating": "Muxing and saving final video file...",
   "audioDownloadPause": "Pause Download",

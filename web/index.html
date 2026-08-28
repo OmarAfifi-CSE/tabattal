@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" class="notranslate" translate="no">
+<html lang="ar" dir="ltr" class="notranslate" translate="no">
 <head>
   <!-- Base HREF for Flutter routing -->
   <base href="$FLUTTER_BASE_HREF">
@@ -10,18 +10,17 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 
-  <!-- Dynamic Saved Locale & Direction Sync -->
+  <!-- Dynamic Saved Locale Sync (Keep DOM LTR for Flutter PlatformView coordinate integrity) -->
   <script>
     (function() {
       try {
         var locale = localStorage.getItem('flutter.app_locale') || localStorage.getItem('app_locale');
         if (locale && (locale.indexOf('en') !== -1 || locale === '"en"')) {
           document.documentElement.setAttribute('lang', 'en');
-          document.documentElement.setAttribute('dir', 'ltr');
         } else {
           document.documentElement.setAttribute('lang', 'ar');
-          document.documentElement.setAttribute('dir', 'rtl');
         }
+        document.documentElement.setAttribute('dir', 'ltr');
       } catch (e) {}
     })();
   </script>
