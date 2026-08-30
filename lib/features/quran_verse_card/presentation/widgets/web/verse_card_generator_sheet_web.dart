@@ -823,7 +823,18 @@ class _VerseCardGeneratorSheetWebContentState
 
     return BlocConsumer<VideoStudioBloc, VideoStudioState>(
       listener: (context, videoState) async {
-        if (videoState.exportProgress.isRendering && !_isExportDialogOpen) {
+        if (videoState.errorMessage != null && videoState.errorMessage!.isNotEmpty) {
+          if (_isExportDialogOpen) {
+            _dismissExportDialog();
+          }
+          if (mounted) {
+            setState(() {
+              _statusMessage = videoState.errorMessage;
+              _isSuccessStatus = false;
+            });
+            _scrollToStatusBanner();
+          }
+        } else if (videoState.exportProgress.isRendering && !_isExportDialogOpen) {
           _showExportDialog(context, context.read<VideoStudioBloc>());
         } else if (videoState.exportProgress.isCompleted &&
             _isExportDialogOpen) {
@@ -1242,9 +1253,13 @@ class _VerseCardGeneratorSheetWebContentState
         );
 
       case ShareFormat.fullPage:
-        return KeyedSubtree(
-          key: const ValueKey('full_page_preview_web'),
-          child: Padding(
+        return RepaintBoundary(
+          key: _repaintKey,
+          child: Container(
+            key: const ValueKey('full_page_preview_web'),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
             padding: EdgeInsets.symmetric(
               horizontal: isLandscape ? 12.0 : 16.0,
               vertical: isLandscape ? 8.0 : 12.0,
@@ -2541,95 +2556,102 @@ class _VideoPreviewViewportWeb extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // 1. Real Video Preview Card
           Padding(
             padding: EdgeInsets.only(
-              top: isLandscape ? 4.0 : 14.h,
-              bottom: isLandscape ? 4.0 : 6.h,
+              top: isLandscape ? 6.0 : 10.h,
+              bottom: isLandscape ? 4.0 : 8.h,
               left: isLandscape ? 8.0 : 16.w,
               right: isLandscape ? 8.0 : 16.w,
             ),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOutCubic,
-              height: previewHeight,
-              alignment: Alignment.center,
-              child: AspectRatio(
-                aspectRatio: config.aspectRatio.ratio,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(isLandscape ? 12.0 : 16.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.16),
-                        blurRadius: 18,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(isLandscape ? 12.0 : 16.r),
-                    child: Directionality(
-                      textDirection: TextDirection.ltr,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                        // 0. Base Theme Layer (Always keeps the active luxury card theme visible underneath)
-                        Positioned.fill(
-                          child: CustomPaint(
-                            key: ValueKey('preview_base_bg_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}'),
-                            painter: VideoStaticFramePainter(
-                              config: config.copyWith(backgroundType: VideoBackgroundType.gradient),
-                              verse: verse,
-                              includeBackground: true,
-                            ),
-                            size: Size.infinite,
-                          ),
+            child: RepaintBoundary(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOutCubic,
+                height: previewHeight,
+                alignment: Alignment.center,
+                child: AspectRatio(
+                  aspectRatio: config.aspectRatio.ratio,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(isLandscape ? 12.0 : 16.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.16),
+                          blurRadius: 20,
+                          spreadRadius: -1,
+                          offset: const Offset(0, 8),
                         ),
-                        if (config.backgroundType == VideoBackgroundType.customVideo &&
-                            config.customVideoPath != null &&
-                            config.customVideoPath!.isNotEmpty)
-                          Positioned.fill(
-                            child: VideoBackgroundPlayerView(
-                              videoPath: config.customVideoPath!,
-                              isPlaying: state.isPlaying,
-                              dimming: config.backgroundDimming,
-                              resetSignal: state.playbackResetTrigger,
-                            ),
-                          ),
-                        Positioned.fill(
-                          child: CustomPaint(
-                            key: ValueKey('static_frame_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}'),
-                            painter: VideoStaticFramePainter(
-                              config: config,
-                              verse: verse,
-                              includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
-                            ),
-                            size: Size.infinite,
-                          ),
-                        ),
-                        Positioned.fill(
-                          child: StreamBuilder<Duration>(
-                            stream: context.read<VideoStudioBloc>().playbackPositionStream,
-                            builder: (context, snapshot) {
-                              final position = snapshot.data ?? Duration.zero;
-
-                              return CustomPaint(
-                                key: ValueKey('preview_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}'),
-                                painter: VideoDynamicContentPainter(
-                                  verse: verse,
-                                  config: config,
-                                  pageNumber: pageNumber,
-                                  tafsirText: verse?.tafsir,
-                                  translationText: verse?.translation,
-                                  playbackPositionMs: position.inMilliseconds,
-                                  wordTimings: state.currentVerseWordTimings,
-                                ),
-                              );
-                            },
-                          ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 8,
+                          spreadRadius: 0,
+                          offset: const Offset(0, 2),
                         ),
                       ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(isLandscape ? 12.0 : 16.r),
+                      child: Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                          // 0. Base Theme Layer (Always keeps the active luxury card theme visible underneath)
+                          Positioned.fill(
+                            child: CustomPaint(
+                              key: ValueKey('preview_base_bg_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}'),
+                              painter: VideoStaticFramePainter(
+                                config: config.copyWith(backgroundType: VideoBackgroundType.gradient),
+                                verse: verse,
+                                includeBackground: true,
+                              ),
+                              size: Size.infinite,
+                            ),
+                          ),
+                          if (config.backgroundType == VideoBackgroundType.customVideo &&
+                              config.customVideoPath != null &&
+                              config.customVideoPath!.isNotEmpty)
+                            Positioned.fill(
+                              child: VideoBackgroundPlayerView(
+                                videoPath: config.customVideoPath!,
+                                isPlaying: state.isPlaying,
+                                dimming: config.backgroundDimming,
+                                resetSignal: state.playbackResetTrigger,
+                              ),
+                            ),
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: VideoStaticFramePainter(
+                                config: config,
+                                verse: verse,
+                                includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
+                              ),
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: StreamBuilder<Duration>(
+                              stream: context.read<VideoStudioBloc>().playbackPositionStream,
+                              initialData: context.read<VideoStudioBloc>().currentVersePosition,
+                              builder: (context, snapshot) {
+                                final position = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
+
+                                return CustomPaint(
+                                  painter: VideoDynamicContentPainter(
+                                    verse: verse,
+                                    config: config,
+                                    pageNumber: pageNumber,
+                                    tafsirText: verse?.tafsir,
+                                    translationText: verse?.translation,
+                                    playbackPositionMs: position.inMilliseconds,
+                                    wordTimings: state.currentVerseWordTimings,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -2637,144 +2659,242 @@ class _VideoPreviewViewportWeb extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: isLandscape ? 6.0 : 10.h),
-          Container(
+
+          // 2. Bottom Playback & Scrubber Controls Bar (Matching Fullscreen Modal with light luxury theme)
+          Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: isLandscape ? 10.0 : 14.w,
-              vertical: isLandscape ? 4.0 : 8.h,
+              horizontal: isLandscape ? 8.0 : 16.w,
+              vertical: isLandscape ? 2.0 : 6.h,
             ),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(isLandscape ? 14.0 : 20.r),
-              border: Border.all(
-                color: AppColors.accentGold.withValues(alpha: 0.15),
-                width: 1,
+            child: RepaintBoundary(
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isLandscape ? 12.0 : 14.w,
+                  vertical: isLandscape ? 6.0 : 8.h,
+                ),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(isLandscape ? 14.0 : 20.r),
+                border: Border.all(
+                  color: AppColors.accentGold.withValues(alpha: 0.20),
+                  width: 1,
+                ),
               ),
-            ),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Row(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    l10n.videoStudioAyahOf(
-                      verse?.verseNumber ?? config.startAyah,
-                      state.verses.isNotEmpty ? state.verses.last.verseNumber : config.endAyah,
+                  // Real-time Video Playback Timeline Scrubber
+                  if (state.totalVideoDuration > Duration.zero)
+                    StreamBuilder<Duration>(
+                      stream: context.read<VideoStudioBloc>().playbackPositionStream,
+                      initialData: context.read<VideoStudioBloc>().currentVersePosition,
+                      builder: (context, snapshot) {
+                        final pos = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
+                        final cumulativePos = state.calculateCumulativePosition(state.currentVerseIndex, pos);
+                        final posStr = VideoStudioState.formatDurationToMinutesSeconds(cumulativePos);
+                        final totalStr = state.formattedTotalDuration ?? '0:00';
+                        final totalMs = state.totalVideoDuration.inMilliseconds.toDouble();
+                        final currentMs = cumulativePos.inMilliseconds.toDouble().clamp(0.0, totalMs > 0 ? totalMs : 0.0);
+
+                        return Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: isLandscape ? 28.0 : 32.w,
+                                child: Text(
+                                  posStr,
+                                  style: TextStyle(
+                                    fontSize: isLandscape ? 9.5 : 10.5.sp,
+                                    color: AppColors.textSecondary,
+                                    fontFamily: 'Outfit',
+                                    fontWeight: FontWeight.w600,
+                                    fontFeatures: const [FontFeature.tabularFigures()],
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: SliderTheme(
+                                  data: SliderTheme.of(context).copyWith(
+                                    trackHeight: isLandscape ? 2.5 : 3.h,
+                                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: isLandscape ? 4.0 : 5.r),
+                                    overlayShape: RoundSliderOverlayShape(overlayRadius: isLandscape ? 8.0 : 10.r),
+                                    activeTrackColor: AppColors.accentGold,
+                                    inactiveTrackColor: AppColors.accentGold.withValues(alpha: 0.18),
+                                    thumbColor: AppColors.accentGold,
+                                  ),
+                                  child: Slider(
+                                    value: currentMs,
+                                    min: 0.0,
+                                    max: totalMs > 0 ? totalMs : 1.0,
+                                    onChanged: (val) {
+                                      context.read<VideoStudioBloc>().add(
+                                            VideoStudioSeekRequested(
+                                              Duration(milliseconds: val.round()),
+                                            ),
+                                          );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                width: isLandscape ? 28.0 : 32.w,
+                                child: Text(
+                                  totalStr,
+                                  textAlign: TextAlign.end,
+                                  style: TextStyle(
+                                    fontSize: isLandscape ? 9.5 : 10.5.sp,
+                                    color: AppColors.textSecondary,
+                                    fontFamily: 'Outfit',
+                                    fontWeight: FontWeight.w600,
+                                    fontFeatures: const [FontFeature.tabularFigures()],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
-                    style: TextStyle(
-                      fontSize: isLandscape ? 12.0 : 13.5.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+
+                  // Verse indicator / step text
+                  if (totalVerses > 0)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: isLandscape ? 2.0 : 4.h),
+                      child: Text(
+                        l10n.videoStudioAyahOfSurah(
+                          currentIndex + 1,
+                          totalVerses,
+                          QuranMetadata.getSurahNameByLang(
+                            Localizations.localeOf(context).languageCode == 'en',
+                            config.surahNumber,
+                          ),
+                        ),
+                        style: TextStyle(
+                          fontSize: isLandscape ? 9.5 : 10.5.sp,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
-                  ),
-                  SizedBox(width: isLandscape ? 8.0 : 12.w),
-                  Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
+
+                  // Playback Controls Row (Reset on Start, Prev/Play/Next in Center, Fullscreen on End)
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // 1. Reset / Replay Button (Start edge)
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: IconButton(
                           onPressed: () {
                             context
                                 .read<VideoStudioBloc>()
                                 .add(const VideoStudioPlaybackReset());
                           },
                           icon: const Icon(Icons.replay_rounded),
-                          iconSize: isLandscape ? 18.0 : 22.sp,
+                          iconSize: isLandscape ? 18.0 : 20.sp,
                           color: AppColors.accentGold,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           tooltip: l10n.videoStudioReplayFromStart,
                         ),
-                        SizedBox(width: isLandscape ? 8.0 : 12.w),
-                        IconButton(
-                          onPressed: currentIndex > 0 && onVerseIndexChanged != null
-                              ? () => onVerseIndexChanged!(currentIndex - 1)
-                              : null,
-                          icon: const Icon(Icons.skip_previous_rounded),
-                          iconSize: isLandscape ? 19.0 : 24.sp,
-                          color: AppColors.accentGold,
-                          disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                        SizedBox(width: isLandscape ? 8.0 : 12.w),
-                        InkWell(
-                          onTap: onTogglePlay,
-                          borderRadius: BorderRadius.circular(isLandscape ? 14.0 : 20.r),
-                          child: Container(
-                            width: isLandscape ? 32.0 : 42.r,
-                            height: isLandscape ? 32.0 : 42.r,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
+                      ),
+
+                      // 2. Center Controls in LTR
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              onPressed: currentIndex > 0 && onVerseIndexChanged != null
+                                  ? () => onVerseIndexChanged!(currentIndex - 1)
+                                  : null,
+                              icon: const Icon(Icons.skip_previous_rounded),
+                              iconSize: isLandscape ? 19.0 : 22.sp,
                               color: AppColors.accentGold,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.accentGold.withValues(alpha: 0.35),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+                              disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
                             ),
-                            child: state.isPreparingAudio
-                                ? Center(
-                                    child: SizedBox(
-                                      width: isLandscape ? 14.0 : 18.r,
-                                      height: isLandscape ? 14.0 : 18.r,
-                                      child: const CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
+                            SizedBox(width: isLandscape ? 10.0 : 14.w),
+                            InkWell(
+                              onTap: onTogglePlay,
+                              borderRadius: BorderRadius.circular(isLandscape ? 16.0 : 22.r),
+                              child: Container(
+                                width: isLandscape ? 36.0 : 44.r,
+                                height: isLandscape ? 36.0 : 44.r,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.accentGold,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.accentGold.withValues(alpha: 0.35),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
                                     ),
-                                  )
-                                : Icon(
-                                    state.isPlaying
-                                        ? Icons.pause_rounded
-                                        : Icons.play_arrow_rounded,
-                                    color: Colors.white,
-                                    size: isLandscape ? 20.0 : 26.sp,
-                                  ),
+                                  ],
+                                ),
+                                child: state.isPreparingAudio
+                                    ? Center(
+                                        child: SizedBox(
+                                          width: isLandscape ? 16.0 : 20.r,
+                                          height: isLandscape ? 16.0 : 20.r,
+                                          child: const CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      )
+                                    : Icon(
+                                        state.isPlaying
+                                            ? Icons.pause_rounded
+                                            : Icons.play_arrow_rounded,
+                                        color: Colors.white,
+                                        size: isLandscape ? 22.0 : 26.sp,
+                                      ),
+                              ),
+                            ),
+                            SizedBox(width: isLandscape ? 10.0 : 14.w),
+                            IconButton(
+                              onPressed: currentIndex < totalVerses - 1 && onVerseIndexChanged != null
+                                  ? () => onVerseIndexChanged!(currentIndex + 1)
+                                  : null,
+                              icon: const Icon(Icons.skip_next_rounded),
+                              iconSize: isLandscape ? 19.0 : 22.sp,
+                              color: AppColors.accentGold,
+                              disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // 3. Fullscreen Button (End edge)
+                      if (onOpenFullscreen != null)
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: IconButton(
+                            onPressed: onOpenFullscreen,
+                            icon: const Icon(Icons.fullscreen_rounded),
+                            iconSize: isLandscape ? 19.0 : 22.sp,
+                            color: AppColors.accentGold,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            tooltip: l10n.videoStudioFullscreenPreview,
                           ),
                         ),
-                        SizedBox(width: isLandscape ? 8.0 : 12.w),
-                        IconButton(
-                          onPressed: currentIndex < totalVerses - 1 && onVerseIndexChanged != null
-                              ? () => onVerseIndexChanged!(currentIndex + 1)
-                              : null,
-                          icon: const Icon(Icons.skip_next_rounded),
-                          iconSize: isLandscape ? 19.0 : 24.sp,
-                          color: AppColors.accentGold,
-                          disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
-                  if (onOpenFullscreen != null) ...[
-                    SizedBox(width: isLandscape ? 8.0 : 12.w),
-                    Container(
-                      width: 1,
-                      height: isLandscape ? 12.0 : 16.h,
-                      color: AppColors.accentGold.withValues(alpha: 0.2),
-                    ),
-                    SizedBox(width: isLandscape ? 6.0 : 10.w),
-                    IconButton(
-                      onPressed: onOpenFullscreen,
-                      icon: const Icon(Icons.fullscreen_rounded),
-                      iconSize: isLandscape ? 19.0 : 24.sp,
-                      color: AppColors.accentGold,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      tooltip: l10n.videoStudioFullscreenPreview,
-                    ),
-                  ],
                 ],
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 }

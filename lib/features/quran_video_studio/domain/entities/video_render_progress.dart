@@ -27,7 +27,12 @@ class VideoRenderProgress extends Equatable {
   final int? ayahNumber;
   final int? currentLine;
   final int? totalLines;
+  final int? currentAyahIndex;
+  final int? totalAyahsCount;
   final int? uploadPercent;
+  final double? renderedSeconds;
+  final double? totalSeconds;
+  final double? speed;
 
   const VideoRenderProgress({
     this.phase = VideoRenderPhase.idle,
@@ -39,7 +44,12 @@ class VideoRenderProgress extends Equatable {
     this.ayahNumber,
     this.currentLine,
     this.totalLines,
+    this.currentAyahIndex,
+    this.totalAyahsCount,
     this.uploadPercent,
+    this.renderedSeconds,
+    this.totalSeconds,
+    this.speed,
   });
 
   bool get isCompleted => phase == VideoRenderPhase.completed || step == VideoProgressStep.completed;
@@ -59,7 +69,12 @@ class VideoRenderProgress extends Equatable {
     int? ayahNumber,
     int? currentLine,
     int? totalLines,
+    int? currentAyahIndex,
+    int? totalAyahsCount,
     int? uploadPercent,
+    double? renderedSeconds,
+    double? totalSeconds,
+    double? speed,
   }) {
     return VideoRenderProgress(
       phase: phase ?? this.phase,
@@ -71,7 +86,12 @@ class VideoRenderProgress extends Equatable {
       ayahNumber: ayahNumber ?? this.ayahNumber,
       currentLine: currentLine ?? this.currentLine,
       totalLines: totalLines ?? this.totalLines,
+      currentAyahIndex: currentAyahIndex ?? this.currentAyahIndex,
+      totalAyahsCount: totalAyahsCount ?? this.totalAyahsCount,
       uploadPercent: uploadPercent ?? this.uploadPercent,
+      renderedSeconds: renderedSeconds ?? this.renderedSeconds,
+      totalSeconds: totalSeconds ?? this.totalSeconds,
+      speed: speed ?? this.speed,
     );
   }
 
@@ -86,6 +106,11 @@ class VideoRenderProgress extends Equatable {
         ayahNumber,
         currentLine,
         totalLines,
+        currentAyahIndex,
+        totalAyahsCount,
         uploadPercent,
+        renderedSeconds,
+        totalSeconds,
+        speed,
       ];
 }

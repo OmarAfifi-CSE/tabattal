@@ -171,11 +171,9 @@ class VideoOptionsSelectorDesktop extends StatelessWidget {
                         ),
                         SizedBox(height: 1.0.h),
                         Text(
-                          quality == VideoQuality.uhd4k
-                              ? l10n.videoQualityUltra
-                              : quality == VideoQuality.fhd1080p
-                                  ? l10n.videoQualityHigh
-                                  : l10n.videoQualityFast,
+                          quality == VideoQuality.fhd1080p
+                              ? l10n.videoQualityHigh
+                              : l10n.videoQualityFast,
                           style: TextStyle(
                             fontSize: 10.5.sp,
                             fontWeight: isSelected

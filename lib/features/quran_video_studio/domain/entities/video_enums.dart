@@ -37,12 +37,12 @@ enum VideoAspectRatio {
   }
 
   int getTargetWidth([VideoQuality quality = VideoQuality.fhd1080p]) {
-    final scale = quality == VideoQuality.uhd4k ? 2.0 : (quality == VideoQuality.hd720p ? 0.6667 : 1.0);
+    final scale = quality == VideoQuality.hd720p ? (2.0 / 3.0) : 1.0;
     return ((targetWidth * scale).round() ~/ 2) * 2;
   }
 
   int getTargetHeight([VideoQuality quality = VideoQuality.fhd1080p]) {
-    final scale = quality == VideoQuality.uhd4k ? 2.0 : (quality == VideoQuality.hd720p ? 0.6667 : 1.0);
+    final scale = quality == VideoQuality.hd720p ? (2.0 / 3.0) : 1.0;
     return ((targetHeight * scale).round() ~/ 2) * 2;
   }
 
@@ -71,8 +71,7 @@ enum VideoAspectRatio {
 
 enum VideoQuality {
   fhd1080p,
-  hd720p,
-  uhd4k;
+  hd720p;
 
   String get labelArabic {
     switch (this) {
@@ -80,8 +79,6 @@ enum VideoQuality {
         return '1080p (عالية الدقة FHD)';
       case VideoQuality.hd720p:
         return '720p (سريعة HD)';
-      case VideoQuality.uhd4k:
-        return '4K (فائقة الدقة 4K)';
     }
   }
 
@@ -91,8 +88,6 @@ enum VideoQuality {
         return '1080p (FHD High Quality)';
       case VideoQuality.hd720p:
         return '720p (HD Fast)';
-      case VideoQuality.uhd4k:
-        return '4K (Ultra HD)';
     }
   }
 
@@ -104,8 +99,6 @@ enum VideoQuality {
         return '1080p';
       case VideoQuality.hd720p:
         return '720p';
-      case VideoQuality.uhd4k:
-        return '4K';
     }
   }
 
@@ -115,8 +108,6 @@ enum VideoQuality {
         return 12000;
       case VideoQuality.hd720p:
         return 6000;
-      case VideoQuality.uhd4k:
-        return 24000;
     }
   }
 
@@ -126,8 +117,6 @@ enum VideoQuality {
         return 16000;
       case VideoQuality.hd720p:
         return 8000;
-      case VideoQuality.uhd4k:
-        return 32000;
     }
   }
 
@@ -137,8 +126,6 @@ enum VideoQuality {
         return 24000;
       case VideoQuality.hd720p:
         return 12000;
-      case VideoQuality.uhd4k:
-        return 48000;
     }
   }
 
@@ -148,8 +135,6 @@ enum VideoQuality {
         return 1;
       case VideoQuality.hd720p:
         return 2;
-      case VideoQuality.uhd4k:
-        return 1;
     }
   }
 
@@ -159,8 +144,6 @@ enum VideoQuality {
         return 22;
       case VideoQuality.hd720p:
         return 24;
-      case VideoQuality.uhd4k:
-        return 20;
     }
   }
 }

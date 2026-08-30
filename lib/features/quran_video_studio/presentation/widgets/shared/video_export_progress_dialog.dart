@@ -23,7 +23,12 @@ class VideoExportProgressDialog extends StatelessWidget {
     final isIndeterminate = progress.progress < 0.0;
 
     return PopScope(
-      canPop: progress.isCompleted || progress.isFailed,
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop && progress.isRendering) {
+          onCancel();
+        }
+      },
       child: Dialog(
         backgroundColor: AppColors.cardCream,
         insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
@@ -108,10 +113,30 @@ class VideoExportProgressDialog extends StatelessWidget {
                   _getLocalizedStatusMessage(context, progress),
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 12.sp,
+                    fontSize: 12.5.sp,
                     color: AppColors.textSecondary,
-                    height: 1.4,
+                    height: 1.35,
                   ),
+                ),
+
+                Builder(
+                  builder: (context) {
+                    final eta = _getLocalizedEtaMessage(context, progress);
+                    if (eta == null) return const SizedBox.shrink();
+                    return Padding(
+                      padding: EdgeInsets.only(top: 4.h),
+                      child: Text(
+                        eta,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 11.5.sp,
+                          color: AppColors.accentGold.withValues(alpha: 0.95),
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Amiri',
+                        ),
+                      ),
+                    );
+                  },
                 ),
 
                 if (progress.isRendering) ...[
@@ -125,16 +150,45 @@ class VideoExportProgressDialog extends StatelessWidget {
                   ),
                   if (!isIndeterminate) ...[
                     SizedBox(height: 8.h),
-                    Center(
-                      child: Text(
-                        '${(progress.progress.clamp(0.0, 1.0) * 100).toInt()}%',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.accentGold,
-                          fontFamily: 'Outfit',
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${(progress.progress.clamp(0.0, 1.0) * 100).toInt()}%',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.accentGold,
+                            fontFamily: 'Outfit',
+                          ),
                         ),
-                      ),
+                        if (progress.renderedSeconds != null &&
+                            progress.totalSeconds != null &&
+                            progress.totalSeconds! > 0)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.movie_creation_outlined,
+                                size: 13.sp,
+                                color: AppColors.textSecondary.withValues(alpha: 0.8),
+                              ),
+                              SizedBox(width: 4.w),
+                              Text(
+                                l10n.videoStudioEncodingProgress(
+                                  _formatTime(progress.renderedSeconds!),
+                                  _formatTime(progress.totalSeconds!),
+                                ),
+                                style: TextStyle(
+                                  fontSize: 11.5.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondary,
+                                  fontFamily: 'Outfit',
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
                     ),
                   ],
                   SizedBox(height: 14.h),
@@ -170,6 +224,41 @@ class VideoExportProgressDialog extends StatelessWidget {
     );
   }
 
+  static String _formatTime(double totalSec) {
+    final int sec = totalSec.round();
+    final int minutes = sec ~/ 60;
+    final int remainingSeconds = sec % 60;
+    return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  String? _getLocalizedEtaMessage(
+      BuildContext context, VideoRenderProgress progress) {
+    if (progress.step != VideoProgressStep.serverEncoding) return null;
+    if (progress.renderedSeconds == null ||
+        progress.totalSeconds == null ||
+        progress.renderedSeconds! <= 0) {
+      return null;
+    }
+    final l10n = AppLocalizations.of(context)!;
+    final speed = progress.speed ?? 1.0;
+    final remainingVideoSec = (progress.totalSeconds! - progress.renderedSeconds!)
+        .clamp(0.0, progress.totalSeconds!);
+    if (speed > 0.1 && remainingVideoSec > 0.3) {
+      final remainingClockSec = (remainingVideoSec / speed).ceil();
+      if (remainingClockSec <= 1) {
+        return l10n.videoStudioEtaOneSecond;
+      } else if (remainingClockSec == 2) {
+        return l10n.videoStudioEtaTwoSeconds;
+      } else if (remainingClockSec <= 10) {
+        return l10n.videoStudioEtaFewSeconds(remainingClockSec);
+      } else {
+        return l10n.videoStudioEtaManySeconds(remainingClockSec);
+      }
+    } else {
+      return l10n.videoStudioEtaMoments;
+    }
+  }
+
   String _getLocalizedStatusMessage(
       BuildContext context, VideoRenderProgress progress) {
     final l10n = AppLocalizations.of(context)!;
@@ -179,16 +268,25 @@ class VideoExportProgressDialog extends StatelessWidget {
       case VideoProgressStep.creatingBaseFrame:
         return l10n.videoStudioProgressCreatingBaseFrame;
       case VideoProgressStep.renderingLine:
+        if (progress.totalAyahsCount != null && progress.totalAyahsCount! > 1 && progress.currentAyahIndex != null) {
+          return l10n.videoStudioProgressPreparingAyahScenes(progress.currentAyahIndex!, progress.totalAyahsCount!);
+        }
         return l10n.videoStudioProgressRenderingLine(
           progress.currentLine ?? 1,
           progress.totalLines ?? 1,
           progress.ayahNumber ?? 1,
         );
       case VideoProgressStep.renderingVerse:
+        if (progress.totalAyahsCount != null && progress.totalAyahsCount! > 1 && progress.currentAyahIndex != null) {
+          return l10n.videoStudioProgressPreparingAyahScenes(progress.currentAyahIndex!, progress.totalAyahsCount!);
+        }
         return l10n.videoStudioProgressRenderingVerse(progress.ayahNumber ?? 1);
       case VideoProgressStep.uploadingPayload:
         return l10n.videoStudioProgressUploadingPayload(progress.uploadPercent ?? 0);
       case VideoProgressStep.serverEncoding:
+        if (progress.statusMessage.isNotEmpty) {
+          return progress.statusMessage;
+        }
         return l10n.videoStudioProgressServerMuxing;
       case VideoProgressStep.preparingDownload:
         return l10n.videoStudioProgressPreparingDownload;
@@ -199,15 +297,10 @@ class VideoExportProgressDialog extends StatelessWidget {
       case VideoProgressStep.completed:
         return l10n.videoStudioProgressCompleted;
       case VideoProgressStep.failed:
-        return progress.statusMessage.isNotEmpty
-            ? progress.statusMessage
-            : l10n.videoStudioProgressFailed;
+        return progress.errorMessage ?? (progress.statusMessage.isNotEmpty ? progress.statusMessage : l10n.videoStudioProgressFailed);
       case VideoProgressStep.cancelled:
         return l10n.videoStudioCancelExport;
       case VideoProgressStep.initial:
-        if (progress.statusMessage.isNotEmpty) {
-          return progress.statusMessage;
-        }
         return l10n.videoStudioExportPreparing;
     }
   }

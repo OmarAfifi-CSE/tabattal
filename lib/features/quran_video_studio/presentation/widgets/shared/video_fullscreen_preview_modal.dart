@@ -156,25 +156,23 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                               // 1. Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
                               RepaintBoundary(
                                 child: CustomPaint(
-                                  key: ValueKey('fullscreen_static_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}'),
                                   painter: VideoStaticFramePainter(
                                     config: config,
                                     verse: verse,
                                     includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
                                   ),
-                                  size: Size.infinite,
                                 ),
                               ),
 
                               // 2. Dynamic Center Content Layer (100% Solid & Real-time Text Tracking)
                               StreamBuilder<Duration>(
                                 stream: context.read<VideoStudioBloc>().playbackPositionStream,
+                                initialData: context.read<VideoStudioBloc>().currentVersePosition,
                                 builder: (context, snapshot) {
-                                  final position = snapshot.data ?? Duration.zero;
+                                  final position = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
 
                                   return RepaintBoundary(
                                     child: CustomPaint(
-                                      key: ValueKey('fullscreen_content_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.isEnglish}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}'),
                                       painter: VideoDynamicContentPainter(
                                         verse: verse,
                                         config: config,
@@ -184,7 +182,6 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                                         playbackPositionMs: position.inMilliseconds,
                                         wordTimings: state.currentVerseWordTimings,
                                       ),
-                                      size: Size.infinite,
                                     ),
                                   );
                                 },
@@ -220,6 +217,80 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Real-time Video Playback Timeline Scrubber
+                        if (state.totalVideoDuration > Duration.zero)
+                          StreamBuilder<Duration>(
+                            stream: context.read<VideoStudioBloc>().playbackPositionStream,
+                            initialData: context.read<VideoStudioBloc>().currentVersePosition,
+                            builder: (context, snapshot) {
+                              final pos = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
+                              final cumulativePos = state.calculateCumulativePosition(state.currentVerseIndex, pos);
+                              final posStr = VideoStudioState.formatDurationToMinutesSeconds(cumulativePos);
+                              final totalStr = state.formattedTotalDuration ?? '0:00';
+                              final totalMs = state.totalVideoDuration.inMilliseconds.toDouble();
+                              final currentMs = cumulativePos.inMilliseconds.toDouble().clamp(0.0, totalMs > 0 ? totalMs : 0.0);
+
+                              return Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 32.w,
+                                      child: Text(
+                                        posStr,
+                                        style: TextStyle(
+                                          fontSize: 10.5.sp,
+                                          color: Colors.white70,
+                                          fontFamily: 'Outfit',
+                                          fontWeight: FontWeight.w600,
+                                          fontFeatures: const [FontFeature.tabularFigures()],
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: SliderTheme(
+                                        data: SliderTheme.of(context).copyWith(
+                                          trackHeight: 3.h,
+                                          thumbShape: RoundSliderThumbShape(enabledThumbRadius: 5.r),
+                                          overlayShape: RoundSliderOverlayShape(overlayRadius: 10.r),
+                                          activeTrackColor: AppColors.accentGold,
+                                          inactiveTrackColor: Colors.white24,
+                                          thumbColor: AppColors.accentGold,
+                                        ),
+                                        child: Slider(
+                                          value: currentMs,
+                                          min: 0.0,
+                                          max: totalMs > 0 ? totalMs : 1.0,
+                                          onChanged: (val) {
+                                            context.read<VideoStudioBloc>().add(
+                                                  VideoStudioSeekRequested(
+                                                    Duration(milliseconds: val.round()),
+                                                  ),
+                                                );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 32.w,
+                                      child: Text(
+                                        totalStr,
+                                        textAlign: TextAlign.end,
+                                        style: TextStyle(
+                                          fontSize: 10.5.sp,
+                                          color: Colors.white70,
+                                          fontFamily: 'Outfit',
+                                          fontWeight: FontWeight.w600,
+                                          fontFeatures: const [FontFeature.tabularFigures()],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+
                         // Verse indicator / step text
                         if (totalVerses > 0)
                           Padding(
@@ -347,6 +418,20 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                                     disabledColor: Colors.white.withValues(alpha: 0.2),
                                   ),
                                 ],
+                              ),
+                            ),
+
+                            // 3. Fullscreen Minimize / Exit Action Button on the opposite side (End edge)
+                            Align(
+                              alignment: AlignmentDirectional.centerEnd,
+                              child: IconButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                icon: const Icon(Icons.fullscreen_exit_rounded),
+                                color: AppColors.accentGold,
+                                iconSize: 26.r,
+                                tooltip: l10n.videoStudioFullscreenPreview,
                               ),
                             ),
                           ],

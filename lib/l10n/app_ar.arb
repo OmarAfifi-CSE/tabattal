@@ -356,12 +356,10 @@
   "videoRatioStory": "قصة (9:16)",
   "videoRatioSquare": "مربع (1:1)",
   "videoRatioLandscape": "عرضي (16:9)",
-  "videoQuality4K": "فائقة (4K)",
   "videoQuality1080p": "عالية (1080p)",
   "videoQuality720p": "سريعة (720p)",
   "videoQualityFast": "سريعة",
   "videoQualityHigh": "عالية الدقة",
-  "videoQualityUltra": "فائقة",
   "videoStudioDisplayMode": "نمط عرض النصوص",
   "videoDisplayModeLineByLine": "سطر بسطر",
   "videoDisplayModeStaticFull": "الآية كاملة",
@@ -482,8 +480,6 @@
     }
   },
   "videoStudioProgressDownloadingAudio": "جاري تحميل التلاوة الصوتية...",
-  "videoStudioProgressGeneratingOverlays": "جاري إعداد النصوص والمشاهد...",
-  "videoStudioProgressEncoding": "جاري تصدير ومعالجة مقطع الفيديو...",
   "videoStudioExportPreparing": "جاري بدء إعداد مقطع الفيديو...",
   "videoStudioProgressReadingTimings": "جاري قراءة توقيتات كلمات الآية ({ayah})...",
   "@videoStudioProgressReadingTimings": {
@@ -512,7 +508,7 @@
       "percent": { "type": "int" }
     }
   },
-  "videoStudioProgressServerMuxing": "جاري معالجة وإنتاج مقطع الفيديو بجودة عالية...",
+  "videoStudioProgressServerMuxing": "جاري معالجة وإنتاج مقطع الفيديو...",
   "videoStudioProgressPreparingDownload": "جاري تحضير ملف الفيديو للتحميل...",
   "videoStudioProgressConcatenating": "جاري تجميع وحفظ الفيديو النهائي...",
   "audioDownloadPause": "إيقاف التحميل",
@@ -525,5 +521,56 @@
       "count": { "type": "int" }
     }
   },
+  "videoStudioProgressPreparingAyahScenes": "جاري إعداد مشاهد الآية ({current} من {total})...",
+  "@videoStudioProgressPreparingAyahScenes": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "videoStudioEncodingProgress": "{rendered} / {total}",
+  "@videoStudioEncodingProgress": {
+    "placeholders": {
+      "rendered": { "type": "String" },
+      "total": { "type": "String" }
+    }
+  },
+  "videoStudioEtaFewSeconds": "متبقي {seconds} ثوانٍ تقريبًا لإنهاء المعالجة",
+  "@videoStudioEtaFewSeconds": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+  "videoStudioEtaManySeconds": "متبقي {seconds} ثانية تقريبًا لإنهاء المعالجة",
+  "@videoStudioEtaManySeconds": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+  "videoStudioEtaOneSecond": "متبقي ثانية واحدة تقريبًا لإنهاء المعالجة",
+  "videoStudioEtaTwoSeconds": "متبقي ثانيتان تقريبًا لإنهاء المعالجة",
+  "videoStudioEtaMoments": "متبقي لحظات لإنهاء المعالجة...",
+  "videoStudioStartingEncoding": "جاري بدء معالجة الفيديو بدقة {quality}...",
+  "@videoStudioStartingEncoding": {
+    "placeholders": {
+      "quality": { "type": "String" }
+    }
+  },
+  "videoStudioMeasureDurationError": "تعذر قياس المدة الصوتية الدقيقة للآية {ayah}",
+  "@videoStudioMeasureDurationError": {
+    "placeholders": {
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioCreateBaseFrameError": "فشل في إنشاء الإطار الأساسي للبطاقة",
+  "videoStudioRenderVerseTextError": "فشل في رسم نصوص الآية {ayah}",
+  "@videoStudioRenderVerseTextError": {
+    "placeholders": {
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioVideoNotFound": "تعذر العثور على ملف الفيديو النهائي",
+  "videoStudioAudioTimelineIncomplete": "قائمة مدد الآيات غير مكتملة",
+  "videoStudioAudioMeasureFailed": "فشل في قياس مدة الملف الصوتي للتلاوة",
   "searchFilterAll": "الكل"
 }

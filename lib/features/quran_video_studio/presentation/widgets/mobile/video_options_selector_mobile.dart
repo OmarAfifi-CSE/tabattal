@@ -159,11 +159,9 @@ class VideoOptionsSelectorMobile extends StatelessWidget {
                         ),
                         SizedBox(height: 1.h),
                         Text(
-                          quality == VideoQuality.uhd4k
-                              ? l10n.videoQualityUltra
-                              : quality == VideoQuality.fhd1080p
-                                  ? l10n.videoQualityHigh
-                                  : l10n.videoQualityFast,
+                          quality == VideoQuality.fhd1080p
+                              ? l10n.videoQualityHigh
+                              : l10n.videoQualityFast,
                           style: TextStyle(
                             fontSize: 9.5.sp,
                             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,

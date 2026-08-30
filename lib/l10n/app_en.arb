@@ -357,12 +357,10 @@
   "videoRatioStory": "Story (9:16)",
   "videoRatioSquare": "Square (1:1)",
   "videoRatioLandscape": "Landscape (16:9)",
-  "videoQuality4K": "4K Ultra",
   "videoQuality1080p": "1080p Full HD",
   "videoQuality720p": "720p HD",
   "videoQualityFast": "Fast",
   "videoQualityHigh": "Full HD",
-  "videoQualityUltra": "Ultra HD",
   "videoStudioDisplayMode": "Text Display Mode",
   "videoDisplayModeLineByLine": "Line by Line",
   "videoDisplayModeStaticFull": "Full Ayah",
@@ -483,8 +481,6 @@
     }
   },
   "videoStudioProgressDownloadingAudio": "Downloading recitation audio...",
-  "videoStudioProgressGeneratingOverlays": "Preparing verse animations...",
-  "videoStudioProgressEncoding": "Encoding and rendering video...",
   "videoStudioExportPreparing": "Starting video generation...",
   "videoStudioProgressReadingTimings": "Reading word timings for Ayah ({ayah})...",
   "@videoStudioProgressReadingTimings": {
@@ -513,7 +509,7 @@
       "percent": { "type": "int" }
     }
   },
-  "videoStudioProgressServerMuxing": "Processing and rendering high-quality video...",
+  "videoStudioProgressServerMuxing": "Processing and rendering video...",
   "videoStudioProgressPreparingDownload": "Preparing video file for download...",
   "videoStudioProgressConcatenating": "Muxing and saving final video file...",
   "audioDownloadPause": "Pause Download",
@@ -526,5 +522,56 @@
       "count": { "type": "int" }
     }
   },
+  "videoStudioProgressPreparingAyahScenes": "Preparing scenes for Ayah ({current} of {total})...",
+  "@videoStudioProgressPreparingAyahScenes": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "videoStudioEncodingProgress": "{rendered} / {total}",
+  "@videoStudioEncodingProgress": {
+    "placeholders": {
+      "rendered": { "type": "String" },
+      "total": { "type": "String" }
+    }
+  },
+  "videoStudioEtaFewSeconds": "approx. {seconds}s remaining to complete processing",
+  "@videoStudioEtaFewSeconds": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+  "videoStudioEtaManySeconds": "approx. {seconds}s remaining to complete processing",
+  "@videoStudioEtaManySeconds": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+  "videoStudioEtaOneSecond": "approx. 1 second remaining to complete processing",
+  "videoStudioEtaTwoSeconds": "approx. 2 seconds remaining to complete processing",
+  "videoStudioEtaMoments": "just a moment remaining to complete processing...",
+  "videoStudioStartingEncoding": "Starting video processing in {quality}...",
+  "@videoStudioStartingEncoding": {
+    "placeholders": {
+      "quality": { "type": "String" }
+    }
+  },
+  "videoStudioMeasureDurationError": "Failed to measure exact audio duration for verse {ayah}",
+  "@videoStudioMeasureDurationError": {
+    "placeholders": {
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioCreateBaseFrameError": "Failed to create base card frame",
+  "videoStudioRenderVerseTextError": "Failed to render text for verse {ayah}",
+  "@videoStudioRenderVerseTextError": {
+    "placeholders": {
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioVideoNotFound": "Final video file not found",
+  "videoStudioAudioTimelineIncomplete": "Verse durations list is incomplete",
+  "videoStudioAudioMeasureFailed": "Failed to measure recitation audio file duration",
   "searchFilterAll": "All"
 }

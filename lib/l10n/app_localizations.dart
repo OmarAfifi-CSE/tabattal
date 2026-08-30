@@ -1358,12 +1358,6 @@ abstract class AppLocalizations {
   /// **'عرضي (16:9)'**
   String get videoRatioLandscape;
 
-  /// No description provided for @videoQuality4K.
-  ///
-  /// In ar, this message translates to:
-  /// **'فائقة (4K)'**
-  String get videoQuality4K;
-
   /// No description provided for @videoQuality1080p.
   ///
   /// In ar, this message translates to:
@@ -1387,12 +1381,6 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'عالية الدقة'**
   String get videoQualityHigh;
-
-  /// No description provided for @videoQualityUltra.
-  ///
-  /// In ar, this message translates to:
-  /// **'فائقة'**
-  String get videoQualityUltra;
 
   /// No description provided for @videoStudioDisplayMode.
   ///
@@ -1800,18 +1788,6 @@ abstract class AppLocalizations {
   /// **'جاري تحميل التلاوة الصوتية...'**
   String get videoStudioProgressDownloadingAudio;
 
-  /// No description provided for @videoStudioProgressGeneratingOverlays.
-  ///
-  /// In ar, this message translates to:
-  /// **'جاري إعداد النصوص والمشاهد...'**
-  String get videoStudioProgressGeneratingOverlays;
-
-  /// No description provided for @videoStudioProgressEncoding.
-  ///
-  /// In ar, this message translates to:
-  /// **'جاري تصدير ومعالجة مقطع الفيديو...'**
-  String get videoStudioProgressEncoding;
-
   /// No description provided for @videoStudioExportPreparing.
   ///
   /// In ar, this message translates to:
@@ -1855,7 +1831,7 @@ abstract class AppLocalizations {
   /// No description provided for @videoStudioProgressServerMuxing.
   ///
   /// In ar, this message translates to:
-  /// **'جاري معالجة وإنتاج مقطع الفيديو بجودة عالية...'**
+  /// **'جاري معالجة وإنتاج مقطع الفيديو...'**
   String get videoStudioProgressServerMuxing;
 
   /// No description provided for @videoStudioProgressPreparingDownload.
@@ -1899,6 +1875,90 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'فشل تحميل {count} سور'**
   String audioDownloadFailedCount(int count);
+
+  /// No description provided for @videoStudioProgressPreparingAyahScenes.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري إعداد مشاهد الآية ({current} من {total})...'**
+  String videoStudioProgressPreparingAyahScenes(int current, int total);
+
+  /// No description provided for @videoStudioEncodingProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'{rendered} / {total}'**
+  String videoStudioEncodingProgress(String rendered, String total);
+
+  /// No description provided for @videoStudioEtaFewSeconds.
+  ///
+  /// In ar, this message translates to:
+  /// **'متبقي {seconds} ثوانٍ تقريبًا لإنهاء المعالجة'**
+  String videoStudioEtaFewSeconds(int seconds);
+
+  /// No description provided for @videoStudioEtaManySeconds.
+  ///
+  /// In ar, this message translates to:
+  /// **'متبقي {seconds} ثانية تقريبًا لإنهاء المعالجة'**
+  String videoStudioEtaManySeconds(int seconds);
+
+  /// No description provided for @videoStudioEtaOneSecond.
+  ///
+  /// In ar, this message translates to:
+  /// **'متبقي ثانية واحدة تقريبًا لإنهاء المعالجة'**
+  String get videoStudioEtaOneSecond;
+
+  /// No description provided for @videoStudioEtaTwoSeconds.
+  ///
+  /// In ar, this message translates to:
+  /// **'متبقي ثانيتان تقريبًا لإنهاء المعالجة'**
+  String get videoStudioEtaTwoSeconds;
+
+  /// No description provided for @videoStudioEtaMoments.
+  ///
+  /// In ar, this message translates to:
+  /// **'متبقي لحظات لإنهاء المعالجة...'**
+  String get videoStudioEtaMoments;
+
+  /// No description provided for @videoStudioStartingEncoding.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري بدء معالجة الفيديو بدقة {quality}...'**
+  String videoStudioStartingEncoding(String quality);
+
+  /// No description provided for @videoStudioMeasureDurationError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر قياس المدة الصوتية الدقيقة للآية {ayah}'**
+  String videoStudioMeasureDurationError(int ayah);
+
+  /// No description provided for @videoStudioCreateBaseFrameError.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في إنشاء الإطار الأساسي للبطاقة'**
+  String get videoStudioCreateBaseFrameError;
+
+  /// No description provided for @videoStudioRenderVerseTextError.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في رسم نصوص الآية {ayah}'**
+  String videoStudioRenderVerseTextError(int ayah);
+
+  /// No description provided for @videoStudioVideoNotFound.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر العثور على ملف الفيديو النهائي'**
+  String get videoStudioVideoNotFound;
+
+  /// No description provided for @videoStudioAudioTimelineIncomplete.
+  ///
+  /// In ar, this message translates to:
+  /// **'قائمة مدد الآيات غير مكتملة'**
+  String get videoStudioAudioTimelineIncomplete;
+
+  /// No description provided for @videoStudioAudioMeasureFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل في قياس مدة الملف الصوتي للتلاوة'**
+  String get videoStudioAudioMeasureFailed;
 
   /// No description provided for @searchFilterAll.
   ///

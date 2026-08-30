@@ -36,17 +36,21 @@ void main() {
     test('VideoQuality options and resolution scaling', () {
       expect(VideoQuality.fhd1080p.bitrateKbps, 12000);
       expect(VideoQuality.hd720p.bitrateKbps, 6000);
-      expect(VideoQuality.uhd4k.bitrateKbps, 24000);
 
       expect(VideoQuality.fhd1080p.crf, 22);
       expect(VideoQuality.hd720p.crf, 24);
-      expect(VideoQuality.uhd4k.crf, 20);
 
       expect(VideoAspectRatio.portrait9x16.getTargetWidth(VideoQuality.fhd1080p), 1080);
       expect(VideoAspectRatio.portrait9x16.getTargetHeight(VideoQuality.fhd1080p), 1920);
 
-      expect(VideoAspectRatio.portrait9x16.getTargetWidth(VideoQuality.uhd4k), 2160);
-      expect(VideoAspectRatio.portrait9x16.getTargetHeight(VideoQuality.uhd4k), 3840);
+      expect(VideoAspectRatio.portrait9x16.getTargetWidth(VideoQuality.hd720p), 720);
+      expect(VideoAspectRatio.portrait9x16.getTargetHeight(VideoQuality.hd720p), 1280);
+
+      expect(VideoAspectRatio.square1x1.getTargetWidth(VideoQuality.hd720p), 720);
+      expect(VideoAspectRatio.square1x1.getTargetHeight(VideoQuality.hd720p), 720);
+
+      expect(VideoAspectRatio.landscape16x9.getTargetWidth(VideoQuality.hd720p), 1280);
+      expect(VideoAspectRatio.landscape16x9.getTargetHeight(VideoQuality.hd720p), 720);
     });
 
     test('VideoProjectConfig copyWith and properties', () {
@@ -69,7 +73,7 @@ void main() {
         startAyah: 2,
         endAyah: 5,
         themePreset: VideoThemePreset.burgundy,
-        videoQuality: VideoQuality.uhd4k,
+        videoQuality: VideoQuality.hd720p,
         textDisplayMode: VideoTextDisplayMode.staticFull,
         showTafsir: true,
         showEnglishTranslation: true,
@@ -78,7 +82,7 @@ void main() {
       expect(updated.aspectRatio, VideoAspectRatio.square1x1);
       expect(updated.totalAyahsCount, 4);
       expect(updated.themePreset.id, 'burgundy');
-      expect(updated.videoQuality, VideoQuality.uhd4k);
+      expect(updated.videoQuality, VideoQuality.hd720p);
       expect(updated.textDisplayMode, VideoTextDisplayMode.staticFull);
       expect(updated.showTafsir, true);
       expect(updated.showEnglishTranslation, true);

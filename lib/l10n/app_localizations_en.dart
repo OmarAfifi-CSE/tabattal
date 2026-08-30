@@ -684,9 +684,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoRatioLandscape => 'Landscape (16:9)';
 
   @override
-  String get videoQuality4K => '4K Ultra';
-
-  @override
   String get videoQuality1080p => '1080p Full HD';
 
   @override
@@ -697,9 +694,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoQualityHigh => 'Full HD';
-
-  @override
-  String get videoQualityUltra => 'Ultra HD';
 
   @override
   String get videoStudioDisplayMode => 'Text Display Mode';
@@ -935,13 +929,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Downloading recitation audio...';
 
   @override
-  String get videoStudioProgressGeneratingOverlays =>
-      'Preparing verse animations...';
-
-  @override
-  String get videoStudioProgressEncoding => 'Encoding and rendering video...';
-
-  @override
   String get videoStudioExportPreparing => 'Starting video generation...';
 
   @override
@@ -974,7 +961,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoStudioProgressServerMuxing =>
-      'Processing and rendering high-quality video...';
+      'Processing and rendering video...';
 
   @override
   String get videoStudioProgressPreparingDownload =>
@@ -1000,6 +987,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String audioDownloadFailedCount(int count) {
     return 'Failed to download $count surahs';
   }
+
+  @override
+  String videoStudioProgressPreparingAyahScenes(int current, int total) {
+    return 'Preparing scenes for Ayah ($current of $total)...';
+  }
+
+  @override
+  String videoStudioEncodingProgress(String rendered, String total) {
+    return '$rendered / $total';
+  }
+
+  @override
+  String videoStudioEtaFewSeconds(int seconds) {
+    return 'approx. ${seconds}s remaining to complete processing';
+  }
+
+  @override
+  String videoStudioEtaManySeconds(int seconds) {
+    return 'approx. ${seconds}s remaining to complete processing';
+  }
+
+  @override
+  String get videoStudioEtaOneSecond =>
+      'approx. 1 second remaining to complete processing';
+
+  @override
+  String get videoStudioEtaTwoSeconds =>
+      'approx. 2 seconds remaining to complete processing';
+
+  @override
+  String get videoStudioEtaMoments =>
+      'just a moment remaining to complete processing...';
+
+  @override
+  String videoStudioStartingEncoding(String quality) {
+    return 'Starting video processing in $quality...';
+  }
+
+  @override
+  String videoStudioMeasureDurationError(int ayah) {
+    return 'Failed to measure exact audio duration for verse $ayah';
+  }
+
+  @override
+  String get videoStudioCreateBaseFrameError =>
+      'Failed to create base card frame';
+
+  @override
+  String videoStudioRenderVerseTextError(int ayah) {
+    return 'Failed to render text for verse $ayah';
+  }
+
+  @override
+  String get videoStudioVideoNotFound => 'Final video file not found';
+
+  @override
+  String get videoStudioAudioTimelineIncomplete =>
+      'Verse durations list is incomplete';
+
+  @override
+  String get videoStudioAudioMeasureFailed =>
+      'Failed to measure recitation audio file duration';
 
   @override
   String get searchFilterAll => 'All';

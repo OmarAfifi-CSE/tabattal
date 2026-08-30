@@ -142,7 +142,10 @@ class AudioTimelineService {
         } catch (_) {}
       }
 
-      durations.add(d ?? const Duration(seconds: 4));
+      if (d == null || d == Duration.zero) {
+        throw Exception('فشل في قياس مدة الملف الصوتي للتلاوة: $path');
+      }
+      durations.add(d);
     }
 
     return durations;
@@ -158,7 +161,10 @@ class AudioTimelineService {
     Duration currentOffset = Duration.zero;
 
     for (int i = 0; i < audioFilePaths.length; i++) {
-      final duration = i < durations.length ? durations[i] : const Duration(seconds: 4);
+      if (i >= durations.length) {
+        throw Exception('قائمة مدد الآيات غير مكتملة');
+      }
+      final duration = durations[i];
       final startTime = currentOffset;
       final endTime = startTime + duration;
 

@@ -684,9 +684,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get videoRatioLandscape => 'عرضي (16:9)';
 
   @override
-  String get videoQuality4K => 'فائقة (4K)';
-
-  @override
   String get videoQuality1080p => 'عالية (1080p)';
 
   @override
@@ -697,9 +694,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get videoQualityHigh => 'عالية الدقة';
-
-  @override
-  String get videoQualityUltra => 'فائقة';
 
   @override
   String get videoStudioDisplayMode => 'نمط عرض النصوص';
@@ -932,14 +926,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'جاري تحميل التلاوة الصوتية...';
 
   @override
-  String get videoStudioProgressGeneratingOverlays =>
-      'جاري إعداد النصوص والمشاهد...';
-
-  @override
-  String get videoStudioProgressEncoding =>
-      'جاري تصدير ومعالجة مقطع الفيديو...';
-
-  @override
   String get videoStudioExportPreparing => 'جاري بدء إعداد مقطع الفيديو...';
 
   @override
@@ -972,7 +958,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get videoStudioProgressServerMuxing =>
-      'جاري معالجة وإنتاج مقطع الفيديو بجودة عالية...';
+      'جاري معالجة وإنتاج مقطع الفيديو...';
 
   @override
   String get videoStudioProgressPreparingDownload =>
@@ -998,6 +984,67 @@ class AppLocalizationsAr extends AppLocalizations {
   String audioDownloadFailedCount(int count) {
     return 'فشل تحميل $count سور';
   }
+
+  @override
+  String videoStudioProgressPreparingAyahScenes(int current, int total) {
+    return 'جاري إعداد مشاهد الآية ($current من $total)...';
+  }
+
+  @override
+  String videoStudioEncodingProgress(String rendered, String total) {
+    return '$rendered / $total';
+  }
+
+  @override
+  String videoStudioEtaFewSeconds(int seconds) {
+    return 'متبقي $seconds ثوانٍ تقريبًا لإنهاء المعالجة';
+  }
+
+  @override
+  String videoStudioEtaManySeconds(int seconds) {
+    return 'متبقي $seconds ثانية تقريبًا لإنهاء المعالجة';
+  }
+
+  @override
+  String get videoStudioEtaOneSecond =>
+      'متبقي ثانية واحدة تقريبًا لإنهاء المعالجة';
+
+  @override
+  String get videoStudioEtaTwoSeconds =>
+      'متبقي ثانيتان تقريبًا لإنهاء المعالجة';
+
+  @override
+  String get videoStudioEtaMoments => 'متبقي لحظات لإنهاء المعالجة...';
+
+  @override
+  String videoStudioStartingEncoding(String quality) {
+    return 'جاري بدء معالجة الفيديو بدقة $quality...';
+  }
+
+  @override
+  String videoStudioMeasureDurationError(int ayah) {
+    return 'تعذر قياس المدة الصوتية الدقيقة للآية $ayah';
+  }
+
+  @override
+  String get videoStudioCreateBaseFrameError =>
+      'فشل في إنشاء الإطار الأساسي للبطاقة';
+
+  @override
+  String videoStudioRenderVerseTextError(int ayah) {
+    return 'فشل في رسم نصوص الآية $ayah';
+  }
+
+  @override
+  String get videoStudioVideoNotFound => 'تعذر العثور على ملف الفيديو النهائي';
+
+  @override
+  String get videoStudioAudioTimelineIncomplete =>
+      'قائمة مدد الآيات غير مكتملة';
+
+  @override
+  String get videoStudioAudioMeasureFailed =>
+      'فشل في قياس مدة الملف الصوتي للتلاوة';
 
   @override
   String get searchFilterAll => 'الكل';

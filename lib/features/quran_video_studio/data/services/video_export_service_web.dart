@@ -60,7 +60,7 @@ class VideoExportService implements IVideoExportService {
 
     () async {
       try {
-        // Phase 1: Preparing timings and calculating layout (0% -> 10%)
+        // Phase 1: Preparing timings and calculating layout (0% -> 15%)
         controller.add(const VideoRenderProgress(
           phase: VideoRenderPhase.downloadingAudio,
           progress: 0.05,
@@ -86,15 +86,21 @@ class VideoExportService implements IVideoExportService {
 
           final verse = verses[i];
           final pageNum = QuranMetadata.getPageNumberForAyah(config.surahNumber, verse.verseNumber);
-          final totalDur = i < verseDurations.length && verseDurations[i].inMilliseconds > 500
-              ? verseDurations[i]
-              : const Duration(seconds: 4);
+          final isEn = config.isEnglish;
+          if (i >= verseDurations.length || verseDurations[i].inMilliseconds <= 500) {
+            throw Exception(isEn
+                ? 'Failed to measure exact audio duration for verse ${verse.verseNumber}'
+                : 'تعذر تحديد المدة الصوتية الدقيقة للآية ${verse.verseNumber}');
+          }
+          final totalDur = verseDurations[i];
 
           controller.add(VideoRenderProgress(
             phase: VideoRenderPhase.downloadingAudio,
             step: VideoProgressStep.readingTimings,
-            progress: 0.02 + ((i + 1) / verses.length) * 0.08,
+            progress: 0.05 + ((i + 1) / verses.length) * 0.10,
             ayahNumber: verse.verseNumber,
+            currentAyahIndex: i + 1,
+            totalAyahsCount: verses.length,
           ));
 
           final timings = await wordTimingService.getWordTimings(
@@ -146,12 +152,14 @@ class VideoExportService implements IVideoExportService {
         }
 
         final totalUnits = unitConfigs.length;
+        final isEn = config.isEnglish;
 
-        // Phase 2: Generating HD Base Frame and Ultra-Lightweight Transparent Overlays (10% -> 50%)
-        controller.add(const VideoRenderProgress(
+        // Phase 2: Generating HD Base Frame and Ultra-Lightweight Transparent Overlays (15% -> 30%)
+        controller.add(VideoRenderProgress(
           phase: VideoRenderPhase.generatingOverlays,
           step: VideoProgressStep.creatingBaseFrame,
-          progress: 0.12,
+          progress: 0.15,
+          totalAyahsCount: verses.length,
         ));
 
         final hasCustomVideo = config.hasCustomVideo &&
@@ -165,7 +173,7 @@ class VideoExportService implements IVideoExportService {
         );
 
         if (rawBaseFrameBytes == null) {
-          throw Exception('فشل في إنشاء الإطار الأساسي للبطاقة');
+          throw Exception(isEn ? 'Failed to create base card frame' : 'فشل في إنشاء الإطار الأساسي للبطاقة');
         }
 
         // When custom video is present, base_frame must remain PNG for transparent overlay.
@@ -192,6 +200,7 @@ class VideoExportService implements IVideoExportService {
 
           final unit = unitConfigs[u];
           final verse = unit['verse'] as VerseModel;
+          final verseIdx = (unit['verseIndex'] as int? ?? 0) + 1;
           final pageNum = unit['pageNum'] as int;
           final timings = unit['timings'] as List<WordTimingSegment>;
           final lineIndex = unit['lineIndex'] as int?;
@@ -207,29 +216,33 @@ class VideoExportService implements IVideoExportService {
           );
 
           if (overlayCrop == null) {
-            throw Exception('فشل في رسم نصوص الآية ${verse.verseNumber}');
+            throw Exception(isEn
+                ? 'Failed to render text for verse ${verse.verseNumber}'
+                : 'فشل في رسم نصوص الآية ${verse.verseNumber}');
           }
 
           overlayBytesList.add(overlayCrop.bytes);
           unit['cropY'] = overlayCrop.cropY;
           unit['cropHeight'] = overlayCrop.cropHeight;
 
-          final overlayProgress = 0.05 + ((u + 1) / totalUnits) * 0.15;
+          final overlayProgress = 0.15 + ((u + 1) / totalUnits) * 0.15;
           controller.add(VideoRenderProgress(
             phase: VideoRenderPhase.generatingOverlays,
             step: isLineByLine ? VideoProgressStep.renderingLine : VideoProgressStep.renderingVerse,
-            progress: overlayProgress.clamp(0.05, 0.20),
+            progress: overlayProgress.clamp(0.15, 0.30),
             ayahNumber: verse.verseNumber,
+            currentAyahIndex: verseIdx,
+            totalAyahsCount: verses.length,
             currentLine: isLineByLine ? (unit['currentLine'] as int) : 1,
             totalLines: isLineByLine ? (unit['lineCount'] as int) : 1,
           ));
         }
 
-        // Phase 3: Uploading to Cloud FFmpeg Video Service (20% -> 35%)
+        // Phase 3: Uploading to Cloud FFmpeg Video Service (30% -> 50%)
         controller.add(const VideoRenderProgress(
           phase: VideoRenderPhase.encodingVideo,
           step: VideoProgressStep.uploadingPayload,
-          progress: 0.20,
+          progress: 0.30,
           uploadPercent: 0,
         ));
 
@@ -243,8 +256,8 @@ class VideoExportService implements IVideoExportService {
           'crf': config.videoQuality.crf,
           'hasCustomVideo': hasCustomVideo,
           'backgroundDimming': config.backgroundDimming,
-          'targetWidth': config.aspectRatio.targetWidth,
-          'targetHeight': config.aspectRatio.targetHeight,
+          'targetWidth': config.aspectRatio.getTargetWidth(config.videoQuality),
+          'targetHeight': config.aspectRatio.getTargetHeight(config.videoQuality),
           'customVideoUrl': (hasCustomVideo &&
                   (config.customVideoPath!.startsWith('http://') ||
                       config.customVideoPath!.startsWith('https://')))
@@ -285,7 +298,7 @@ class VideoExportService implements IVideoExportService {
         request.timeout = 300000; // 5 minutes timeout
 
         Timer? serverPulseTimer;
-        double currentServerProgress = 0.35;
+        double currentServerProgress = 0.50;
         bool serverPulseStarted = false;
 
         // Estimate realistic FFmpeg render time based on total audio duration
@@ -301,7 +314,7 @@ class VideoExportService implements IVideoExportService {
           if (serverPulseStarted) return;
           serverPulseStarted = true;
           serverPulseTimer?.cancel();
-          currentServerProgress = 0.35;
+          currentServerProgress = 0.50;
           controller.add(VideoRenderProgress(
             phase: VideoRenderPhase.encodingVideo,
             step: VideoProgressStep.serverEncoding,
@@ -310,7 +323,7 @@ class VideoExportService implements IVideoExportService {
 
           final stopwatch = Stopwatch()..start();
 
-          // Smooth real-time progression: maps 35% -> 92% uniformly over the estimated FFmpeg encoding duration
+          // Smooth real-time progression: maps 50% -> 95% uniformly over the estimated FFmpeg encoding duration
           serverPulseTimer = Timer.periodic(const Duration(milliseconds: 200), (timer) {
             if (_isCancelled) {
               timer.cancel();
@@ -321,13 +334,13 @@ class VideoExportService implements IVideoExportService {
             final elapsedSec = stopwatch.elapsedMilliseconds / 1000.0;
             if (elapsedSec <= estRenderSec) {
               final fraction = (elapsedSec / estRenderSec).clamp(0.0, 1.0);
-              // Linear-to-smooth progression from 0.35 to 0.92
-              currentServerProgress = 0.35 + (fraction * 0.57);
-            } else if (currentServerProgress < 0.960) {
-              // Gentle ongoing crawl (92% -> 96%) if FFmpeg takes slightly longer than estimated
+              // Linear-to-smooth progression from 0.50 to 0.95
+              currentServerProgress = 0.50 + (fraction * 0.45);
+            } else if (currentServerProgress < 0.965) {
+              // Gentle ongoing crawl if FFmpeg takes slightly longer than estimated
               currentServerProgress += 0.001;
-            } else if (currentServerProgress < 0.975) {
-              // Micro-pulse keepalive until response arrives (never exceeds 97.5% before response arrives)
+            } else if (currentServerProgress < 0.980) {
+              // Micro-pulse keepalive until response arrives
               currentServerProgress += 0.0002;
             }
 
@@ -342,14 +355,14 @@ class VideoExportService implements IVideoExportService {
         request.upload.onProgress.listen((html.ProgressEvent event) {
           if (event.lengthComputable && event.total != null && event.total! > 0) {
             final double uploadFraction = (event.loaded! / event.total!).clamp(0.0, 1.0);
-            final double uploadProgress = 0.20 + (uploadFraction * 0.15);
+            final double uploadProgress = 0.30 + (uploadFraction * 0.20);
             final int percent = (uploadFraction * 100).toInt();
 
             if (uploadFraction < 1.0) {
               controller.add(VideoRenderProgress(
                 phase: VideoRenderPhase.encodingVideo,
                 step: VideoProgressStep.uploadingPayload,
-                progress: uploadProgress.clamp(0.20, 0.35),
+                progress: uploadProgress.clamp(0.30, 0.50),
                 uploadPercent: percent,
               ));
             } else {
@@ -442,7 +455,7 @@ class VideoExportService implements IVideoExportService {
         controller.add(VideoRenderProgress(
           phase: VideoRenderPhase.completed,
           progress: 1.0,
-          statusMessage: 'تم إنشاء مقطع الفيديو بنجاح!',
+          statusMessage: config.isEnglish ? 'Video created successfully!' : 'تم إنشاء مقطع الفيديو بنجاح!',
           outputPath: outputFileName,
         ));
       } catch (e) {
@@ -563,5 +576,3 @@ class VideoExportService implements IVideoExportService {
     return completer.future;
   }
 }
-
-

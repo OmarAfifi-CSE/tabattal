@@ -42,6 +42,42 @@ class VideoStudioState extends Equatable {
     return verses[currentVerseIndex];
   }
 
+  Duration get totalVideoDuration {
+    if (verseDurations.isEmpty) {
+      return Duration.zero;
+    }
+    return verseDurations.fold<Duration>(
+      Duration.zero,
+      (sum, dur) => sum + dur,
+    );
+  }
+
+  String? get formattedTotalDuration {
+    final total = totalVideoDuration;
+    if (total == Duration.zero) return null;
+    return formatDurationToMinutesSeconds(total);
+  }
+
+  static String formatDurationToMinutesSeconds(Duration dur) {
+    final int sec = dur.inSeconds;
+    final int minutes = sec ~/ 60;
+    final int remainingSeconds = sec % 60;
+    return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  Duration calculateCumulativePosition(int currentVerseIndex, Duration currentVersePosition) {
+    if (verseDurations.isEmpty) return currentVersePosition;
+    int accumulatedMs = 0;
+    for (int i = 0; i < currentVerseIndex && i < verseDurations.length; i++) {
+      accumulatedMs += verseDurations[i].inMilliseconds;
+    }
+    final totalMs = totalVideoDuration.inMilliseconds;
+    final currentDur = currentVerseIndex < verseDurations.length ? verseDurations[currentVerseIndex].inMilliseconds : 0;
+    final safeVersePosMs = currentDur > 0 ? currentVersePosition.inMilliseconds.clamp(0, currentDur) : currentVersePosition.inMilliseconds;
+    final resMs = (accumulatedMs + safeVersePosMs).clamp(0, totalMs > 0 ? totalMs : accumulatedMs + safeVersePosMs);
+    return Duration(milliseconds: resMs);
+  }
+
   List<WordTimingSegment> get currentVerseWordTimings {
     final v = currentVerse;
     if (v == null) return const [];

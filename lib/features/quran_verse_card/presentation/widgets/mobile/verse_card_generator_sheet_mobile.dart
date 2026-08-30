@@ -814,7 +814,18 @@ class _VerseCardGeneratorSheetContentMobileState
 
     return BlocConsumer<VideoStudioBloc, VideoStudioState>(
       listener: (context, videoState) async {
-        if (videoState.exportProgress.isRendering && !_isExportDialogOpen) {
+        if (videoState.errorMessage != null && videoState.errorMessage!.isNotEmpty) {
+          if (_isExportDialogOpen) {
+            _dismissExportDialog();
+          }
+          if (mounted) {
+            setState(() {
+              _statusMessage = videoState.errorMessage;
+              _isSuccessStatus = false;
+            });
+            _scrollToStatusBanner();
+          }
+        } else if (videoState.exportProgress.isRendering && !_isExportDialogOpen) {
           _showExportDialog(context, context.read<VideoStudioBloc>());
         } else if (videoState.exportProgress.isCompleted &&
             _isExportDialogOpen) {
@@ -913,7 +924,7 @@ class _VerseCardGeneratorSheetContentMobileState
                   Flexible(
                     child: SingleChildScrollView(
                       controller: _scrollController,
-                      physics: const BouncingScrollPhysics(),
+                      physics: const ClampingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                       child: Column(
                         children: [
                           // ---------------- PREVIEW AREA ----------------
@@ -1114,10 +1125,14 @@ class _VerseCardGeneratorSheetContentMobileState
         );
 
       case ShareFormat.fullPage:
-        return KeyedSubtree(
-          key: const ValueKey('full_page_preview'),
-          child: RepaintBoundary(
-            key: _repaintKey,
+        return RepaintBoundary(
+          key: _repaintKey,
+          child: Container(
+            key: const ValueKey('full_page_preview'),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            padding: EdgeInsets.symmetric(vertical: 4.h),
             child: VerseCardFullPagePreview(
               theme: _activeTheme,
               isCapturingSnapshot: _isCapturingSnapshot,

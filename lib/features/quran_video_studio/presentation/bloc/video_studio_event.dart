@@ -208,3 +208,12 @@ class VideoStudioTextDisplayModeChanged extends VideoStudioEvent {
   @override
   List<Object?> get props => [mode];
 }
+
+class VideoStudioSeekRequested extends VideoStudioEvent {
+  final Duration position;
+
+  const VideoStudioSeekRequested(this.position);
+
+  @override
+  List<Object?> get props => [position];
+}
