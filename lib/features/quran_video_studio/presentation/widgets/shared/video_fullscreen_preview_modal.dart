@@ -137,41 +137,43 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              // 0. Video Background Player Layer (if custom video is active)
-                              if (config.backgroundType == VideoBackgroundType.customVideo &&
-                                  config.customVideoPath != null &&
-                                  config.customVideoPath!.isNotEmpty)
-                                RepaintBoundary(
-                                  child: VideoBackgroundPlayerView(
-                                    videoPath: config.customVideoPath!,
-                                    isPlaying: state.isPlaying,
-                                    dimming: config.backgroundDimming,
-                                    resetSignal: state.playbackResetTrigger,
+                          child: StreamBuilder<Duration>(
+                            stream: context.read<VideoStudioBloc>().playbackPositionStream,
+                            initialData: context.read<VideoStudioBloc>().currentVersePosition,
+                            builder: (context, snapshot) {
+                              final position = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
+                              final cumulativePos = state.calculateCumulativePosition(state.currentVerseIndex, position);
+
+                              return Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  // 0. Video Background Player Layer (if custom video is active)
+                                  if (config.backgroundType == VideoBackgroundType.customVideo &&
+                                      config.customVideoPath != null &&
+                                      config.customVideoPath!.isNotEmpty)
+                                    RepaintBoundary(
+                                      child: VideoBackgroundPlayerView(
+                                        videoPath: config.customVideoPath!,
+                                        isPlaying: state.isPlaying,
+                                        dimming: config.backgroundDimming,
+                                        resetSignal: state.playbackResetTrigger,
+                                        currentPosition: cumulativePos,
+                                      ),
+                                    ),
+
+                                  // 1. Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
+                                  RepaintBoundary(
+                                    child: CustomPaint(
+                                      painter: VideoStaticFramePainter(
+                                        config: config,
+                                        verse: verse,
+                                        includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
+                                      ),
+                                    ),
                                   ),
-                                ),
 
-                              // 1. Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
-                              RepaintBoundary(
-                                child: CustomPaint(
-                                  painter: VideoStaticFramePainter(
-                                    config: config,
-                                    verse: verse,
-                                    includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
-                                  ),
-                                ),
-                              ),
-
-                              // 2. Dynamic Center Content Layer (100% Solid & Real-time Text Tracking)
-                              StreamBuilder<Duration>(
-                                stream: context.read<VideoStudioBloc>().playbackPositionStream,
-                                initialData: context.read<VideoStudioBloc>().currentVersePosition,
-                                builder: (context, snapshot) {
-                                  final position = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
-
-                                  return RepaintBoundary(
+                                  // 2. Dynamic Center Content Layer (100% Solid & Real-time Text Tracking)
+                                  RepaintBoundary(
                                     child: CustomPaint(
                                       painter: VideoDynamicContentPainter(
                                         verse: verse,
@@ -183,10 +185,10 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                                         wordTimings: state.currentVerseWordTimings,
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
-                            ],
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                         ),
                       ),

@@ -37,8 +37,6 @@
 
 مصحف المدينة، والتلاوة، والتفسير، والحفظ، وصانع مقاطع قرآنية متزامنة — مجانًا وبدون إعلانات أو تتبع.
 
-[Open the Arabic landing page](docs/index.html) · [Read the marketing system](docs/marketing/README.md)
-
 </div>
 
 <br/>

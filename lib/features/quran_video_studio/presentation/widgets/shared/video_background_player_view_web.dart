@@ -10,6 +10,7 @@ class VideoBackgroundPlayerViewWeb extends StatefulWidget {
   final bool isPlaying;
   final double dimming;
   final int resetSignal;
+  final Duration? currentPosition;
 
   const VideoBackgroundPlayerViewWeb({
     super.key,
@@ -17,6 +18,7 @@ class VideoBackgroundPlayerViewWeb extends StatefulWidget {
     required this.isPlaying,
     this.dimming = 0.35,
     this.resetSignal = 0,
+    this.currentPosition,
   });
 
   @override
@@ -28,6 +30,7 @@ class _VideoBackgroundPlayerViewWebState
     extends State<VideoBackgroundPlayerViewWeb> {
   web.HTMLVideoElement? _videoElement;
   bool _isVideoReady = false;
+  bool _hasError = false;
 
   void _configureVideo(web.HTMLVideoElement video) {
     _videoElement = video;
@@ -126,9 +129,12 @@ class _VideoBackgroundPlayerViewWebState
     }).toJS;
 
     video.onerror = ((web.Event _) {
-      web.console.warn(
-        'VideoBackgroundPlayerViewWeb: Failed to load video source ${widget.videoPath}'.toJS,
-      );
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _isVideoReady = false;
+        });
+      }
     }).toJS;
 
     try {
@@ -161,13 +167,15 @@ class _VideoBackgroundPlayerViewWebState
         } else {
           _videoElement!.pause();
         }
-      }
-
-      if (oldWidget.isPlaying != widget.isPlaying) {
-        if (widget.isPlaying) {
-          _videoElement!.play();
-        } else {
-          _videoElement!.pause();
+      } else if (widget.currentPosition != null &&
+          oldWidget.currentPosition != widget.currentPosition) {
+        final videoDuration = _videoElement!.duration;
+        if (!videoDuration.isNaN && videoDuration > 0) {
+          final targetSec = (widget.currentPosition!.inMilliseconds / 1000.0) % videoDuration;
+          final diffSec = (_videoElement!.currentTime - targetSec).abs();
+          if (!widget.isPlaying || diffSec > 0.35) {
+            _videoElement!.currentTime = targetSec;
+          }
         }
       }
     }
@@ -216,7 +224,7 @@ class _VideoBackgroundPlayerViewWebState
               ],
             ),
           ),
-          if (!_isVideoReady)
+          if (!_isVideoReady && !_hasError)
             Center(
               child: Container(
                 padding: const EdgeInsets.all(10),
@@ -237,6 +245,43 @@ class _VideoBackgroundPlayerViewWebState
                     strokeWidth: 2.2,
                     color: AppColors.accentGold,
                   ),
+                ),
+              ),
+            ),
+          if (_hasError)
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.75),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.amber.withValues(alpha: 0.4),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.videocam_off_rounded,
+                      color: Colors.amber,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'تعذر تشغيل الفيديو من هذا الرابط، يرجى التأكد من أنه رابط مباشر (MP4).',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 12,
+                          fontFamily: 'Amiri',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

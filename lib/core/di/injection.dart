@@ -41,7 +41,30 @@ class DependencyContainer {
 
 Future<DependencyContainer> configureDependencies() async {
   final databaseHelper = DatabaseHelper();
-  await databaseHelper.database;
+  final isEnLocale = PlatformDispatcher.instance.locale.languageCode == 'en';
+
+  // 🚀 Overlapped Concurrent Bootstrapping (Cuts cold start latency significantly)
+  final results = await Future.wait([
+    databaseHelper.database,
+    SharedPreferences.getInstance(),
+    AudioPreferencesService.create(),
+    AudioService.init<QuranAudioHandler>(
+      builder: () => QuranAudioHandler(),
+      config: AudioServiceConfig(
+        androidNotificationChannelId: 'com.tabattal.channel.audio',
+        androidNotificationChannelName: isEnLocale
+            ? 'Quran Recitations'
+            : 'تلاوات القرآن',
+        androidNotificationIcon: 'mipmap/ic_launcher',
+        androidNotificationOngoing: true,
+        androidStopForegroundOnPause: true,
+      ),
+    ),
+  ]);
+
+  final prefs = results[1] as SharedPreferences;
+  final audioPrefs = results[2] as AudioPreferencesService;
+  final audioHandler = results[3] as QuranAudioHandler;
 
   final apiClient = ApiClient(dio: Dio());
   final localDataSource = QuranLocalDataSourceImpl(
@@ -60,24 +83,7 @@ Future<DependencyContainer> configureDependencies() async {
     tafsirDownloadService: tafsirDownloadService,
   );
 
-  final prefs = await SharedPreferences.getInstance();
   final bookmarkRepository = BookmarkRepositoryImpl(prefs);
-
-  final audioPrefs = await AudioPreferencesService.create();
-
-  final isEnLocale = PlatformDispatcher.instance.locale.languageCode == 'en';
-  final audioHandler = await AudioService.init<QuranAudioHandler>(
-    builder: () => QuranAudioHandler(),
-    config: AudioServiceConfig(
-      androidNotificationChannelId: 'com.tabattal.channel.audio',
-      androidNotificationChannelName: isEnLocale
-          ? 'Quran Recitations'
-          : 'تلاوات القرآن',
-      androidNotificationIcon: 'mipmap/ic_launcher',
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
-    ),
-  );
 
   return DependencyContainer(
     databaseHelper: databaseHelper,

@@ -41,7 +41,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   Future<Uri> _getArtUri() async {
     if (_cachedArtUri != null) return _cachedArtUri!;
     if (kIsWeb) {
-      _cachedArtUri = Uri.parse('/assets/images/app_icon.png');
+      _cachedArtUri = Uri.base.resolve('icons/Icon-512.png');
       return _cachedArtUri!;
     }
     try {

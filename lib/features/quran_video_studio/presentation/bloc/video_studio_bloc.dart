@@ -730,10 +730,12 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
             state.exportProgress.phase == VideoRenderPhase.idle) {
           return state;
         }
+        final rawMsg = error.toString().replaceFirst('Exception: ', '').trim();
         return state.copyWith(
           exportProgress: VideoRenderProgress(
             phase: VideoRenderPhase.failed,
-            errorMessage: error.toString(),
+            step: VideoProgressStep.failed,
+            errorMessage: rawMsg.isNotEmpty ? rawMsg : null,
           ),
         );
       },

@@ -2604,36 +2604,38 @@ class _VideoPreviewViewportDesktop extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (config.backgroundType == VideoBackgroundType.customVideo &&
-                            config.customVideoPath != null &&
-                            config.customVideoPath!.isNotEmpty)
-                          RepaintBoundary(
-                            child: VideoBackgroundPlayerView(
-                              videoPath: config.customVideoPath!,
-                              isPlaying: state.isPlaying,
-                              dimming: config.backgroundDimming,
-                              resetSignal: state.playbackResetTrigger,
-                            ),
-                          ),
-                        RepaintBoundary(
-                          child: CustomPaint(
-                            painter: VideoStaticFramePainter(
-                              config: config,
-                              verse: verse,
-                              includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
-                            ),
-                          ),
-                        ),
-                        StreamBuilder<Duration>(
-                          stream: context.read<VideoStudioBloc>().playbackPositionStream,
-                          initialData: context.read<VideoStudioBloc>().currentVersePosition,
-                          builder: (context, snapshot) {
-                            final position = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
+                    child: StreamBuilder<Duration>(
+                      stream: context.read<VideoStudioBloc>().playbackPositionStream,
+                      initialData: context.read<VideoStudioBloc>().currentVersePosition,
+                      builder: (context, snapshot) {
+                        final position = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
+                        final cumulativePos = state.calculateCumulativePosition(state.currentVerseIndex, position);
 
-                            return RepaintBoundary(
+                        return Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            if (config.backgroundType == VideoBackgroundType.customVideo &&
+                                config.customVideoPath != null &&
+                                config.customVideoPath!.isNotEmpty)
+                              RepaintBoundary(
+                                child: VideoBackgroundPlayerView(
+                                  videoPath: config.customVideoPath!,
+                                  isPlaying: state.isPlaying,
+                                  dimming: config.backgroundDimming,
+                                  resetSignal: state.playbackResetTrigger,
+                                  currentPosition: cumulativePos,
+                                ),
+                              ),
+                            RepaintBoundary(
+                              child: CustomPaint(
+                                painter: VideoStaticFramePainter(
+                                  config: config,
+                                  verse: verse,
+                                  includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
+                                ),
+                              ),
+                            ),
+                            RepaintBoundary(
                               child: CustomPaint(
                                 painter: VideoDynamicContentPainter(
                                   verse: verse,
@@ -2645,10 +2647,10 @@ class _VideoPreviewViewportDesktop extends StatelessWidget {
                                   wordTimings: state.currentVerseWordTimings,
                                 ),
                               ),
-                            );
-                          },
-                        ),
-                      ],
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),
