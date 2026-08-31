@@ -296,14 +296,23 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                           Padding(
                             padding: EdgeInsets.only(bottom: 6.h),
                             child: Text(
-                              l10n.videoStudioAyahOfSurah(
-                                currentIndex + 1,
-                                totalVerses,
-                                QuranMetadata.getSurahNameByLang(
-                                  Localizations.localeOf(context).languageCode == 'en',
-                                  config.surahNumber,
-                                ),
-                              ),
+                              config.startAyah == config.endAyah
+                                  ? l10n.videoStudioAyahOfSurah(
+                                      config.startAyah,
+                                      config.startAyah,
+                                      QuranMetadata.getSurahNameByLang(
+                                        Localizations.localeOf(context).languageCode == 'en',
+                                        config.surahNumber,
+                                      ),
+                                    )
+                                  : l10n.videoStudioAyahOfSurah(
+                                      verse?.verseNumber ?? (config.startAyah + currentIndex),
+                                      config.endAyah,
+                                      QuranMetadata.getSurahNameByLang(
+                                        Localizations.localeOf(context).languageCode == 'en',
+                                        config.surahNumber,
+                                      ),
+                                    ),
                               style: TextStyle(
                                 fontSize: 10.5.sp,
                                 color: Colors.white.withValues(alpha: 0.8),

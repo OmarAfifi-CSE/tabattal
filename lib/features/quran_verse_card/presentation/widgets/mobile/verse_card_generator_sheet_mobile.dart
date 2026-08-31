@@ -261,18 +261,6 @@ class _VerseCardGeneratorSheetContentMobileState
     super.dispose();
   }
 
-  void _scrollToStatusBanner() {
-    Future.delayed(const Duration(milliseconds: 320), () {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOutCubic,
-        );
-      }
-    });
-  }
-
   void _clearStatusBanner() {
     if (_statusMessage != null) {
       setState(() => _statusMessage = null);
@@ -305,8 +293,8 @@ class _VerseCardGeneratorSheetContentMobileState
               return VideoExportProgressDialog(
                 progress: state.exportProgress,
                 onCancel: () {
-                  bloc.add(const VideoStudioExportCancelled());
                   _dismissExportDialog();
+                  bloc.add(const VideoStudioExportCancelled());
                 },
                 onDismiss: () {
                   _dismissExportDialog();
@@ -751,7 +739,6 @@ class _VerseCardGeneratorSheetContentMobileState
               : l10n.verseCardImageSavedGalleryError;
           _isSuccessStatus = success;
         });
-        _scrollToStatusBanner();
       }
     } catch (e) {
       if (mounted) {
@@ -760,7 +747,6 @@ class _VerseCardGeneratorSheetContentMobileState
               AppLocalizations.of(context)!.verseCardSaveError(e.toString());
           _isSuccessStatus = false;
         });
-        _scrollToStatusBanner();
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -787,7 +773,6 @@ class _VerseCardGeneratorSheetContentMobileState
         _statusMessage = AppLocalizations.of(context)!.verseCardCopiedSuccess;
         _isSuccessStatus = true;
       });
-      _scrollToStatusBanner();
     }
   }
 
@@ -823,7 +808,6 @@ class _VerseCardGeneratorSheetContentMobileState
               _statusMessage = videoState.errorMessage;
               _isSuccessStatus = false;
             });
-            _scrollToStatusBanner();
           }
         } else if (videoState.exportProgress.isRendering && !_isExportDialogOpen) {
           _showExportDialog(context, context.read<VideoStudioBloc>());
@@ -849,7 +833,6 @@ class _VerseCardGeneratorSheetContentMobileState
                       : l10n.videoStudioSavedError;
                   _isSuccessStatus = saved;
                 });
-                _scrollToStatusBanner();
               }
             }
           }

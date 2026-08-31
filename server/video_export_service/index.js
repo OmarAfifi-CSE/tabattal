@@ -5,7 +5,7 @@ const rateLimit = require('express-rate-limit');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { exec, execSync } = require('child_process');
+const { spawn, spawnSync, execSync } = require('child_process');
 const axios = require('axios');
 const { isAllowedOrigin } = require('./cors_policy');
 
@@ -70,14 +70,131 @@ const upload = multer({
   }
 });
 
-function runCommand(command, cwd) {
+const activeJobs = new Map();
+
+// Progress polling endpoint for real-time hardware metrics
+app.get('/api/export-progress/:jobId', (req, res) => {
+  const jobId = req.params.jobId;
+  const job = activeJobs.get(jobId);
+  if (!job) {
+    return res.json({ status: 'unknown' });
+  }
+  return res.json({
+    status: job.status,
+    renderedSec: job.renderedSec,
+    totalSec: job.totalSec,
+    speed: job.speed,
+    progress: job.progress
+  });
+});
+
+// Cancellation endpoint to terminate FFmpeg process immediately
+app.post('/api/cancel-export/:jobId', (req, res) => {
+  const jobId = req.params.jobId;
+  const job = activeJobs.get(jobId);
+  if (job && job.process) {
+    try {
+      job.process.kill('SIGKILL');
+    } catch (_) {}
+  }
+  activeJobs.delete(jobId);
+  return res.json({ status: 'cancelled' });
+});
+
+function runFfmpegWithProgress(args, cwd, jobId, totalDurationSec) {
   return new Promise((resolve, reject) => {
-    exec(command, { cwd, maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`FFmpeg error: ${stderr || error.message}`);
-        return reject(new Error(stderr || error.message));
+    const fullArgs = [...args, '-progress', 'pipe:1'];
+    console.log(`[Job ${jobId || 'direct'}] Spawning FFmpeg process: ffmpeg ${fullArgs.slice(0, 10).join(' ')}...`);
+
+    const ffmpegProc = spawn('ffmpeg', fullArgs, { cwd });
+
+    if (jobId) {
+      activeJobs.set(jobId, {
+        status: 'encoding',
+        renderedSec: 0.0,
+        totalSec: totalDurationSec,
+        speed: null,
+        progress: 0.50,
+        process: ffmpegProc
+      });
+    }
+
+    let stderrBuffer = '';
+    let stdoutBuffer = '';
+
+    ffmpegProc.stdout.on('data', (chunk) => {
+      stdoutBuffer += chunk.toString();
+      const lines = stdoutBuffer.split('\n');
+      stdoutBuffer = lines.pop();
+
+      let outTimeUs = null;
+      let speedStr = null;
+
+      for (const line of lines) {
+        const parts = line.trim().split('=');
+        if (parts.length === 2) {
+          const key = parts[0].trim();
+          const value = parts[1].trim();
+          if (key === 'out_time_us' || key === 'out_time_ms') {
+            outTimeUs = parseInt(value, 10);
+          } else if (key === 'speed') {
+            speedStr = value;
+          }
+        }
       }
-      resolve(stdout);
+
+      if (outTimeUs !== null && !isNaN(outTimeUs) && jobId) {
+        const renderedSec = Math.max(0.0, Math.min(totalDurationSec, outTimeUs / 1000000.0));
+        let speedNum = null;
+        if (speedStr && speedStr.includes('x')) {
+          const parsed = parseFloat(speedStr.replace('x', '').trim());
+          if (!isNaN(parsed) && parsed > 0.01) {
+            speedNum = parsed;
+          }
+        }
+
+        const percent = totalDurationSec > 0 ? Math.min(1.0, renderedSec / totalDurationSec) : 0.0;
+        const progress = 0.50 + (percent * 0.49);
+
+        const currentJob = activeJobs.get(jobId) || {};
+        activeJobs.set(jobId, {
+          ...currentJob,
+          status: 'encoding',
+          renderedSec: parseFloat(renderedSec.toFixed(3)),
+          totalSec: parseFloat(totalDurationSec.toFixed(3)),
+          speed: speedNum,
+          progress: parseFloat(progress.toFixed(3))
+        });
+      }
+    });
+
+    ffmpegProc.stderr.on('data', (chunk) => {
+      stderrBuffer += chunk.toString();
+    });
+
+    ffmpegProc.on('error', (err) => {
+      if (jobId) activeJobs.delete(jobId);
+      console.error(`FFmpeg spawn error: ${err.message}`);
+      reject(err);
+    });
+
+    ffmpegProc.on('close', (code) => {
+      if (jobId) {
+        const currentJob = activeJobs.get(jobId);
+        if (currentJob) {
+          activeJobs.set(jobId, {
+            ...currentJob,
+            status: code === 0 ? 'completed' : 'failed',
+            renderedSec: totalDurationSec,
+            progress: 0.99
+          });
+        }
+      }
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`FFmpeg exited with code ${code}: ${stderrBuffer.slice(-1000)}`));
+      }
     });
   });
 }
@@ -207,9 +324,16 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
     // Helper to measure exact media duration via ffprobe
     function getExactMediaDuration(filePath) {
       try {
-        const stdout = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`, { encoding: 'utf-8' });
-        const dur = parseFloat(stdout.trim());
-        if (!isNaN(dur) && dur > 0) return dur;
+        const result = spawnSync('ffprobe', [
+          '-v', 'error',
+          '-show_entries', 'format=duration',
+          '-of', 'default=noprint_wrappers=1:nokey=1',
+          filePath
+        ], { encoding: 'utf-8' });
+        if (result.stdout) {
+          const dur = parseFloat(result.stdout.trim());
+          if (!isNaN(dur) && dur > 0) return dur;
+        }
       } catch (_) {}
       return null;
     }
@@ -337,13 +461,13 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
     // 3. Ultra-fast Single-Pass Video Rendering & Direct Muxing
     const cpuCount = Math.max(os.cpus()?.length || 2, 2);
     const outputMp4 = path.join(sessionDir, `Tabattal_${surahNumber}_${startAyah}-${endAyah}_${Date.now()}.mp4`);
-    const inputs = [];
+    const ffmpegArgs = ['-y'];
     const filterChains = [];
     const isCustom = customVideoDest && fs.existsSync(customVideoDest);
 
     if (isCustom) {
-      inputs.push(`-stream_loop -1 -t ${cumulativeStartSec.toFixed(3)} -i "${customVideoDest}"`);
-      inputs.push(`-loop 1 -t ${cumulativeStartSec.toFixed(3)} -framerate 25 -i "${baseFrameDest}"`);
+      ffmpegArgs.push('-stream_loop', '-1', '-t', cumulativeStartSec.toFixed(3), '-i', customVideoDest);
+      ffmpegArgs.push('-loop', '1', '-t', cumulativeStartSec.toFixed(3), '-framerate', '30', '-i', baseFrameDest);
 
       for (let u = 0; u < unitConfigs.length; u++) {
         const overlaySrc = fileMap[`overlay_unit_${u}`];
@@ -353,7 +477,7 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
         const overlayDest = path.join(sessionDir, `overlay_unit_${u}.png`);
         fs.copyFileSync(overlaySrc, overlayDest);
         const durSec = parseFloat(unitConfigs[u].durSec);
-        inputs.push(`-loop 1 -t ${durSec.toFixed(3)} -framerate 25 -i "${overlayDest}"`);
+        ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', overlayDest);
       }
 
       filterChains.push(`[0:v]setpts=PTS-STARTPTS,scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=increase,crop=${targetWidth}:${targetHeight},setsar=1,drawbox=color=black@${backgroundDimming.toFixed(2)}:t=fill[bg]`);
@@ -375,7 +499,7 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
         currentCanvas = nextCanvas;
       }
     } else {
-      inputs.push(`-loop 1 -t ${cumulativeStartSec.toFixed(3)} -framerate 25 -i "${baseFrameDest}"`);
+      ffmpegArgs.push('-loop', '1', '-t', cumulativeStartSec.toFixed(3), '-framerate', '30', '-i', baseFrameDest);
 
       for (let u = 0; u < unitConfigs.length; u++) {
         const overlaySrc = fileMap[`overlay_unit_${u}`];
@@ -385,7 +509,7 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
         const overlayDest = path.join(sessionDir, `overlay_unit_${u}.png`);
         fs.copyFileSync(overlaySrc, overlayDest);
         const durSec = parseFloat(unitConfigs[u].durSec);
-        inputs.push(`-loop 1 -t ${durSec.toFixed(3)} -framerate 25 -i "${overlayDest}"`);
+        ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', overlayDest);
       }
 
       let currentCanvas = '0:v';
@@ -410,12 +534,12 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
     const audioInputIndex = isCustom ? unitConfigs.length + 2 : unitConfigs.length + 1;
     if (hasAudio) {
       if (validAudioFiles.length === 1) {
-        inputs.push(`-i "${validAudioFiles[0]}"`);
+        ffmpegArgs.push('-i', validAudioFiles[0]);
       } else {
         const audioConcatFile = path.join(sessionDir, 'audio_segments.txt');
         const audioBuffer = validAudioFiles.map(p => `file '${path.basename(p)}'`).join('\n');
-        fs.writeFileSync(audioConcatFile, audioBuffer);
-        inputs.push(`-f concat -safe 0 -i audio_segments.txt`);
+        fs.writeFileSync(audioConcatFile, audioBuffer, 'utf-8');
+        ffmpegArgs.push('-f', 'concat', '-safe', '0', '-i', 'audio_segments.txt');
       }
     }
 
@@ -423,15 +547,46 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
       const lower = p.toLowerCase();
       return lower.endsWith('.mp3') || lower.endsWith('.m4a') || lower.endsWith('.aac');
     });
-    const audioCodecArg = isCopySafeAudio ? '-c:a copy' : '-c:a aac -b:a 128k';
-    const audioMapArg = hasAudio ? `-map ${audioInputIndex}:a ${audioCodecArg} -shortest` : '';
-    const preset = isCustom ? '-preset ultrafast' : '-preset ultrafast -tune stillimage';
-    const filter = filterChains.join(';');
 
-    const ffmpegSinglePassCmd = `ffmpeg -y ${inputs.join(' ')} -filter_complex "${filter}" -map "[v]" ${audioMapArg} -t ${cumulativeStartSec.toFixed(3)} -c:v libx264 ${preset} -crf ${crf} -pix_fmt yuv420p -r 25 -threads ${cpuCount} -movflags +faststart "${outputMp4}"`;
-    await runCommand(ffmpegSinglePassCmd, sessionDir);
+    const filter = filterChains.join(';\n');
+    const filterScriptPath = path.join(sessionDir, 'filter_graph.txt');
+    fs.writeFileSync(filterScriptPath, filter, 'utf-8');
+
+    ffmpegArgs.push('-filter_complex_script', filterScriptPath);
+    ffmpegArgs.push('-map', '[v]');
+
+    if (hasAudio) {
+      ffmpegArgs.push('-map', `${audioInputIndex}:a`);
+      if (isCopySafeAudio) {
+        ffmpegArgs.push('-c:a', 'copy');
+      } else {
+        ffmpegArgs.push('-c:a', 'aac', '-b:a', '128k');
+      }
+      ffmpegArgs.push('-shortest');
+    }
+
+    ffmpegArgs.push(
+      '-t', cumulativeStartSec.toFixed(3),
+      '-c:v', 'libx264',
+      '-preset', 'ultrafast'
+    );
+    if (!isCustom) {
+      ffmpegArgs.push('-tune', 'stillimage');
+    }
+    ffmpegArgs.push(
+      '-crf', crf.toString(),
+      '-pix_fmt', 'yuv420p',
+      '-r', '30',
+      '-threads', cpuCount.toString(),
+      '-movflags', '+faststart',
+      outputMp4
+    );
+
+    const jobId = req.body.jobId || metadata.jobId || req.query.jobId || 'job_' + Date.now();
+    await runFfmpegWithProgress(ffmpegArgs, sessionDir, jobId, cumulativeStartSec);
 
     if (!fs.existsSync(outputMp4)) {
+      if (jobId) activeJobs.delete(jobId);
       return res.status(500).json({
         code: 'FFMPEG_OUTPUT_MISSING',
         messageAr: 'فشل في تجميع ملف الفيديو النهائي.',
@@ -448,6 +603,7 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
     fileStream.pipe(res);
 
     fileStream.on('close', () => {
+      if (jobId) activeJobs.delete(jobId);
       // Clean up temp directories
       try {
         fs.rmSync(sessionDir, { recursive: true, force: true });

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -5,7 +6,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../domain/entities/video_render_progress.dart';
 
-class VideoExportProgressDialog extends StatelessWidget {
+class VideoExportProgressDialog extends StatefulWidget {
   final VideoRenderProgress progress;
   final VoidCallback onCancel;
   final VoidCallback onDismiss;
@@ -18,15 +19,41 @@ class VideoExportProgressDialog extends StatelessWidget {
   });
 
   @override
+  State<VideoExportProgressDialog> createState() => _VideoExportProgressDialogState();
+}
+
+class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
+  double? _smoothedRemainingSeconds;
+  DateTime? _lastEtaUpdateTime;
+  double _lastRenderedSeconds = 0.0;
+  double _lastProgress = 0.0;
+
+  @override
+  void didUpdateWidget(covariant VideoExportProgressDialog oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.progress.progress > _lastProgress) {
+      _lastProgress = widget.progress.progress;
+    }
+    if (widget.progress.renderedSeconds != null &&
+        widget.progress.renderedSeconds! > _lastRenderedSeconds) {
+      _lastRenderedSeconds = widget.progress.renderedSeconds!;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isIndeterminate = progress.progress < 0.0;
+    final isIndeterminate = widget.progress.progress < 0.0;
+    final displayProgress = max(_lastProgress, widget.progress.progress).clamp(0.0, 1.0);
+    final displayRenderedSec = widget.progress.renderedSeconds != null
+        ? max(_lastRenderedSeconds, widget.progress.renderedSeconds!)
+        : _lastRenderedSeconds;
 
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop && progress.isRendering) {
-          onCancel();
+        if (didPop && widget.progress.isRendering) {
+          widget.onCancel();
         }
       },
       child: Dialog(
@@ -50,7 +77,7 @@ class VideoExportProgressDialog extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Icon Status Indicator
-                if (progress.isCompleted)
+                if (widget.progress.isCompleted)
                   Container(
                     padding: EdgeInsets.all(12.r),
                     decoration: BoxDecoration(
@@ -59,7 +86,7 @@ class VideoExportProgressDialog extends StatelessWidget {
                     ),
                     child: Icon(Icons.check_circle_rounded, color: AppColors.accentGold, size: 36.sp),
                   )
-                else if (progress.isFailed)
+                else if (widget.progress.isFailed)
                   Container(
                     padding: EdgeInsets.all(12.r),
                     decoration: BoxDecoration(
@@ -83,20 +110,27 @@ class VideoExportProgressDialog extends StatelessWidget {
                   SizedBox(
                     width: 44.r,
                     height: 44.r,
-                    child: CircularProgressIndicator(
-                      value: progress.progress > 0 ? progress.progress.clamp(0.0, 1.0) : null,
-                      strokeWidth: 3.5,
-                      color: AppColors.accentGold,
-                      backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween<double>(begin: 0.0, end: displayProgress),
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, animValue, _) {
+                        return CircularProgressIndicator(
+                          value: animValue > 0 ? animValue : null,
+                          strokeWidth: 3.5,
+                          color: AppColors.accentGold,
+                          backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
+                        );
+                      },
                     ),
                   ),
 
                 SizedBox(height: 14.h),
 
                 Text(
-                  progress.isCompleted
+                  widget.progress.isCompleted
                       ? l10n.videoStudioProgressCompleted
-                      : progress.isFailed
+                      : widget.progress.isFailed
                           ? l10n.videoStudioProgressFailed
                           : l10n.videoStudioProgressTitle,
                   style: TextStyle(
@@ -110,7 +144,7 @@ class VideoExportProgressDialog extends StatelessWidget {
                 SizedBox(height: 6.h),
 
                 Text(
-                  _getLocalizedStatusMessage(context, progress),
+                  _getLocalizedStatusMessage(context, widget.progress),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 12.5.sp,
@@ -121,7 +155,7 @@ class VideoExportProgressDialog extends StatelessWidget {
 
                 Builder(
                   builder: (context) {
-                    final eta = _getLocalizedEtaMessage(context, progress);
+                    final eta = _getLocalizedEtaMessage(context, widget.progress, displayRenderedSec);
                     if (eta == null) return const SizedBox.shrink();
                     return Padding(
                       padding: EdgeInsets.only(top: 4.h),
@@ -139,81 +173,134 @@ class VideoExportProgressDialog extends StatelessWidget {
                   },
                 ),
 
-                if (progress.isRendering) ...[
+                if (widget.progress.isRendering) ...[
                   SizedBox(height: 14.h),
-                  LinearProgressIndicator(
-                    value: isIndeterminate ? null : progress.progress.clamp(0.0, 1.0),
-                    minHeight: 6.h,
-                    borderRadius: BorderRadius.circular(8.r),
-                    color: AppColors.accentGold,
-                    backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
-                  ),
-                  if (!isIndeterminate) ...[
-                    SizedBox(height: 8.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '${(progress.progress.clamp(0.0, 1.0) * 100).toInt()}%',
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.bold,
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0.0, end: displayProgress),
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, animValue, _) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          LinearProgressIndicator(
+                            value: isIndeterminate ? null : animValue,
+                            minHeight: 6.h,
+                            borderRadius: BorderRadius.circular(8.r),
                             color: AppColors.accentGold,
-                            fontFamily: 'Outfit',
+                            backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
                           ),
-                        ),
-                        if (progress.renderedSeconds != null &&
-                            progress.totalSeconds != null &&
-                            progress.totalSeconds! > 0)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.movie_creation_outlined,
-                                size: 13.sp,
-                                color: AppColors.textSecondary.withValues(alpha: 0.8),
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                l10n.videoStudioEncodingProgress(
-                                  _formatTime(progress.renderedSeconds!),
-                                  _formatTime(progress.totalSeconds!),
+                          if (!isIndeterminate) ...[
+                            SizedBox(height: 8.h),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                SizedBox(
+                                  width: 46.w,
+                                  child: Align(
+                                    alignment: AlignmentDirectional.centerStart,
+                                    child: Text(
+                                      '${(animValue * 100).toInt()}%',
+                                      style: TextStyle(
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.accentGold,
+                                        fontFamily: 'Outfit',
+                                        fontFeatures: const [FontFeature.tabularFigures()],
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                style: TextStyle(
-                                  fontSize: 11.5.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary,
-                                  fontFamily: 'Outfit',
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  ],
-                  SizedBox(height: 14.h),
-                  TextButton(
-                    onPressed: onCancel,
-                    child: Text(
-                      l10n.videoStudioCancelExport,
-                      style: TextStyle(
-                        fontSize: 13.sp,
+                                if (widget.progress.totalSeconds != null && widget.progress.totalSeconds! > 0)
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.movie_creation_outlined,
+                                        size: 13.sp,
+                                        color: AppColors.textSecondary.withValues(alpha: 0.8),
+                                      ),
+                                      SizedBox(width: 4.w),
+                                      Text(
+                                        l10n.videoStudioEncodingProgress(
+                                          _formatTime(displayRenderedSec),
+                                          _formatTime(widget.progress.totalSeconds!),
+                                        ),
+                                        style: TextStyle(
+                                          fontSize: 11.5.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textSecondary,
+                                          fontFamily: 'Outfit',
+                                          fontFeatures: const [FontFeature.tabularFigures()],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      );
+                    },
+                  ),
+                  SizedBox(height: 18.h),
+                  SizedBox(
+                    height: 38.h,
+                    child: TextButton.icon(
+                      onPressed: widget.onCancel,
+                      icon: Icon(
+                        Icons.close_rounded,
+                        size: 16.sp,
                         color: Colors.red.shade400,
                       ),
-                    ),
-                  ),
-                ] else if (progress.isFailed) ...[
-                  SizedBox(height: 18.h),
-                  OutlinedButton(
-                    onPressed: onDismiss,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.accentGold,
-                      side: BorderSide(color: AppColors.accentGold),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
+                      label: Text(
+                        l10n.videoStudioCancelExport,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.red.shade400,
+                          fontFamily: 'Amiri',
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.red.shade500.withValues(alpha: 0.10),
+                        foregroundColor: Colors.red.shade400,
+                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 6.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          side: BorderSide(
+                            color: Colors.red.shade400.withValues(alpha: 0.30),
+                            width: 1.0,
+                          ),
+                        ),
                       ),
                     ),
-                    child: Text(l10n.videoStudioClose),
+                  ),
+                ] else if (widget.progress.isFailed) ...[
+                  SizedBox(height: 18.h),
+                  SizedBox(
+                    height: 38.h,
+                    child: ElevatedButton.icon(
+                      onPressed: widget.onDismiss,
+                      icon: Icon(Icons.close_rounded, size: 16.sp, color: AppColors.cardCream),
+                      label: Text(
+                        l10n.videoStudioClose,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Amiri',
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accentGold,
+                        foregroundColor: AppColors.cardCream,
+                        elevation: 0,
+                        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 6.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ],
@@ -232,30 +319,50 @@ class VideoExportProgressDialog extends StatelessWidget {
   }
 
   String? _getLocalizedEtaMessage(
-      BuildContext context, VideoRenderProgress progress) {
+      BuildContext context, VideoRenderProgress progress, double renderedSec) {
     if (progress.step != VideoProgressStep.serverEncoding) return null;
-    if (progress.renderedSeconds == null ||
-        progress.totalSeconds == null ||
-        progress.renderedSeconds! <= 0) {
+    final totalSec = progress.totalSeconds;
+    final speed = progress.speed;
+    if (totalSec == null || totalSec <= 0 || renderedSec <= 0 || speed == null || speed <= 0.05) {
       return null;
     }
+
     final l10n = AppLocalizations.of(context)!;
-    final speed = progress.speed ?? 1.0;
-    final remainingVideoSec = (progress.totalSeconds! - progress.renderedSeconds!)
-        .clamp(0.0, progress.totalSeconds!);
-    if (speed > 0.1 && remainingVideoSec > 0.3) {
-      final remainingClockSec = (remainingVideoSec / speed).ceil();
-      if (remainingClockSec <= 1) {
-        return l10n.videoStudioEtaOneSecond;
-      } else if (remainingClockSec == 2) {
-        return l10n.videoStudioEtaTwoSeconds;
-      } else if (remainingClockSec <= 10) {
-        return l10n.videoStudioEtaFewSeconds(remainingClockSec);
-      } else {
-        return l10n.videoStudioEtaManySeconds(remainingClockSec);
-      }
-    } else {
+    final remainingVideoSec = (totalSec - renderedSec).clamp(0.0, totalSec);
+
+    if (remainingVideoSec <= 0.5) {
       return l10n.videoStudioEtaMoments;
+    }
+
+    final now = DateTime.now();
+    final instantClockSec = remainingVideoSec / speed;
+
+    if (_smoothedRemainingSeconds == null) {
+      _smoothedRemainingSeconds = instantClockSec;
+      _lastEtaUpdateTime = now;
+    } else {
+      final elapsedSinceLastUpdate = _lastEtaUpdateTime != null
+          ? (now.difference(_lastEtaUpdateTime!).inMilliseconds / 1000.0).clamp(0.0, 5.0)
+          : 0.0;
+      _lastEtaUpdateTime = now;
+
+      // Natural wall-clock countdown (ticking down in real-time)
+      final wallDecayed = max(0.0, _smoothedRemainingSeconds! - elapsedSinceLastUpdate);
+
+      // Smoothly blend with live hardware speed measurement (EMA)
+      _smoothedRemainingSeconds = (wallDecayed * 0.80) + (instantClockSec * 0.20);
+    }
+
+    final displaySec = _smoothedRemainingSeconds!.ceil().clamp(1, 9999);
+
+    if (displaySec <= 1) {
+      return l10n.videoStudioEtaOneSecond;
+    } else if (displaySec == 2) {
+      return l10n.videoStudioEtaTwoSeconds;
+    } else if (displaySec <= 10) {
+      return l10n.videoStudioEtaFewSeconds(displaySec);
+    } else {
+      return l10n.videoStudioEtaManySeconds(displaySec);
     }
   }
 
@@ -305,3 +412,4 @@ class VideoExportProgressDialog extends StatelessWidget {
     }
   }
 }
+

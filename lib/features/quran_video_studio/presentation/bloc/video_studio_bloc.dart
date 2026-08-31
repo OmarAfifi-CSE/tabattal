@@ -718,13 +718,25 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         audioFilePaths: currentAudios,
         verseDurations: currentDurations,
       ),
-      onData: (progress) => state.copyWith(exportProgress: progress),
-      onError: (error, _) => state.copyWith(
-        exportProgress: VideoRenderProgress(
-          phase: VideoRenderPhase.failed,
-          errorMessage: error.toString(),
-        ),
-      ),
+      onData: (progress) {
+        if (state.exportProgress.step == VideoProgressStep.cancelled ||
+            state.exportProgress.phase == VideoRenderPhase.idle) {
+          return state;
+        }
+        return state.copyWith(exportProgress: progress);
+      },
+      onError: (error, _) {
+        if (state.exportProgress.step == VideoProgressStep.cancelled ||
+            state.exportProgress.phase == VideoRenderPhase.idle) {
+          return state;
+        }
+        return state.copyWith(
+          exportProgress: VideoRenderProgress(
+            phase: VideoRenderPhase.failed,
+            errorMessage: error.toString(),
+          ),
+        );
+      },
     );
   }
 
@@ -734,6 +746,8 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   ) {
     repository.cancelExport();
     emit(state.copyWith(
+      pendingExportAction: null,
+      errorMessage: null,
       exportProgress: const VideoRenderProgress(
         phase: VideoRenderPhase.idle,
         step: VideoProgressStep.cancelled,

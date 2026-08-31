@@ -269,18 +269,6 @@ class _VerseCardGeneratorSheetDesktopContentState
     super.dispose();
   }
 
-  void _scrollToStatusBanner() {
-    Future.delayed(const Duration(milliseconds: 320), () {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOutCubic,
-        );
-      }
-    });
-  }
-
   void _clearStatusBanner() {
     if (_statusMessage != null) {
       setState(() => _statusMessage = null);
@@ -313,8 +301,8 @@ class _VerseCardGeneratorSheetDesktopContentState
               return VideoExportProgressDialog(
                 progress: state.exportProgress,
                 onCancel: () {
-                  bloc.add(const VideoStudioExportCancelled());
                   _dismissExportDialog();
+                  bloc.add(const VideoStudioExportCancelled());
                 },
                 onDismiss: () {
                   _dismissExportDialog();
@@ -759,7 +747,6 @@ class _VerseCardGeneratorSheetDesktopContentState
               : l10n.verseCardImageSavedGalleryError;
           _isSuccessStatus = success;
         });
-        _scrollToStatusBanner();
       }
     } catch (e) {
       if (mounted) {
@@ -768,7 +755,6 @@ class _VerseCardGeneratorSheetDesktopContentState
               AppLocalizations.of(context)!.verseCardSaveError(e.toString());
           _isSuccessStatus = false;
         });
-        _scrollToStatusBanner();
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -795,7 +781,6 @@ class _VerseCardGeneratorSheetDesktopContentState
         _statusMessage = AppLocalizations.of(context)!.verseCardCopiedSuccess;
         _isSuccessStatus = true;
       });
-      _scrollToStatusBanner();
     }
   }
 
@@ -832,7 +817,6 @@ class _VerseCardGeneratorSheetDesktopContentState
               _statusMessage = videoState.errorMessage;
               _isSuccessStatus = false;
             });
-            _scrollToStatusBanner();
           }
         } else if (videoState.exportProgress.isRendering && !_isExportDialogOpen) {
           _showExportDialog(context, context.read<VideoStudioBloc>());
@@ -858,7 +842,6 @@ class _VerseCardGeneratorSheetDesktopContentState
                       : l10n.videoStudioSavedError;
                   _isSuccessStatus = saved;
                 });
-                _scrollToStatusBanner();
               }
             }
           }
@@ -2572,13 +2555,13 @@ class _VideoPreviewViewportDesktop extends StatelessWidget {
     final double previewHeight;
     switch (config.aspectRatio) {
       case VideoAspectRatio.portrait9x16:
-        previewHeight = isLandscape ? 470.0 : 380.h;
+        previewHeight = isLandscape ? 440.0 : 380.h;
         break;
       case VideoAspectRatio.square1x1:
-        previewHeight = isLandscape ? 380.0 : 290.h;
+        previewHeight = isLandscape ? 360.0 : 290.h;
         break;
       case VideoAspectRatio.landscape16x9:
-        previewHeight = isLandscape ? 280.0 : 200.h;
+        previewHeight = isLandscape ? 260.0 : 200.h;
         break;
     }
 
@@ -2589,8 +2572,8 @@ class _VideoPreviewViewportDesktop extends StatelessWidget {
           // 1. Real Video Preview Card
           Padding(
             padding: EdgeInsets.only(
-              top: isLandscape ? 6.0 : 10.h,
-              bottom: isLandscape ? 4.0 : 8.h,
+              top: isLandscape ? 4.0 : 8.h,
+              bottom: isLandscape ? 6.0 : 6.h,
               left: isLandscape ? 8.0 : 16.w,
               right: isLandscape ? 8.0 : 16.w,
             ),
@@ -2673,11 +2656,15 @@ class _VideoPreviewViewportDesktop extends StatelessWidget {
             ),
           ),
 
+          SizedBox(height: isLandscape ? 8.0 : 6.h),
+
           // 2. Bottom Playback & Scrubber Controls Bar (Matching Fullscreen Modal with light luxury theme)
           Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isLandscape ? 8.0 : 16.w,
-              vertical: isLandscape ? 2.0 : 6.h,
+            padding: EdgeInsets.only(
+              left: isLandscape ? 8.0 : 16.w,
+              right: isLandscape ? 8.0 : 16.w,
+              top: isLandscape ? 6.0 : 4.h,
+              bottom: isLandscape ? 6.0 : 6.h,
             ),
             child: RepaintBoundary(
               child: Container(
@@ -2775,14 +2762,23 @@ class _VideoPreviewViewportDesktop extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.only(bottom: isLandscape ? 2.0 : 4.h),
                       child: Text(
-                        l10n.videoStudioAyahOfSurah(
-                          currentIndex + 1,
-                          totalVerses,
-                          QuranMetadata.getSurahNameByLang(
-                            Localizations.localeOf(context).languageCode == 'en',
-                            config.surahNumber,
-                          ),
-                        ),
+                        config.startAyah == config.endAyah
+                            ? l10n.videoStudioAyahOfSurah(
+                                config.startAyah,
+                                config.startAyah,
+                                QuranMetadata.getSurahNameByLang(
+                                  Localizations.localeOf(context).languageCode == 'en',
+                                  config.surahNumber,
+                                ),
+                              )
+                            : l10n.videoStudioAyahOfSurah(
+                                verse?.verseNumber ?? (config.startAyah + currentIndex),
+                                config.endAyah,
+                                QuranMetadata.getSurahNameByLang(
+                                  Localizations.localeOf(context).languageCode == 'en',
+                                  config.surahNumber,
+                                ),
+                              ),
                         style: TextStyle(
                           fontSize: isLandscape ? 9.5 : 10.5.sp,
                           color: AppColors.textSecondary,
