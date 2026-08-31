@@ -751,9 +751,9 @@ class CanvasOverlayGenerator {
     final theme = config.themePreset;
     final textColors = _resolveTextColors(config);
     final bool hasCustomMedia = _hasCustomMedia(config);
-    final bool hasCustomImage = hasCustomMedia;
     final bool isFramelessCustom = hasCustomMedia && !config.showCardFrame;
     final Color badgeAccentColor = _resolveAccentColor(config);
+    final bool isEn = config.isEnglish;
 
     final timings = wordTimings ?? WordTimingService.computeProportionalTimings(
       verse: verse,
@@ -930,6 +930,20 @@ class CanvasOverlayGenerator {
 
           final wordColor = textColors.primaryTextColor;
 
+          // If lineByLine, add Right Quranic Bracket (U+FD5F) at the start (in RTL it renders on the right)
+          if (isLineByLine) {
+            children.add(
+              TextSpan(
+                text: '\uFD5F',
+                style: TextStyle(
+                  fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
+                  color: wordColor,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            );
+          }
+
           for (int i = 0; i < wordsToRender.length; i++) {
             final w = wordsToRender[i];
             final pageNum = w.pageNumber > 0 ? w.pageNumber : pageNumber;
@@ -952,6 +966,21 @@ class CanvasOverlayGenerator {
             );
           }
 
+          // If lineByLine, add Left Quranic Bracket (U+FD5E) at the end (in RTL it renders on the left)
+          if (isLineByLine) {
+            children.add(const TextSpan(text: ' '));
+            children.add(
+              TextSpan(
+                text: '\uFD5E',
+                style: TextStyle(
+                  fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
+                  color: wordColor,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            );
+          }
+
           return TextSpan(
             style: TextStyle(
               color: textColors.primaryTextColor,
@@ -961,14 +990,16 @@ class CanvasOverlayGenerator {
             children: children,
           );
         } else {
-          final displayText = '﴿ ${verse.textUthmani} ﴾';
+          final displayText = isLineByLine
+              ? '\uFD5F ${verse.textUthmani} \uFD5E'
+              : '﴿ ${verse.textUthmani} ﴾';
           return TextSpan(
             text: displayText,
             style: TextStyle(
               color: textColors.primaryTextColor,
               fontSize: vSize,
               height: lineHeight,
-              fontFamily: 'Amiri',
+              fontFamily: isLineByLine ? 'KFGQPC HAFS Uthmanic Script Regular' : 'Amiri',
             ),
           );
         }
@@ -1003,19 +1034,18 @@ class CanvasOverlayGenerator {
       double tBadgeH = 0;
 
       if (hasTafsir) {
+        final Color badgeTextColor = isFramelessCustom ? badgeAccentColor : theme.accentColor;
         tBadgePainter = TextPainter(
           text: TextSpan(
-            text: 'التفسير الميسر',
+            text: isEn ? 'Al-Muyassar Tafsir' : 'التفسير الميسر',
             style: TextStyle(
-              color: isFramelessCustom
-                  ? badgeAccentColor
-                  : (hasCustomImage ? const Color(0xFFE2B755) : theme.accentColor),
+              color: badgeTextColor,
               fontSize: (baseScale * 0.024) * scale,
               fontWeight: FontWeight.bold,
-              fontFamily: 'Amiri',
+              fontFamily: isEn ? null : 'Amiri',
             ),
           ),
-          textDirection: TextDirection.rtl,
+          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
           textAlign: TextAlign.center,
         )..layout(maxWidth: width * 0.6);
 
@@ -1046,19 +1076,18 @@ class CanvasOverlayGenerator {
 
       if (hasTranslation) {
         if (hasTafsir) {
+          final Color badgeTextColor = isFramelessCustom ? badgeAccentColor : theme.accentColor;
           trBadgePainter = TextPainter(
             text: TextSpan(
-              text: 'الترجمة الإنجليزية',
+              text: isEn ? 'English Translation' : 'الترجمة الإنجليزية',
               style: TextStyle(
-                color: isFramelessCustom
-                    ? badgeAccentColor
-                    : (hasCustomImage ? const Color(0xFFE2B755) : theme.accentColor),
+                color: badgeTextColor,
                 fontSize: (baseScale * 0.020) * scale,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Amiri',
+                fontFamily: isEn ? null : 'Amiri',
               ),
             ),
-            textDirection: TextDirection.rtl,
+            textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
             textAlign: TextAlign.center,
           )..layout(maxWidth: width * 0.6);
 
@@ -1172,15 +1201,11 @@ class CanvasOverlayGenerator {
         final badgePaint = Paint()
           ..color = isFramelessCustom
               ? badgeAccentColor.withValues(alpha: 0.16)
-              : (hasCustomImage
-                  ? theme.accentColor.withValues(alpha: 0.22)
-                  : theme.accentColor.withValues(alpha: 0.12));
+              : theme.accentColor.withValues(alpha: 0.15);
         final borderPaint = Paint()
           ..color = isFramelessCustom
               ? badgeAccentColor.withValues(alpha: 0.45)
-              : (hasCustomImage
-                  ? theme.accentColor.withValues(alpha: 0.65)
-                  : theme.accentColor.withValues(alpha: 0.30))
+              : theme.accentColor.withValues(alpha: 0.40)
           ..style = PaintingStyle.stroke
           ..strokeWidth = baseScale * 0.0015;
 
@@ -1219,15 +1244,11 @@ class CanvasOverlayGenerator {
         final badgePaint = Paint()
           ..color = isFramelessCustom
               ? badgeAccentColor.withValues(alpha: 0.16)
-              : (hasCustomImage
-                  ? theme.accentColor.withValues(alpha: 0.22)
-                  : theme.accentColor.withValues(alpha: 0.12));
+              : theme.accentColor.withValues(alpha: 0.15);
         final borderPaint = Paint()
           ..color = isFramelessCustom
               ? badgeAccentColor.withValues(alpha: 0.45)
-              : (hasCustomImage
-                  ? theme.accentColor.withValues(alpha: 0.65)
-                  : theme.accentColor.withValues(alpha: 0.30))
+              : theme.accentColor.withValues(alpha: 0.40)
           ..style = PaintingStyle.stroke
           ..strokeWidth = baseScale * 0.0015;
 

@@ -73,10 +73,6 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="manifest" href="manifest.json">
 
-  <!-- High-Priority Network Preloads for Web Startup -->
-  <link rel="preload" href="flutter_bootstrap.js" as="script">
-  <link rel="preload" href="canvaskit/canvaskit.wasm" as="fetch" crossorigin>
-
   <!-- Google Fonts Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -438,8 +434,8 @@
         infoBox.dir = isArabic ? 'rtl' : 'ltr';
       }
 
-      // Cold start expected payload: ~24.5 MB
-      const EXPECTED_TOTAL_BYTES = 24.5 * 1024 * 1024;
+      // Cold start expected payload: ~8.5 MB (Optimized with GZip DB & preloads)
+      const EXPECTED_TOTAL_BYTES = 8.5 * 1024 * 1024;
       let totalBytesTransferred = 0;
       let highestPercentage = 8;
       let isCompleted = false;
@@ -468,7 +464,7 @@
         if (customStatus) {
           setStatus(customStatus, statusRank);
         } else if (highestPercentage >= 78) {
-          setStatus(isArabic ? 'جاري تهيئة قاعدة بيانات المصحف...' : 'Initializing Quran database & storage...', 5);
+          setStatus(isArabic ? 'جاري تهيئة قاعدة بيانات المصحف...' : 'Initializing Quran database & storage...', 6);
         }
       }
 
@@ -491,12 +487,15 @@
               if (name.includes('canvaskit') || name.includes('skwasm')) {
                 stageMessage = isArabic ? 'جاري تحميل محرّك الرسوم (CanvasKit)...' : 'Loading graphics engine (CanvasKit)...';
                 stageRank = 2;
-              } else if (name.includes('main.dart.js')) {
+              } else if (name.includes('main.dart.js') || name.includes('main.dart.wasm')) {
                 stageMessage = isArabic ? 'جاري تحميل كود التطبيق...' : 'Loading application bundle...';
                 stageRank = 3;
               } else if (name.includes('.ttf') || name.includes('fonts') || name.includes('.woff')) {
                 stageMessage = isArabic ? 'جاري تحميل خطوط المصحف...' : 'Loading Mushaf fonts...';
                 stageRank = 4;
+              } else if (name.includes('quran') || name.includes('sqlite3')) {
+                stageMessage = isArabic ? 'جاري تحميل قاعدة بيانات المصحف...' : 'Loading Quran database...';
+                stageRank = 5;
               }
 
               // Network download phase maps smoothly from 8% to 78%

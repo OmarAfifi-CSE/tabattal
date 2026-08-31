@@ -11,6 +11,7 @@ class VideoBackgroundPlayerView extends StatefulWidget {
   final bool isPlaying;
   final double dimming;
   final int resetSignal;
+  final Duration? currentPosition;
 
   const VideoBackgroundPlayerView({
     super.key,
@@ -18,6 +19,7 @@ class VideoBackgroundPlayerView extends StatefulWidget {
     required this.isPlaying,
     this.dimming = 0.35,
     this.resetSignal = 0,
+    this.currentPosition,
   });
 
   @override
@@ -40,23 +42,34 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
     if (oldWidget.videoPath != widget.videoPath) {
       _initPlayer();
     } else {
-      if (oldWidget.resetSignal != widget.resetSignal &&
-          _controller != null &&
-          _controller!.value.isInitialized) {
-        _controller?.seekTo(Duration.zero);
-        if (widget.isPlaying) {
-          _controller?.play();
-        } else {
-          _controller?.pause();
+      final controller = _controller;
+      if (controller != null && controller.value.isInitialized) {
+        if (oldWidget.resetSignal != widget.resetSignal) {
+          controller.seekTo(Duration.zero);
+          if (widget.isPlaying) {
+            controller.play();
+          } else {
+            controller.pause();
+          }
+        } else if (widget.currentPosition != null &&
+            oldWidget.currentPosition != widget.currentPosition) {
+          final videoDuration = controller.value.duration;
+          if (videoDuration > Duration.zero) {
+            final targetMs = widget.currentPosition!.inMilliseconds % videoDuration.inMilliseconds;
+            final targetDur = Duration(milliseconds: targetMs);
+            final diffMs = (controller.value.position - targetDur).inMilliseconds.abs();
+            if (!widget.isPlaying || diffMs > 350) {
+              controller.seekTo(targetDur);
+            }
+          }
         }
-      }
-      if (oldWidget.isPlaying != widget.isPlaying &&
-          _controller != null &&
-          _controller!.value.isInitialized) {
-        if (widget.isPlaying) {
-          _controller?.play();
-        } else {
-          _controller?.pause();
+
+        if (oldWidget.isPlaying != widget.isPlaying) {
+          if (widget.isPlaying) {
+            controller.play();
+          } else {
+            controller.pause();
+          }
         }
       }
     }
@@ -133,6 +146,7 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
         isPlaying: widget.isPlaying,
         dimming: widget.dimming,
         resetSignal: widget.resetSignal,
+        currentPosition: widget.currentPosition,
       );
     }
 

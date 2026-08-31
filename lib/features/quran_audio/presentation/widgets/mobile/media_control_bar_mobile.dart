@@ -203,6 +203,7 @@ class _MobileMiniPlayer extends StatelessWidget {
                       Flexible(
                         child: Text(
                           '$reciterName ($categoryName)',
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textDirection:
                               isEn ? TextDirection.ltr : TextDirection.rtl,
@@ -280,6 +281,7 @@ class _MobileReciterButton extends StatelessWidget {
                   );
                   return Text(
                     reciterName,
+                    maxLines: 1,
                     textAlign: isEn ? TextAlign.left : TextAlign.right,
                     style: AppTextStyles.menuItemText.copyWith(
                       color: AppColors.inkBrown,
@@ -363,7 +365,11 @@ class _MobileSleepTimerAndClose extends StatelessWidget {
               color: AppColors.textPrimary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.close, color: AppColors.inkBrown, size: 24.sp),
+            child: Icon(
+              Icons.close,
+              color: AppColors.inkBrown,
+              size: 24.sp,
+            ),
           ),
         ),
       ],
@@ -381,14 +387,15 @@ class _MobilePlaybackRow extends StatelessWidget {
         final isPlaying = state is AudioPlaying;
         final isLoading = state is AudioLoading;
 
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(width: 4.w),
-            Directionality(
+        return FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4.w),
+            child: Directionality(
               textDirection: TextDirection.ltr,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
                     padding: EdgeInsets.zero,
@@ -447,8 +454,7 @@ class _MobilePlaybackRow extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(width: 4.w),
-          ],
+          ),
         );
       },
     );

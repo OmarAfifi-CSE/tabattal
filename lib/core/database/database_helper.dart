@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:archive/archive.dart';
 import 'database_platform_helper.dart';
 
 class DatabaseHelper {
@@ -53,15 +54,23 @@ class DatabaseHelper {
         await databaseFactory.deleteDatabase(path);
       }
 
-      // Copy from asset. ALWAYS use forward slashes for rootBundle paths!
-      ByteData data = await rootBundle.load('assets/data/quran.db');
-      List<int> bytes = data.buffer.asUint8List(
+      final ByteData data = await rootBundle.load('assets/data/quran.db');
+      final rawBytes = data.buffer.asUint8List(
         data.offsetInBytes,
         data.lengthInBytes,
       );
 
-      // Write bytes via databaseFactory (supports native)
-      await databaseFactory.writeDatabaseBytes(path, Uint8List.fromList(bytes));
+      Uint8List dbBytes;
+      try {
+        // Try decoding GZip compressed database (3.85 MB instead of 13.1 MB - immune to IDM interception)
+        dbBytes = const GZipDecoder().decodeBytes(rawBytes);
+      } catch (_) {
+        // Fallback to raw bytes if the database asset is not compressed
+        dbBytes = rawBytes;
+      }
+
+      // Write bytes via databaseFactory (zero redundant allocations)
+      await databaseFactory.writeDatabaseBytes(path, dbBytes);
 
       await prefs.setInt('db_version', currentDbVersion);
     }

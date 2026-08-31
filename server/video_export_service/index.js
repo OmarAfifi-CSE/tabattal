@@ -13,25 +13,37 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const isRunningLocally = !process.env.K_SERVICE && !process.env.GOOGLE_CLOUD_PROJECT;
 
-// Logging middleware
+// Logging & CORS middleware
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Origin: ${req.headers.origin || 'none'}`);
+  const origin = req.headers.origin;
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Origin: ${origin || 'none'}`);
+  
+  if (isAllowedOrigin(origin, { isRunningLocally })) {
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    res.setHeader('Access-Control-Max-Age', '86400');
+  }
+
+  if (req.method === 'OPTIONS') {
+    if (isAllowedOrigin(origin, { isRunningLocally })) {
+      return res.status(204).end();
+    }
+    return res.status(403).end();
+  }
   next();
 });
 
-// 1. CORS Configuration (exact production origins only)
+// 1. CORS Configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    // In local dev allow all origins
-    if (isRunningLocally) {
+    if (isAllowedOrigin(origin, { isRunningLocally })) {
       return callback(null, true);
     }
-
-    if (isAllowedOrigin(origin)) {
-      return callback(null, true);
-    }
-
-    return callback(new Error('Access denied: Unauthorized origin. Only official Tabattal domains are permitted.'));
+    return callback(null, false);
   },
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
@@ -40,6 +52,31 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+// 🔒 Strict Origin & Referer Verification for Export API in Production
+app.use('/api/export-video', (req, res, next) => {
+  if (isRunningLocally) {
+    return next();
+  }
+
+  const origin = req.headers.origin;
+  const referer = req.headers.referer;
+  let effectiveOrigin = origin;
+  if (!effectiveOrigin && referer) {
+    try {
+      effectiveOrigin = new URL(referer).origin;
+    } catch (_) {}
+  }
+
+  if (!isAllowedOrigin(effectiveOrigin, { allowMissing: false, isRunningLocally: false })) {
+    return res.status(403).json({
+      code: 'FORBIDDEN_ORIGIN',
+      messageAr: 'غير مصرح بالوصول: الخدمة متاحة فقط من خلال نطاقات تطبيق تبتل الرسمية.',
+      messageEn: 'Forbidden: Video export service is only accessible from official Tabattal domains.'
+    });
+  }
+  next();
+});
 
 // 2. Strict Rate Limiting Protection (Prevents automated abuse with Bilingual Error Message)
 const exportLimiter = rateLimit({
@@ -459,14 +496,16 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
     }
 
     // 3. Ultra-fast Single-Pass Video Rendering & Direct Muxing
-    const cpuCount = Math.max(os.cpus()?.length || 2, 2);
+    const cpuCount = process.env.FFMPEG_THREADS
+      ? parseInt(process.env.FFMPEG_THREADS, 10)
+      : Math.min(Math.max(os.cpus()?.length || 4, 2), 8);
     const outputMp4 = path.join(sessionDir, `Tabattal_${surahNumber}_${startAyah}-${endAyah}_${Date.now()}.mp4`);
     const ffmpegArgs = ['-y'];
     const filterChains = [];
     const isCustom = customVideoDest && fs.existsSync(customVideoDest);
 
     if (isCustom) {
-      ffmpegArgs.push('-stream_loop', '-1', '-t', cumulativeStartSec.toFixed(3), '-i', customVideoDest);
+      ffmpegArgs.push('-stream_loop', '-1', '-i', customVideoDest);
       ffmpegArgs.push('-loop', '1', '-t', cumulativeStartSec.toFixed(3), '-framerate', '30', '-i', baseFrameDest);
 
       for (let u = 0; u < unitConfigs.length; u++) {

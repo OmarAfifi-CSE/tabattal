@@ -62,14 +62,24 @@ class _QuranTabletScreenState extends State<QuranTabletScreen> {
 
   void _prewarmAdjacentPages(int page) {
     final repo = context.read<QuranRepository>();
-    for (int offset = -4; offset <= 5; offset++) {
-      final p = page + offset;
-      if (p >= 1 && p <= QuranConstants.totalPages) {
-        if (QuranPageCache.get(p) == null) {
-          repo.getLinesByPage(p);
+    // 1. Immediately request the active primary page
+    if (QuranPageCache.get(page) == null) {
+      repo.getLinesByPage(page);
+    }
+
+    // 2. Defer neighbor prewarming to post-frame to keep frame 1 completely unblocked
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      for (int offset = -4; offset <= 5; offset++) {
+        if (offset == 0) continue;
+        final p = page + offset;
+        if (p >= 1 && p <= QuranConstants.totalPages) {
+          if (QuranPageCache.get(p) == null) {
+            repo.getLinesByPage(p);
+          }
         }
       }
-    }
+    });
   }
 
   void _onPageChanged(int newPage) {

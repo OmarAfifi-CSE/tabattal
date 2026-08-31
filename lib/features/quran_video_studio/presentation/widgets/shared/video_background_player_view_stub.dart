@@ -6,6 +6,7 @@ class VideoBackgroundPlayerViewWeb extends StatelessWidget {
   final bool isPlaying;
   final double dimming;
   final int resetSignal;
+  final Duration? currentPosition;
 
   const VideoBackgroundPlayerViewWeb({
     super.key,
@@ -13,6 +14,7 @@ class VideoBackgroundPlayerViewWeb extends StatelessWidget {
     required this.isPlaying,
     this.dimming = 0.35,
     this.resetSignal = 0,
+    this.currentPosition,
   });
 
   @override

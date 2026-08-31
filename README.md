@@ -37,8 +37,6 @@
 
 مصحف المدينة، والتلاوة، والتفسير، والحفظ، وصانع مقاطع قرآنية متزامنة — مجانًا وبدون إعلانات أو تتبع.
 
-[Open the Arabic landing page](docs/index.html) · [Read the marketing system](docs/marketing/README.md)
-
 </div>
 
 <br/>
@@ -95,37 +93,37 @@ Sharing is limited to plain text or flat cards → no way to create modern, sync
 <table width="100%">
 <tr>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/arabic/01_quran_reader_actions.png" alt="تلاوة القرآن والقائمة الذكية"/>
+        <img src="docs/assets/images/showcase/arabic/01_quran_reader_actions.png" alt="تلاوة القرآن والقائمة الذكية"/>
         <p><b>📖 تلاوة القرآن والقائمة الذكية</b><br/>رسم عثماني مطابق لمصحف المدينة وقائمة إجراءات سريعة</p>
     </td>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/arabic/02_app_drawer_tools.png" alt="القائمة الجانبية والأدوات"/>
+        <img src="docs/assets/images/showcase/arabic/02_app_drawer_tools.png" alt="القائمة الجانبية والأدوات"/>
         <p><b>📑 القائمة الجانبية والأدوات</b><br/>تنقل فوري وشامل لجميع خدمات وأدوات المصحف</p>
     </td>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/arabic/03_quran_video_studio.png" alt="صانع مقاطع الفيديو والريلز"/>
+        <img src="docs/assets/images/showcase/arabic/03_quran_video_studio.png" alt="صانع مقاطع الفيديو والريلز"/>
         <p><b>🎬 صانع مقاطع الفيديو والريلز</b><br/>فيديوهات قرآنية سينمائية متزامنة بدقة 1080p</p>
     </td>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/arabic/04_verse_card_generator.png" alt="تصميم بطاقات الآيات"/>
+        <img src="docs/assets/images/showcase/arabic/04_verse_card_generator.png" alt="تصميم بطاقات الآيات"/>
         <p><b>🎨 تصميم بطاقات الآيات</b><br/>بطاقات فاخرة للآيات مع التفسير والترجمة للمشاركة</p>
     </td>
 </tr>
 <tr>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/arabic/05_hifz_memorization_mode.png" alt="وضع تثبيت واختبار الحفظ"/>
+        <img src="docs/assets/images/showcase/arabic/05_hifz_memorization_mode.png" alt="وضع تثبيت واختبار الحفظ"/>
         <p><b>🧠 وضع تثبيت واختبار الحفظ</b><br/>إخفاء ذكي للآيات والكلمات وكشفها تفاعليًا بلمسة</p>
     </td>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/arabic/06_full_tafsir_library.png" alt="مكتبة التفسير الشاملة"/>
+        <img src="docs/assets/images/showcase/arabic/06_full_tafsir_library.png" alt="مكتبة التفسير الشاملة"/>
         <p><b>📚 مكتبة التفسير الشاملة</b><br/>تفسير كامل متصل مع تفاسير متعددة لأشهر العلماء</p>
     </td>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/arabic/07_audio_manager_downloads.png" alt="مدير الصوتيات والتلاوات"/>
+        <img src="docs/assets/images/showcase/arabic/07_audio_manager_downloads.png" alt="مدير الصوتيات والتلاوات"/>
         <p><b>🎧 مدير الصوتيات والتلاوات</b><br/>تحميل السور والمصحف كاملًا بجودة نقية دون إنترنت</p>
     </td>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/arabic/08_themes_appearance_language.png" alt="المظهر واللغة وثيمات المصحف"/>
+        <img src="docs/assets/images/showcase/arabic/08_themes_appearance_language.png" alt="المظهر واللغة وثيمات المصحف"/>
         <p><b>🎨 المظهر واللغة وثيمات المصحف</b><br/>11 مظهرًا ووضع ليلي ودعم للغتين</p>
     </td>
 </tr>
@@ -139,37 +137,37 @@ Sharing is limited to plain text or flat cards → no way to create modern, sync
 <table width="100%">
 <tr>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/english/01_quran_reader_actions.png" alt="Authentic Mushaf & Smart Menu"/>
+        <img src="docs/assets/images/showcase/english/01_quran_reader_actions.png" alt="Authentic Mushaf & Smart Menu"/>
         <p><b>📖 Authentic Mushaf & Smart Menu</b><br/>Flawless 15-line Madani layout with quick actions</p>
     </td>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/english/02_app_drawer_tools.png" alt="Navigation Drawer & Tools Hub"/>
+        <img src="docs/assets/images/showcase/english/02_app_drawer_tools.png" alt="Navigation Drawer & Tools Hub"/>
         <p><b>📑 Navigation Drawer & Tools Hub</b><br/>Instant access to all Quranic learning utilities</p>
     </td>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/english/03_quran_video_studio.png" alt="Quran Video Studio & Reels"/>
+        <img src="docs/assets/images/showcase/english/03_quran_video_studio.png" alt="Quran Video Studio & Reels"/>
         <p><b>🎬 Quran Video Studio & Reels</b><br/>Synced audio video creator in 9:16, 1:1, and 16:9</p>
     </td>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/english/04_verse_card_generator.png" alt="Verse Card Designer & Sharing"/>
+        <img src="docs/assets/images/showcase/english/04_verse_card_generator.png" alt="Verse Card Designer & Sharing"/>
         <p><b>🎨 Verse Card Designer & Sharing</b><br/>High-res social cards with Tafsir & Translation</p>
     </td>
 </tr>
 <tr>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/english/05_hifz_memorization_mode.png" alt="Smart Hifz & Memorization Mode"/>
+        <img src="docs/assets/images/showcase/english/05_hifz_memorization_mode.png" alt="Smart Hifz & Memorization Mode"/>
         <p><b>🧠 Smart Hifz & Memorization Mode</b><br/>Mask verses & words with tap-to-reveal testing</p>
     </td>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/english/06_full_tafsir_library.png" alt="Comprehensive Tafsir Library"/>
+        <img src="docs/assets/images/showcase/english/06_full_tafsir_library.png" alt="Comprehensive Tafsir Library"/>
         <p><b>📚 Comprehensive Tafsir Library</b><br/>Full surah commentaries from leading scholars</p>
     </td>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/english/07_audio_manager_downloads.png" alt="Audio Manager & Offline Recitations"/>
+        <img src="docs/assets/images/showcase/english/07_audio_manager_downloads.png" alt="Audio Manager & Offline Recitations"/>
         <p><b>🎧 Audio Manager & Offline Recitations</b><br/>Download full surahs or entire Mushaf offline</p>
     </td>
     <td width="25%" align="center" valign="top">
-        <img src="assets/images/showcase/english/08_themes_appearance_language.png" alt="Themes, Night Mode & Language"/>
+        <img src="docs/assets/images/showcase/english/08_themes_appearance_language.png" alt="Themes, Night Mode & Language"/>
         <p><b>🎨 Themes, Night Mode & Language</b><br/>11 themes, dark mode, and bilingual support</p>
     </td>
 </tr>

@@ -130,11 +130,6 @@ class VideoExportService implements IVideoExportService {
         final surahName = QuranMetadata.getSurahName(config.surahNumber);
         final outputMp4File = File('${tempDir.path}/Tabattal_${surahName}_${config.startAyah}-${config.endAyah}_$timestamp.mp4');
         final outputPath = outputMp4File.path.replaceAll(r'\', '/');
-        final quality = config.videoQuality;
-        final crfArg = '-crf ${quality.crf}';
-        final presetArg = isCustomVideo
-            ? '-preset ultrafast -threads 0'
-            : '-preset ultrafast -tune stillimage -threads 0';
         final targetW = config.aspectRatio.getTargetWidth(config.videoQuality);
         final targetH = config.aspectRatio.getTargetHeight(config.videoQuality);
         final bgVideoPath = isCustomVideo
@@ -316,11 +311,131 @@ class VideoExportService implements IVideoExportService {
           }
         }
 
-        final segmentPaths = <String>[];
-        double completedRenderedSec = 0.0;
+        final filterChains = <String>[];
+        final ffmpegArgs = <String>['-y'];
+        final totalDurationStr = totalDurationSec.toStringAsFixed(3);
+
+        if (isCustomVideo) {
+          ffmpegArgs.addAll(['-stream_loop', '-1', '-i', bgVideoPath]);
+          ffmpegArgs.addAll(['-loop', '1', '-t', totalDurationStr, '-framerate', '30', '-i', baseFramePath]);
+
+          for (int u = 0; u < totalUnits; u++) {
+            final durSec = (unitConfigs[u]['durSec'] as double).toStringAsFixed(3);
+            ffmpegArgs.addAll(['-loop', '1', '-t', durSec, '-framerate', '30', '-i', overlayPaths[u]]);
+          }
+
+          final dimmingAlpha = config.backgroundDimming.clamp(0.0, 0.95).toStringAsFixed(2);
+          filterChains.add('[0:v]setpts=PTS-STARTPTS,scale=$targetW:$targetH:force_original_aspect_ratio=increase,crop=$targetW:$targetH,setsar=1,format=yuv420p,drawbox=color=black@$dimmingAlpha:t=fill[bg]');
+          filterChains.add('[bg][1:v]overlay=0:0[canvas0]');
+          var currentCanvas = 'canvas0';
+
+          double cumStart = 0.0;
+          for (int u = 0; u < totalUnits; u++) {
+            final durSec = unitConfigs[u]['durSec'] as double;
+            final segStart = cumStart;
+            final segEnd = segStart + durSec;
+            cumStart += durSec;
+
+            const fadeDur = 0.30;
+            final safeFade = fadeDur.clamp(0.05, durSec * 0.20);
+            final fadeOutStart = (durSec - safeFade).clamp(0.08, durSec);
+            final nextCanvas = (u == totalUnits - 1) ? 'v' : 'canvas${u + 1}';
+            final cropY = unitConfigs[u]['cropY'] as int? ?? 0;
+
+            filterChains.add('[${u + 2}:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toStringAsFixed(3)}/TB[ov$u]');
+            filterChains.add('[$currentCanvas][ov$u]overlay=0:$cropY:enable=\'between(t,${segStart.toStringAsFixed(3)},${segEnd.toStringAsFixed(3)})\'[$nextCanvas]');
+            currentCanvas = nextCanvas;
+          }
+        } else {
+          ffmpegArgs.addAll(['-loop', '1', '-t', totalDurationStr, '-framerate', '30', '-i', baseFramePath]);
+
+          for (int u = 0; u < totalUnits; u++) {
+            final durSec = (unitConfigs[u]['durSec'] as double).toStringAsFixed(3);
+            ffmpegArgs.addAll(['-loop', '1', '-t', durSec, '-framerate', '30', '-i', overlayPaths[u]]);
+          }
+
+          var currentCanvas = '0:v';
+          double cumStart = 0.0;
+          for (int u = 0; u < totalUnits; u++) {
+            final durSec = unitConfigs[u]['durSec'] as double;
+            final segStart = cumStart;
+            final segEnd = segStart + durSec;
+            cumStart += durSec;
+
+            const fadeDur = 0.30;
+            final safeFade = fadeDur.clamp(0.05, durSec * 0.20);
+            final fadeOutStart = (durSec - safeFade).clamp(0.08, durSec);
+            final nextCanvas = (u == totalUnits - 1) ? 'v' : 'canvas${u + 1}';
+            final cropY = unitConfigs[u]['cropY'] as int? ?? 0;
+
+            filterChains.add('[${u + 1}:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toStringAsFixed(3)}/TB[ov$u]');
+            filterChains.add('[$currentCanvas][ov$u]overlay=0:$cropY:enable=\'between(t,${segStart.toStringAsFixed(3)},${segEnd.toStringAsFixed(3)})\'[$nextCanvas]');
+            currentCanvas = nextCanvas;
+          }
+        }
+
+        // Audio Input
+        final hasAudio = validAudioFiles.isNotEmpty;
+        final audioInputIndex = isCustomVideo ? totalUnits + 2 : totalUnits + 1;
+        if (hasAudio) {
+          if (validAudioFiles.length == 1) {
+            ffmpegArgs.addAll(['-i', validAudioFiles.first]);
+          } else {
+            final audioConcatFile = File('${sessionDir.path}/audio_segments.txt');
+            final audioBuffer = StringBuffer();
+            for (final p in validAudioFiles) {
+              audioBuffer.writeln("file '$p'");
+            }
+            await audioConcatFile.writeAsString(audioBuffer.toString());
+            final audioConcatInput = audioConcatFile.path.replaceAll(r'\', '/');
+            ffmpegArgs.addAll(['-f', 'concat', '-safe', '0', '-i', audioConcatInput]);
+          }
+        }
+
+        final filter = filterChains.join(';\n');
+        final filterScriptFile = File('${sessionDir.path}/filter_graph.txt');
+        await filterScriptFile.writeAsString(filter);
+        final filterScriptInput = filterScriptFile.path.replaceAll(r'\', '/');
+
+        ffmpegArgs.addAll(['-filter_complex_script', filterScriptInput]);
+        ffmpegArgs.addAll(['-map', '[v]']);
+
+        final isCopySafeAudio = validAudioFiles.every((p) {
+          final lower = p.toLowerCase();
+          return lower.endsWith('.mp3') || lower.endsWith('.m4a') || lower.endsWith('.aac');
+        });
+
+        if (hasAudio) {
+          ffmpegArgs.addAll(['-map', '$audioInputIndex:a']);
+          if (isCopySafeAudio) {
+            ffmpegArgs.addAll(['-c:a', 'copy']);
+          } else {
+            ffmpegArgs.addAll(['-c:a', 'aac', '-b:a', '128k']);
+          }
+          ffmpegArgs.add('-shortest');
+        }
+
+        ffmpegArgs.addAll([
+          '-t', totalDurationStr,
+          '-c:v', 'libx264',
+          '-preset', 'ultrafast',
+        ]);
+        if (!isCustomVideo) {
+          ffmpegArgs.addAll(['-tune', 'stillimage']);
+        }
+        ffmpegArgs.addAll([
+          '-crf', config.videoQuality.crf.toString(),
+          '-pix_fmt', 'yuv420p',
+          '-r', '30',
+          '-threads', '0',
+          '-movflags', '+faststart',
+          outputPath,
+        ]);
+
+        final sessionCompleter = Completer<dynamic>();
+        final encodingStopwatch = Stopwatch()..start();
         double maxMonotonicRenderedSec = 0.0;
         double maxMonotonicProgress = 0.20;
-        final encodingStopwatch = Stopwatch()..start();
 
         controller.add(VideoRenderProgress(
           phase: VideoRenderPhase.encodingVideo,
@@ -334,176 +449,56 @@ class VideoExportService implements IVideoExportService {
           speed: null,
         ));
 
-        for (int u = 0; u < totalUnits; u++) {
-          if (_isCancelled) {
-            controller.add(const VideoRenderProgress(phase: VideoRenderPhase.cancelled, step: VideoProgressStep.cancelled));
-            await controller.close();
-            return;
-          }
-
-          final unit = unitConfigs[u];
-          final durSec = unit['durSec'] as double;
-          final cropY = unit['cropY'] as int? ?? 0;
-          final segPath = '${sessionDir.path}/seg_$u.mp4';
-          segmentPaths.add(segPath);
-
-          final safeDurStr = durSec.toStringAsFixed(3);
-          const fadeDur = 0.30;
-          final safeFade = fadeDur.clamp(0.05, durSec * 0.20);
-          final fadeOutStart = (durSec - safeFade).clamp(0.08, durSec);
-          final fadeFilter = 'fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1';
-          final String segCmd;
-
-          if (isCustomVideo) {
-            final segStart = completedRenderedSec.toStringAsFixed(3);
-            final dimmingAlpha = config.backgroundDimming.clamp(0.0, 0.95).toStringAsFixed(2);
-            segCmd = '-y -ss $segStart -t $safeDurStr -i "$bgVideoPath" -loop 1 -t $safeDurStr -framerate 30 -i "$baseFramePath" -loop 1 -t $safeDurStr -framerate 30 -i "${overlayPaths[u]}" -filter_complex "[2:v]$fadeFilter[ov];[0:v]setpts=PTS-STARTPTS,scale=$targetW:$targetH:force_original_aspect_ratio=increase,crop=$targetW:$targetH,setsar=1,format=yuv420p,drawbox=color=black@$dimmingAlpha:t=fill[bg];[bg][1:v]overlay=0:0[canvas];[canvas][ov]overlay=0:$cropY:format=auto[v]" -map "[v]" -t $safeDurStr -c:v libx264 $presetArg $crfArg -pix_fmt yuv420p -r 30 "$segPath"';
-          } else {
-            segCmd = '-y -loop 1 -t $safeDurStr -framerate 30 -i "$baseFramePath" -loop 1 -t $safeDurStr -framerate 30 -i "${overlayPaths[u]}" -filter_complex "[1:v]$fadeFilter[ov];[0:v][ov]overlay=0:$cropY:format=auto[v]" -map "[v]" -t $safeDurStr -c:v libx264 $presetArg $crfArg -pix_fmt yuv420p -r 30 "$segPath"';
-          }
-
-          final sessionCompleter = Completer<dynamic>();
-          final baseCompletedSec = completedRenderedSec;
-
-          await FFmpegKit.executeAsync(
-            segCmd,
-            (session) {
-              if (!sessionCompleter.isCompleted) {
-                sessionCompleter.complete(session);
-              }
-            },
-            (log) {},
-            (statistics) {
-              if (_isCancelled) return;
-              final currentSegRenderedMs = max(0, statistics.getTime());
-              final currentSegRenderedSec = min(currentSegRenderedMs / 1000.0, durSec);
-              final calculatedTotalSec = baseCompletedSec + currentSegRenderedSec;
-              maxMonotonicRenderedSec = max(maxMonotonicRenderedSec, min(calculatedTotalSec, totalDurationSec));
-
-              final ffmpegPercent = (maxMonotonicRenderedSec / totalDurationSec).clamp(0.0, 1.0);
-              final calculatedProgress = 0.20 + (ffmpegPercent * 0.79);
-              maxMonotonicProgress = max(maxMonotonicProgress, calculatedProgress.clamp(0.20, 0.99));
-
-              final elapsedRealSec = encodingStopwatch.elapsedMilliseconds / 1000.0;
-              final double? realMeasuredSpeed;
-              if (elapsedRealSec >= 1.0 && maxMonotonicRenderedSec > 0.1) {
-                realMeasuredSpeed = maxMonotonicRenderedSec / elapsedRealSec;
-              } else {
-                realMeasuredSpeed = null;
-              }
-
-              controller.add(VideoRenderProgress(
-                phase: VideoRenderPhase.encodingVideo,
-                step: VideoProgressStep.serverEncoding,
-                progress: maxMonotonicProgress,
-                ayahNumber: (unit['verse'] as VerseModel).verseNumber,
-                currentAyahIndex: (unit['verseIndex'] as int? ?? 0) + 1,
-                totalAyahsCount: verses.length,
-                renderedSeconds: maxMonotonicRenderedSec,
-                totalSeconds: totalDurationSec,
-                speed: realMeasuredSpeed,
-              ));
-            },
-          );
-
-          final session = await sessionCompleter.future;
-          if (_isCancelled) return;
-          final returnCode = await session.getReturnCode();
-          if (returnCode != null && ReturnCode.isCancel(returnCode)) {
-            return;
-          }
-          if (returnCode == null || !ReturnCode.isSuccess(returnCode)) {
+        await FFmpegKit.executeWithArgumentsAsync(
+          ffmpegArgs,
+          (session) {
+            if (!sessionCompleter.isCompleted) {
+              sessionCompleter.complete(session);
+            }
+          },
+          (log) {},
+          (statistics) {
             if (_isCancelled) return;
-            final logs = await session.getAllLogsAsString();
-            throw Exception('تعذر رندر مقطع الفيديو $u: $logs');
-          }
+            final currentRenderedMs = max(0, statistics.getTime());
+            final currentRenderedSec = min(currentRenderedMs / 1000.0, totalDurationSec);
+            maxMonotonicRenderedSec = max(maxMonotonicRenderedSec, currentRenderedSec);
 
-          completedRenderedSec += durSec;
-          maxMonotonicRenderedSec = max(maxMonotonicRenderedSec, min(completedRenderedSec, totalDurationSec));
+            final ffmpegPercent = (maxMonotonicRenderedSec / totalDurationSec).clamp(0.0, 1.0);
+            final calculatedProgress = 0.20 + (ffmpegPercent * 0.79);
+            maxMonotonicProgress = max(maxMonotonicProgress, calculatedProgress.clamp(0.20, 0.99));
 
-          final elapsedRealSec = encodingStopwatch.elapsedMilliseconds / 1000.0;
-          final double? realMeasuredSpeed;
-          if (elapsedRealSec >= 1.0 && maxMonotonicRenderedSec > 0.1) {
-            realMeasuredSpeed = maxMonotonicRenderedSec / elapsedRealSec;
-          } else {
-            realMeasuredSpeed = null;
-          }
+            final elapsedRealSec = encodingStopwatch.elapsedMilliseconds / 1000.0;
+            final double? realMeasuredSpeed;
+            if (elapsedRealSec >= 1.0 && maxMonotonicRenderedSec > 0.1) {
+              realMeasuredSpeed = maxMonotonicRenderedSec / elapsedRealSec;
+            } else {
+              realMeasuredSpeed = null;
+            }
 
-          final ffmpegPercent = (completedRenderedSec / totalDurationSec).clamp(0.0, 1.0);
-          final calculatedProgress = 0.20 + (ffmpegPercent * 0.79);
-          maxMonotonicProgress = max(maxMonotonicProgress, calculatedProgress.clamp(0.20, 0.99));
+            controller.add(VideoRenderProgress(
+              phase: VideoRenderPhase.encodingVideo,
+              step: VideoProgressStep.serverEncoding,
+              progress: maxMonotonicProgress,
+              ayahNumber: verses.first.verseNumber,
+              currentAyahIndex: 1,
+              totalAyahsCount: verses.length,
+              renderedSeconds: maxMonotonicRenderedSec,
+              totalSeconds: totalDurationSec,
+              speed: realMeasuredSpeed,
+            ));
+          },
+        );
 
-          controller.add(VideoRenderProgress(
-            phase: VideoRenderPhase.encodingVideo,
-            step: VideoProgressStep.serverEncoding,
-            progress: maxMonotonicProgress,
-            ayahNumber: (unit['verse'] as VerseModel).verseNumber,
-            currentAyahIndex: (unit['verseIndex'] as int? ?? 0) + 1,
-            totalAyahsCount: verses.length,
-            renderedSeconds: maxMonotonicRenderedSec,
-            totalSeconds: totalDurationSec,
-            speed: realMeasuredSpeed,
-          ));
+        final session = await sessionCompleter.future;
+        if (_isCancelled) return;
+        final returnCode = await session.getReturnCode();
+        if (returnCode != null && ReturnCode.isCancel(returnCode)) {
+          return;
         }
-
-        final rawVideoPath = '${sessionDir.path}/raw_video.mp4';
-        if (segmentPaths.length == 1) {
-          final copyCmd = '-y -i "${segmentPaths.first}" -c copy "$rawVideoPath"';
-          await FFmpegKit.execute(copyCmd);
-        } else {
-          final concatListFile = File('${sessionDir.path}/segments.txt');
-          final concatBuffer = StringBuffer();
-          for (final p in segmentPaths) {
-            concatBuffer.writeln("file '$p'");
-          }
-          await concatListFile.writeAsString(concatBuffer.toString());
-          final concatInput = concatListFile.path.replaceAll(r'\', '/');
-
-          final concatCmd = '-y -f concat -safe 0 -i "$concatInput" -c copy "$rawVideoPath"';
-          final concatSession = await FFmpegKit.execute(concatCmd);
-          final concatReturnCode = await concatSession.getReturnCode();
-          if (!ReturnCode.isSuccess(concatReturnCode)) {
-            final allLogs = await concatSession.getAllLogsAsString();
-            throw Exception('تعذر تجميع مقاطع الفيديو: $allLogs');
-          }
-        }
-
-        // Final Mux: Video Track + Audio Track with instant stream copy
-        final hasAudio = validAudioFiles.isNotEmpty;
-        final isCopySafeAudio = validAudioFiles.every((p) {
-          final lower = p.toLowerCase();
-          return lower.endsWith('.mp3') || lower.endsWith('.m4a') || lower.endsWith('.aac');
-        });
-        final audioCodecArg = isCopySafeAudio ? '-c:a copy' : '-c:a aac -b:a 128k';
-
-        if (!hasAudio) {
-          final copyCmd = '-y -i "$rawVideoPath" -c:v copy -movflags +faststart "$outputPath"';
-          await FFmpegKit.execute(copyCmd);
-        } else if (validAudioFiles.length == 1) {
-          final singleAudio = validAudioFiles.first;
-          final muxCmd = '-y -i "$rawVideoPath" -i "$singleAudio" -c:v copy $audioCodecArg -shortest -movflags +faststart "$outputPath"';
-          final muxSession = await FFmpegKit.execute(muxCmd);
-          final muxReturnCode = await muxSession.getReturnCode();
-          if (!ReturnCode.isSuccess(muxReturnCode)) {
-            final allLogs = await muxSession.getAllLogsAsString();
-            throw Exception('تعذر دمج الصوت مع الفيديو: $allLogs');
-          }
-        } else {
-          final audioConcatFile = File('${sessionDir.path}/audio_segments.txt');
-          final audioBuffer = StringBuffer();
-          for (final p in validAudioFiles) {
-            audioBuffer.writeln("file '$p'");
-          }
-          await audioConcatFile.writeAsString(audioBuffer.toString());
-          final audioConcatInput = audioConcatFile.path.replaceAll(r'\', '/');
-
-          final muxCmd = '-y -i "$rawVideoPath" -f concat -safe 0 -i "$audioConcatInput" -c:v copy $audioCodecArg -shortest -movflags +faststart "$outputPath"';
-          final muxSession = await FFmpegKit.execute(muxCmd);
-          final muxReturnCode = await muxSession.getReturnCode();
-          if (!ReturnCode.isSuccess(muxReturnCode)) {
-            final allLogs = await muxSession.getAllLogsAsString();
-            throw Exception('تعذر دمج الصوت مع الفيديو: $allLogs');
-          }
+        if (returnCode == null || !ReturnCode.isSuccess(returnCode)) {
+          if (_isCancelled) return;
+          final logs = await session.getAllLogsAsString();
+          throw Exception('تعذر رندر مقطع الفيديو: $logs');
         }
 
         if (!outputMp4File.existsSync() || outputMp4File.lengthSync() < 1024) {

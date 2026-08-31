@@ -369,6 +369,11 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
   String _getLocalizedStatusMessage(
       BuildContext context, VideoRenderProgress progress) {
     final l10n = AppLocalizations.of(context)!;
+    if (progress.isFailed) {
+      return progress.errorMessage ??
+          (progress.statusMessage.isNotEmpty ? progress.statusMessage : l10n.videoStudioProgressFailed);
+    }
+
     switch (progress.step) {
       case VideoProgressStep.readingTimings:
         return l10n.videoStudioProgressReadingTimings(progress.ayahNumber ?? 1);
