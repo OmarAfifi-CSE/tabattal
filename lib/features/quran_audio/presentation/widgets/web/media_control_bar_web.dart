@@ -184,10 +184,12 @@ class _WebLandscapeHorizonBar extends StatelessWidget {
           width: 1.2.r,
         ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
           // ── Right/Start: Reciter Capsule ──
           GestureDetector(
             onTap: () => showAudioSettingsSheetWeb(context),
@@ -398,8 +400,9 @@ class _WebLandscapeHorizonBar extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

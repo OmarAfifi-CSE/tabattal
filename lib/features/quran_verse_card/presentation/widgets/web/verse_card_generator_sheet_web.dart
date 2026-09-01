@@ -1345,7 +1345,9 @@ class _VerseCardGeneratorSheetWebContentState
                         endAyah: newEnd,
                       ),
                     );
-                _loadAllVerseData();
+                if (_selectedFormat != ShareFormat.video) {
+                  _loadAllVerseData();
+                }
               },
               onEndAyahChanged: (end) {
                 if (end == _endAyah) return;
@@ -1364,7 +1366,9 @@ class _VerseCardGeneratorSheetWebContentState
                         endAyah: end,
                       ),
                     );
-                _loadAllVerseData();
+                if (_selectedFormat != ShareFormat.video) {
+                  _loadAllVerseData();
+                }
               },
             ),
             SizedBox(height: isLandscape ? 12.0 : 14.0),
@@ -2577,65 +2581,71 @@ class _VideoPreviewViewportWeb extends StatelessWidget {
                       borderRadius: BorderRadius.circular(isLandscape ? 12.0 : 16.r),
                       child: Directionality(
                         textDirection: TextDirection.ltr,
-                        child: StreamBuilder<Duration>(
-                          stream: context.read<VideoStudioBloc>().playbackPositionStream,
-                          initialData: context.read<VideoStudioBloc>().currentVersePosition,
-                          builder: (context, snapshot) {
-                            final position = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
-                            final cumulativePos = state.calculateCumulativePosition(state.currentVerseIndex, position);
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            // 0. Base Theme Layer (Always keeps the active luxury card theme visible underneath)
+                            Positioned.fill(
+                              child: RepaintBoundary(
+                                child: CustomPaint(
+                                  key: ValueKey('preview_base_bg_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}'),
+                                  painter: VideoStaticFramePainter(
+                                    config: config.copyWith(backgroundType: VideoBackgroundType.gradient),
+                                    verse: verse,
+                                    includeBackground: true,
+                                  ),
+                                  size: Size.infinite,
+                                ),
+                              ),
+                            ),
+                            if (config.backgroundType == VideoBackgroundType.customVideo &&
+                                config.customVideoPath != null &&
+                                config.customVideoPath!.isNotEmpty)
+                              Positioned.fill(
+                                child: RepaintBoundary(
+                                  child: VideoBackgroundPlayerView(
+                                    videoPath: config.customVideoPath!,
+                                    isPlaying: state.isPlaying,
+                                    dimming: config.backgroundDimming,
+                                    resetSignal: state.playbackResetTrigger,
+                                  ),
+                                ),
+                              ),
+                            Positioned.fill(
+                              child: RepaintBoundary(
+                                child: CustomPaint(
+                                  painter: VideoStaticFramePainter(
+                                    config: config,
+                                    verse: verse,
+                                    includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned.fill(
+                              child: RepaintBoundary(
+                                child: StreamBuilder<Duration>(
+                                  stream: context.read<VideoStudioBloc>().playbackPositionStream,
+                                  initialData: context.read<VideoStudioBloc>().currentVersePosition,
+                                  builder: (context, snapshot) {
+                                    final position = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
 
-                            return Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                // 0. Base Theme Layer (Always keeps the active luxury card theme visible underneath)
-                                Positioned.fill(
-                                  child: CustomPaint(
-                                    key: ValueKey('preview_base_bg_${verse?.verseNumber}_${config.themePreset.id}_${config.aspectRatio.name}'),
-                                    painter: VideoStaticFramePainter(
-                                      config: config.copyWith(backgroundType: VideoBackgroundType.gradient),
-                                      verse: verse,
-                                      includeBackground: true,
-                                    ),
-                                    size: Size.infinite,
-                                  ),
+                                    return CustomPaint(
+                                      painter: VideoDynamicContentPainter(
+                                        verse: verse,
+                                        config: config,
+                                        pageNumber: pageNumber,
+                                        tafsirText: verse?.tafsir,
+                                        translationText: verse?.translation,
+                                        playbackPositionMs: position.inMilliseconds,
+                                        wordTimings: state.currentVerseWordTimings,
+                                      ),
+                                    );
+                                  },
                                 ),
-                                if (config.backgroundType == VideoBackgroundType.customVideo &&
-                                    config.customVideoPath != null &&
-                                    config.customVideoPath!.isNotEmpty)
-                                  Positioned.fill(
-                                    child: VideoBackgroundPlayerView(
-                                      videoPath: config.customVideoPath!,
-                                      isPlaying: state.isPlaying,
-                                      dimming: config.backgroundDimming,
-                                      resetSignal: state.playbackResetTrigger,
-                                      currentPosition: cumulativePos,
-                                    ),
-                                  ),
-                                Positioned.fill(
-                                  child: CustomPaint(
-                                    painter: VideoStaticFramePainter(
-                                      config: config,
-                                      verse: verse,
-                                      includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
-                                    ),
-                                  ),
-                                ),
-                                Positioned.fill(
-                                  child: CustomPaint(
-                                    painter: VideoDynamicContentPainter(
-                                      verse: verse,
-                                      config: config,
-                                      pageNumber: pageNumber,
-                                      tafsirText: verse?.tafsir,
-                                      translationText: verse?.translation,
-                                      playbackPositionMs: position.inMilliseconds,
-                                      wordTimings: state.currentVerseWordTimings,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

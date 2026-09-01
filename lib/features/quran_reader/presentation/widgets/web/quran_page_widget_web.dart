@@ -26,6 +26,7 @@ import '../../../../../core/constants/quran_metadata.dart';
 import 'surah_header_widget_web.dart';
 import '../../../../settings/presentation/bloc/settings_bloc.dart';
 import '../../../../../core/theme/mushaf_theme.dart';
+import '../../../../../core/services/web_font_prewarmer.dart';
 
 // ---------------------------------------------------------------------------
 // Widget
@@ -104,6 +105,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
         curve: Curves.easeInOut,
       ),
     );
+    WebFontPrewarmer.prewarmPage(widget.pageNumber);
     final cached = QuranPageCache.get(widget.pageNumber);
     if (cached == null) {
       _loadPageDataFallback();
@@ -134,6 +136,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
   void didUpdateWidget(QuranPageWidgetWeb oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.pageNumber != oldWidget.pageNumber) {
+      WebFontPrewarmer.prewarmPage(widget.pageNumber);
       final cached = QuranPageCache.get(widget.pageNumber);
       if (cached == null) _loadPageDataFallback();
     }
@@ -948,10 +951,6 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
                     return prevOnPage || currOnPage;
                   },
                   builder: (context, audioState) {
-                    final mushafTheme = context
-                        .watch<SettingsBloc>()
-                        .state
-                        .effectiveMushafTheme;
                     int? playingVerseId;
                     final activeAudioVerseId = audioState is AudioPlaying
                         ? audioState.currentVerseId
@@ -961,10 +960,7 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
                       playingVerseId = activeAudioVerseId;
                     }
 
-                    return MediaQuery(
-                      data: MediaQuery.of(
-                        context,
-                      ).copyWith(textScaler: TextScaler.noScaling),
+                    return MediaQuery.withNoTextScaling(
                       child: Directionality(
                         textDirection: TextDirection.rtl,
                         child: LayoutBuilder(

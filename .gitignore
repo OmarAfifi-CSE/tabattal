@@ -61,3 +61,6 @@ yarn-error.log*
 
 # Marketing documentation
 docs/marketing/
+
+# Private Migration & Server Guides
+server/oracle_coolify_migration.md

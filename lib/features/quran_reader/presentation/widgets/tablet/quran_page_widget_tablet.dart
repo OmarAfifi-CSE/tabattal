@@ -948,10 +948,6 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
                     return prevOnPage || currOnPage;
                   },
                   builder: (context, audioState) {
-                    final mushafTheme = context
-                        .watch<SettingsBloc>()
-                        .state
-                        .effectiveMushafTheme;
                     int? playingVerseId;
                     final activeAudioVerseId = audioState is AudioPlaying
                         ? audioState.currentVerseId
@@ -961,10 +957,7 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
                       playingVerseId = activeAudioVerseId;
                     }
 
-                    return MediaQuery(
-                      data: MediaQuery.of(
-                        context,
-                      ).copyWith(textScaler: TextScaler.noScaling),
+                    return MediaQuery.withNoTextScaling(
                       child: Directionality(
                         textDirection: TextDirection.rtl,
                         child: LayoutBuilder(

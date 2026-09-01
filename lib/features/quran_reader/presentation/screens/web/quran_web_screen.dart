@@ -23,6 +23,7 @@ import '../../../../settings/presentation/bloc/settings_bloc.dart';
 import '../../../../../core/utils/app_snack_bar.dart';
 import '../../../../../core/utils/web_launch_intent.dart';
 import '../../../../../core/constants/quran_metadata.dart';
+import '../../../../../core/services/web_font_prewarmer.dart';
 import '../../../data/models/verse_model.dart';
 import '../../../../quran_verse_card/presentation/widgets/web/verse_card_generator_sheet_web.dart';
 
@@ -93,8 +94,9 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
   }
 
   void _prewarmAdjacentPages(int page) {
+    WebFontPrewarmer.prewarmPage(page);
+
     final repo = context.read<QuranRepository>();
-    // 1. Immediately request the active primary page
     if (QuranPageCache.get(page) == null) {
       repo.getLinesByPage(page);
     }
@@ -102,6 +104,8 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
     // 2. Defer neighbor prewarming to post-frame to keep frame 1 completely unblocked
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      WebFontPrewarmer.prewarmAround(page, distance: 4);
+
       for (int offset = -4; offset <= 5; offset++) {
         if (offset == 0) continue;
         final p = page + offset;

@@ -7,6 +7,8 @@ class MushafTheme extends Equatable {
   final Color textColor;
   final Color goldColor;
   final Color innerBorderColor;
+  final Color bookmarkedMarkerColor;
+  final bool isDarkTheme;
 
   const MushafTheme({
     required this.id,
@@ -14,6 +16,8 @@ class MushafTheme extends Equatable {
     required this.textColor,
     required this.goldColor,
     required this.innerBorderColor,
+    required this.bookmarkedMarkerColor,
+    this.isDarkTheme = false,
   });
 
   @override
@@ -23,24 +27,9 @@ class MushafTheme extends Equatable {
     textColor,
     goldColor,
     innerBorderColor,
+    bookmarkedMarkerColor,
+    isDarkTheme,
   ];
-
-  /// Returns true if the theme background is dark (luminance < 0.45).
-  bool get isDarkTheme => backgroundColor.computeLuminance() < 0.45;
-
-  /// Slightly darker/richer accent color for verse numbers that have bookmarks.
-  Color get bookmarkedMarkerColor {
-    final hsl = HSLColor.fromColor(goldColor);
-    if (isDarkTheme) {
-      return hsl
-          .withLightness((hsl.lightness * 0.88).clamp(0.0, 1.0))
-          .toColor();
-    } else {
-      return hsl
-          .withLightness((hsl.lightness * 0.78).clamp(0.0, 1.0))
-          .toColor();
-    }
-  }
 
   // The 4 color themes
   static const MushafTheme cream = MushafTheme(
@@ -49,6 +38,8 @@ class MushafTheme extends Equatable {
     textColor: Color(0xFF2C2520),
     goldColor: Color(0xFFB59A53),
     innerBorderColor: Color(0xFFEAD8BA),
+    bookmarkedMarkerColor: Color(0xFF8D7841),
+    isDarkTheme: false,
   );
 
   static const MushafTheme white = MushafTheme(
@@ -57,6 +48,8 @@ class MushafTheme extends Equatable {
     textColor: Color(0xFF1E1E1E),
     goldColor: Color(0xFFC7A263),
     innerBorderColor: Color(0xFFF0E5D1),
+    bookmarkedMarkerColor: Color(0xFF9B7E4D),
+    isDarkTheme: false,
   );
 
   static const MushafTheme mint = MushafTheme(
@@ -65,6 +58,8 @@ class MushafTheme extends Equatable {
     textColor: Color(0xFF1E2E24),
     goldColor: Color(0xFF91A896),
     innerBorderColor: Color(0xFFD6E8DB),
+    bookmarkedMarkerColor: Color(0xFF718375),
+    isDarkTheme: false,
   );
 
   static const MushafTheme iceBlue = MushafTheme(
@@ -73,6 +68,8 @@ class MushafTheme extends Equatable {
     textColor: Color(0xFF1D2830),
     goldColor: Color(0xFF7B99AD),
     innerBorderColor: Color(0xFFD6E4EE),
+    bookmarkedMarkerColor: Color(0xFF607787),
+    isDarkTheme: false,
   );
 
   static const MushafTheme parchment = MushafTheme(
@@ -81,6 +78,8 @@ class MushafTheme extends Equatable {
     textColor: Color(0xFF3A2D21),
     goldColor: Color(0xFF9C7A44),
     innerBorderColor: Color(0xFFE3D4C1),
+    bookmarkedMarkerColor: Color(0xFF7A5F35),
+    isDarkTheme: false,
   );
 
   static const MushafTheme roseGold = MushafTheme(
@@ -89,6 +88,8 @@ class MushafTheme extends Equatable {
     textColor: Color(0xFF38282A),
     goldColor: Color(0xFFD89A88),
     innerBorderColor: Color(0xFFF0DCD5),
+    bookmarkedMarkerColor: Color(0xFFA8786A),
+    isDarkTheme: false,
   );
 
   static const MushafTheme slate = MushafTheme(
@@ -97,6 +98,8 @@ class MushafTheme extends Equatable {
     textColor: Color(0xFF1E252B),
     goldColor: Color(0xFF7D8C9E),
     innerBorderColor: Color(0xFFD8DFE8),
+    bookmarkedMarkerColor: Color(0xFF616D7B),
+    isDarkTheme: false,
   );
 
   static const MushafTheme olive = MushafTheme(
@@ -105,6 +108,8 @@ class MushafTheme extends Equatable {
     textColor: Color(0xFF252B1E),
     goldColor: Color(0xFF9A9D49),
     innerBorderColor: Color(0xFFDFE3D1),
+    bookmarkedMarkerColor: Color(0xFF787A39),
+    isDarkTheme: false,
   );
 
   static const MushafTheme emerald = MushafTheme(
@@ -113,6 +118,8 @@ class MushafTheme extends Equatable {
     textColor: Color(0xFFF5F0E6),
     goldColor: Color(0xFFD4AF37),
     innerBorderColor: Color(0xFF1D3B30),
+    bookmarkedMarkerColor: Color(0xFFBB9A30),
+    isDarkTheme: true,
   );
 
   static const MushafTheme burgundy = MushafTheme(
@@ -121,6 +128,8 @@ class MushafTheme extends Equatable {
     textColor: Color(0xFFF8EEF2),
     goldColor: Color(0xFFE0B36C),
     innerBorderColor: Color(0xFF331B28),
+    bookmarkedMarkerColor: Color(0xFFC59D5F),
+    isDarkTheme: true,
   );
 
   // Dark Mode override
@@ -130,6 +139,8 @@ class MushafTheme extends Equatable {
     textColor: Color(0xFFE0E0E0),
     goldColor: Color(0xFF6B6B6B),
     innerBorderColor: Color(0xFF2C2C2C),
+    bookmarkedMarkerColor: Color(0xFF5E5E5E),
+    isDarkTheme: true,
   );
 
   static const List<MushafTheme> values = [

@@ -160,12 +160,28 @@ class _VideoBackgroundPlayerViewWebState
         }
       }
 
+      if (oldWidget.isPlaying != widget.isPlaying) {
+        if (widget.isPlaying) {
+          try {
+            _videoElement!.play();
+          } catch (_) {}
+        } else {
+          try {
+            _videoElement!.pause();
+          } catch (_) {}
+        }
+      }
+
       if (oldWidget.resetSignal != widget.resetSignal) {
         _videoElement!.currentTime = 0.001;
         if (widget.isPlaying) {
-          _videoElement!.play();
+          try {
+            _videoElement!.play();
+          } catch (_) {}
         } else {
-          _videoElement!.pause();
+          try {
+            _videoElement!.pause();
+          } catch (_) {}
         }
       } else if (widget.currentPosition != null &&
           oldWidget.currentPosition != widget.currentPosition) {

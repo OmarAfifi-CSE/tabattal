@@ -26,10 +26,13 @@ class WordTimingService {
               ),
             );
 
+  static final Map<String, Future<void>> _inFlightChapterRequests = {};
+
   /// Clears the in-memory timing caches
   static void clearCache() {
     _chapterCache.clear();
     _verseCache.clear();
+    _inFlightChapterRequests.clear();
   }
 
   /// Verified Quran.com API recitation IDs mapped directly to studio reciter paths
@@ -84,61 +87,71 @@ class WordTimingService {
     if (recitationId != null) {
       final chapterKey = '$recitationId:$surahNumber';
 
-      // Check if entire chapter is already cached
+      // Check if entire chapter is already cached or in-flight
       if (!_chapterCache.containsKey(chapterKey)) {
-        try {
-          final url = 'https://api.quran.com/api/v4/chapter_recitations/$recitationId/$surahNumber?segments=true';
-          final response = await _dio.get(url);
-          if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
-            final audioFile = response.data['audio_file'] as Map<String, dynamic>?;
-            final timestamps = audioFile?['timestamps'] as List<dynamic>?;
-            if (timestamps != null && timestamps.isNotEmpty) {
-              final chapterMap = <String, List<WordTimingSegment>>{};
-              for (final t in timestamps) {
-                final vMap = t as Map<String, dynamic>;
-                final vKey = vMap['verse_key'] as String? ?? '';
-                final rawSegments = vMap['segments'] as List<dynamic>?;
-                if (rawSegments != null && rawSegments.isNotEmpty) {
-                  double? firstSegStart;
-                  for (final s in rawSegments) {
-                    if (s is List && s.length >= 3) {
-                      firstSegStart = (s[1] as num).toDouble();
-                      break;
+        if (_inFlightChapterRequests.containsKey(chapterKey)) {
+          await _inFlightChapterRequests[chapterKey];
+        } else {
+          final completerFuture = () async {
+            try {
+              final url = 'https://api.quran.com/api/v4/chapter_recitations/$recitationId/$surahNumber?segments=true';
+              final response = await _dio.get(url);
+              if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+                final audioFile = response.data['audio_file'] as Map<String, dynamic>?;
+                final timestamps = audioFile?['timestamps'] as List<dynamic>?;
+                if (timestamps != null && timestamps.isNotEmpty) {
+                  final chapterMap = <String, List<WordTimingSegment>>{};
+                  for (final t in timestamps) {
+                    final vMap = t as Map<String, dynamic>;
+                    final vKey = vMap['verse_key'] as String? ?? '';
+                    final rawSegments = vMap['segments'] as List<dynamic>?;
+                    if (rawSegments != null && rawSegments.isNotEmpty) {
+                      double? firstSegStart;
+                      for (final s in rawSegments) {
+                        if (s is List && s.length >= 3) {
+                          firstSegStart = (s[1] as num).toDouble();
+                          break;
+                        }
+                      }
+                      final baseStart = firstSegStart ?? (vMap['timestamp_from'] as num?)?.toDouble() ?? 0.0;
+
+                      final segments = <WordTimingSegment>[];
+                      for (int i = 0; i < rawSegments.length; i++) {
+                        if (rawSegments[i] is! List) continue;
+                        final list = rawSegments[i] as List<dynamic>;
+                        if (list.length < 3) continue;
+
+                        final wordPos = (list[0] as num).toInt();
+                        final double segStart = (list[1] as num).toDouble();
+                        final double segEnd = (list[2] as num).toDouble();
+                        final int rawStart = (segStart - baseStart).round();
+                        final int rawEnd = (segEnd - baseStart).round();
+
+                        segments.add(
+                          WordTimingSegment(
+                            wordPosition: wordPos,
+                            startMs: max(0, rawStart),
+                            endMs: max(max(0, rawStart), rawEnd),
+                          ),
+                        );
+                      }
+
+                      if (segments.isNotEmpty) {
+                        chapterMap[vKey] = segments;
+                      }
                     }
                   }
-                  final baseStart = firstSegStart ?? (vMap['timestamp_from'] as num?)?.toDouble() ?? 0.0;
-
-                  final segments = <WordTimingSegment>[];
-                  for (int i = 0; i < rawSegments.length; i++) {
-                    if (rawSegments[i] is! List) continue;
-                    final list = rawSegments[i] as List<dynamic>;
-                    if (list.length < 3) continue;
-
-                    final wordPos = (list[0] as num).toInt();
-                    final double segStart = (list[1] as num).toDouble();
-                    final double segEnd = (list[2] as num).toDouble();
-                    final int rawStart = (segStart - baseStart).round();
-                    final int rawEnd = (segEnd - baseStart).round();
-
-                    segments.add(
-                      WordTimingSegment(
-                        wordPosition: wordPos,
-                        startMs: max(0, rawStart),
-                        endMs: max(max(0, rawStart), rawEnd),
-                      ),
-                    );
-                  }
-
-                  if (segments.isNotEmpty) {
-                    chapterMap[vKey] = segments;
-                  }
+                  _chapterCache[chapterKey] = chapterMap;
                 }
               }
-              _chapterCache[chapterKey] = chapterMap;
+            } catch (_) {
+              // Graceful fallback to proportional calculation on network error
+            } finally {
+              _inFlightChapterRequests.remove(chapterKey);
             }
-          }
-        } catch (_) {
-          // Graceful fallback to proportional calculation on network error
+          }();
+          _inFlightChapterRequests[chapterKey] = completerFuture;
+          await completerFuture;
         }
       }
 

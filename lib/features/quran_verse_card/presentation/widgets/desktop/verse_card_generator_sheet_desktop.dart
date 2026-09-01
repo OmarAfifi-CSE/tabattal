@@ -1345,7 +1345,9 @@ class _VerseCardGeneratorSheetDesktopContentState
                         endAyah: newEnd,
                       ),
                     );
-                _loadAllVerseData();
+                if (_selectedFormat != ShareFormat.video) {
+                  _loadAllVerseData();
+                }
               },
               onEndAyahChanged: (end) {
                 if (end == _endAyah) return;
@@ -1364,7 +1366,9 @@ class _VerseCardGeneratorSheetDesktopContentState
                         endAyah: end,
                       ),
                     );
-                _loadAllVerseData();
+                if (_selectedFormat != ShareFormat.video) {
+                  _loadAllVerseData();
+                }
               },
             ),
             SizedBox(height: isLandscape ? 12.0 : 14.0),

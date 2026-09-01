@@ -431,9 +431,11 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     }
 
     // If actively playing, pause
-    if (state.isPlaying && _previewPlayer.playing && _previewPlayer.processingState != ProcessingState.completed) {
+    if (state.isPlaying) {
       _stopPositionTicker();
-      await _previewPlayer.pause();
+      try {
+        await _previewPlayer.pause();
+      } catch (_) {}
       emit(state.copyWith(isPlaying: false));
     } else {
       // Start or resume playback
