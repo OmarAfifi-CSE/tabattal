@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/constants/hizb_data.dart';
 import '../../../../../core/theme/mushaf_theme.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
@@ -12,17 +11,18 @@ import 'quran_page_widget_mobile.dart';
 /// Calculates the Y-position of a Hizb marker from its line number (1–15),
 /// clamped so the frame cut never overflows the border corners.
 double _calculateHizbMarkerYPosition(int lineNumber, double pageHeight) {
-  final double topPadding = pageHeight * 0.04;
+  final double scale = pageHeight / 864.0;
+  final double topPadding = pageHeight * 0.057;
   final double textHeight = pageHeight * 0.89;
-  final double rawY = topPadding + textHeight * ((lineNumber - 0.5) / 15.0);
+  final double rawY = topPadding + textHeight * ((lineNumber - 0.56) / 15.0);
 
-  final minY = pageHeight * 0.02 + pageHeight * 0.095 + pageHeight * 0.01;
-  final maxY = pageHeight * 0.97 - pageHeight * 0.125 - pageHeight * 0.01;
-  if (minY >= maxY) return rawY; // Safeguard against small layout constraints
+  final double minY = (pageHeight * 0.035) + (88.0 * scale) + (10.0 * scale);
+  final double maxY = (pageHeight * 0.965) - (116.0 * scale) - (10.0 * scale);
+  if (minY >= maxY) return rawY;
   return rawY.clamp(minY, maxY);
 }
 
-/// Builds inline text spans for a Hizb label, making the digit larger and on a new line.
+/// Builds inline text spans for a Hizb label, making the digit on a new line with balanced scale.
 List<TextSpan> _buildHizbLabelTextSpans(String text, TextStyle baseStyle) {
   final digitRegExp = RegExp(r'[0-9٠-٩]+');
   final spans = <TextSpan>[];
@@ -34,8 +34,8 @@ List<TextSpan> _buildHizbLabelTextSpans(String text, TextStyle baseStyle) {
         TextSpan(
           text: '\n${match.group(0)}',
           style: baseStyle.copyWith(
-            fontSize: baseStyle.fontSize! * 1.25,
-            fontWeight: FontWeight.w900,
+            fontSize: baseStyle.fontSize! * 1.05,
+            fontWeight: FontWeight.normal,
             fontFamily: 'Amiri',
           ),
         ),
@@ -87,7 +87,7 @@ class QuranPageFrameMobile extends StatelessWidget {
     final TextStyle headerStyle = TextStyle(
       fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
       color: mushafTheme.textColor,
-      fontWeight: FontWeight.bold,
+      fontWeight: FontWeight.normal,
     );
 
     return Material(
@@ -96,6 +96,7 @@ class QuranPageFrameMobile extends StatelessWidget {
         builder: (context, constraints) {
           final double pageWidth = constraints.maxWidth;
           final double pageHeight = constraints.maxHeight;
+          final double scale = pageHeight / 864.0;
 
           return Stack(
             fit: StackFit.expand,
@@ -138,9 +139,9 @@ class QuranPageFrameMobile extends StatelessWidget {
 
               // Juz Name
               Positioned(
-                top: pageHeight * 0.02,
-                left: pageWidth * 0.08,
-                width: pageWidth * 0.35,
+                top: pageHeight * 0.035,
+                left: pageWidth * 0.088,
+                width: pageWidth * 0.334,
                 child: FractionalTranslation(
                   translation: const Offset(0.0, -0.5),
                   child: GestureDetector(
@@ -167,12 +168,20 @@ class QuranPageFrameMobile extends StatelessWidget {
                     },
                     child: _MobileFrameInfoBox(
                       theme: mushafTheme,
-                      child: Text(
-                        juzName,
-                        style: headerStyle.copyWith(fontSize: 10.sp),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      scale: scale,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
+                        child: Text(
+                          juzName,
+                          style: headerStyle.copyWith(
+                            fontSize: 13.5 * scale,
+                            height: 1.18,
+                            leadingDistribution: TextLeadingDistribution.even,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -181,9 +190,9 @@ class QuranPageFrameMobile extends StatelessWidget {
 
               // Surah Name
               Positioned(
-                top: pageHeight * 0.02,
-                left: pageWidth * 0.46,
-                width: pageWidth * 0.33,
+                top: pageHeight * 0.035,
+                left: pageWidth * 0.468,
+                width: pageWidth * 0.314,
                 child: FractionalTranslation(
                   translation: const Offset(0.0, -0.5),
                   child: GestureDetector(
@@ -210,11 +219,17 @@ class QuranPageFrameMobile extends StatelessWidget {
                     },
                     child: _MobileFrameInfoBox(
                       theme: mushafTheme,
+                      scale: scale,
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
                         child: Text(
                           surahName,
-                          style: headerStyle.copyWith(fontSize: 10.sp),
+                          style: headerStyle.copyWith(
+                            fontSize: 13.5 * scale,
+                            height: 1.18,
+                            leadingDistribution: TextLeadingDistribution.even,
+                          ),
                           textAlign: TextAlign.center,
                           maxLines: 1,
                         ),
@@ -227,8 +242,9 @@ class QuranPageFrameMobile extends StatelessWidget {
               // Hamburger Menu
               if (showHeaderMenu)
                 Positioned(
-                  top: pageHeight * 0.02,
-                  right: pageWidth * 0.07,
+                  top: pageHeight * 0.035,
+                  left: pageWidth * 0.828,
+                  width: pageWidth * 0.094,
                   child: FractionalTranslation(
                     translation: const Offset(0, -0.5),
                     child: GestureDetector(
@@ -239,15 +255,15 @@ class QuranPageFrameMobile extends StatelessWidget {
                       },
                       child: _MobileFrameInfoBox(
                         theme: mushafTheme,
-                        margin: EdgeInsets.symmetric(horizontal: 6.w),
+                        scale: scale,
                         padding: EdgeInsets.symmetric(
-                          horizontal: 4.w,
-                          vertical: 0.h,
+                          horizontal: 2.0 * scale,
+                          vertical: 1.5 * scale,
                         ),
                         child: Icon(
                           Icons.segment_rounded,
                           color: mushafTheme.goldColor,
-                          size: 24.sp,
+                          size: 18.0 * scale,
                         ),
                       ),
                     ),
@@ -256,15 +272,21 @@ class QuranPageFrameMobile extends StatelessWidget {
 
               // ── LAYER 4: Page Number (bottom cut) ──────────────────────
               Positioned(
-                bottom: pageHeight * 0.03,
-                left: pageWidth * 0.42,
-                width: pageWidth * 0.16,
+                bottom: pageHeight * 0.035,
+                left: pageWidth * 0.43,
+                width: pageWidth * 0.14,
                 child: FractionalTranslation(
                   translation: const Offset(0.0, 0.5),
                   child: _MobileFrameInfoBox(
                     theme: mushafTheme,
+                    scale: scale,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 4.0 * scale,
+                      vertical: 1.5 * scale,
+                    ),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
+                      alignment: Alignment.center,
                       child: Text(
                         isEn
                             ? pageNumber.toString()
@@ -272,10 +294,12 @@ class QuranPageFrameMobile extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'Amiri',
                           color: mushafTheme.textColor,
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w900,
-                          height: 1.1.h,
+                          fontSize: 14.5 * scale,
+                          fontWeight: FontWeight.normal,
+                          height: 1.18,
+                          leadingDistribution: TextLeadingDistribution.even,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
@@ -303,29 +327,32 @@ class QuranPageFrameMobile extends StatelessWidget {
 class _MobileFrameInfoBox extends StatelessWidget {
   final Widget child;
   final MushafTheme theme;
-  final EdgeInsetsGeometry? margin;
+  final double scale;
   final EdgeInsetsGeometry? padding;
 
   const _MobileFrameInfoBox({
     required this.child,
     required this.theme,
-    this.margin,
+    required this.scale,
     this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: margin ?? (EdgeInsets.symmetric(horizontal: 6.w)),
-      padding:
-          padding ?? (EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h)),
+      margin: EdgeInsets.symmetric(horizontal: 1.0 * scale),
+      padding: padding ??
+          EdgeInsets.symmetric(
+            horizontal: 4.0 * scale,
+            vertical: 1.5 * scale,
+          ),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         border: Border.all(
-          color: theme.goldColor.withValues(alpha: 0.6),
-          width: 1.0.w,
+          color: theme.goldColor.withValues(alpha: 0.65),
+          width: (1.0 * scale).clamp(0.8, 1.5),
         ),
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(8.0 * scale),
         color: theme.backgroundColor,
       ),
       child: child,
@@ -350,14 +377,16 @@ class _MobileHizbMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double scale = pageHeight / 864.0;
+
     return Positioned(
       top: _calculateHizbMarkerYPosition(
         marker['line'] as int,
         pageHeight,
       ),
-      left: isLeftPage ? (pageWidth * 0.057) : null,
-      right: !isLeftPage ? (pageWidth * 0.043) : null,
-      width: pageWidth * 0.12,
+      left: isLeftPage ? (pageWidth * 0.0375) : null,
+      right: !isLeftPage ? (pageWidth * 0.0375) : null,
+      width: 70.0 * scale,
       child: FractionalTranslation(
         translation: Offset(isLeftPage ? -0.5 : 0.5, -0.5),
         child: Stack(
@@ -365,33 +394,36 @@ class _MobileHizbMarker extends StatelessWidget {
           children: [
             // Ornament glyph from QCF_BSML
             Transform.scale(
-              scaleX: 0.55,
+              scaleX: isLeftPage ? -0.57 : 0.57,
               scaleY: 1.0,
               child: Text(
                 '\u00F5',
                 style: TextStyle(
                   fontFamily: 'QCF_BSML',
-                  fontSize: 65.sp,
+                  fontSize: 86.0 * scale,
                   color: mushafTheme.goldColor,
-                  height: 1.0.h,
+                  height: 1.0,
                 ),
               ),
             ),
             // Label text centred inside the ornament
             Transform.translate(
-              offset: Offset(-3.2.w, 12.h),
+              offset: Offset(
+                isLeftPage ? (5.3 * scale) : (-5.3 * scale),
+                18.8 * scale,
+              ),
               child: SizedBox(
-                width: pageWidth * 0.06,
+                width: 40.0 * scale,
                 child: Text.rich(
                   TextSpan(
                     children: _buildHizbLabelTextSpans(
                       (marker['text'] as String).toArabicDigits,
                       TextStyle(
                         fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
-                        fontSize: 6.sp,
-                        height: 1.2.h,
+                        fontSize: 9.5 * scale,
+                        height: 1.15,
                         color: mushafTheme.textColor,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.normal,
                       ),
                     ),
                   ),

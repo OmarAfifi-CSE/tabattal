@@ -194,8 +194,6 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
       _showErrorSnackBar(state.message);
     } else if (state is AudioPlaying) {
       _navigateToPlayingVerse(context, state.currentVerseId);
-    } else if (state is AudioIdle) {
-      _isAudioExpanded = true;
     }
   }
 
@@ -362,7 +360,7 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                                               fit: BoxFit.contain,
                                               child: SizedBox(
                                                 width: 800,
-                                                height: 1200,
+                                                height: 1280,
                                                 child: RepaintBoundary(
                                                   child: QuranPageWidgetWeb(
                                                     key: ValueKey(
@@ -427,7 +425,7 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                                                 fit: BoxFit.contain,
                                                 child: SizedBox(
                                                   width: 800,
-                                                  height: 1200,
+                                                  height: 1280,
                                                   child: RepaintBoundary(
                                                     child: QuranPageWidgetWeb(
                                                       key: ValueKey(
@@ -471,7 +469,7 @@ class _QuranWebScreenState extends State<QuranWebScreen> {
                                         fit: BoxFit.contain,
                                         child: SizedBox(
                                           width: 800,
-                                          height: 1200,
+                                          height: 1280,
                                           child: QuranPageWidgetWeb(
                                             key: ValueKey('page_$page'),
                                             pageNumber: page,

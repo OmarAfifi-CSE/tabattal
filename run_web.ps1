@@ -1,3 +1,7 @@
+param (
+    [switch]$Release
+)
+
 # ==============================================================================
 # 🚀 Tabattal Web Runner with Auto-Spawn Local Video Export Microservice
 # ==============================================================================
@@ -50,8 +54,14 @@ try {
     $leanLines | Out-File -FilePath $pubspecPath -Encoding utf8
     Write-Host "[TABATTAL] Lean Web Environment configured (4 core fonts for fast boot)." -ForegroundColor Green
 
-    Write-Host "`n[TABATTAL] Launching Flutter Web on Chrome..." -ForegroundColor Cyan
-    flutter run -d chrome
+    $modeText = if ($Release) { "RELEASE (Ultra Fast)" } else { "DEBUG" }
+    Write-Host "`n[TABATTAL] Launching Flutter Web ($modeText) on 0.0.0.0:3000..." -ForegroundColor Cyan
+
+    if ($Release) {
+        flutter run -d chrome --release --web-hostname 0.0.0.0 --web-port 3000
+    } else {
+        flutter run -d chrome --web-hostname 0.0.0.0 --web-port 3000
+    }
 } finally {
     if (Test-Path $pubspecBak) {
         Copy-Item $pubspecBak -Destination $pubspecPath -Force

@@ -155,35 +155,29 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
         // The playlist finished
         if (_currentVerseIds.isNotEmpty && _currentRepeatCount != -1 && !_isPlayingOnce) {
-          if (kIsWeb) {
-            // On web, we only load 1 ayah at a time (to avoid browser DOM limits and ConcatenatingAudioSource bugs).
-            // So when it completes, we advance to the next Ayah.
-            add(const NextAyah());
-          } else {
-            // Snapshot the last verse in the list — NOT _currentIndex — because by the time
-            // `completed` fires the index stream may have already updated _currentIndex.
-            // The last entry in the list is always the final ayah of the loaded playlist.
-            final lastVerse = _currentVerseIds.lastWhere(
-              (v) => v.ayah > 0, // skip basmalah (ayah == 0)
-              orElse: () => _currentVerseIds.last,
-            );
-            final surahLength = QuranMetadata.surahLengthOf(lastVerse.surah);
+          // Snapshot the last verse in the list — NOT _currentIndex — because by the time
+          // `completed` fires the index stream may have already updated _currentIndex.
+          // The last entry in the list is always the final ayah of the loaded playlist.
+          final lastVerse = _currentVerseIds.lastWhere(
+            (v) => v.ayah > 0, // skip basmalah (ayah == 0)
+            orElse: () => _currentVerseIds.last,
+          );
+          final surahLength = QuranMetadata.surahLengthOf(lastVerse.surah);
 
-            if (lastVerse.ayah < surahLength) {
-              // The player ran out of buffered audio before the surah finished (e.g. slow network)
-              // Resume from the next ayah without re-playing basmalah.
-              final nextAyah = lastVerse.next;
-              if (nextAyah != null) {
-                add(PlayVerse('', nextAyah.verseId, skipBasmalah: true));
-              }
+          if (lastVerse.ayah < surahLength) {
+            // The player ran out of buffered audio before the surah finished (e.g. slow network)
+            // Resume from the next ayah without re-playing basmalah.
+            final nextAyah = lastVerse.next;
+            if (nextAyah != null) {
+              add(PlayVerse('', nextAyah.verseId, skipBasmalah: true));
+            }
+          } else {
+            // The entire surah playlist finished — advance to the next surah (WITH basmalah)
+            final nextSurah = lastVerse.surah + 1;
+            if (nextSurah <= 114) {
+              add(PlayVerse('', VerseRef(nextSurah, 1).verseId));
             } else {
-              // The entire surah playlist finished — advance to the next surah (WITH basmalah)
-              final nextSurah = lastVerse.surah + 1;
-              if (nextSurah <= 114) {
-                add(PlayVerse('', VerseRef(nextSurah, 1).verseId));
-              } else {
-                add(const AudioStateChanged(isPlaying: false));
-              }
+              add(const AudioStateChanged(isPlaying: false));
             }
           }
         } else {
@@ -412,8 +406,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       if (needsBasmalah) {
         downloadFutures.add(_ensureLocalPath(1, 0, 1000));
       }
-      int preloadCount = kIsWeb ? 1 : 3;
-      if (_isPlayingOnce) preloadCount = 1;
+      final int preloadCount = _isPlayingOnce ? 1 : 3;
       final List<VerseRef> versesToPreload = _nextVerses(verse, preloadCount);
       for (final v in versesToPreload) {
         downloadFutures.add(_ensureLocalPath(v.surah, v.ayah, v.verseId));
@@ -493,7 +486,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       // We deliberately never cross into the next surah here. The `completed`
       // event handler is the single, correct place that triggers the next-surah
       // transition WITH basmalah.
-      if (!kIsWeb && _currentRepeatCount != -1 && versesToPreload.isNotEmpty && !_isPlayingOnce) {
+      if (_currentRepeatCount != -1 && versesToPreload.isNotEmpty && !_isPlayingOnce) {
         final lastPreloadedAyah = versesToPreload.last.ayah;
         final surahLength = QuranMetadata.surahLengthOf(verse.surah);
         if (lastPreloadedAyah < surahLength) {
@@ -676,6 +669,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       emit(AudioPlaying(verseId));
     } else {
       if (_audioPlayer.processingState == ProcessingState.completed) {
+        if (_currentRepeatCount != -1 && !_isPlayingOnce) {
+          // Advancing to the next verse (especially on Web) - do not emit AudioIdle
+          return;
+        }
         emit(AudioIdle());
       } else {
         emit(AudioPaused(verseId));

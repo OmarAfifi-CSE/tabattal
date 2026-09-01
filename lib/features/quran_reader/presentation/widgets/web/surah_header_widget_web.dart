@@ -162,94 +162,94 @@ class SurahHeaderWidgetWeb extends StatelessWidget {
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-              // 1. The decorative frame from QCF_BSML
-              SizedBox(
-                width: canvasWidth,
-                child: Transform.scale(
-                  scaleX: 1.0,
-                  scaleY: 1.28,
-                  child: FittedBox(
-                    fit: BoxFit.fitWidth,
-                    child: Text(
-                      '\u00F2',
-                      style: TextStyle(
-                        fontFamily: 'QCF_BSML',
-                        fontSize: 60.0,
-                        color: mushafTheme.goldColor,
-                        height: 1.0,
-                      ),
+            // 1. The decorative frame from QCF_BSML
+            SizedBox(
+              width: canvasWidth,
+              child: Transform.scale(
+                scaleX: 1.0,
+                scaleY: 1.28,
+                child: FittedBox(
+                  fit: BoxFit.fitWidth,
+                  child: Text(
+                    '\u00F2',
+                    style: TextStyle(
+                      fontFamily: 'QCF_BSML',
+                      fontSize: 60.0,
+                      color: mushafTheme.goldColor,
+                      height: 1.0,
                     ),
                   ),
                 ),
               ),
+            ),
 
-              // 2. The Surah Name from QCF_Surah
-              Transform.translate(
-                offset: const Offset(
-                  -10.0,
-                  11.0,
-                ), // Calibrated center tweak for this ornament
-                child: Text(
-                  '${_getSurahNameGlyph(surahNumber)}${String.fromCharCode(0xE903)}',
-                  style: TextStyle(
-                    fontFamily: 'QCF_Surah',
-                    fontSize: 46.0,
-                    color: innerTextColor,
-                    height: 1.0,
-                  ),
+            // 2. The Surah Name from QCF_Surah
+            Transform.translate(
+              offset: const Offset(
+                -10.0,
+                11.0,
+              ), // Calibrated center tweak for this ornament
+              child: Text(
+                '${_getSurahNameGlyph(surahNumber)}${String.fromCharCode(0xE903)}',
+                style: TextStyle(
+                  fontFamily: 'QCF_Surah',
+                  fontSize: 46.0,
+                  color: innerTextColor,
+                  height: 1.0,
                 ),
               ),
+            ),
 
-              // 3. Right Oval Text (Verses count)
-              Positioned(
-                right: 77.0, // Calibrated position within virtual canvas
-                top: 22.0,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'آياتها',
-                      style: TextStyle(
-                        fontFamily: 'Amiri',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14.0,
-                        color: innerTextColor,
-                        height: 1.0,
-                      ),
+            // 3. Right Oval Text (Verses count)
+            Positioned(
+              right: 77.0, // Calibrated position within virtual canvas
+              top: 22.0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'آياتها',
+                    style: TextStyle(
+                      fontFamily: 'Amiri',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.0,
+                      color: innerTextColor,
+                      height: 1.0,
                     ),
-                    Text(
-                      versesCount.toArabicDigits,
-                      style: TextStyle(
-                        fontFamily: 'Amiri',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.0,
-                        color: innerTextColor,
-                        height: 1.0,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // 4. Left Oval Text (Revelation place)
-              Positioned(
-                left: 74.0, // Calibrated position within virtual canvas
-                top: 25.0,
-                child: Text(
-                  revelationPlace,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Amiri',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14.0,
-                    color: innerTextColor,
-                    height: 1.0,
                   ),
+                  Text(
+                    versesCount.toArabicDigits,
+                    style: TextStyle(
+                      fontFamily: 'Amiri',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.0,
+                      color: innerTextColor,
+                      height: 1.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 4. Left Oval Text (Revelation place)
+            Positioned(
+              left: 74.0, // Calibrated position within virtual canvas
+              top: 25.0,
+              child: Text(
+                revelationPlace,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Amiri',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14.0,
+                  color: innerTextColor,
+                  height: 1.0,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
+      ),
+    );
   }
 }

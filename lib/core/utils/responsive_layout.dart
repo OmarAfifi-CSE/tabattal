@@ -25,7 +25,13 @@ class ResponsiveLayout extends StatelessWidget {
     this.webBody,
   });
 
+  /// Standard breakpoint for native mobile vs tablet devices (Android & iOS).
   static const double mobileBreakpoint = 600.0;
+
+  /// Responsive window resizing breakpoint for Web & Desktop platforms.
+  static const double webAndDesktopMobileBreakpoint = 500.0;
+
+  /// Multi-page / large viewport breakpoint for Desktop.
   static const double tabletBreakpoint = 1100.0;
 
   @override
@@ -35,7 +41,7 @@ class ResponsiveLayout extends StatelessWidget {
         final width = constraints.maxWidth;
 
         if (kIsWeb) {
-          if (width < mobileBreakpoint) {
+          if (width < webAndDesktopMobileBreakpoint) {
             return mobileBody;
           }
           return webBody ?? desktopBody;
@@ -53,7 +59,7 @@ class ResponsiveLayout extends StatelessWidget {
         // On native desktop operating systems (Windows, macOS, Linux)
         if (width >= tabletBreakpoint) {
           return desktopBody;
-        } else if (width >= mobileBreakpoint) {
+        } else if (width >= webAndDesktopMobileBreakpoint) {
           return tabletBody;
         } else {
           return mobileBody;

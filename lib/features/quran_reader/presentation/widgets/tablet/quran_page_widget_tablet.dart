@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
@@ -26,6 +27,7 @@ import '../../../../../core/constants/quran_metadata.dart';
 import 'surah_header_widget_tablet.dart';
 import '../../../../settings/presentation/bloc/settings_bloc.dart';
 import '../../../../../core/theme/mushaf_theme.dart';
+import '../../../../../core/services/quran_font_service.dart';
 
 // ---------------------------------------------------------------------------
 // Widget
@@ -104,6 +106,12 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
         curve: Curves.easeInOut,
       ),
     );
+    if (kIsWeb) {
+      QuranFontService.ensurePageFontLoaded(widget.pageNumber).then((_) {
+        if (mounted) setState(() {});
+      });
+      QuranFontService.prewarmAround(widget.pageNumber, distance: 3);
+    }
     final cached = QuranPageCache.get(widget.pageNumber);
     if (cached == null) {
       _loadPageDataFallback();
@@ -134,6 +142,12 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
   void didUpdateWidget(QuranPageWidgetTablet oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.pageNumber != oldWidget.pageNumber) {
+      if (kIsWeb) {
+        QuranFontService.ensurePageFontLoaded(widget.pageNumber).then((_) {
+          if (mounted) setState(() {});
+        });
+        QuranFontService.prewarmAround(widget.pageNumber, distance: 3);
+      }
       final cached = QuranPageCache.get(widget.pageNumber);
       if (cached == null) _loadPageDataFallback();
     }
@@ -439,14 +453,17 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
           padding: EdgeInsets.symmetric(vertical: 2.0.h),
           child: SurahHeaderWidgetTablet(surahNumber: upcomingSurahId),
         );
-        final basmala = Center(
-          child: Text(
-            '1 2 3',
-            style: TextStyle(
-              fontFamily: 'QCF_BSML',
-              fontSize: 26.0.sp,
-              color: mushafTheme.textColor,
-              height: 1.0,
+        final basmala = Padding(
+          padding: EdgeInsets.symmetric(vertical: 8.0.h),
+          child: Center(
+            child: Text(
+              '1 2 3',
+              style: TextStyle(
+                fontFamily: 'QCF_BSML',
+                fontSize: 26.0.sp,
+                color: mushafTheme.textColor,
+                height: 1.0,
+              ),
             ),
           ),
         );

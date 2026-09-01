@@ -1,13 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 
-class _BorderPathData {
+class _BorderPathDataMobile {
   final Path framePath;
   final Path diamondsPath;
-  _BorderPathData(this.framePath, this.diamondsPath);
+  _BorderPathDataMobile(this.framePath, this.diamondsPath);
 }
 
-final Map<String, _BorderPathData> _borderCacheMobile = {};
+final Map<String, _BorderPathDataMobile> _borderCacheMobile = {};
 
 class QuranBorderPainterMobile extends CustomPainter {
   final int pageNumber;
@@ -27,12 +28,10 @@ class QuranBorderPainterMobile extends CustomPainter {
   static final Paint _bgPaint = Paint();
   static final Paint _outerBoundPaint = Paint()
     ..style = PaintingStyle.stroke
-    ..strokeWidth = 12.0
     ..strokeJoin = StrokeJoin.miter
     ..strokeCap = StrokeCap.round;
   static final Paint _innerFillPaint = Paint()
     ..style = PaintingStyle.stroke
-    ..strokeWidth = 10.0
     ..strokeJoin = StrokeJoin.miter
     ..strokeCap = StrokeCap.round;
   static final Paint _diamondFillPaint = Paint()..style = PaintingStyle.fill;
@@ -47,16 +46,25 @@ class QuranBorderPainterMobile extends CustomPainter {
     // 1. Paint Background
     _drawBackground(canvas, size);
 
+    final double scale = H / 864.0;
+
     final String cacheKey =
         '${W.toStringAsFixed(1)}_${H.toStringAsFixed(1)}_${isLeftPage}_${hizbCutCenters.map((c) => c.toStringAsFixed(1)).join(',')}';
-    _BorderPathData? data = _borderCacheMobile[cacheKey];
+    _BorderPathDataMobile? data =
+        kDebugMode ? null : _borderCacheMobile[cacheKey];
 
     if (data == null) {
       // 2. Constants for positioning
       final double left = W * 0.05;
       final double right = W * 0.95;
-      final double top = H * 0.02;
-      final double bottom = H * 0.97;
+      final double top = H * 0.035;
+      final double bottom = H * 0.965;
+
+      final double cutTop = 88.0 * scale;
+      final double cutBottom = 116.0 * scale;
+
+      final double diamondRadius = 5.5 * scale;
+      final double diamondStep = 16.0 * scale;
 
       // 3. Build the exact continuous wireframe of the border with cuts
       final Path framePath = Path();
@@ -65,13 +73,13 @@ class QuranBorderPainterMobile extends CustomPainter {
       framePath.moveTo(W * 0.08, top); // Juz Left Cut
       framePath.lineTo(left, top); // Top Left Corner
 
-      // Left Edge
+      // Left Edge Hizb Cuts (Even Pages)
       if (isLeftPage && hizbCutCenters.isNotEmpty) {
         final sortedCenters = List<double>.from(hizbCutCenters)
           ..sort((a, b) => a.compareTo(b));
         for (final cy in sortedCenters) {
-          framePath.lineTo(left, cy - H * 0.083);
-          framePath.moveTo(left, cy + H * 0.112);
+          framePath.lineTo(left, cy - cutTop);
+          framePath.moveTo(left, cy + cutBottom);
         }
       }
 
@@ -82,13 +90,13 @@ class QuranBorderPainterMobile extends CustomPainter {
       framePath.moveTo(W * 0.58, bottom); // Page Number Right Cut
       framePath.lineTo(right, bottom); // Bottom Right Corner
 
-      // Right Edge
+      // Right Edge Hizb Cuts (Odd Pages)
       if (!isLeftPage && hizbCutCenters.isNotEmpty) {
         final sortedCenters = List<double>.from(hizbCutCenters)
           ..sort((a, b) => b.compareTo(a));
         for (final cy in sortedCenters) {
-          framePath.lineTo(right, cy + H * 0.112);
-          framePath.moveTo(right, cy - H * 0.083);
+          framePath.lineTo(right, cy + cutBottom);
+          framePath.moveTo(right, cy - cutTop);
         }
       }
 
@@ -106,7 +114,7 @@ class QuranBorderPainterMobile extends CustomPainter {
       final Path allDiamondsPath = Path();
       for (final metric in framePath.computeMetrics()) {
         final double length = metric.length;
-        int nSegments = (length / 14.0).round();
+        int nSegments = (length / diamondStep).round();
         if (nSegments == 0) nSegments = 1;
         double exactStep = length / nSegments;
 
@@ -119,21 +127,23 @@ class QuranBorderPainterMobile extends CustomPainter {
           final Offset dir = tangent.vector;
           final Offset normal = Offset(-dir.dy, dir.dx);
 
-          allDiamondsPath.moveTo(pos.dx + dir.dx * 4.5, pos.dy + dir.dy * 4.5);
-          allDiamondsPath.lineTo(pos.dx + normal.dx * 4.5, pos.dy + normal.dy * 4.5);
-          allDiamondsPath.lineTo(pos.dx - dir.dx * 4.5, pos.dy - dir.dy * 4.5);
-          allDiamondsPath.lineTo(pos.dx - normal.dx * 4.5, pos.dy - normal.dy * 4.5);
+          allDiamondsPath.moveTo(pos.dx + dir.dx * diamondRadius, pos.dy + dir.dy * diamondRadius);
+          allDiamondsPath.lineTo(pos.dx + normal.dx * diamondRadius, pos.dy + normal.dy * diamondRadius);
+          allDiamondsPath.lineTo(pos.dx - dir.dx * diamondRadius, pos.dy - dir.dy * diamondRadius);
+          allDiamondsPath.lineTo(pos.dx - normal.dx * diamondRadius, pos.dy - normal.dy * diamondRadius);
           allDiamondsPath.close();
         }
       }
 
-      data = _BorderPathData(framePath, allDiamondsPath);
+      data = _BorderPathDataMobile(framePath, allDiamondsPath);
       _borderCacheMobile[cacheKey] = data;
     }
 
+    _outerBoundPaint.strokeWidth = 15.0 * scale;
     _outerBoundPaint.color = goldColor;
     canvas.drawPath(data.framePath, _outerBoundPaint);
 
+    _innerFillPaint.strokeWidth = 12.5 * scale;
     _innerFillPaint.color = innerColor;
     canvas.drawPath(data.framePath, _innerFillPaint);
 

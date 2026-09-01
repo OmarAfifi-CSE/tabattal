@@ -159,8 +159,6 @@ class _QuranDesktopScreenState extends State<QuranDesktopScreen> {
       _showErrorSnackBar(state.message);
     } else if (state is AudioPlaying) {
       _navigateToPlayingVerse(context, state.currentVerseId);
-    } else if (state is AudioIdle) {
-      _isAudioExpanded = true;
     }
   }
 
@@ -317,7 +315,7 @@ class _QuranDesktopScreenState extends State<QuranDesktopScreen> {
                                               fit: BoxFit.contain,
                                               child: SizedBox(
                                                 width: 800,
-                                                height: 1200,
+                                                height: 1280,
                                                 child: RepaintBoundary(
                                                   child: QuranPageWidgetDesktop(
                                                     key: ValueKey(
@@ -380,7 +378,7 @@ class _QuranDesktopScreenState extends State<QuranDesktopScreen> {
                                                 fit: BoxFit.contain,
                                                 child: SizedBox(
                                                   width: 800,
-                                                  height: 1200,
+                                                  height: 1280,
                                                   child: RepaintBoundary(
                                                     child: QuranPageWidgetDesktop(
                                                       key: ValueKey(
@@ -424,7 +422,7 @@ class _QuranDesktopScreenState extends State<QuranDesktopScreen> {
                                         fit: BoxFit.contain,
                                         child: SizedBox(
                                           width: 800,
-                                          height: 1200,
+                                          height: 1280,
                                           child: QuranPageWidgetDesktop(
                                             key: ValueKey('page_$page'),
                                             pageNumber: page,

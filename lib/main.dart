@@ -114,7 +114,7 @@ class TabattalApp extends StatelessWidget {
                       final isTwoPage =
                           isLandscape && constraints.maxWidth >= 1000;
                       final isMobile =
-                          !isLandscape && constraints.maxWidth < 600;
+                          !isLandscape && constraints.maxWidth < 500;
                       final Size effectiveDesignSize = isMobile
                           ? const Size(412, 917)
                           : isTwoPage

@@ -2,7 +2,7 @@ name: tabattal
 description: "A comprehensive Quran application featuring reading, audio playback, and studying tools."
 publish_to: 'none'
 
-version: 1.3.3+7
+version: 1.3.4+8
 
 environment:
   sdk: ^3.12.1

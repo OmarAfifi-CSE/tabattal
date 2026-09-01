@@ -1,5 +1,6 @@
 import '../../widgets/drawer/mobile/quran_drawer_mobile.dart';
 import '../../../../quran_hifz/presentation/widgets/mobile/hifz_toolbar_widget_mobile.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,6 +20,7 @@ import 'package:flutter/services.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/services/update_service.dart';
 import '../../../../../core/utils/app_snack_bar.dart';
+import '../../../../../core/services/quran_font_service.dart';
 
 class QuranMobileScreen extends StatefulWidget {
   final int? initialPage;
@@ -55,6 +57,10 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
 
     // Trigger initial page load
     context.read<QuranRepository>().getLinesByPage(_currentPage);
+    if (kIsWeb) {
+      QuranFontService.ensurePageFontLoaded(_currentPage);
+      QuranFontService.prewarmAround(_currentPage, distance: 3);
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -68,6 +74,10 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
     if (newPage != _highlightTargetPage) {
       _highlightVerseKey = null;
       _highlightTargetPage = null;
+    }
+    if (kIsWeb) {
+      QuranFontService.ensurePageFontLoaded(newPage);
+      QuranFontService.prewarmAround(newPage, distance: 3);
     }
     _commitPageChange(newPage, ++_pageChangeToken);
   }
@@ -106,8 +116,6 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
       _showErrorSnackBar(state.message);
     } else if (state is AudioPlaying) {
       _navigateToPlayingVerse(context, state.currentVerseId);
-    } else if (state is AudioIdle) {
-      _isAudioExpanded = true;
     }
   }
 
@@ -203,7 +211,9 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                     final isVisible =
                         state is! AudioIdle && state is! AudioError;
                     final double paddingBottom = isVisible
-                        ? (_isAudioExpanded ? 125.h : 42.h)
+                        ? (_isAudioExpanded
+                            ? (kIsWeb ? 145.h : 125.h)
+                            : (kIsWeb ? 45.h : 42.h))
                         : 0;
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
@@ -244,7 +254,7 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
                     return AnimatedPositioned(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeOutCubic,
-                      bottom: isVisible ? 0 : -200,
+                      bottom: isVisible ? (kIsWeb ? 10.h : 0) : -200,
                       left: 16.w,
                       right: 16.w,
                       child: MediaControlBarMobile(

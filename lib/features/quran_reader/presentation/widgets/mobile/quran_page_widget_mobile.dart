@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
@@ -26,6 +27,7 @@ import '../../../../../core/theme/mushaf_theme.dart';
 import '../../../../quran_hifz/presentation/bloc/hifz_bloc.dart';
 import '../../../../quran_hifz/presentation/bloc/hifz_event.dart';
 import '../../../../quran_hifz/presentation/bloc/hifz_state.dart';
+import '../../../../../core/services/quran_font_service.dart';
 
 // ---------------------------------------------------------------------------
 // Widget
@@ -108,6 +110,12 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         curve: Curves.easeInOut,
       ),
     );
+    if (kIsWeb) {
+      QuranFontService.ensurePageFontLoaded(widget.pageNumber).then((_) {
+        if (mounted) setState(() {});
+      });
+      QuranFontService.prewarmAround(widget.pageNumber, distance: 3);
+    }
     final cached = QuranPageCache.get(widget.pageNumber);
     if (cached == null) {
       _loadPageDataFallback();
@@ -138,6 +146,12 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
   void didUpdateWidget(QuranPageWidgetMobile oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.pageNumber != oldWidget.pageNumber) {
+      if (kIsWeb) {
+        QuranFontService.ensurePageFontLoaded(widget.pageNumber).then((_) {
+          if (mounted) setState(() {});
+        });
+        QuranFontService.prewarmAround(widget.pageNumber, distance: 3);
+      }
       final cached = QuranPageCache.get(widget.pageNumber);
       if (cached == null) _loadPageDataFallback();
     }
@@ -426,19 +440,21 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     final nextSurah = _findNextSurahStartOnPage(lineNumber);
     if (nextSurah != null) {
       final (:ayah1Line, :surahId) = nextSurah;
-      // SurahHeaderWidgetMobile uses FittedBox(fitWidth) which NEEDS tight width
-      // constraints to scale properly. Center converts tight→loose constraints,
-      // so we omit Center and let the outer Column's CrossAxisAlignment.stretch
-      // provide the tight width directly.
-      final header = SurahHeaderWidgetMobile(surahNumber: surahId);
-      final basmala = Center(
-        child: Text(
-          '1 2 3',
-          style: TextStyle(
-            fontFamily: 'QCF_BSML',
-            fontSize: 26.sp,
-            color: mushafTheme.textColor,
-            height: 1.0.h,
+      final header = Padding(
+        padding: EdgeInsets.symmetric(vertical: 2.0.h),
+        child: SurahHeaderWidgetMobile(surahNumber: surahId),
+      );
+      final basmala = Padding(
+        padding: EdgeInsets.symmetric(vertical: 8.0.h),
+        child: Center(
+          child: Text(
+            '1 2 3',
+            style: TextStyle(
+              fontFamily: 'QCF_BSML',
+              fontSize: 26.sp,
+              color: mushafTheme.textColor,
+              height: 1.0.h,
+            ),
           ),
         ),
       );
@@ -484,15 +500,21 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
       final upcomingSurahId = previousSurahId + 1;
       if (upcomingSurahId <= 114) {
         final emptyLinesBefore = _countEmptyLinesBefore(lineNumber);
-        final header = SurahHeaderWidgetMobile(surahNumber: upcomingSurahId);
-        final basmala = Center(
-          child: Text(
-            '1 2 3',
-            style: TextStyle(
-              fontFamily: 'QCF_BSML',
-              fontSize: 26.sp,
-              color: mushafTheme.textColor,
-              height: 1.0.h,
+        final header = Padding(
+          padding: EdgeInsets.symmetric(vertical: 2.0.h),
+          child: SurahHeaderWidgetMobile(surahNumber: upcomingSurahId),
+        );
+        final basmala = Padding(
+          padding: EdgeInsets.symmetric(vertical: 8.0.h),
+          child: Center(
+            child: Text(
+              '1 2 3',
+              style: TextStyle(
+                fontFamily: 'QCF_BSML',
+                fontSize: 26.sp,
+                color: mushafTheme.textColor,
+                height: 1.0.h,
+              ),
             ),
           ),
         );
@@ -1059,8 +1081,8 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
                                       height: canvasH,
                                       child: Padding(
                                         padding: EdgeInsets.only(
-                                          top: canvasH * 0.027,
-                                          bottom: canvasH * 0.032,
+                                          top: canvasH * 0.040,
+                                          bottom: canvasH * 0.040,
                                         ),
                                         child: Column(
                                           key: _pageColumnKey,

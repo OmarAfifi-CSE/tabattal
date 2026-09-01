@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/constants/hizb_data.dart';
 import '../../../../../core/theme/mushaf_theme.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
@@ -8,16 +7,15 @@ import '../../../../settings/presentation/bloc/settings_bloc.dart';
 import '../drawer/web/quran_index_view_web.dart';
 import 'quran_border_painter_web.dart';
 
-/// Calculates the Y-position of a Hizb marker from its line number (1–15),
-/// clamped so the frame cut never overflows the border corners.
 double _calculateHizbMarkerYPosition(int lineNumber, double pageHeight) {
+  final double scale = pageHeight / 864.0;
   final double topPadding = pageHeight * 0.057;
   final double textHeight = pageHeight * 0.89;
   final double rawY = topPadding + textHeight * ((lineNumber - 0.56) / 15.0);
 
-  final minY = pageHeight * 0.035 + pageHeight * 0.095 + pageHeight * 0.01;
-  final maxY = pageHeight * 0.965 - pageHeight * 0.125 - pageHeight * 0.01;
-  if (minY >= maxY) return rawY; // Safeguard against small layout constraints
+  final double minY = (pageHeight * 0.035) + (100.0 * scale) + (10.0 * scale);
+  final double maxY = (pageHeight * 0.965) - (132.0 * scale) - (10.0 * scale);
+  if (minY >= maxY) return rawY;
   return rawY.clamp(minY, maxY);
 }
 
@@ -33,8 +31,8 @@ List<TextSpan> _buildHizbLabelTextSpans(String text, TextStyle baseStyle) {
         TextSpan(
           text: '\n${match.group(0)}',
           style: baseStyle.copyWith(
-            fontSize: baseStyle.fontSize! * 1.4,
-            fontWeight: FontWeight.w900,
+            fontSize: baseStyle.fontSize! * 1.25,
+            fontWeight: FontWeight.normal,
             fontFamily: 'Amiri',
           ),
         ),
@@ -86,7 +84,7 @@ class QuranPageFrameWeb extends StatelessWidget {
     final TextStyle headerStyle = TextStyle(
       fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
       color: mushafTheme.textColor,
-      fontWeight: FontWeight.bold,
+      fontWeight: FontWeight.normal,
     );
 
     final isLandscape =
@@ -98,6 +96,7 @@ class QuranPageFrameWeb extends StatelessWidget {
         builder: (context, constraints) {
           final double pageWidth = constraints.maxWidth;
           final double pageHeight = constraints.maxHeight;
+          final double scale = pageHeight / 864.0;
 
           return Stack(
             fit: StackFit.expand,
@@ -169,17 +168,17 @@ class QuranPageFrameWeb extends StatelessWidget {
                     },
                     child: _WebFrameInfoBox(
                       theme: mushafTheme,
+                      scale: scale,
                       isLandscape: isLandscape,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: (isLandscape ? 5.0 : 5.0).w,
-                        vertical: (isLandscape ? 3.0 : 2.5).h,
-                      ),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
                         child: Text(
                           juzName,
                           style: headerStyle.copyWith(
-                            fontSize: (isLandscape ? 16.5 : 17.0).sp,
+                            fontSize: 13.5 * scale,
+                            height: 1.18,
+                            leadingDistribution: TextLeadingDistribution.even,
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 1,
@@ -220,17 +219,17 @@ class QuranPageFrameWeb extends StatelessWidget {
                     },
                     child: _WebFrameInfoBox(
                       theme: mushafTheme,
+                      scale: scale,
                       isLandscape: isLandscape,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: (isLandscape ? 5.0 : 5.0).w,
-                        vertical: (isLandscape ? 3.0 : 2.5).h,
-                      ),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
                         child: Text(
                           surahName,
                           style: headerStyle.copyWith(
-                            fontSize: (isLandscape ? 16.5 : 17.0).sp,
+                            fontSize: 13.5 * scale,
+                            height: 1.18,
+                            leadingDistribution: TextLeadingDistribution.even,
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 1,
@@ -256,18 +255,19 @@ class QuranPageFrameWeb extends StatelessWidget {
                       },
                       child: _WebFrameInfoBox(
                         theme: mushafTheme,
+                        scale: scale,
                         isLandscape: isLandscape,
                         margin: EdgeInsets.symmetric(
-                          horizontal: (isLandscape ? 1.0 : 2.0).w,
+                          horizontal: (isLandscape ? 1.0 : 1.0) * scale,
                         ),
                         padding: EdgeInsets.symmetric(
-                          horizontal: (isLandscape ? 3.5 : 3.0).w,
-                          vertical: (isLandscape ? 2.0 : 1.5).h,
+                          horizontal: (isLandscape ? 2.5 : 2.0) * scale,
+                          vertical: 1.5 * scale,
                         ),
                         child: Icon(
                           Icons.segment_rounded,
                           color: mushafTheme.goldColor,
-                          size: (isLandscape ? 22.0 : 22.0).r,
+                          size: (isLandscape ? 18.0 : 18.0) * scale,
                         ),
                       ),
                     ),
@@ -283,16 +283,18 @@ class QuranPageFrameWeb extends StatelessWidget {
                   translation: const Offset(0.0, 0.5),
                   child: _WebFrameInfoBox(
                     theme: mushafTheme,
+                    scale: scale,
                     isLandscape: isLandscape,
                     margin: EdgeInsets.symmetric(
-                      horizontal: (isLandscape ? 1.0 : 2.0).w,
+                      horizontal: (isLandscape ? 1.0 : 1.0) * scale,
                     ),
                     padding: EdgeInsets.symmetric(
-                      horizontal: (isLandscape ? 5.0 : 5.0).w,
-                      vertical: (isLandscape ? 2.5 : 2.0).h,
+                      horizontal: (isLandscape ? 4.0 : 4.0) * scale,
+                      vertical: (isLandscape ? 1.5 : 1.5) * scale,
                     ),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
+                      alignment: Alignment.center,
                       child: Text(
                         isEn
                             ? pageNumber.toString()
@@ -300,10 +302,12 @@ class QuranPageFrameWeb extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'Amiri',
                           color: mushafTheme.textColor,
-                          fontSize: (isLandscape ? 17.5 : 17.5).sp,
-                          fontWeight: FontWeight.w900,
-                          height: 1.1,
+                          fontSize: (isLandscape ? 14.5 : 14.5) * scale,
+                          fontWeight: FontWeight.normal,
+                          height: 1.18,
+                          leadingDistribution: TextLeadingDistribution.even,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
@@ -332,6 +336,7 @@ class QuranPageFrameWeb extends StatelessWidget {
 class _WebFrameInfoBox extends StatelessWidget {
   final Widget child;
   final MushafTheme theme;
+  final double scale;
   final EdgeInsetsGeometry? margin;
   final EdgeInsetsGeometry? padding;
   final bool isLandscape;
@@ -339,6 +344,7 @@ class _WebFrameInfoBox extends StatelessWidget {
   const _WebFrameInfoBox({
     required this.child,
     required this.theme,
+    required this.scale,
     this.margin,
     this.padding,
     this.isLandscape = false,
@@ -348,19 +354,19 @@ class _WebFrameInfoBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: margin ??
-          EdgeInsets.symmetric(horizontal: (isLandscape ? 1.0 : 3.0).w),
+          EdgeInsets.symmetric(horizontal: (isLandscape ? 1.0 : 1.0) * scale),
       padding: padding ??
           EdgeInsets.symmetric(
-            horizontal: (isLandscape ? 4.0 : 5.0).w,
-            vertical: (isLandscape ? 2.0 : 2.5).h,
+            horizontal: (isLandscape ? 4.0 : 4.0) * scale,
+            vertical: (isLandscape ? 1.5 : 1.5) * scale,
           ),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         border: Border.all(
           color: theme.goldColor.withValues(alpha: 0.65),
-          width: (isLandscape ? 1.1 : 1.0).r,
+          width: (1.0 * scale).clamp(0.8, 1.5),
         ),
-        borderRadius: BorderRadius.circular((isLandscape ? 9.0 : 10.0).r),
+        borderRadius: BorderRadius.circular((isLandscape ? 8.0 : 8.0) * scale),
         color: theme.backgroundColor,
       ),
       child: child,
@@ -387,14 +393,16 @@ class _WebHizbMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double scale = pageHeight / 864.0;
+
     return Positioned(
       top: _calculateHizbMarkerYPosition(
         marker['line'] as int,
         pageHeight,
       ),
-      left: isLeftPage ? (pageWidth * 0.061) : null,
-      right: !isLeftPage ? (pageWidth * 0.039) : null,
-      width: 98.0.w,
+      left: isLeftPage ? (pageWidth * 0.0407) : null,
+      right: !isLeftPage ? (pageWidth * 0.0407) : null,
+      width: 78.0 * scale,
       child: FractionalTranslation(
         translation: Offset(isLeftPage ? -0.5 : 0.5, -0.5),
         child: Stack(
@@ -402,13 +410,13 @@ class _WebHizbMarker extends StatelessWidget {
           children: [
             // Ornament glyph from QCF_BSML
             Transform.scale(
-              scaleX: 0.64,
+              scaleX: isLeftPage ? -0.57 : 0.57,
               scaleY: 1.0,
               child: Text(
                 '\u00F5',
                 style: TextStyle(
                   fontFamily: 'QCF_BSML',
-                  fontSize: 116.0.sp,
+                  fontSize: 98.0 * scale,
                   color: mushafTheme.goldColor,
                   height: 1.0,
                 ),
@@ -416,17 +424,17 @@ class _WebHizbMarker extends StatelessWidget {
             ),
             // Label text centred inside the ornament
             Transform.translate(
-              offset: Offset(-9.5.w, 25.5.h),
+              offset: Offset(isLeftPage ? (6 * scale) : (-6 * scale), 21.5 * scale),
               child: SizedBox(
-                width: 56.0.w,
+                width: 44.0 * scale,
                 child: Text.rich(
                   TextSpan(
                     children: _buildHizbLabelTextSpans(
                       (marker['text'] as String).toArabicDigits,
                       TextStyle(
                         fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
-                        fontSize: 13.0.sp,
-                        height: 1.18,
+                        fontSize: 10.8 * scale,
+                        height: 1.15,
                         color: mushafTheme.textColor,
                         fontWeight: FontWeight.bold,
                       ),

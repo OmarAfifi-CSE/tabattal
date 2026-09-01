@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/constants/quran_metadata.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -142,8 +141,7 @@ class SurahHeaderWidgetMobile extends StatelessWidget {
 
     // We use a fixed reference width for the internal drawing canvas.
     // The parent FittedBox will scale this entire drawing up/down proportionally.
-    // 412 is a standard mobile screen width used for calibration.
-    final double canvasWidth = 412.0.w;
+    const double canvasWidth = 412.0;
 
     final mushafTheme = context
         .watch<SettingsBloc>()
@@ -161,7 +159,7 @@ class SurahHeaderWidgetMobile extends StatelessWidget {
       fit: BoxFit.fitWidth,
       child: SizedBox(
         width: canvasWidth,
-        height: 85.0.h,
+        height: 76.0,
         child: Stack(
           alignment: Alignment.center,
           clipBehavior: Clip.none,
@@ -171,14 +169,14 @@ class SurahHeaderWidgetMobile extends StatelessWidget {
               width: canvasWidth,
               child: Transform.scale(
                 scaleX: 1.0,
-                scaleY: 1.8,
+                scaleY: 1.6,
                 child: FittedBox(
                   fit: BoxFit.fitWidth,
                   child: Text(
                     '\u00F2',
                     style: TextStyle(
                       fontFamily: 'QCF_BSML',
-                      fontSize: 60.0.sp,
+                      fontSize: 60.0,
                       color: mushafTheme.goldColor,
                       height: 1.0,
                     ),
@@ -189,15 +187,15 @@ class SurahHeaderWidgetMobile extends StatelessWidget {
 
             // 2. The Surah Name from QCF_Surah
             Transform.translate(
-              offset: Offset(
-                -10.0.w,
-                11.0.h,
+              offset: const Offset(
+                -10.0,
+                11.0,
               ), // Calibrated center tweak for this ornament
               child: Text(
                 '${_getSurahNameGlyph(surahNumber)}${String.fromCharCode(0xE903)}',
                 style: TextStyle(
                   fontFamily: 'QCF_Surah',
-                  fontSize: 46.0.sp,
+                  fontSize: 44.0,
                   color: innerTextColor,
                   height: 1.0,
                 ),
@@ -206,8 +204,8 @@ class SurahHeaderWidgetMobile extends StatelessWidget {
 
             // 3. Right Oval Text (Verses count) — in canvasWidth coords
             Positioned(
-              right: 77.0.w,
-              top: 34.0.h,
+              right: 77.0,
+              top: 30.0,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -216,7 +214,7 @@ class SurahHeaderWidgetMobile extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Amiri',
                       fontWeight: FontWeight.bold,
-                      fontSize: 14.0.sp,
+                      fontSize: 13.5,
                       color: innerTextColor,
                       height: 1.0,
                     ),
@@ -226,7 +224,7 @@ class SurahHeaderWidgetMobile extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Amiri',
                       fontWeight: FontWeight.bold,
-                      fontSize: 12.0.sp,
+                      fontSize: 12.0,
                       color: innerTextColor,
                       height: 1.0,
                     ),
@@ -237,15 +235,15 @@ class SurahHeaderWidgetMobile extends StatelessWidget {
 
             // 4. Left Oval Text (Revelation place) — in canvasWidth coords
             Positioned(
-              left: 74.0.w,
-              top: 38.0.h,
+              left: 74.0,
+              top: 34.0,
               child: Text(
                 revelationPlace,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Amiri',
                   fontWeight: FontWeight.bold,
-                  fontSize: 14.0.sp,
+                  fontSize: 13.5,
                   color: innerTextColor,
                   height: 1.0,
                 ),
