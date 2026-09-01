@@ -157,30 +157,82 @@ if ($buildWeb) {
     $videoExportApiUrl = Get-EnvVariable "VIDEO_EXPORT_API_URL" "http://localhost:8080/api/export-video"
     Write-Host "`n[BUILD] Building Flutter Web (Release for '$webBaseHref')..." -ForegroundColor Cyan
     
-    if ($videoExportApiUrl -and $videoExportApiUrl -ne "http://localhost:8080/api/export-video") {
-        Write-Host "[ENV] Injected Video Export API: $videoExportApiUrl" -ForegroundColor Green
-        flutter build web --release --base-href "$webBaseHref" --dart-define=VIDEO_EXPORT_API_URL="$videoExportApiUrl"
-    } else {
-        flutter build web --release --base-href "$webBaseHref"
+    $pubspecPath = "pubspec.yaml"
+    $pubspecBak = "pubspec.yaml.bak"
+    Copy-Item $pubspecPath -Destination $pubspecBak -Force
+
+    try {
+        $lines = Get-Content $pubspecPath
+        $leanLines = [System.Collections.Generic.List[string]]::new()
+        $inQcfPageFont = $false
+
+        foreach ($line in $lines) {
+            if ($line -match '^\s+- family:\s+QCF_P\d{3}') {
+                $inQcfPageFont = $true
+                continue
+            }
+            if ($inQcfPageFont) {
+                if ($line -match '^\s+- family:' -or ($line -notmatch '^\s+' -and -not [string]::IsNullOrWhiteSpace($line))) {
+                    $inQcfPageFont = $false
+                } else {
+                    continue
+                }
+            }
+            if ($line -match '^\s+- assets/data/quran.db') {
+                $leanLines.Add($line)
+                for ($p = 1; $p -le 604; $p++) {
+                    $pStr = $p.ToString().PadLeft(3, '0')
+                    $leanLines.Add("    - assets/fonts/quran/QCF_P$pStr.ttf")
+                }
+                continue
+            }
+            $leanLines.Add($line)
+        }
+
+        $leanLines | Out-File -FilePath $pubspecPath -Encoding utf8
+        Write-Host "[BUILD] Web Build Environment Configured (Lean 4-Font Manifest for Instant Boot)." -ForegroundColor Green
+
+        if ($videoExportApiUrl -and $videoExportApiUrl -ne "http://localhost:8080/api/export-video") {
+            Write-Host "[ENV] Injected Video Export API: $videoExportApiUrl" -ForegroundColor Green
+            flutter build web --release --base-href "$webBaseHref" --dart-define=VIDEO_EXPORT_API_URL="$videoExportApiUrl"
+        } else {
+            flutter build web --release --base-href "$webBaseHref"
+        }
+        Check-CommandSuccess "Flutter Build Web"
+
+        Write-Host "Deploying web release to '$docsAppFolder'..." -ForegroundColor Cyan
+        if (Test-Path $docsAppFolder) {
+            Remove-Item -Path "$docsAppFolder\*" -Recurse -Force -ErrorAction SilentlyContinue
+        } else {
+            New-Item -ItemType Directory -Path $docsAppFolder -Force | Out-Null
+        }
+
+        Copy-Item -Path "build\web\*" -Destination $docsAppFolder -Recurse -Force
+        Check-CommandSuccess "Deploy to $docsAppFolder"
+
+        # Deploy on-demand font assets to both asset resolution paths
+        $targetFontDir1 = "$docsAppFolder\assets\assets\fonts\quran"
+        $targetFontDir2 = "$docsAppFolder\assets\fonts\quran"
+        if (-not (Test-Path $targetFontDir1)) { New-Item -ItemType Directory -Path $targetFontDir1 -Force | Out-Null }
+        if (-not (Test-Path $targetFontDir2)) { New-Item -ItemType Directory -Path $targetFontDir2 -Force | Out-Null }
+
+        Copy-Item -Path "assets\fonts\quran\*.ttf" -Destination $targetFontDir1 -Force
+        Copy-Item -Path "assets\fonts\quran\*.ttf" -Destination $targetFontDir2 -Force
+        Write-Host "[DEPLOY] All 604 on-demand font assets deployed for lazy streaming." -ForegroundColor Green
+
+        if (-not (Test-Path "docs\.nojekyll")) {
+            "# Disable Jekyll for GitHub Pages" | Out-File -FilePath "docs\.nojekyll" -Encoding utf8
+        }
+
+        $webFileCount = (Get-ChildItem -Path $docsAppFolder -Recurse -File).Count
+        Write-Host "Web app deployed successfully: $webFileCount files in '$docsAppFolder'" -ForegroundColor Green
+    } finally {
+        if (Test-Path $pubspecBak) {
+            Copy-Item $pubspecBak -Destination $pubspecPath -Force
+            Remove-Item $pubspecBak -Force
+            Write-Host "[BUILD] Native Mobile Pubspec (All 604 Fonts) Restored." -ForegroundColor Green
+        }
     }
-    Check-CommandSuccess "Flutter Build Web"
-
-    Write-Host "Deploying web release to '$docsAppFolder'..." -ForegroundColor Cyan
-    if (Test-Path $docsAppFolder) {
-        Remove-Item -Path "$docsAppFolder\*" -Recurse -Force -ErrorAction SilentlyContinue
-    } else {
-        New-Item -ItemType Directory -Path $docsAppFolder -Force | Out-Null
-    }
-
-    Copy-Item -Path "build\web\*" -Destination $docsAppFolder -Recurse -Force
-    Check-CommandSuccess "Deploy to $docsAppFolder"
-
-    if (-not (Test-Path "docs\.nojekyll")) {
-        "# Disable Jekyll for GitHub Pages" | Out-File -FilePath "docs\.nojekyll" -Encoding utf8
-    }
-
-    $webFileCount = (Get-ChildItem -Path $docsAppFolder -Recurse -File).Count
-    Write-Host "Web app deployed successfully: $webFileCount files in '$docsAppFolder'" -ForegroundColor Green
 }
 
 # --- Summary ---

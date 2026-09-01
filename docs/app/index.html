@@ -9,9 +9,16 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 
-  <!-- Dynamic Saved Locale Sync (Keep DOM LTR for Flutter PlatformView coordinate integrity) -->
+  <!-- Dynamic Saved Locale Sync & Modern Intl Polyfill -->
   <script>
     (function() {
+      // Suppress legacy Chrome Intl.v8BreakIterator deprecation warning in favor of Intl.Segmenter
+      try {
+        if (typeof Intl !== 'undefined' && 'v8BreakIterator' in Intl) {
+          delete Intl.v8BreakIterator;
+        }
+      } catch (e) {}
+
       try {
         var locale = localStorage.getItem('flutter.app_locale') || localStorage.getItem('app_locale');
         if (locale && (locale.indexOf('en') !== -1 || locale === '"en"')) {
@@ -78,9 +85,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
 
-  <!-- Cold Boot Font Preload (Instant Zero-FOUT Frame 1 for Quran Pages 1 & 2) -->
-  <link rel="preload" href="assets/fonts/quran/QCF_P001.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="preload" href="assets/fonts/quran/QCF_P002.ttf" as="font" type="font/ttf" crossorigin>
 
   <!-- Structured Data / JSON-LD: SoftwareApplication & MobileApplication -->
   <script type="application/ld+json">
@@ -210,7 +214,7 @@
       justify-content: space-between;
     }
 
-    /* Luxury Loading Animation with Real Progress Bar */
+    /* Luxury Authentic Loading Animation */
     #tabattal-loader {
       position: fixed;
       inset: 0;
@@ -218,9 +222,9 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at center, #151d2a 0%, #0A0F16 100%);
+      background: radial-gradient(ellipse at center, #151d2a 0%, #0A0F16 100%);
       z-index: 9999;
-      transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .loader-content {
@@ -228,72 +232,68 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 90%;
-      max-width: 320px;
       text-align: center;
+      user-select: none;
     }
 
     .loader-brand {
       font-family: 'Amiri', serif;
-      font-size: 2.8rem;
+      font-size: 3.2rem;
       font-weight: 700;
       color: var(--gold-color);
       letter-spacing: 2px;
-      margin-bottom: 4px;
-      text-shadow: 0 0 25px rgba(212, 175, 55, 0.4);
+      margin-bottom: 6px;
+      animation: brandBreathing 2.5s ease-in-out infinite alternate;
     }
 
     .loader-subtitle {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      margin-bottom: 28px;
+      font-family: 'Amiri', serif;
+      font-size: 1rem;
+      color: #A0AEC0;
+      letter-spacing: 1.5px;
+      margin-bottom: 32px;
+      opacity: 0.85;
     }
 
-    .progress-track {
-      width: 100%;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.08);
+    .loader-track {
+      width: 160px;
+      height: 3px;
+      background: rgba(212, 175, 55, 0.15);
       border-radius: 999px;
       overflow: hidden;
       position: relative;
-      border: 1px solid rgba(212, 175, 55, 0.2);
-      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
-      margin-bottom: 12px;
     }
 
-    .progress-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #D4AF37, #F3D268);
+    .loader-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 45%;
+      background: linear-gradient(90deg, transparent, #D4AF37, #FFF0B3, #D4AF37, transparent);
       border-radius: 999px;
-      box-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
-      transition: width 0.15s ease-out;
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.8);
+      animation: smoothShimmer 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
 
-    .progress-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      font-size: 0.8rem;
-      color: var(--text-muted);
+    @keyframes brandBreathing {
+      0% {
+        text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        opacity: 0.92;
+      }
+      100% {
+        text-shadow: 0 0 40px rgba(212, 175, 55, 0.7), 0 0 10px rgba(255, 255, 255, 0.3);
+        opacity: 1;
+      }
     }
 
-    #progress-percent {
-      color: var(--gold-color);
-      font-weight: 700;
-      font-family: 'Outfit', sans-serif;
-    }
-
-    #progress-status {
-      font-size: 0.75rem;
-      color: #A0AEC0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 220px;
+    @keyframes smoothShimmer {
+      0% {
+        transform: translateX(-150%);
+      }
+      100% {
+        transform: translateX(350%);
+      }
     }
 
     /* Semantic SEO Content Container (Accessible to search engine crawlers) */
@@ -331,21 +331,14 @@
 </head>
 <body>
 
-  <!-- Instant Visual Loader Shell with Real Progress Bar -->
+  <!-- Instant Luxury Visual Loader Shell -->
   <div id="tabattal-loader" aria-hidden="true">
     <div class="loader-content">
       <div class="loader-brand">تَبَتَّلْ</div>
-      <div class="loader-subtitle">TABATTAL QURAN APP</div>
+      <div class="loader-subtitle">المصحف الرقمي • تلاوة وتدبر</div>
       
-      <!-- Progress Bar Track & Glow -->
-      <div class="progress-track">
-        <div id="progress-bar-fill" class="progress-fill"></div>
-      </div>
-      
-      <!-- Percentage & Status Info -->
-      <div id="progress-info-box" class="progress-info">
-        <span id="progress-status">Loading Tabattal...</span>
-        <span id="progress-percent">0%</span>
+      <div class="loader-track">
+        <div class="loader-bar"></div>
       </div>
     </div>
   </div>
@@ -423,142 +416,18 @@
     </div>
   </noscript>
 
-  <!-- Real Network Byte Tracking Controller & Flutter Web Bootstrapper -->
+  <!-- Seamless Flutter Web Bootstrapper -->
   <script>
     (function () {
-      const isArabic = (navigator.language || navigator.userLanguage || '').toLowerCase().startsWith('ar');
-
-      const fill = document.getElementById('progress-bar-fill');
-      const percentText = document.getElementById('progress-percent');
-      const statusText = document.getElementById('progress-status');
-      const infoBox = document.getElementById('progress-info-box');
       const loader = document.getElementById('tabattal-loader');
-
-      if (infoBox) {
-        infoBox.dir = isArabic ? 'rtl' : 'ltr';
-      }
-
-      // Cold start expected payload: ~8.5 MB (Optimized with GZip DB & preloads)
-      const EXPECTED_TOTAL_BYTES = 8.5 * 1024 * 1024;
-      let totalBytesTransferred = 0;
-      let highestPercentage = 8;
-      let isCompleted = false;
-      let currentStageRank = 0;
-
-      function setStatus(text, rank) {
-        if (!statusText || !text) return;
-        if (rank !== undefined) {
-          if (rank < currentStageRank) return; // Prevent backwards regression and flickering
-          currentStageRank = rank;
-        }
-        if (statusText.textContent !== text) {
-          statusText.textContent = text;
-        }
-      }
-
-      function updateProgress(percentage, customStatus, statusRank) {
-        if (isCompleted) return;
-        if (percentage > highestPercentage) {
-          highestPercentage = Math.min(98, percentage);
-        }
-        const displayPercent = Math.floor(highestPercentage);
-        if (fill) fill.style.width = highestPercentage.toFixed(1) + '%';
-        if (percentText) percentText.textContent = displayPercent + '%';
-        
-        if (customStatus) {
-          setStatus(customStatus, statusRank);
-        } else if (highestPercentage >= 78) {
-          setStatus(isArabic ? 'جاري تهيئة قاعدة بيانات المصحف...' : 'Initializing Quran database & storage...', 6);
-        }
-      }
-
-      setStatus(isArabic ? 'جاري تحضير المصحف الشريف...' : 'Preparing the Holy Quran...', 1);
-
-      // 1. Native Real-time Network Observer (Resource Timing API)
-      if (window.PerformanceObserver) {
-        try {
-          const observer = new PerformanceObserver(function (list) {
-            for (const entry of list.getEntries()) {
-              const name = entry.name || '';
-              const size = entry.encodedBodySize || entry.transferSize || entry.decodedBodySize || 0;
-
-              if (size > 0) {
-                totalBytesTransferred += size;
-              }
-
-              let stageMessage = '';
-              let stageRank = 0;
-              if (name.includes('canvaskit') || name.includes('skwasm')) {
-                stageMessage = isArabic ? 'جاري تحميل محرّك الرسوم (CanvasKit)...' : 'Loading graphics engine (CanvasKit)...';
-                stageRank = 2;
-              } else if (name.includes('main.dart.js') || name.includes('main.dart.wasm')) {
-                stageMessage = isArabic ? 'جاري تحميل كود التطبيق...' : 'Loading application bundle...';
-                stageRank = 3;
-              } else if (name.includes('.ttf') || name.includes('fonts') || name.includes('.woff')) {
-                stageMessage = isArabic ? 'جاري تحميل خطوط المصحف...' : 'Loading Mushaf fonts...';
-                stageRank = 4;
-              } else if (name.includes('quran') || name.includes('sqlite3')) {
-                stageMessage = isArabic ? 'جاري تحميل قاعدة بيانات المصحف...' : 'Loading Quran database...';
-                stageRank = 5;
-              }
-
-              // Network download phase maps smoothly from 8% to 78%
-              const networkRatio = Math.min(1.0, totalBytesTransferred / EXPECTED_TOTAL_BYTES);
-              const calculatedPercent = Math.round(8 + (networkRatio * 70));
-              updateProgress(calculatedPercent, stageMessage, stageRank);
-            }
-          });
-
-          observer.observe({ type: 'resource', buffered: true });
-        } catch (e) {
-          console.warn('Resource observer note:', e);
-        }
-      }
-
-      // 2. Continuous byte poll & smooth incremental progress for DB & Shader initialization
-      const pollInterval = setInterval(function () {
-        if (isCompleted) return;
-        try {
-          const entries = performance.getEntriesByType('resource');
-          let currentBytes = 0;
-          for (let i = 0; i < entries.length; i++) {
-            const e = entries[i];
-            const sz = e.encodedBodySize || e.transferSize || e.decodedBodySize || 0;
-            currentBytes += sz;
-          }
-          if (currentBytes > totalBytesTransferred) {
-            totalBytesTransferred = currentBytes;
-          }
-          const networkRatio = Math.min(1.0, totalBytesTransferred / EXPECTED_TOTAL_BYTES);
-          const networkPercent = 8 + (networkRatio * 70);
-
-          if (highestPercentage < networkPercent) {
-            highestPercentage = networkPercent;
-          } else if (highestPercentage >= 78) {
-            // Smoothly and continuously increment during DB & WASM initialization (78% -> 97%)
-            const step = Math.max(0.12, (97.5 - highestPercentage) * 0.035);
-            highestPercentage = Math.min(97.5, highestPercentage + step);
-          }
-          updateProgress(highestPercentage);
-        } catch (_) {}
-      }, 100);
-
-      // 3. Handle Flutter first frame render event
       window.addEventListener('flutter-first-frame', function () {
-        isCompleted = true;
-        clearInterval(pollInterval);
-        if (fill) fill.style.width = '100%';
-        if (percentText) percentText.textContent = '100%';
-        setStatus(isArabic ? 'اكتمل التحميل، مرحبًا بك...' : 'Ready, welcome...', 6);
+        if (!loader) return;
+        loader.style.opacity = '0';
+        loader.style.transform = 'scale(1.02)';
+        loader.style.pointerEvents = 'none';
         setTimeout(function () {
-          if (loader) {
-            loader.style.opacity = '0';
-            loader.style.visibility = 'hidden';
-            setTimeout(function () {
-              loader.remove();
-            }, 500);
-          }
-        }, 350);
+          loader.remove();
+        }, 500);
       });
     })();
   </script>

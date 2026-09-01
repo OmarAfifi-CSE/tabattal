@@ -15,5 +15,47 @@ if ($portInUse) {
     Write-Host "[TABATTAL] Video Export Service started successfully on http://localhost:8080." -ForegroundColor Green
 }
 
-Write-Host "`n[TABATTAL] Launching Flutter Web on Chrome..." -ForegroundColor Cyan
-flutter run -d chrome
+$pubspecPath = "pubspec.yaml"
+$pubspecBak = "pubspec.yaml.bak"
+Copy-Item $pubspecPath -Destination $pubspecBak -Force
+
+try {
+    $lines = Get-Content $pubspecPath
+    $leanLines = [System.Collections.Generic.List[string]]::new()
+    $inQcfPageFont = $false
+
+    foreach ($line in $lines) {
+        if ($line -match '^\s+- family:\s+QCF_P\d{3}') {
+            $inQcfPageFont = $true
+            continue
+        }
+        if ($inQcfPageFont) {
+            if ($line -match '^\s+- family:' -or ($line -notmatch '^\s+' -and -not [string]::IsNullOrWhiteSpace($line))) {
+                $inQcfPageFont = $false
+            } else {
+                continue
+            }
+        }
+        if ($line -match '^\s+- assets/data/quran.db') {
+            $leanLines.Add($line)
+            for ($p = 1; $p -le 604; $p++) {
+                $pStr = $p.ToString().PadLeft(3, '0')
+                $leanLines.Add("    - assets/fonts/quran/QCF_P$pStr.ttf")
+            }
+            continue
+        }
+        $leanLines.Add($line)
+    }
+
+    $leanLines | Out-File -FilePath $pubspecPath -Encoding utf8
+    Write-Host "[TABATTAL] Lean Web Environment configured (4 core fonts for fast boot)." -ForegroundColor Green
+
+    Write-Host "`n[TABATTAL] Launching Flutter Web on Chrome..." -ForegroundColor Cyan
+    flutter run -d chrome
+} finally {
+    if (Test-Path $pubspecBak) {
+        Copy-Item $pubspecBak -Destination $pubspecPath -Force
+        Remove-Item $pubspecBak -Force
+        Write-Host "[TABATTAL] Native Mobile Pubspec (All 604 Fonts) Restored." -ForegroundColor Green
+    }
+}

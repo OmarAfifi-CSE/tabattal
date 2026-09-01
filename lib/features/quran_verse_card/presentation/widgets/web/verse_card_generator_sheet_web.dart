@@ -8,6 +8,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../../../../core/constants/quran_metadata.dart';
 import '../../../../../core/database/database_helper.dart';
+import '../../../../../core/services/quran_font_service.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
 import '../../../../../l10n/app_localizations.dart';
@@ -222,6 +223,9 @@ class _VerseCardGeneratorSheetWebContentState
 
     final pageNum = widget.pageNumber;
     if (pageNum != null && widget.verse.words.isNotEmpty) {
+      QuranFontService.ensurePageFontLoaded(pageNum).then((_) {
+        if (mounted) setState(() {});
+      });
       final pageStr = pageNum.toString().padLeft(3, '0');
       final fontFamily = 'QCF_P$pageStr';
       final codeText = widget.verse.words
@@ -399,6 +403,7 @@ class _VerseCardGeneratorSheetWebContentState
 
           if (wordsForVerse != null && wordsForVerse.isNotEmpty) {
             final pageNum = wordsForVerse.first['page'] as int? ?? 1;
+            await QuranFontService.ensurePageFontLoaded(pageNum);
             final pageStr = pageNum.toString().padLeft(3, '0');
             final fontFamily = 'QCF_P$pageStr';
 

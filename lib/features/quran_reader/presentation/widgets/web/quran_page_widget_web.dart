@@ -26,7 +26,7 @@ import '../../../../../core/constants/quran_metadata.dart';
 import 'surah_header_widget_web.dart';
 import '../../../../settings/presentation/bloc/settings_bloc.dart';
 import '../../../../../core/theme/mushaf_theme.dart';
-import '../../../../../core/services/web_font_prewarmer.dart';
+import '../../../../../core/services/quran_font_service.dart';
 
 // ---------------------------------------------------------------------------
 // Widget
@@ -105,7 +105,10 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
         curve: Curves.easeInOut,
       ),
     );
-    WebFontPrewarmer.prewarmPage(widget.pageNumber);
+    QuranFontService.ensurePageFontLoaded(widget.pageNumber).then((_) {
+      if (mounted) setState(() {});
+    });
+    QuranFontService.prewarmAround(widget.pageNumber, distance: 3);
     final cached = QuranPageCache.get(widget.pageNumber);
     if (cached == null) {
       _loadPageDataFallback();
@@ -136,7 +139,10 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
   void didUpdateWidget(QuranPageWidgetWeb oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.pageNumber != oldWidget.pageNumber) {
-      WebFontPrewarmer.prewarmPage(widget.pageNumber);
+      QuranFontService.ensurePageFontLoaded(widget.pageNumber).then((_) {
+        if (mounted) setState(() {});
+      });
+      QuranFontService.prewarmAround(widget.pageNumber, distance: 3);
       final cached = QuranPageCache.get(widget.pageNumber);
       if (cached == null) _loadPageDataFallback();
     }
@@ -1043,8 +1049,14 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
         .effectiveMushafTheme;
 
     final displayState = QuranPageCache.get(widget.pageNumber);
+    final fontReady = QuranFontService.isPageFontLoaded(widget.pageNumber);
 
-    if (displayState == null) {
+    if (displayState == null || !fontReady) {
+      if (!fontReady) {
+        QuranFontService.ensurePageFontLoaded(widget.pageNumber).then((_) {
+          if (mounted) setState(() {});
+        });
+      }
       return QuranPageFrameWeb(
         pageNumber: widget.pageNumber,
         onNavigateToPage: widget.onNavigateToPage,
