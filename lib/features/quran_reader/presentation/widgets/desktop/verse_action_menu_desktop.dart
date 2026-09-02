@@ -386,7 +386,7 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                                 ),
                                                 style: TextStyle(
                                                   fontSize: (isLandscape ? 12.0 : 14.0).sp,
-                                                  fontWeight: FontWeight.bold,
+                                                  fontWeight: FontWeight.w600,
                                                   color: AppColors.accentGold,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
@@ -515,7 +515,7 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                   Text(
                                     l10n.tafsirNotAvailableLocally,
                                     style: AppTextStyles.menuItemText.copyWith(
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -557,7 +557,7 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                       l10n.continueDownload,
                                       style: TextStyle(
                                         fontSize: 16.sp,
-                                        fontWeight: FontWeight.bold,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ),
@@ -691,7 +691,7 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                                                     style: TextStyle(
                                                       fontSize: 14.5.sp,
                                                       fontWeight:
-                                                          FontWeight.bold,
+                                                          FontWeight.w600,
                                                       color:
                                                           AppColors.accentGold,
                                                     ),
@@ -796,7 +796,7 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
     final l10n = AppLocalizations.of(context)!;
     final isLandscape =
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
-    final menuWidth = isLandscape ? 190.0.w : 250.w;
+    final menuWidth = isLandscape ? 165.0.w : 205.w;
     final menuHeight = isLandscape ? 260.0.h : 330.h;
     final menuSize = Size(menuWidth, menuHeight);
 
@@ -1065,24 +1065,26 @@ class _VerseActionMenuItemDesktop extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: (isLandscape ? 14.0 : 18.0).w,
-          vertical: (isLandscape ? 8.0 : 12.0).h,
+          horizontal: (isLandscape ? 12.0 : 14.0).w,
+          vertical: (isLandscape ? 8.0 : 10.0).h,
         ),
         child: Row(
           children: [
             Icon(
               icon,
               color: iconColor ?? AppColors.bronzeIcon,
-              size: (isLandscape ? 20.0 : 24.0).sp,
+              size: (isLandscape ? 18.0 : 20.0).sp,
             ),
-            SizedBox(width: (isLandscape ? 10.0 : 14.0).w),
+            SizedBox(width: (isLandscape ? 8.0 : 10.0).w),
             Expanded(
               child: Text(
                 text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: (isLandscape ? 14.5 : 16.5).sp,
+                  fontSize: (isLandscape ? 13.5 : 14.5).sp,
                   color: AppColors.inkBrown,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.normal,
                 ),
               ),
             ),

@@ -234,7 +234,7 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
           l10n.audioManagerTitle,
           style: TextStyle(
             color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontSize: 20.sp,
           ),
         ),
@@ -275,7 +275,7 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
                         l10n.audioTypeLabel,
                         style: TextStyle(
                           fontSize: 12.sp,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -303,7 +303,7 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
                         l10n.audioReciterLabel,
                         style: TextStyle(
                           fontSize: 12.sp,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -346,7 +346,7 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
                                 : l10n.audioDownloadAll,
                             style: TextStyle(
                               fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: Colors.white,
                             ),
                           ),
@@ -513,7 +513,7 @@ class _AudioManagerSurahItemMobile extends StatelessWidget {
                           '${(progress * 100).toInt()}%',
                           style: TextStyle(
                             fontSize: 11.sp,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.accentGold,
                           ),
                         ),
@@ -563,7 +563,7 @@ class _AudioManagerSurahItemMobile extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: (surah >= 100 ? 12 : 14).sp,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.accentGold,
                   ),
                 ),
@@ -574,7 +574,7 @@ class _AudioManagerSurahItemMobile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),

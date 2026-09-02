@@ -62,8 +62,8 @@ class QuranBorderPainterWeb extends CustomPainter {
       final double top = H * 0.035;
       final double bottom = H * 0.965;
 
-      final double cutTop = 100.0 * scale;
-      final double cutBottom = 132.0 * scale;
+      final double cutTop = 88.0 * scale;
+      final double cutBottom = 116.0 * scale;
 
       final double diamondRadius = 5.5 * scale;
       final double diamondStep = 16.0 * scale;

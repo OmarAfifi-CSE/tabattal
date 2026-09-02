@@ -223,7 +223,7 @@ class _AudioSettingsSheetContentState
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: (isLandscape ? 17.0 : 24.0).sp,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
                         ),
                       ),
@@ -332,7 +332,7 @@ class _AudioSettingsSheetContentState
                             style: TextStyle(
                               fontSize: (isLandscape ? 15.0 : 19.0).sp,
                               color: AppColors.textPrimary,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -374,7 +374,7 @@ class _AudioSettingsSheetContentState
                         : AppLocalizations.of(context)!.audioSaveSettings,
                     style: TextStyle(
                       fontSize: (isLandscape ? 16.0 : 20.0).sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   onPressed: _applyAndPlay,

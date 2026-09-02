@@ -175,7 +175,7 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
                       l10n.videoBgCustomVideo,
                       style: TextStyle(
                         fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
                     ),
@@ -361,7 +361,7 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: errorColor,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -424,7 +424,7 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
                     title,
                     style: TextStyle(
                       fontSize: 13.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),

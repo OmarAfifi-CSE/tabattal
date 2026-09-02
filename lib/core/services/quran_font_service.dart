@@ -60,31 +60,53 @@ class QuranFontService {
 
       // 2. If rootBundle is unavailable, fetch directly via HTTP
       if (byteData == null && kIsWeb) {
-        final candidateUrls = [
+        final candidateUrls = <String>{
+          // Relative to current page / document base
           'assets/fonts/quran/QCF_P$pageStr.ttf',
           'assets/assets/fonts/quran/QCF_P$pageStr.ttf',
           'app/assets/fonts/quran/QCF_P$pageStr.ttf',
-        ];
+          'app/assets/assets/fonts/quran/QCF_P$pageStr.ttf',
+          // Absolute paths from domain root
+          '/assets/fonts/quran/QCF_P$pageStr.ttf',
+          '/assets/assets/fonts/quran/QCF_P$pageStr.ttf',
+          '/app/assets/fonts/quran/QCF_P$pageStr.ttf',
+          '/app/assets/assets/fonts/quran/QCF_P$pageStr.ttf',
+          // Resolved via Uri.base
+          Uri.base.resolve('assets/fonts/quran/QCF_P$pageStr.ttf').toString(),
+          Uri.base.resolve('assets/assets/fonts/quran/QCF_P$pageStr.ttf').toString(),
+        };
 
         for (final url in candidateUrls) {
           try {
             final response = await _dio.get<List<int>>(
               url,
-              options: Options(responseType: ResponseType.bytes),
+              options: Options(
+                responseType: ResponseType.bytes,
+                sendTimeout: const Duration(seconds: 8),
+                receiveTimeout: const Duration(seconds: 8),
+              ),
             );
             if (response.statusCode == 200 && response.data != null) {
               final uint8List = Uint8List.fromList(response.data!);
-              byteData = ByteData.view(uint8List.buffer);
-              break;
+              if (uint8List.isNotEmpty) {
+                byteData = ByteData.view(uint8List.buffer);
+                break;
+              }
             }
           } catch (_) {}
         }
       }
 
       if (byteData != null) {
-        final fontLoader = FontLoader(fontFamily);
-        fontLoader.addFont(Future.value(byteData));
-        await fontLoader.load();
+        try {
+          final fontLoader = FontLoader(fontFamily);
+          fontLoader.addFont(Future.value(byteData));
+          await fontLoader.load();
+        } catch (e) {
+          if (!e.toString().toLowerCase().contains('already')) {
+            debugPrint('QuranFontService: FontLoader error for $fontFamily: $e');
+          }
+        }
         _loadedPages.add(pageNumber);
       } else {
         debugPrint('QuranFontService: Could not retrieve font bytes for $fontFamily');

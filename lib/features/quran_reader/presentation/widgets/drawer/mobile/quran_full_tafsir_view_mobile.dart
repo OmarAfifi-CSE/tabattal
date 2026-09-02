@@ -486,7 +486,7 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
               l10n.fullTafsirTitle,
               style: TextStyle(
                 color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 22.sp,
               ),
             ),
@@ -761,7 +761,7 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
                                                             item.surah,
                                                           ),
                                                     style: TextStyle(
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight: FontWeight.w600,
                                                       color: AppColors.accentGold,
                                                       fontSize: 16.sp,
                                                     ),
@@ -775,7 +775,7 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
                                                         ? '(${item.ayah})'
                                                         : '﴿${item.ayah.toArabicDigits}﴾',
                                                     style: TextStyle(
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight: FontWeight.w600,
                                                       color: AppColors.accentGold,
                                                       fontSize: 14.sp,
                                                       fontFamily: 'Amiri',
@@ -896,7 +896,7 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
                                                             : 'Tafsir of Verses (${item.groupVerseRange})'),
                                                     style: TextStyle(
                                                       fontSize: 12.sp,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight: FontWeight.w600,
                                                       color: AppColors.accentGold,
                                                     ),
                                                   ),

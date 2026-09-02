@@ -495,7 +495,7 @@ class _QuranFullTafsirViewWebState extends State<QuranFullTafsirViewWeb> {
               l10n.fullTafsirTitle,
               style: TextStyle(
                 color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 24.sp,
               ),
             ),
@@ -782,7 +782,7 @@ class _QuranFullTafsirViewWebState extends State<QuranFullTafsirViewWeb> {
                                                           item.surah,
                                                         ),
                                                   style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
+                                                    fontWeight: FontWeight.w600,
                                                     color: AppColors.accentGold,
                                                     fontSize: 20.sp,
                                                   ),
@@ -796,7 +796,7 @@ class _QuranFullTafsirViewWebState extends State<QuranFullTafsirViewWeb> {
                                                       ? '(${item.ayah})'
                                                       : '﴿${item.ayah.toArabicDigits}﴾',
                                                   style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
+                                                    fontWeight: FontWeight.w600,
                                                     color: AppColors.accentGold,
                                                     fontSize: 18.sp,
                                                     fontFamily: 'Amiri',
@@ -917,7 +917,7 @@ class _QuranFullTafsirViewWebState extends State<QuranFullTafsirViewWeb> {
                                                           : 'Tafsir of Verses (${item.groupVerseRange})'),
                                                   style: TextStyle(
                                                     fontSize: 15.sp,
-                                                    fontWeight: FontWeight.bold,
+                                                    fontWeight: FontWeight.w600,
                                                     color: AppColors.accentGold,
                                                   ),
                                                 ),

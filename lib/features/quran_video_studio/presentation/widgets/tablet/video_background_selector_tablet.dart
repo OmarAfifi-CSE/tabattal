@@ -40,7 +40,7 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
               l10n.videoStudioThemeAndBg,
               style: TextStyle(
                 fontSize: 16.0.sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -118,7 +118,7 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14.5.sp,
                               fontWeight: isDefaultTheme
-                                  ? FontWeight.bold
+                                  ? FontWeight.w600
                                   : FontWeight.w500,
                               color: isDefaultTheme
                                   ? AppColors.textPrimary
@@ -196,8 +196,8 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14.5.sp,
                               fontWeight: hasCustomImage
-                                  ? FontWeight.bold
-                                  : FontWeight.w600,
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
                               color: hasCustomImage
                                   ? Colors.white
                                   : AppColors.textPrimary,
@@ -266,8 +266,8 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14.5.sp,
                               fontWeight: hasCustomVideo
-                                  ? FontWeight.bold
-                                  : FontWeight.w600,
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
                               color: hasCustomVideo
                                   ? AppColors.accentGold
                                   : AppColors.textPrimary,

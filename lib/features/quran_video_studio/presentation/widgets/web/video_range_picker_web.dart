@@ -59,7 +59,7 @@ class VideoRangePickerWeb extends StatelessWidget {
                           title,
                           style: TextStyle(
                             fontSize: 17.0.sp,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
                           ),
                         ),
@@ -117,8 +117,8 @@ class VideoRangePickerWeb extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 15.0.sp,
                                   fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.w600,
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
                                   color: isSelected
                                       ? Colors.white
                                       : AppColors.textPrimary,
@@ -160,7 +160,7 @@ class VideoRangePickerWeb extends StatelessWidget {
               l10n.videoStudioVerseRange,
               style: TextStyle(
                 fontSize: 16.0.sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -184,7 +184,7 @@ class VideoRangePickerWeb extends StatelessWidget {
                 ),
                 style: TextStyle(
                   fontSize: 13.0.sp,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.accentGold,
                 ),
               ),

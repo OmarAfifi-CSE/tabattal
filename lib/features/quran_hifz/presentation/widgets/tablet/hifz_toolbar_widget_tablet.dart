@@ -279,7 +279,7 @@ class _TabletHifzTypeChip extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: (isLandscape ? 14.0 : 15.0).sp,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             color: isSelected ? Colors.white : AppColors.textSecondary,
           ),
         ),

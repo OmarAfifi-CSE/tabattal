@@ -145,7 +145,7 @@ class VerseCardTextPreview extends StatelessWidget {
                                 style: TextStyle(
                                   fontFamily: isEn ? null : 'Amiri',
                                   fontSize: 11.sp,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   color: theme.accentColor,
                                 ),
                               ),
@@ -207,7 +207,7 @@ class VerseCardTextPreview extends StatelessWidget {
                                 style: TextStyle(
                                   fontFamily: isEn ? null : 'Amiri',
                                   fontSize: 11.sp,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   color: theme.accentColor,
                                 ),
                               ),
@@ -245,7 +245,7 @@ class VerseCardTextPreview extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'Amiri',
                 fontSize: 11.sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: theme.accentColor,
               ),
             ),

@@ -490,7 +490,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 20.sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w500,
                 height: 1.6.h,
                 color: AppColors.textPrimary.withValues(alpha: 0.6),
               ),
@@ -509,7 +509,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                 l10n.topicSectionsTitle,
                 style: TextStyle(
                   fontSize: 22.sp,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -562,7 +562,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                             maxLines: 1,
                             style: TextStyle(
                               fontSize: 18.sp,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w500,
                               color: AppColors.textPrimary,
                             ),
                           ),
@@ -605,7 +605,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                     topicTitle,
                     style: TextStyle(
                       fontSize: 20.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.accentGold,
                     ),
                   ),
@@ -650,7 +650,9 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                         l10n.searchFilterAll,
                         style: TextStyle(
                           fontSize: 15.sp,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: _selectedSubTopic == null
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                           color: _selectedSubTopic == null
                               ? Colors.white
                               : AppColors.textPrimary,
@@ -682,7 +684,9 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                           sub.getName(isAr),
                           style: TextStyle(
                             fontSize: 15.sp,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                             color: isSelected
                                 ? Colors.white
                                 : AppColors.textPrimary,
@@ -773,7 +777,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                                 ),
                                 style: TextStyle(
                                   fontSize: 17.sp,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   color: AppColors.accentGold,
                                 ),
                               ),
@@ -897,7 +901,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                       ),
                       style: TextStyle(
                         fontSize: 17.sp,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.accentGold,
                       ),
                     ),
@@ -1031,7 +1035,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
           textDirection: TextDirection.rtl,
           style: TextStyle(
             fontSize: 18.5.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
             color: AppColors.textPrimary,
           ),
         ),

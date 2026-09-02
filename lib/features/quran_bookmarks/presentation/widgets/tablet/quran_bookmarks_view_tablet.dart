@@ -28,7 +28,7 @@ class QuranBookmarksViewTablet extends StatelessWidget {
           l10n.bookmarksTitle,
           style: TextStyle(
             color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontSize: 24.sp,
           ),
         ),
@@ -129,7 +129,7 @@ class _EmptyBookmarksViewTablet extends StatelessWidget {
             l10n.noBookmarks,
             style: TextStyle(
               fontSize: 22.sp,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
@@ -263,7 +263,7 @@ class _BookmarkCardState extends State<_BookmarkCard>
             l10n.surahBookmarkTitle(widget.surahName),
             style: TextStyle(
               fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),

@@ -263,7 +263,7 @@ class _TafsirMenuScrollableContentState
                                       ? AppColors.accentGold
                                       : AppColors.textPrimary,
                                   fontWeight: isSelected
-                                      ? FontWeight.bold
+                                      ? FontWeight.w600
                                       : FontWeight.w500,
                                 ),
                               ),
@@ -277,7 +277,7 @@ class _TafsirMenuScrollableContentState
                           style: AppTextStyles.menuItemText.copyWith(
                             fontSize: widget.itemFontSize - 2,
                             color: AppColors.accentGold,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         )
                       else if (!option.isDownloaded)

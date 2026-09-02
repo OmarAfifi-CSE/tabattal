@@ -62,7 +62,7 @@ class VerseCardTextUtils {
       fontFamily: 'Amiri',
       fontSize: fontSize,
       height: lineHeight,
-      fontWeight: hasQcfFont ? FontWeight.normal : FontWeight.bold,
+      fontWeight: hasQcfFont ? FontWeight.normal : FontWeight.w600,
       color: theme.primaryTextColor,
     );
   }

@@ -669,7 +669,7 @@ class CanvasOverlayGenerator {
           style: TextStyle(
             color: isFramelessCustom ? badgeAccentColor : theme.accentColor,
             fontSize: baseScale * 0.026,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontFamily: isEn ? null : 'Amiri',
           ),
         ),
@@ -1041,7 +1041,7 @@ class CanvasOverlayGenerator {
             style: TextStyle(
               color: badgeTextColor,
               fontSize: (baseScale * 0.024) * scale,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               fontFamily: isEn ? null : 'Amiri',
             ),
           ),
@@ -1083,7 +1083,7 @@ class CanvasOverlayGenerator {
               style: TextStyle(
                 color: badgeTextColor,
                 fontSize: (baseScale * 0.020) * scale,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontFamily: isEn ? null : 'Amiri',
               ),
             ),
@@ -1301,16 +1301,21 @@ class CanvasOverlayGenerator {
     // 2. Text Painter ('تَـبَـتَّـلْ • Tabattal')
     final textPainter = TextPainter(
       text: TextSpan(
-        text: 'تَـبَـتَّـلْ • Tabattal',
         style: TextStyle(
           fontFamily: 'Amiri',
           fontSize: textFontSize,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
+          fontWeight: FontWeight.w600,
           color: isFramelessCustom
               ? textColors.primaryTextColor
               : textColors.secondaryTextColor.withValues(alpha: 0.85),
         ),
+        children: const [
+          TextSpan(text: 'تَـبَـتَّـلْ • '),
+          TextSpan(
+            text: 'Tabattal',
+            style: TextStyle(letterSpacing: 0.6),
+          ),
+        ],
       ),
       textDirection: TextDirection.rtl,
     )..layout();

@@ -13,13 +13,13 @@ double _calculateHizbMarkerYPosition(int lineNumber, double pageHeight) {
   final double textHeight = pageHeight * 0.89;
   final double rawY = topPadding + textHeight * ((lineNumber - 0.56) / 15.0);
 
-  final double minY = (pageHeight * 0.035) + (100.0 * scale) + (10.0 * scale);
-  final double maxY = (pageHeight * 0.965) - (132.0 * scale) - (10.0 * scale);
+  final double minY = (pageHeight * 0.035) + (88.0 * scale) + (10.0 * scale);
+  final double maxY = (pageHeight * 0.965) - (116.0 * scale) - (10.0 * scale);
   if (minY >= maxY) return rawY;
   return rawY.clamp(minY, maxY);
 }
 
-/// Builds inline text spans for a Hizb label, making the digit larger and on a new line.
+/// Builds inline text spans for a Hizb label, making the digit on a new line with balanced scale.
 List<TextSpan> _buildHizbLabelTextSpans(String text, TextStyle baseStyle) {
   final digitRegExp = RegExp(r'[0-9٠-٩]+');
   final spans = <TextSpan>[];
@@ -31,7 +31,7 @@ List<TextSpan> _buildHizbLabelTextSpans(String text, TextStyle baseStyle) {
         TextSpan(
           text: '\n${match.group(0)}',
           style: baseStyle.copyWith(
-            fontSize: baseStyle.fontSize! * 1.25,
+            fontSize: baseStyle.fontSize! * 1.05,
             fontWeight: FontWeight.normal,
             fontFamily: 'Amiri',
           ),
@@ -261,13 +261,17 @@ class QuranPageFrameWeb extends StatelessWidget {
                           horizontal: (isLandscape ? 1.0 : 1.0) * scale,
                         ),
                         padding: EdgeInsets.symmetric(
-                          horizontal: (isLandscape ? 2.5 : 2.0) * scale,
+                          horizontal: (isLandscape ? 2.0 : 2.0) * scale,
                           vertical: 1.5 * scale,
                         ),
-                        child: Icon(
-                          Icons.segment_rounded,
-                          color: mushafTheme.goldColor,
-                          size: (isLandscape ? 18.0 : 18.0) * scale,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.segment_rounded,
+                            color: mushafTheme.goldColor,
+                            size: (isLandscape ? 18.0 : 18.0) * scale,
+                          ),
                         ),
                       ),
                     ),
@@ -353,6 +357,7 @@ class _WebFrameInfoBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 23.0 * scale,
       margin: margin ??
           EdgeInsets.symmetric(horizontal: (isLandscape ? 1.0 : 1.0) * scale),
       padding: padding ??
@@ -402,7 +407,7 @@ class _WebHizbMarker extends StatelessWidget {
       ),
       left: isLeftPage ? (pageWidth * 0.0407) : null,
       right: !isLeftPage ? (pageWidth * 0.0407) : null,
-      width: 78.0 * scale,
+      width: 70.0 * scale,
       child: FractionalTranslation(
         translation: Offset(isLeftPage ? -0.5 : 0.5, -0.5),
         child: Stack(
@@ -416,7 +421,7 @@ class _WebHizbMarker extends StatelessWidget {
                 '\u00F5',
                 style: TextStyle(
                   fontFamily: 'QCF_BSML',
-                  fontSize: 98.0 * scale,
+                  fontSize: 86.0 * scale,
                   color: mushafTheme.goldColor,
                   height: 1.0,
                 ),
@@ -424,19 +429,22 @@ class _WebHizbMarker extends StatelessWidget {
             ),
             // Label text centred inside the ornament
             Transform.translate(
-              offset: Offset(isLeftPage ? (6 * scale) : (-6 * scale), 21.5 * scale),
+              offset: Offset(
+                isLeftPage ? (5.3 * scale) : (-5.3 * scale),
+                18.8 * scale,
+              ),
               child: SizedBox(
-                width: 44.0 * scale,
+                width: 40.0 * scale,
                 child: Text.rich(
                   TextSpan(
                     children: _buildHizbLabelTextSpans(
                       (marker['text'] as String).toArabicDigits,
                       TextStyle(
                         fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
-                        fontSize: 10.8 * scale,
+                        fontSize: 9.5 * scale,
                         height: 1.15,
                         color: mushafTheme.textColor,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.normal,
                       ),
                     ),
                   ),

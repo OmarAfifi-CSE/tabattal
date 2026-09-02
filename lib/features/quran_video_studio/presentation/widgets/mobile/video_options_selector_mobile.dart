@@ -38,7 +38,7 @@ class VideoOptionsSelectorMobile extends StatelessWidget {
           l10n.videoStudioDisplayMode,
           style: TextStyle(
             fontSize: 13.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
@@ -95,7 +95,7 @@ class VideoOptionsSelectorMobile extends StatelessWidget {
                             label,
                             style: TextStyle(
                               fontSize: 11.sp,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                               color: isSelected ? AppColors.accentGold : AppColors.textPrimary,
                             ),
                           ),
@@ -116,7 +116,7 @@ class VideoOptionsSelectorMobile extends StatelessWidget {
           l10n.videoStudioQuality,
           style: TextStyle(
             fontSize: 13.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
@@ -152,7 +152,7 @@ class VideoOptionsSelectorMobile extends StatelessWidget {
                           quality.shortLabel,
                           style: TextStyle(
                             fontSize: 12.5.sp,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             color: isSelected ? AppColors.accentGold : AppColors.textPrimary,
                             height: 1.1,
                           ),
@@ -164,7 +164,7 @@ class VideoOptionsSelectorMobile extends StatelessWidget {
                               : l10n.videoQualityFast,
                           style: TextStyle(
                             fontSize: 9.5.sp,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                             color: isSelected ? AppColors.accentGold : AppColors.textSecondary,
                             height: 1.1,
                           ),
@@ -185,7 +185,7 @@ class VideoOptionsSelectorMobile extends StatelessWidget {
           l10n.videoStudioDisplayOptions,
           style: TextStyle(
             fontSize: 13.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),

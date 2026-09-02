@@ -256,7 +256,7 @@ class _WordMeaningsHeaderDesktop extends StatelessWidget {
                 l10n.wordMeaningsTitle,
                 style: AppTextStyles.headerText.copyWith(
                   fontSize: (isLandscape ? 16.0 : 21.0).sp,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.verseMarkerGold,
                 ),
               ),
@@ -281,7 +281,7 @@ class _WordMeaningsHeaderDesktop extends StatelessWidget {
               style: TextStyle(
                 fontFamily: isArabic ? 'Amiri' : null,
                 fontSize: (isLandscape ? 13.0 : 16.0).sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: AppColors.verseMarkerGold,
               ),
             ),
@@ -379,7 +379,7 @@ class _WordMeaningCardDesktop extends StatelessWidget {
               ArabicTextUtils.toArabicDigits(index + 1),
               style: TextStyle(
                 fontSize: (isLandscape ? 11.5 : 14.0).sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: AppColors.verseMarkerGold,
               ),
             ),
@@ -396,7 +396,7 @@ class _WordMeaningCardDesktop extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
                       fontSize: (isLandscape ? 17.0 : 23.0).sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.normal,
                       color: AppColors.verseMarkerGold,
                       height: 1.4,
                     ),

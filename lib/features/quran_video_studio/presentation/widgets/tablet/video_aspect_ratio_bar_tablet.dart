@@ -64,7 +64,7 @@ class VideoAspectRatioBarTablet extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13.5.sp,
                       fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.w600,
+                          isSelected ? FontWeight.w600 : FontWeight.w500,
                       color: isSelected ? Colors.white : AppColors.textPrimary,
                     ),
                   ),

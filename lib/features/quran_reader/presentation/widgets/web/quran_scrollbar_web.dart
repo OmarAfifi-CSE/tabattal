@@ -244,7 +244,7 @@ class _QuranScrollbarWebState extends State<QuranScrollbarWeb> {
                                 fontFamily:
                                     'KFGQPC HAFS Uthmanic Script Regular',
                                 fontSize: 13.sp,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.normal,
                                 color: textColor,
                               ),
                             ),
@@ -257,7 +257,7 @@ class _QuranScrollbarWebState extends State<QuranScrollbarWeb> {
                                   style: TextStyle(
                                     fontFamily: 'Amiri',
                                     fontSize: 12.sp,
-                                    fontWeight: FontWeight.w900,
+                                    fontWeight: FontWeight.w600,
                                     color: goldColor,
                                   ),
                                 ),

@@ -267,7 +267,7 @@ class _HifzTypeChipMobile extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 11.5.sp,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             color: isSelected ? Colors.white : AppColors.textSecondary,
           ),
         ),

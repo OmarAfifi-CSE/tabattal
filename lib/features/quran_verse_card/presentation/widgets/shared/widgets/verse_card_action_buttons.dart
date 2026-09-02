@@ -72,7 +72,7 @@ class VerseCardActionButtons extends StatelessWidget {
                       l10n.videoStudioDownloadVideo,
                       style: TextStyle(
                         fontSize: 14.sp,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -109,7 +109,7 @@ class VerseCardActionButtons extends StatelessWidget {
                     l10n.videoStudioShare,
                     style: TextStyle(
                       fontSize: 14.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -143,7 +143,7 @@ class VerseCardActionButtons extends StatelessWidget {
                     l10n.videoStudioSave,
                     style: TextStyle(
                       fontSize: 14.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -181,7 +181,7 @@ class VerseCardActionButtons extends StatelessWidget {
                     l10n.verseCardShareImage,
                     style: TextStyle(
                       fontSize: 14.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -215,7 +215,7 @@ class VerseCardActionButtons extends StatelessWidget {
                     l10n.verseCardSaveImage,
                     style: TextStyle(
                       fontSize: 14.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -242,7 +242,7 @@ class VerseCardActionButtons extends StatelessWidget {
                 l10n.verseCardCopyText,
                 style: TextStyle(
                   fontSize: 14.sp,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),

@@ -395,7 +395,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                                       color:
                                                           AppColors.accentGold,
                                                       fontWeight:
-                                                          FontWeight.w700,
+                                                          FontWeight.w600,
                                                     ),
                                               ),
                                             ),
@@ -516,9 +516,9 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                   SizedBox(height: 16.h),
                                   Text(
                                     l10n.tafsirNotAvailableLocally,
-                                    style: AppTextStyles.menuItemText.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                      style: AppTextStyles.menuItemText.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     textAlign: TextAlign.center,
                                   ),
                                   SizedBox(height: 8.h),
@@ -559,7 +559,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                       l10n.continueDownload,
                                       style: TextStyle(
                                         fontSize: 16.sp,
-                                        fontWeight: FontWeight.bold,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ),
@@ -696,7 +696,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                                     style: TextStyle(
                                                       fontSize: 12.sp,
                                                       fontWeight:
-                                                          FontWeight.bold,
+                                                          FontWeight.w600,
                                                       color:
                                                           AppColors.accentGold,
                                                     ),
@@ -799,7 +799,8 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final menuSize = Size(240.w, 280.h);
+    final menuWidth = 205.w;
+    final menuSize = Size(menuWidth, 280.h);
 
     return Stack(
       children: [
@@ -827,7 +828,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
               borderRadius: BorderRadius.circular(16.r),
               color: Colors.transparent,
               child: Container(
-                width: 250.w,
+                width: menuWidth,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceCream,
                   borderRadius: BorderRadius.circular(16.r),
@@ -1062,17 +1063,20 @@ class _VerseActionMenuItemMobile extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.5.h),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? AppColors.bronzeIcon, size: 22.sp),
-            SizedBox(width: 12.w),
+            Icon(icon, color: iconColor ?? AppColors.bronzeIcon, size: 20.sp),
+            SizedBox(width: 10.w),
             Expanded(
               child: Text(
                 text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.menuItemText.copyWith(
+                  fontSize: 14.5.sp,
                   color: AppColors.inkBrown,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.normal,
                 ),
               ),
             ),

@@ -77,7 +77,7 @@ class VerseCardRangePicker extends StatelessWidget {
                       title,
                       style: TextStyle(
                         fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
                     ),
@@ -143,7 +143,7 @@ class VerseCardRangePicker extends StatelessWidget {
                             ),
                             style: TextStyle(
                               fontSize: 12.sp,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: isSelected
                                   ? Colors.white
                                   : AppColors.textPrimary,
@@ -185,7 +185,7 @@ class VerseCardRangePicker extends StatelessWidget {
               l10n.verseCardVerseRange,
               style: TextStyle(
                 fontSize: 13.sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -209,7 +209,7 @@ class VerseCardRangePicker extends StatelessWidget {
                   ),
                   style: TextStyle(
                     fontSize: 11.sp,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.accentGold,
                   ),
                 ),

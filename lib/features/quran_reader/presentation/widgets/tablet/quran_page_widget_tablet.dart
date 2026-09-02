@@ -1057,8 +1057,14 @@ class _QuranPageWidgetTabletState extends State<QuranPageWidgetTablet>
         .effectiveMushafTheme;
 
     final displayState = QuranPageCache.get(widget.pageNumber);
+    final fontReady = QuranFontService.isPageFontLoaded(widget.pageNumber);
 
-    if (displayState == null) {
+    if (displayState == null || !fontReady) {
+      if (!fontReady) {
+        QuranFontService.ensurePageFontLoaded(widget.pageNumber).then((_) {
+          if (mounted) setState(() {});
+        });
+      }
       return QuranPageFrameTablet(
         pageNumber: widget.pageNumber,
         onNavigateToPage: widget.onNavigateToPage,

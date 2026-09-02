@@ -13,6 +13,7 @@ import '../../domain/entities/video_project_config.dart';
 import '../../domain/entities/video_render_progress.dart';
 import '../../domain/entities/word_timing_segment.dart';
 import '../../domain/repositories/i_video_export_service.dart';
+import '../../../../core/services/quran_font_service.dart';
 import 'audio_timeline_service.dart';
 import 'canvas_overlay_generator.dart';
 import 'word_timing_service.dart';
@@ -95,6 +96,7 @@ class VideoExportService implements IVideoExportService {
         final timingTasks = verses.map((verse) async {
           final i = verses.indexOf(verse);
           final pageNum = QuranMetadata.getPageNumberForAyah(config.surahNumber, verse.verseNumber);
+          await QuranFontService.ensurePageFontLoaded(pageNum);
           final isEn = config.isEnglish;
           if (i >= verseDurations.length || verseDurations[i].inMilliseconds <= 500) {
             throw Exception(isEn

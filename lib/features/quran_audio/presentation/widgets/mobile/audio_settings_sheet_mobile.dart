@@ -169,7 +169,7 @@ class _AudioSettingsSheetContentState
                 AppLocalizations.of(context)!.audioSettingsTitle,
                 style: TextStyle(
                   fontSize: 19.sp,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -254,7 +254,7 @@ class _AudioSettingsSheetContentState
                         style: TextStyle(
                           fontSize: 14.sp,
                           color: AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -291,7 +291,7 @@ class _AudioSettingsSheetContentState
                 widget.verseId != null
                     ? AppLocalizations.of(context)!.audioStartListening
                     : AppLocalizations.of(context)!.audioSaveSettings,
-                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
               ),
               onPressed: _applyAndPlay,
             ),

@@ -157,7 +157,7 @@ class ThemeAndLanguageSheetWeb extends StatelessWidget {
                             l10n.drawerThemeAndLanguage,
                             style: TextStyle(
                               fontSize: (isLandscape ? 17.0 : 22.0).sp,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
                             ),
                           ),
@@ -287,7 +287,7 @@ class ThemeAndLanguageSheetWeb extends StatelessWidget {
                     l10n.themeMushafColor,
                     style: TextStyle(
                       fontSize: (isLandscape ? 16.0 : 18.5).sp,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -337,7 +337,7 @@ class ThemeAndLanguageSheetWeb extends StatelessWidget {
                                         ? [
                                             BoxShadow(
                                               color: theme.goldColor
-                                                  .withValues(alpha: 0.4),
+                                                   .withValues(alpha: 0.4),
                                               blurRadius: 8.r,
                                               spreadRadius: 1.r,
                                             ),
@@ -369,7 +369,7 @@ class ThemeAndLanguageSheetWeb extends StatelessWidget {
                                           ? theme.goldColor
                                           : AppColors.textPrimary,
                                       fontWeight: isSelected
-                                          ? FontWeight.bold
+                                          ? FontWeight.w600
                                           : FontWeight.w500,
                                     ),
                                   ),
@@ -438,7 +438,7 @@ class _LanguagePillWeb extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: (isLandscape ? 15.0 : 17.5).sp,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: isSelected
                     ? activeGold
                     : AppColors.textPrimary.withValues(alpha: 0.7),

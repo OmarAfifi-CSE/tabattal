@@ -106,7 +106,7 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                               l10n.videoStudioFullscreenPreview,
                               style: TextStyle(
                                 fontSize: 11.5.sp,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: Colors.white,
                               ),
                             ),

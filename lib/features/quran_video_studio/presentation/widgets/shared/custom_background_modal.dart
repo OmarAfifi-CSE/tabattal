@@ -155,7 +155,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
                   l10n.videoStudioCustomPhotoTitle,
                   style: TextStyle(
                     fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -334,7 +334,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: errorColor,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -397,7 +397,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
                     title,
                     style: TextStyle(
                       fontSize: 13.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),

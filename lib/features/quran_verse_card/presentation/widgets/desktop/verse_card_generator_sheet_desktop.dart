@@ -223,11 +223,6 @@ class _VerseCardGeneratorSheetDesktopContentState
     _verseTextUthmani = '$cleanVerseText ﴿$arabicAyahNum﴾';
 
     final pageNum = widget.pageNumber;
-    if (kIsWeb && pageNum != null) {
-      QuranFontService.ensurePageFontLoaded(pageNum).then((_) {
-        if (mounted) setState(() {});
-      });
-    }
     if (pageNum != null && widget.verse.words.isNotEmpty) {
       final pageStr = pageNum.toString().padLeft(3, '0');
       final fontFamily = 'QCF_P$pageStr';
@@ -237,7 +232,14 @@ class _VerseCardGeneratorSheetDesktopContentState
       _qcfSpans = [
         TextSpan(text: codeText, style: TextStyle(fontFamily: fontFamily)),
       ];
-      _isLoadingText = false;
+      if (kIsWeb && !QuranFontService.isPageFontLoaded(pageNum)) {
+        _isLoadingText = true;
+        QuranFontService.ensurePageFontLoaded(pageNum).then((_) {
+          if (mounted) setState(() => _isLoadingText = false);
+        });
+      } else {
+        _isLoadingText = false;
+      }
     } else {
       _isLoadingText = false;
       _loadVerseTextAndFont(null);
@@ -406,6 +408,7 @@ class _VerseCardGeneratorSheetDesktopContentState
 
           if (wordsForVerse != null && wordsForVerse.isNotEmpty) {
             final pageNum = wordsForVerse.first['page'] as int? ?? 1;
+            await QuranFontService.ensurePageFontLoaded(pageNum);
             final pageStr = pageNum.toString().padLeft(3, '0');
             final fontFamily = 'QCF_P$pageStr';
 
@@ -906,7 +909,7 @@ class _VerseCardGeneratorSheetDesktopContentState
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: isLandscape ? 18.0 : 22.sp,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
                               ),
                             ),
@@ -1607,7 +1610,7 @@ class _VerseCardFormatSelectorDesktop extends StatelessWidget {
             l10n.verseCardFormatLabel,
             style: TextStyle(
               fontSize: isLandscape ? 15.0.sp : 17.5.sp,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
@@ -1725,7 +1728,7 @@ class _FormatTileDesktop extends StatelessWidget {
                   maxLines: 1,
                   style: TextStyle(
                     fontSize: isLandscape ? 14.5 : 16.0,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     color: isSelected ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -1760,7 +1763,7 @@ class _VerseCardThemeSelectorDesktop extends StatelessWidget {
           l10n.videoStudioThemeAndColors,
           style: TextStyle(
             fontSize: isLandscape ? 15.0.sp : 16.0.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
@@ -1819,7 +1822,7 @@ class _VerseCardThemeSelectorDesktop extends StatelessWidget {
                           style: TextStyle(
                             fontSize: isLandscape ? 14.0.sp : 15.0.sp,
                             fontWeight: isSelected
-                                ? FontWeight.bold
+                                ? FontWeight.w600
                                 : FontWeight.w500,
                             color: t.primaryTextColor,
                           ),
@@ -1890,7 +1893,7 @@ class _VerseCardRangePickerDesktop extends StatelessWidget {
                           title,
                           style: TextStyle(
                             fontSize: 17.0.sp,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
                           ),
                         ),
@@ -1948,8 +1951,8 @@ class _VerseCardRangePickerDesktop extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 15.0.sp,
                                   fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.w600,
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
                                   color: isSelected
                                       ? Colors.white
                                       : AppColors.textPrimary,
@@ -1994,7 +1997,7 @@ class _VerseCardRangePickerDesktop extends StatelessWidget {
               l10n.videoStudioVerseRange,
               style: TextStyle(
                 fontSize: isLandscape ? 15.0.sp : 16.0.sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -2021,7 +2024,7 @@ class _VerseCardRangePickerDesktop extends StatelessWidget {
                   ),
                   style: TextStyle(
                     fontSize: isLandscape ? 13.0.sp : 14.0.sp,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.accentGold,
                   ),
                 ),
@@ -2174,7 +2177,7 @@ class _VerseCardOptionsBarDesktop extends StatelessWidget {
           l10n.videoStudioDisplayOptions,
           style: TextStyle(
             fontSize: isLandscape ? 15.0.sp : 16.0.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
@@ -2306,7 +2309,7 @@ class _VerseCardActionButtonsDesktop extends StatelessWidget {
     final iconSize = isLandscape ? 22.0 : 24.0;
     final labelStyle = TextStyle(
       fontSize: isLandscape ? 16.5 : 18.0,
-      fontWeight: FontWeight.bold,
+      fontWeight: FontWeight.w600,
     );
     final buttonSpacing = isLandscape ? 14.0 : 16.0;
 

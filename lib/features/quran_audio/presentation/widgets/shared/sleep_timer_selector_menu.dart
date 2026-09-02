@@ -199,7 +199,7 @@ class _SleepTimerScrollableContentState
                                 ? AppColors.accentGold
                                 : AppColors.textPrimary,
                             fontWeight: isSelected
-                                ? FontWeight.bold
+                                ? FontWeight.w600
                                 : FontWeight.w500,
                           ),
                         ),

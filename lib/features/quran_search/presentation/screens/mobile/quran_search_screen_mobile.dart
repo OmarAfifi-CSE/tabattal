@@ -505,7 +505,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
                 l10n.topicSectionsTitle,
                 style: TextStyle(
                   fontSize: 20.sp,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -554,7 +554,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
                             maxLines: 1,
                             style: TextStyle(
                               fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w500,
                               color: AppColors.textPrimary,
                             ),
                           ),
@@ -597,7 +597,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
                     topicTitle,
                     style: TextStyle(
                       fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.accentGold,
                     ),
                   ),
@@ -642,7 +642,9 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
                         l10n.searchFilterAll,
                         style: TextStyle(
                           fontSize: 12.sp,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: _selectedSubTopic == null
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                           color: _selectedSubTopic == null
                               ? Colors.white
                               : AppColors.textPrimary,
@@ -674,7 +676,9 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
                           sub.getName(isAr),
                           style: TextStyle(
                             fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                             color: isSelected
                                 ? Colors.white
                                 : AppColors.textPrimary,
@@ -765,7 +769,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
                                 ),
                                 style: TextStyle(
                                   fontSize: 14.sp,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   color: AppColors.accentGold,
                                 ),
                               ),
@@ -890,7 +894,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
                       ),
                       style: TextStyle(
                         fontSize: 14.sp,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.accentGold,
                       ),
                     ),
@@ -1024,7 +1028,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
           textDirection: TextDirection.rtl,
           style: TextStyle(
             fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
             color: AppColors.textPrimary,
           ),
         ),

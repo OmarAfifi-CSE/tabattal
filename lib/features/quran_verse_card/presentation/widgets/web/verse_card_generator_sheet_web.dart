@@ -904,7 +904,7 @@ class _VerseCardGeneratorSheetWebContentState
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: isLandscape ? 18.0 : 22.sp,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
                               ),
                             ),
@@ -1605,7 +1605,7 @@ class _VerseCardFormatSelectorWeb extends StatelessWidget {
             l10n.verseCardFormatLabel,
             style: TextStyle(
               fontSize: isLandscape ? 15.0.sp : 17.5.sp,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
@@ -1723,7 +1723,7 @@ class _FormatTileWeb extends StatelessWidget {
                   maxLines: 1,
                   style: TextStyle(
                     fontSize: isLandscape ? 14.5 : 16.0,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     color: isSelected ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -1758,7 +1758,7 @@ class _VerseCardThemeSelectorWeb extends StatelessWidget {
           l10n.videoStudioThemeAndColors,
           style: TextStyle(
             fontSize: isLandscape ? 15.0.sp : 16.0.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
@@ -1817,7 +1817,7 @@ class _VerseCardThemeSelectorWeb extends StatelessWidget {
                           style: TextStyle(
                             fontSize: isLandscape ? 14.0.sp : 15.0.sp,
                             fontWeight: isSelected
-                                ? FontWeight.bold
+                                ? FontWeight.w600
                                 : FontWeight.w500,
                             color: t.primaryTextColor,
                           ),
@@ -1888,7 +1888,7 @@ class _VerseCardRangePickerWeb extends StatelessWidget {
                           title,
                           style: TextStyle(
                             fontSize: 17.0.sp,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
                           ),
                         ),
@@ -1946,8 +1946,8 @@ class _VerseCardRangePickerWeb extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 15.0.sp,
                                   fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.w600,
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
                                   color: isSelected
                                       ? Colors.white
                                       : AppColors.textPrimary,
@@ -1992,7 +1992,7 @@ class _VerseCardRangePickerWeb extends StatelessWidget {
               l10n.videoStudioVerseRange,
               style: TextStyle(
                 fontSize: isLandscape ? 15.0.sp : 16.0.sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -2019,7 +2019,7 @@ class _VerseCardRangePickerWeb extends StatelessWidget {
                   ),
                   style: TextStyle(
                     fontSize: isLandscape ? 13.0.sp : 14.0.sp,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.accentGold,
                   ),
                 ),
@@ -2172,7 +2172,7 @@ class _VerseCardOptionsBarWeb extends StatelessWidget {
           l10n.videoStudioDisplayOptions,
           style: TextStyle(
             fontSize: isLandscape ? 15.0.sp : 16.0.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
@@ -2304,7 +2304,7 @@ class _VerseCardActionButtonsWeb extends StatelessWidget {
     final iconSize = isLandscape ? 22.0 : 24.0;
     final labelStyle = TextStyle(
       fontSize: isLandscape ? 16.5 : 18.0,
-      fontWeight: FontWeight.bold,
+      fontWeight: FontWeight.w600,
     );
     final buttonSpacing = isLandscape ? 14.0 : 16.0;
 

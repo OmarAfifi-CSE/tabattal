@@ -254,7 +254,7 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
               l10n.translationTitle,
               style: TextStyle(
                 color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 22.sp,
               ),
             ),
@@ -406,7 +406,7 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                                                     item.surah,
                                                   ),
                                             style: TextStyle(
-                                              fontWeight: FontWeight.bold,
+                                              fontWeight: FontWeight.w600,
                                               color: AppColors.accentGold,
                                               fontSize: 16.sp,
                                             ),
@@ -420,7 +420,7 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                                                 ? '(${item.ayah})'
                                                 : '﴿${item.ayah.toArabicDigits}﴾',
                                             style: TextStyle(
-                                              fontWeight: FontWeight.bold,
+                                              fontWeight: FontWeight.w600,
                                               color: AppColors.accentGold,
                                               fontSize: 14.sp,
                                               fontFamily: 'Amiri',

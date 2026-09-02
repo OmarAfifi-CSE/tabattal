@@ -222,7 +222,7 @@ class _WordMeaningsHeaderMobile extends StatelessWidget {
                 l10n.wordMeaningsTitle,
                 style: AppTextStyles.headerText.copyWith(
                   fontSize: 21.sp,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.verseMarkerGold,
                 ),
               ),
@@ -244,7 +244,7 @@ class _WordMeaningsHeaderMobile extends StatelessWidget {
               style: TextStyle(
                 fontFamily: isArabic ? 'Amiri' : null,
                 fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: AppColors.verseMarkerGold,
               ),
             ),
@@ -331,7 +331,7 @@ class _WordMeaningCardMobile extends StatelessWidget {
               (index + 1).toString().toArabicDigits,
               style: TextStyle(
                 fontSize: 14.sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: AppColors.verseMarkerGold,
               ),
             ),
@@ -351,7 +351,7 @@ class _WordMeaningCardMobile extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
                       fontSize: 23.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.normal,
                       color: AppColors.verseMarkerGold,
                       height: 1.4,
                     ),

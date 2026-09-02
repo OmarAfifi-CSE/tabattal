@@ -28,7 +28,7 @@ class VerseCardFormatSelector extends StatelessWidget {
             l10n.verseCardFormatLabel,
             style: TextStyle(
               fontSize: 13.sp,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
@@ -139,7 +139,7 @@ class _FormatOptionTile extends StatelessWidget {
                   maxLines: 1,
                   style: TextStyle(
                     fontSize: 12.sp,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     color: isSelected ? Colors.white : AppColors.textPrimary,
                   ),
                 ),

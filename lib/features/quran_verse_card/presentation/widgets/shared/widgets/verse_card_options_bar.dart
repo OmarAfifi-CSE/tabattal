@@ -29,7 +29,7 @@ class VerseCardOptionsBar extends StatelessWidget {
           l10n.videoStudioDisplayOptions,
           style: TextStyle(
             fontSize: 13.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),

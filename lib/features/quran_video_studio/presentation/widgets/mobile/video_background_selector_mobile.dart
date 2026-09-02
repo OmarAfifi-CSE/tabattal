@@ -41,7 +41,7 @@ class VideoBackgroundSelectorMobile extends StatelessWidget {
               l10n.videoStudioThemeAndBg,
               style: TextStyle(
                 fontSize: 13.sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -118,7 +118,7 @@ class VideoBackgroundSelectorMobile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11.5.sp,
                             fontWeight:
-                                isDefaultTheme ? FontWeight.bold : FontWeight.w500,
+                                isDefaultTheme ? FontWeight.w600 : FontWeight.w500,
                             color: isDefaultTheme
                                 ? AppColors.textPrimary
                                 : AppColors.textSecondary,
@@ -192,8 +192,8 @@ class VideoBackgroundSelectorMobile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11.5.sp,
                             fontWeight: hasCustomImage
-                                ? FontWeight.bold
-                                : FontWeight.w600,
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                             color: hasCustomImage
                                 ? Colors.white
                                 : AppColors.textPrimary,
@@ -259,8 +259,8 @@ class VideoBackgroundSelectorMobile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11.5.sp,
                             fontWeight: hasCustomVideo
-                                ? FontWeight.bold
-                                : FontWeight.w600,
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                             color: hasCustomVideo
                                 ? AppColors.accentGold
                                 : AppColors.textPrimary,

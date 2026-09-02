@@ -215,11 +215,6 @@ class _VerseCardGeneratorSheetContentMobileState
     _verseTextUthmani = '$cleanVerseText ﴿$arabicAyahNum﴾';
 
     final pageNum = widget.pageNumber;
-    if (kIsWeb && pageNum != null) {
-      QuranFontService.ensurePageFontLoaded(pageNum).then((_) {
-        if (mounted) setState(() {});
-      });
-    }
     if (pageNum != null && widget.verse.words.isNotEmpty) {
       final pageStr = pageNum.toString().padLeft(3, '0');
       final fontFamily = 'QCF_P$pageStr';
@@ -229,7 +224,14 @@ class _VerseCardGeneratorSheetContentMobileState
       _qcfSpans = [
         TextSpan(text: codeText, style: TextStyle(fontFamily: fontFamily)),
       ];
-      _isLoadingText = false;
+      if (kIsWeb && !QuranFontService.isPageFontLoaded(pageNum)) {
+        _isLoadingText = true;
+        QuranFontService.ensurePageFontLoaded(pageNum).then((_) {
+          if (mounted) setState(() => _isLoadingText = false);
+        });
+      } else {
+        _isLoadingText = false;
+      }
     } else {
       _isLoadingText = false;
       _loadVerseTextAndFont(null);
@@ -398,6 +400,7 @@ class _VerseCardGeneratorSheetContentMobileState
 
           if (wordsForVerse != null && wordsForVerse.isNotEmpty) {
             final pageNum = wordsForVerse.first['page'] as int? ?? 1;
+            await QuranFontService.ensurePageFontLoaded(pageNum);
             final pageStr = pageNum.toString().padLeft(3, '0');
             final fontFamily = 'QCF_P$pageStr';
 
@@ -895,7 +898,7 @@ class _VerseCardGeneratorSheetContentMobileState
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 17.sp,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
                               ),
                             ),

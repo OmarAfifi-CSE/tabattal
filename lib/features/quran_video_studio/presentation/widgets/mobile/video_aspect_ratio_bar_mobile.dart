@@ -62,7 +62,7 @@ class VideoAspectRatioBarMobile extends StatelessWidget {
                     ratio.shortLabel,
                     style: TextStyle(
                       fontSize: 12.sp,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                       color: isSelected ? Colors.white : AppColors.textPrimary,
                     ),
                   ),

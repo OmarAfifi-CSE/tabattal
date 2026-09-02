@@ -75,7 +75,7 @@ class VideoRangePickerMobile extends StatelessWidget {
                       title,
                       style: TextStyle(
                         fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
                     ),
@@ -125,7 +125,7 @@ class VideoRangePickerMobile extends StatelessWidget {
                             isEn ? '$item' : VerseCardTextUtils.toArabicDigits(item),
                             style: TextStyle(
                               fontSize: 14.sp,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                               color: isSelected ? Colors.white : AppColors.textPrimary,
                             ),
                           ),
@@ -163,7 +163,7 @@ class VideoRangePickerMobile extends StatelessWidget {
               l10n.videoStudioVerseRange,
               style: TextStyle(
                 fontSize: 13.sp,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -186,7 +186,7 @@ class VideoRangePickerMobile extends StatelessWidget {
                 ),
                 style: TextStyle(
                   fontSize: 11.sp,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.accentGold,
                 ),
               ),

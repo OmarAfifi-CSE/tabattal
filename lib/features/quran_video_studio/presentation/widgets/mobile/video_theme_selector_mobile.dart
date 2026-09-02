@@ -27,7 +27,7 @@ class VideoThemeSelectorMobile extends StatelessWidget {
           l10n.videoStudioThemeAndColors,
           style: TextStyle(
             fontSize: 13.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
@@ -82,7 +82,7 @@ class VideoThemeSelectorMobile extends StatelessWidget {
                         isEn ? preset.nameEnglish : preset.nameArabic,
                         style: TextStyle(
                           fontSize: 12.sp,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                           color: preset.primaryTextColor,
                         ),
                       ),

@@ -362,7 +362,7 @@ class _WebLandscapeHorizonBar extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 8.5.sp,
                             color: AppColors.bronzeDark,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -618,7 +618,7 @@ class _WebMiniPlayer extends StatelessWidget {
                           style: AppTextStyles.menuItemText.copyWith(
                             color: AppColors.inkBrown,
                             fontSize: 13.5.sp,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -756,7 +756,7 @@ class _WebSleepTimerAndClose extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 8.5.sp,
                       color: AppColors.bronzeDark,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
               ],

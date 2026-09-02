@@ -26,7 +26,7 @@ class VerseCardThemeSelector extends StatelessWidget {
           l10n.videoStudioThemeAndBg,
           style: TextStyle(
             fontSize: 13.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
@@ -84,8 +84,8 @@ class VerseCardThemeSelector extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 12.sp,
                             fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                             color: t.primaryTextColor,
                           ),
                         ),

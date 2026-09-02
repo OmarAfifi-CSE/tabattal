@@ -238,7 +238,7 @@ class _QuranAudioManagerViewDesktopState
           l10n.audioManagerTitle,
           style: TextStyle(
             color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontSize: 24.sp,
           ),
         ),
@@ -288,7 +288,7 @@ class _QuranAudioManagerViewDesktopState
                                     l10n.audioTypeLabel,
                                     style: TextStyle(
                                       fontSize: 15.sp,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w600,
                                       color: AppColors.textSecondary,
                                     ),
                                   ),
@@ -328,7 +328,7 @@ class _QuranAudioManagerViewDesktopState
                                     l10n.audioReciterLabel,
                                     style: TextStyle(
                                       fontSize: 15.sp,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w600,
                                       color: AppColors.textSecondary,
                                     ),
                                   ),
@@ -357,7 +357,7 @@ class _QuranAudioManagerViewDesktopState
                           l10n.audioTypeLabel,
                           style: TextStyle(
                             fontSize: 15.sp,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.textSecondary,
                           ),
                         ),
@@ -390,7 +390,7 @@ class _QuranAudioManagerViewDesktopState
                           l10n.audioReciterLabel,
                           style: TextStyle(
                             fontSize: 15.sp,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.textSecondary,
                           ),
                         ),
@@ -441,7 +441,7 @@ class _QuranAudioManagerViewDesktopState
                                 : l10n.audioDownloadAll,
                             style: TextStyle(
                               fontSize: 18.5.sp,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: Colors.white,
                             ),
                           ),
@@ -641,7 +641,7 @@ class _AudioManagerSurahItemDesktop extends StatelessWidget {
                           '${(progress * 100).toInt()}%',
                           style: TextStyle(
                             fontSize: 13.sp,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.accentGold,
                           ),
                         ),
@@ -694,7 +694,7 @@ class _AudioManagerSurahItemDesktop extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: (surah >= 100 ? 15 : 18).sp,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.accentGold,
                   ),
                 ),
@@ -705,7 +705,7 @@ class _AudioManagerSurahItemDesktop extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 19.sp,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),

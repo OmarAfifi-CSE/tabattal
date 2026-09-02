@@ -118,7 +118,7 @@ class ThemeAndLanguageSheetMobile extends StatelessWidget {
                         l10n.drawerThemeAndLanguage,
                         style: TextStyle(
                           fontSize: 21.sp,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
                         ),
                       ),
@@ -139,7 +139,7 @@ class ThemeAndLanguageSheetMobile extends StatelessWidget {
                         l10n.drawerLanguage,
                         style: TextStyle(
                           fontSize: 17.sp,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
                         ),
                       ),
@@ -272,7 +272,7 @@ class ThemeAndLanguageSheetMobile extends StatelessWidget {
                     l10n.themeMushafColor,
                     style: TextStyle(
                       fontSize: 17.sp,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -348,8 +348,8 @@ class ThemeAndLanguageSheetMobile extends StatelessWidget {
                                           ? theme.goldColor
                                           : AppColors.textPrimary,
                                       fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                                          ? FontWeight.w600
+                                          : FontWeight.w500,
                                     ),
                                   ),
                                 ),
@@ -415,7 +415,7 @@ class _LanguagePillMobile extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 16.5.sp,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: isSelected ? activeGold : AppColors.textPrimary.withValues(alpha: 0.7),
               ),
             ),

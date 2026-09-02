@@ -70,7 +70,7 @@ class QuranDrawerMobile extends StatelessWidget {
                                       l10n.themeScrollDirection,
                                       style: TextStyle(
                                         fontSize: 14.sp,
-                                        fontWeight: FontWeight.bold,
+                                        fontWeight: FontWeight.w500,
                                         color: AppColors.textPrimary,
                                       ),
                                     ),
@@ -286,7 +286,7 @@ class _MobileDrawerHeader extends StatelessWidget {
           ),
           SizedBox(height: 10.h),
           Text(
-            '\uFD71 وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا \uFD70',
+            '\uFD5F وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا \uFD5E',
             textAlign: TextAlign.center,
             textDirection: TextDirection.rtl,
             style: TextStyle(
@@ -322,7 +322,7 @@ class _MobileBookmarkBadge extends StatelessWidget {
             style: TextStyle(
               color: AppColors.cardCream,
               fontSize: 12.sp,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             ),
           ),
         );
@@ -381,7 +381,7 @@ class _MobileDrawerItem extends StatelessWidget {
                           title,
                           style: TextStyle(
                             fontSize: 15.sp,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w500,
                             color: AppColors.textPrimary,
                           ),
                         ),
@@ -495,7 +495,7 @@ class ScrollDirectionToggle extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: isHorizontal
-                                  ? FontWeight.bold
+                                  ? FontWeight.w600
                                   : FontWeight.w500,
                               color: isHorizontal
                                   ? activeTheme.goldColor
@@ -530,7 +530,7 @@ class ScrollDirectionToggle extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: !isHorizontal
-                                  ? FontWeight.bold
+                                  ? FontWeight.w600
                                   : FontWeight.w500,
                               color: !isHorizontal
                                   ? activeTheme.goldColor

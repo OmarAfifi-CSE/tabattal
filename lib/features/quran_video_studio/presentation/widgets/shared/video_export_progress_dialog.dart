@@ -135,7 +135,7 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
                           : l10n.videoStudioProgressTitle,
                   style: TextStyle(
                     fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                     fontFamily: 'Amiri',
                   ),
@@ -203,7 +203,7 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
                                       '${(animValue * 100).toInt()}%',
                                       style: TextStyle(
                                         fontSize: 13.sp,
-                                        fontWeight: FontWeight.bold,
+                                        fontWeight: FontWeight.w600,
                                         color: AppColors.accentGold,
                                         fontFamily: 'Outfit',
                                         fontFeatures: const [FontFeature.tabularFigures()],

@@ -118,7 +118,7 @@ class AudioSelectorButton<T> extends StatelessWidget {
                         style: TextStyle(
                           fontSize: valueFontSize,
                           color: AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           height: 1.15,
                         ),
                       ),
@@ -237,8 +237,8 @@ class _PopupMenuScrollableContentState<T>
                             fontSize: widget.itemFontSize,
                             color: AppColors.textPrimary,
                             fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                           ),
                         ),
                       ),

@@ -105,14 +105,21 @@ class VerseCardFullPagePreview extends StatelessWidget {
                   color: theme.accentColor,
                 ),
                 SizedBox(width: 6.w),
-                Text(
-                  'تَـبَـتَّـلْ • Tabattal',
-                  style: TextStyle(
-                    fontFamily: 'Amiri',
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.bold,
-                    color: theme.secondaryTextColor.withValues(alpha: 0.85),
-                    letterSpacing: 0.5,
+                Text.rich(
+                  TextSpan(
+                    style: TextStyle(
+                      fontFamily: 'Amiri',
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w600,
+                      color: theme.secondaryTextColor.withValues(alpha: 0.85),
+                    ),
+                    children: const [
+                      TextSpan(text: 'تَـبَـتَّـلْ • '),
+                      TextSpan(
+                        text: 'Tabattal',
+                        style: TextStyle(letterSpacing: 0.6),
+                      ),
+                    ],
                   ),
                 ),
               ],

@@ -210,7 +210,7 @@ class _MobileMiniPlayer extends StatelessWidget {
                           style: AppTextStyles.menuItemText.copyWith(
                             color: AppColors.inkBrown,
                             fontSize: 14.sp,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -349,7 +349,7 @@ class _MobileSleepTimerAndClose extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10.sp,
                       color: AppColors.bronzeDark,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
               ],

@@ -260,10 +260,14 @@ class QuranPageFrameMobile extends StatelessWidget {
                           horizontal: 2.0 * scale,
                           vertical: 1.5 * scale,
                         ),
-                        child: Icon(
-                          Icons.segment_rounded,
-                          color: mushafTheme.goldColor,
-                          size: 18.0 * scale,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.segment_rounded,
+                            color: mushafTheme.goldColor,
+                            size: 18.0 * scale,
+                          ),
                         ),
                       ),
                     ),
@@ -340,6 +344,7 @@ class _MobileFrameInfoBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 23.0 * scale,
       margin: EdgeInsets.symmetric(horizontal: 1.0 * scale),
       padding: padding ??
           EdgeInsets.symmetric(

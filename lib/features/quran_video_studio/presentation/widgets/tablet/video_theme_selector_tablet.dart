@@ -27,7 +27,7 @@ class VideoThemeSelectorTablet extends StatelessWidget {
           l10n.videoStudioThemeAndColors,
           style: TextStyle(
             fontSize: 16.0.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
@@ -88,7 +88,7 @@ class VideoThemeSelectorTablet extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14.0.sp,
                             fontWeight: isSelected
-                                ? FontWeight.bold
+                                ? FontWeight.w600
                                 : FontWeight.w500,
                             color: preset.primaryTextColor,
                             height: 1.15,

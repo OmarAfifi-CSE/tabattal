@@ -85,7 +85,7 @@ class _VideoReciterSelectorWebState
                                 l10n.videoStudioChooseReciter,
                                 style: TextStyle(
                                   fontSize: 15.0.sp,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   color: AppColors.textPrimary,
                                 ),
                               ),
@@ -103,7 +103,7 @@ class _VideoReciterSelectorWebState
                             AppColors.textPrimary.withValues(alpha: 0.6),
                         indicatorColor: AppColors.accentGold,
                         labelStyle: TextStyle(
-                            fontSize: 12.0.sp, fontWeight: FontWeight.bold),
+                            fontSize: 12.0.sp, fontWeight: FontWeight.w600),
                         tabs: ReciterCatalog
                             .verifiedVideoRecitersByCategory.keys
                             .map((cat) => Tab(
@@ -152,8 +152,8 @@ class _VideoReciterSelectorWebState
                                     style: TextStyle(
                                       fontSize: 13.0.sp,
                                       fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                                          ? FontWeight.w600
+                                          : FontWeight.w500,
                                       color: isSelected
                                           ? AppColors.accentGold
                                           : AppColors.textPrimary,
@@ -207,7 +207,7 @@ class _VideoReciterSelectorWebState
                   l10n.videoStudioReciter,
                   style: TextStyle(
                     fontSize: 16.0.sp,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -294,7 +294,7 @@ class _VideoReciterSelectorWebState
                         style: TextStyle(
                           fontSize: 13.5.sp,
                           fontWeight: isCatSelected
-                              ? FontWeight.bold
+                              ? FontWeight.w600
                               : FontWeight.w500,
                           color: isCatSelected
                               ? Colors.white
@@ -372,8 +372,8 @@ class _VideoReciterSelectorWebState
                           style: TextStyle(
                             fontSize: 14.0.sp,
                             fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                             color: isSelected
                                 ? AppColors.accentGold
                                 : AppColors.textPrimary,

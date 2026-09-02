@@ -90,7 +90,7 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
                             l10n.videoStudioChooseReciter,
                             style: TextStyle(
                               fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
                             ),
                           ),
@@ -106,7 +106,7 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
                     labelColor: AppColors.accentGold,
                     unselectedLabelColor: AppColors.textPrimary.withValues(alpha: 0.6),
                     indicatorColor: AppColors.accentGold,
-                    labelStyle: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold),
+                    labelStyle: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600),
                     tabs: ReciterCatalog.verifiedVideoRecitersByCategory.keys
                         .map((cat) => Tab(text: isEn ? ReciterCatalog.getCategoryNameEnglish(cat) : cat))
                         .toList(),
@@ -139,7 +139,7 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
                                 reciterDisplayName,
                                 style: TextStyle(
                                   fontSize: 14.sp,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                                   color: isSelected ? AppColors.accentGold : AppColors.textPrimary,
                                 ),
                               ),
@@ -186,7 +186,7 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
                   l10n.videoStudioReciter,
                   style: TextStyle(
                     fontSize: 13.sp,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -259,7 +259,7 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
                       isEn ? ReciterCatalog.getCategoryNameEnglish(cat) : cat,
                       style: TextStyle(
                         fontSize: 11.5.sp,
-                        fontWeight: isCatSelected ? FontWeight.bold : FontWeight.w500,
+                        fontWeight: isCatSelected ? FontWeight.w600 : FontWeight.w500,
                         color: isCatSelected ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -324,7 +324,7 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
                         reciterDisplayName,
                         style: TextStyle(
                           fontSize: 11.5.sp,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                           color: isSelected ? AppColors.accentGold : AppColors.textPrimary,
                         ),
                       ),

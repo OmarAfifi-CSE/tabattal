@@ -55,7 +55,7 @@ class _QuranIndexViewWebState extends State<QuranIndexViewWeb>
           l10n.indexTitle,
           style: TextStyle(
             color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontSize: 24.sp,
           ),
         ),
@@ -72,7 +72,7 @@ class _QuranIndexViewWebState extends State<QuranIndexViewWeb>
           labelColor: AppColors.accentGold,
           unselectedLabelColor: AppColors.textPrimary.withValues(alpha: 0.54),
           indicatorColor: AppColors.accentGold,
-          labelStyle: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+          labelStyle: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w600),
           tabs: [
             Tab(text: l10n.indexSurahsTab),
             Tab(text: l10n.indexJuzsTab),
@@ -223,7 +223,7 @@ class _IndexSurahTile extends StatelessWidget {
         l10n.surahListItem(surahName),
         style: TextStyle(
           fontSize: (isLandscape ? 15.5 : 21.0).sp,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w500,
           color: AppColors.textPrimary,
         ),
       ),
@@ -366,7 +366,7 @@ class _IndexJuzTile extends StatelessWidget {
         ),
         style: TextStyle(
           fontSize: (isLandscape ? 15.5 : 21.0).sp,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w500,
           color: AppColors.textPrimary,
         ),
       ),
@@ -412,7 +412,7 @@ class _IndexNumberBadge extends StatelessWidget {
         label,
         style: TextStyle(
           fontSize: (isLandscape ? 13.0 : 16.0).sp,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           color: AppColors.accentGold,
         ),
       ),

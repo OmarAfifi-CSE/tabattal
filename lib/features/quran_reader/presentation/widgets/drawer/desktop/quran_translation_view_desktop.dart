@@ -264,7 +264,7 @@ class _QuranTranslationViewDesktopState
               l10n.translationTitle,
               style: TextStyle(
                 color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 24.sp,
               ),
             ),
@@ -411,7 +411,7 @@ class _QuranTranslationViewDesktopState
                                                         item.surah,
                                                       ),
                                                 style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
+                                                  fontWeight: FontWeight.w600,
                                                   color: AppColors.accentGold,
                                                   fontSize: 20.sp,
                                                 ),
@@ -425,7 +425,7 @@ class _QuranTranslationViewDesktopState
                                                     ? '(${item.ayah})'
                                                     : '﴿${item.ayah.toArabicDigits}﴾',
                                                 style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
+                                                  fontWeight: FontWeight.w600,
                                                   color: AppColors.accentGold,
                                                   fontSize: 18.sp,
                                                   fontFamily: 'Amiri',

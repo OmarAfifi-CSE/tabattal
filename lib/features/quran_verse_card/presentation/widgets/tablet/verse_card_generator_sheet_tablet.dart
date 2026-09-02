@@ -226,11 +226,6 @@ class _VerseCardGeneratorSheetTabletContentState
     _verseTextUthmani = '$cleanVerseText ﴿$arabicAyahNum﴾';
 
     final pageNum = widget.pageNumber;
-    if (kIsWeb && pageNum != null) {
-      QuranFontService.ensurePageFontLoaded(pageNum).then((_) {
-        if (mounted) setState(() {});
-      });
-    }
     if (pageNum != null && widget.verse.words.isNotEmpty) {
       final pageStr = pageNum.toString().padLeft(3, '0');
       final fontFamily = 'QCF_P$pageStr';
@@ -240,7 +235,14 @@ class _VerseCardGeneratorSheetTabletContentState
       _qcfSpans = [
         TextSpan(text: codeText, style: TextStyle(fontFamily: fontFamily)),
       ];
-      _isLoadingText = false;
+      if (kIsWeb && !QuranFontService.isPageFontLoaded(pageNum)) {
+        _isLoadingText = true;
+        QuranFontService.ensurePageFontLoaded(pageNum).then((_) {
+          if (mounted) setState(() => _isLoadingText = false);
+        });
+      } else {
+        _isLoadingText = false;
+      }
     } else {
       _isLoadingText = false;
       _loadVerseTextAndFont(null);
@@ -409,6 +411,7 @@ class _VerseCardGeneratorSheetTabletContentState
 
           if (wordsForVerse != null && wordsForVerse.isNotEmpty) {
             final pageNum = wordsForVerse.first['page'] as int? ?? 1;
+            await QuranFontService.ensurePageFontLoaded(pageNum);
             final pageStr = pageNum.toString().padLeft(3, '0');
             final fontFamily = 'QCF_P$pageStr';
 
@@ -909,7 +912,7 @@ class _VerseCardGeneratorSheetTabletContentState
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: isLandscape ? 18.0 : 22.sp,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
                               ),
                             ),
@@ -1592,7 +1595,7 @@ class _VerseCardFormatSelectorTablet extends StatelessWidget {
             l10n.verseCardFormatLabel,
             style: TextStyle(
               fontSize: isLandscape ? 15.0.sp : 17.5.sp,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
@@ -1710,7 +1713,7 @@ class _FormatTileTablet extends StatelessWidget {
                   maxLines: 1,
                   style: TextStyle(
                     fontSize: isLandscape ? 14.0.sp : 16.0.sp,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     color: isSelected ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -1790,7 +1793,7 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                     l10n.videoStudioShare,
                     style: TextStyle(
                       fontSize: isLandscape ? 15.0.sp : 18.0.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -1826,7 +1829,7 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                     l10n.videoStudioSave,
                     style: TextStyle(
                       fontSize: isLandscape ? 15.0.sp : 18.0.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -1866,7 +1869,7 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                     l10n.verseCardShareImage,
                     style: TextStyle(
                       fontSize: isLandscape ? 15.0.sp : 18.0.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -1902,7 +1905,7 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                     l10n.verseCardSaveImage,
                     style: TextStyle(
                       fontSize: isLandscape ? 15.0.sp : 18.0.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -1931,7 +1934,7 @@ class _VerseCardActionButtonsTablet extends StatelessWidget {
                 l10n.verseCardCopyText,
                 style: TextStyle(
                   fontSize: isLandscape ? 15.0.sp : 18.0.sp,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
