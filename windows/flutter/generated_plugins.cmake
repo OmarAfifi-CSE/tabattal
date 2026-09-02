@@ -6,8 +6,12 @@ list(APPEND FLUTTER_PLUGIN_LIST
   ffmpeg_kit_flutter_new_min_gpl
   file_selector_windows
   gal
+  just_audio_windows
+  screen_retriever_windows
   share_plus
   url_launcher_windows
+  video_player_win
+  window_manager
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

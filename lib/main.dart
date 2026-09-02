@@ -1,8 +1,11 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:window_manager/window_manager.dart';
 import 'l10n/app_localizations.dart';
 
 import 'features/quran_reader/presentation/screens/mobile/quran_mobile_screen.dart';
@@ -10,6 +13,7 @@ import 'features/quran_reader/presentation/screens/tablet/quran_tablet_screen.da
 import 'features/quran_reader/presentation/screens/desktop/quran_desktop_screen.dart';
 import 'features/quran_reader/presentation/screens/web/quran_web_screen.dart';
 import 'core/utils/responsive_layout.dart';
+import 'core/widgets/desktop_title_bar.dart';
 import 'features/quran_audio/presentation/bloc/audio_bloc.dart';
 import 'features/quran_bookmarks/presentation/bloc/bookmark_bloc.dart';
 import 'features/quran_bookmarks/presentation/bloc/bookmark_event.dart';
@@ -45,6 +49,27 @@ void main() async {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+  }
+
+  // Desktop Window Manager configuration (Windows, macOS, Linux)
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    await windowManager.ensureInitialized();
+
+    const windowOptions = WindowOptions(
+      size: Size(1280, 800),
+      minimumSize: Size(900, 600),
+      center: true,
+      titleBarStyle: TitleBarStyle.hidden,
+      title: 'Tabattal - تبتل',
+      backgroundColor: Colors.transparent,
+      skipTaskbar: false,
+    );
+
+    await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.center();
+      await windowManager.show();
+      await windowManager.focus();
+    });
   }
 
   final container = await configureDependencies();
@@ -172,7 +197,16 @@ class TabattalApp extends StatelessWidget {
                           theme: appTheme(),
                           darkTheme: appThemeDark(),
                           themeMode: settingsState.themeMode,
-                          builder: appDirectionalityBuilder,
+                          builder: (context, child) {
+                            final directedChild =
+                                appDirectionalityBuilder(context, child);
+                            return Column(
+                              children: [
+                                const DesktopTitleBar(),
+                                Expanded(child: directedChild),
+                              ],
+                            );
+                          },
                           home: const QuranDesktopScreen(),
                         ),
                       );
@@ -203,7 +237,22 @@ class TabattalApp extends StatelessWidget {
                           theme: appTheme(),
                           darkTheme: appThemeDark(),
                           themeMode: settingsState.themeMode,
-                          builder: appDirectionalityBuilder,
+                          builder: (context, child) {
+                            final directedChild =
+                                appDirectionalityBuilder(context, child);
+                            if (!kIsWeb &&
+                                (Platform.isWindows ||
+                                    Platform.isLinux ||
+                                    Platform.isMacOS)) {
+                              return Column(
+                                children: [
+                                  const DesktopTitleBar(),
+                                  Expanded(child: directedChild),
+                                ],
+                              );
+                            }
+                            return directedChild;
+                          },
                           home: const QuranTabletScreen(),
                         ),
                       );
@@ -229,7 +278,22 @@ class TabattalApp extends StatelessWidget {
                       theme: appTheme(),
                       darkTheme: appThemeDark(),
                       themeMode: settingsState.themeMode,
-                      builder: appDirectionalityBuilder,
+                      builder: (context, child) {
+                        final directedChild =
+                            appDirectionalityBuilder(context, child);
+                        if (!kIsWeb &&
+                            (Platform.isWindows ||
+                                Platform.isLinux ||
+                                Platform.isMacOS)) {
+                          return Column(
+                            children: [
+                              const DesktopTitleBar(),
+                              Expanded(child: directedChild),
+                            ],
+                          );
+                        }
+                        return directedChild;
+                      },
                       home: const QuranMobileScreen(),
                     ),
                   ),

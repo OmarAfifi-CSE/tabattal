@@ -27,10 +27,16 @@ class CustomVideoService {
       final picker = ImagePicker();
       final XFile? pickedFile = await picker.pickVideo(
         source: ImageSource.gallery,
-        maxDuration: const Duration(minutes: 10),
+        maxDuration: (!kIsWeb &&
+                (Platform.isWindows ||
+                    Platform.isLinux ||
+                    Platform.isMacOS))
+            ? null
+            : const Duration(minutes: 10),
       );
       return pickedFile?.path;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error picking video: $e');
       return null;
     }
   }

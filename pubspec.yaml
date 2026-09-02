@@ -12,29 +12,50 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  intl: ^0.20.2
+
+  # --- Architecture, State Management & Utils ---
   flutter_bloc: ^9.1.1
-  equatable: ^2.0.8
-  dio: ^5.9.2
-  just_audio: ^0.10.5
-  audio_service: ^0.18.18
-  shared_preferences: ^2.5.5
   bloc_concurrency: ^0.3.0
-  sqflite: ^2.4.1
+  equatable: ^2.0.8
+  intl: ^0.20.2
+  archive: ^4.2.0
+
+  # --- UI, Presentation & Layout ---
+  flutter_screenutil: ^5.9.3
+  scrollable_positioned_list: ^0.3.8
+
+  # --- Networking & HTTP ---
+  dio: ^5.9.2
+
+  # --- Local Storage, Preferences & Database (Mobile, Desktop, Web) ---
+  shared_preferences: ^2.5.5
   path_provider: ^2.1.5
   path: ^1.9.0
-  scrollable_positioned_list: ^0.3.8
-  flutter_screenutil: ^5.9.3
+  sqflite: ^2.4.1
   sqflite_common_ffi: ^2.4.2
   sqflite_common_ffi_web: ^1.1.2
-  in_app_update: ^5.0.0
-  share_plus: ^13.3.0
-  ffmpeg_kit_flutter_new_min_gpl: ^2.6.2
-  gal: ^2.3.1
-  image_picker: ^1.1.2
+
+  # --- Audio Playback Suite (Mobile, Web & Desktop) ---
+  just_audio: ^0.10.5
+  just_audio_windows: ^0.2.3
+  audio_service: ^0.18.18
+
+  # --- Quran Video Studio & Media Processing ---
   video_player: ^2.14.0
+  video_player_win: ^3.2.2
+  ffmpeg_kit_flutter_new_min_gpl: ^2.6.2
+
+  # --- Platform Hardware & Device Integrations ---
+  image_picker: ^1.1.2
+  share_plus: ^13.3.0
+  gal: ^2.3.1
+  in_app_update: ^5.0.0
+
+  # --- Desktop Window Management (Windows, macOS, Linux) ---
+  window_manager: ^0.5.2
+
+  # --- Web Platform Support ---
   web: ^1.1.0
-  archive: ^4.2.0
 
 dev_dependencies:
   flutter_test:

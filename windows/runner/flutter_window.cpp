@@ -27,9 +27,11 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
-  flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
-  });
+  // Defer window display to window_manager in Dart (waitUntilReadyToShow)
+  // to ensure window opens centered with custom title bar and zero visual flash.
+  // flutter_controller_->engine()->SetNextFrameCallback([&]() {
+  //   this->Show();
+  // });
 
   // Flutter can complete the first frame before the "show window" callback is
   // registered. The following call ensures a frame is pending to ensure the
