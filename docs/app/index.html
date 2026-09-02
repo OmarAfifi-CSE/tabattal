@@ -7,9 +7,9 @@
   <!-- Core Meta Tags & Disable Auto-Translation -->
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-  <!-- Dynamic Saved Locale Sync & Modern Intl Polyfill -->
+  <!-- Dynamic Saved Locale Sync, Modern Intl Polyfill & iOS Zoom Lock -->
   <script>
     (function() {
       // Suppress legacy Chrome Intl.v8BreakIterator deprecation warning in favor of Intl.Segmenter
@@ -17,6 +17,19 @@
         if (typeof Intl !== 'undefined' && 'v8BreakIterator' in Intl) {
           delete Intl.v8BreakIterator;
         }
+      } catch (e) {}
+
+      // Prevent iOS Safari heuristic auto-zooming and pinch gestures from breaking Flutter canvas layout
+      try {
+        document.addEventListener('gesturestart', function(e) {
+          e.preventDefault();
+        });
+        document.addEventListener('gesturechange', function(e) {
+          e.preventDefault();
+        });
+        document.addEventListener('gestureend', function(e) {
+          e.preventDefault();
+        });
       } catch (e) {}
 
       try {
@@ -201,6 +214,18 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+    }
+
+    html, body {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      touch-action: pan-x pan-y;
+      -webkit-touch-callout: none;
+    }
+
+    /* Prevent iOS Safari from auto-zooming on focus */
+    input, textarea, select {
+      font-size: 16px !important;
     }
 
     body {
