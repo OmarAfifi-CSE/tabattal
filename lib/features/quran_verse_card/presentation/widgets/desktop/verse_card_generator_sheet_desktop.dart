@@ -749,12 +749,12 @@ class _VerseCardGeneratorSheetDesktopContentState
         endAyah: _endAyah,
       );
 
-      if (mounted) {
+      if (mounted && success != null) {
         final l10n = AppLocalizations.of(context)!;
         setState(() {
           _statusMessage = success
-              ? l10n.verseCardImageSavedGallerySuccess
-              : l10n.verseCardImageSavedGalleryError;
+              ? l10n.verseCardImageDownloadedSuccess
+              : l10n.verseCardImageDownloadedError;
           _isSuccessStatus = success;
         });
       }
@@ -839,17 +839,19 @@ class _VerseCardGeneratorSheetDesktopContentState
             if (videoState.pendingExportAction == VideoExportAction.share) {
               await VideoExportService.shareOutput(
                 filePath: outputPath,
-                title: l10n.videoStudioShareCaption,
               );
             } else {
-              final saved = await VideoExportService.saveToGallery(
+              final surahName = QuranMetadata.getSurahName(_surahNumber);
+              final suggestedName = 'Tabattal_${surahName}_$_startAyah-$_endAyah.mp4';
+              final saved = await VideoExportService.saveVideo(
                 filePath: outputPath,
+                suggestedName: suggestedName,
               );
-              if (mounted) {
+              if (mounted && saved != null) {
                 setState(() {
                   _statusMessage = saved
-                      ? l10n.videoStudioSavedSuccess
-                      : l10n.videoStudioSavedError;
+                      ? l10n.videoStudioDownloadedSuccess
+                      : l10n.videoStudioDownloadedError;
                   _isSuccessStatus = saved;
                 });
               }

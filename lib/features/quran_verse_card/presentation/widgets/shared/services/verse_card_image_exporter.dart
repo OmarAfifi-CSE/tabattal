@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
@@ -115,18 +116,41 @@ class VerseCardImageExporter {
       final tempFile = File('${tempDir.path}/$fileName');
       await tempFile.writeAsBytes(imageBytes);
 
+      final normalizedPath = Platform.isWindows
+          ? tempFile.path.replaceAll('/', '\\')
+          : tempFile.path;
+
       try {
-        await SharePlus.instance.share(
-          ShareParams(
-            files: [XFile(tempFile.path, mimeType: 'image/png')],
-          ),
-        );
+        if (Platform.isWindows) {
+          const channel = MethodChannel('dev.fluttercommunity.plus/share');
+          await channel.invokeMethod<String>('share', <String, dynamic>{
+            'paths': [normalizedPath],
+            'mimeTypes': ['image/png'],
+            'title': fileName,
+            'text': '',
+          });
+        } else {
+          await SharePlus.instance.share(
+            ShareParams(
+              files: [
+                XFile(
+                  normalizedPath,
+                  mimeType: 'image/png',
+                  name: fileName,
+                ),
+              ],
+            ),
+          );
+        }
       } on MissingPluginException {
+        final shareTitle = isEn ? 'Surah $surahName' : 'سورة $surahName';
+        final shareText = isEn
+            ? '( $fallbackText ) — Surah $surahName'
+            : '﴿ $fallbackText ﴾ — سورة $surahName';
         await SharePlus.instance.share(
           ShareParams(
-            text: isEn
-                ? '( $fallbackText ) — Surah $surahName'
-                : '﴿ $fallbackText ﴾ — سورة $surahName',
+            title: shareTitle,
+            text: shareText,
           ),
         );
       }
@@ -134,7 +158,10 @@ class VerseCardImageExporter {
   }
 
   /// Saves the image directly to device storage.
-  static Future<bool> saveCardImage({
+  /// On Desktop (Windows/macOS/Linux), opens the native Save File Dialog so the user can choose destination and filename.
+  /// On Mobile, saves to Pictures/Tabattal with MediaStore scan on Android, or Documents on iOS.
+  /// Returns `true` if saved successfully, `false` if an error occurred, or `null` if user cancelled.
+  static Future<bool?> saveCardImage({
     required Uint8List imageBytes,
     required int surahNumber,
     required int startAyah,
@@ -142,11 +169,41 @@ class VerseCardImageExporter {
   }) async {
     if (kIsWeb) return true;
 
+    final surahName = QuranMetadata.getSurahName(surahNumber);
     final fileName = startAyah == endAyah
-        ? 'Verse_${surahNumber}_$startAyah'
-        : 'Verse_${surahNumber}_${startAyah}_to_$endAyah';
+        ? 'Tabattal_${surahName}_$startAyah'
+        : 'Tabattal_${surahName}_${startAyah}_to_$endAyah';
 
-    if (Platform.isAndroid) {
+    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      try {
+        final saveLocation = await getSaveLocation(
+          suggestedName: '$fileName.png',
+          acceptedTypeGroups: const [
+            XTypeGroup(
+              label: 'PNG Image',
+              extensions: ['png'],
+              mimeTypes: ['image/png'],
+            ),
+          ],
+        );
+
+        if (saveLocation == null) {
+          return null; // User dismissed save dialog
+        }
+
+        final destinationFile = File(saveLocation.path);
+        final parentDir = destinationFile.parent;
+        if (!await parentDir.exists()) {
+          await parentDir.create(recursive: true);
+        }
+
+        await destinationFile.writeAsBytes(imageBytes);
+        return true;
+      } catch (e) {
+        debugPrint('Desktop saveCardImage error: $e');
+        return false;
+      }
+    } else if (!kIsWeb && Platform.isAndroid) {
       try {
         final picturesDir = Directory('/storage/emulated/0/Pictures/Tabattal');
         if (!picturesDir.existsSync()) {

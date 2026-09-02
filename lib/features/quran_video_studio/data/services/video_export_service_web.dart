@@ -526,16 +526,20 @@ class VideoExportService implements IVideoExportService {
     return controller.stream;
   }
 
-  /// Web implementation for saving video (Downloaded directly to browser).
-  static Future<bool> saveToGallery({
+  /// Saves the generated video file on Web by triggering direct browser download.
+  static Future<bool?> saveVideo({
     required String filePath,
+    required String suggestedName,
     String? album,
   }) async {
     try {
       if (_lastBlob != null) {
+        final downloadName = suggestedName.isNotEmpty
+            ? suggestedName
+            : (_lastExportedFileName ?? filePath);
         final downloadUrl = html.Url.createObjectUrlFromBlob(_lastBlob!);
         final anchor = html.AnchorElement(href: downloadUrl)
-          ..setAttribute('download', _lastExportedFileName ?? filePath)
+          ..setAttribute('download', downloadName)
           ..style.display = 'none';
 
         html.document.body?.append(anchor);
@@ -546,7 +550,7 @@ class VideoExportService implements IVideoExportService {
       }
       return false;
     } catch (e) {
-      debugPrint('Web saveToGallery error: $e');
+      debugPrint('Web saveVideo error: $e');
       return false;
     }
   }
@@ -554,7 +558,7 @@ class VideoExportService implements IVideoExportService {
   /// Web implementation for sharing output.
   static Future<void> shareOutput({
     required String filePath,
-    required String title,
+    String? title,
   }) async {
     final fileName = _lastExportedFileName ?? filePath;
     if (_lastExportedBytes != null) {
@@ -574,10 +578,10 @@ class VideoExportService implements IVideoExportService {
       } catch (e) {
         debugPrint('Web share video error: $e');
         // Fallback to downloading if browser sharing fails
-        await saveToGallery(filePath: filePath);
+        await saveVideo(filePath: filePath, suggestedName: fileName);
       }
     } else if (_lastBlob != null) {
-      await saveToGallery(filePath: filePath);
+      await saveVideo(filePath: filePath, suggestedName: fileName);
     }
   }
 

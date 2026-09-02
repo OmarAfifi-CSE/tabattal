@@ -98,21 +98,11 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> with WindowListener {
     final double screenWidth = MediaQuery.sizeOf(context).width;
 
     return Material(
-      type: MaterialType.transparency,
-      child: Container(
+      color: barBackground,
+      elevation: 0,
+      child: SizedBox(
         width: screenWidth,
         height: DesktopTitleBar.barHeight,
-        decoration: BoxDecoration(
-          color: barBackground,
-          border: Border(
-            bottom: BorderSide(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.07)
-                  : Colors.black.withValues(alpha: 0.06),
-              width: 1.0,
-            ),
-          ),
-        ),
         child: Directionality(
           textDirection: TextDirection.ltr,
           child: Row(

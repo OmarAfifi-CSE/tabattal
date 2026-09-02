@@ -185,22 +185,6 @@ class CanvasOverlayGenerator {
     final int width = config.aspectRatio.getTargetWidth(config.videoQuality);
     final int height = config.aspectRatio.getTargetHeight(config.videoQuality);
 
-    final dummyRecorder = ui.PictureRecorder();
-    final dummyCanvas = Canvas(dummyRecorder, Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()));
-
-    paintDynamicContent(
-      dummyCanvas,
-      Size(width.toDouble(), height.toDouble()),
-      verse: verse,
-      config: config,
-      pageNumber: pageNumber,
-      translationText: translationText,
-      tafsirText: tafsirText,
-      playbackPositionMs: playbackPositionMs,
-      wordTimings: wordTimings,
-      overrideLineIndex: overrideLineIndex,
-    );
-
     final bounds = computeDynamicContentBounds(
       Size(width.toDouble(), height.toDouble()),
       verse: verse,

@@ -1,5 +1,5 @@
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
@@ -38,6 +38,11 @@ import 'features/quran_reader/presentation/bloc/quran_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Silence all debug logging in release mode for security and performance
+  if (kReleaseMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {};
+  }
   SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
@@ -61,7 +66,6 @@ void main() async {
       center: true,
       titleBarStyle: TitleBarStyle.hidden,
       title: 'Tabattal - تبتل',
-      backgroundColor: Colors.transparent,
       skipTaskbar: false,
     );
 

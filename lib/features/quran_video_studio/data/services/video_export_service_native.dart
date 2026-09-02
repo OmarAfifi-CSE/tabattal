@@ -3,7 +3,9 @@ import 'dart:io';
 import 'dart:math';
 import 'package:ffmpeg_kit_flutter_new_min_gpl/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new_min_gpl/return_code.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -127,14 +129,30 @@ class VideoExportService implements IVideoExportService {
         await baseFrameFile.writeAsBytes(baseFrameBytes);
         final baseFramePath = baseFrameFile.path.replaceAll(r'\', '/');
 
-        final surahName = QuranMetadata.getSurahName(config.surahNumber);
-        final outputMp4File = File('${tempDir.path}/Tabattal_${surahName}_${config.startAyah}-${config.endAyah}_$timestamp.mp4');
-        final outputPath = outputMp4File.path.replaceAll(r'\', '/');
+        final renderOutputFile = File('${sessionDir.path}/render_output.mp4');
+        final renderOutputPath = renderOutputFile.path.replaceAll(r'\', '/');
         final targetW = config.aspectRatio.getTargetWidth(config.videoQuality);
         final targetH = config.aspectRatio.getTargetHeight(config.videoQuality);
-        final bgVideoPath = isCustomVideo
-            ? config.customVideoPath!.replaceAll(r'\', '/')
-            : '';
+
+        String bgVideoPath = '';
+        if (isCustomVideo) {
+          final rawBgPath = config.customVideoPath!;
+          final hasSpecialChars = rawBgPath.codeUnits.any((c) => c > 127) ||
+              rawBgPath.contains(' ') ||
+              rawBgPath.contains("'");
+          if (hasSpecialChars) {
+            final safeBgFile = File('${sessionDir.path}/custom_bg.mp4');
+            try {
+              await File(rawBgPath).copy(safeBgFile.path);
+              bgVideoPath = safeBgFile.path.replaceAll(r'\', '/');
+            } catch (e) {
+              debugPrint('Failed to copy custom video to safe ASCII path: $e');
+              bgVideoPath = rawBgPath.replaceAll(r'\', '/');
+            }
+          } else {
+            bgVideoPath = rawBgPath.replaceAll(r'\', '/');
+          }
+        }
 
         final wordTimingService = WordTimingService();
         int totalUnits = 0;
@@ -234,9 +252,9 @@ class VideoExportService implements IVideoExportService {
           statusMessage: 'جاري إنشاء الإطار الأساسي للبطاقة...',
         ));
 
-        // Worker Pool with Concurrency Limiter (4 concurrent workers) for Ultra-Fast Micro-Cropped Overlays
+        // Dynamic Worker Pool scaled to hardware capabilities (up to 16 parallel workers on modern desktop CPUs)
         final overlayPaths = List<String>.filled(totalUnits, '');
-        const workerConcurrency = 4;
+        final workerConcurrency = Platform.numberOfProcessors.clamp(4, 16);
         int nextUnitIndex = 0;
         int completedOverlayUnits = 0;
 
@@ -305,14 +323,33 @@ class VideoExportService implements IVideoExportService {
 
         // Phase 3: Ultra-Fast Segment Rendering & Instant Stream Copy Muxing (20% -> 99%)
         final validAudioFiles = <String>[];
-        for (final p in resolvedAudioPaths) {
+        for (int i = 0; i < resolvedAudioPaths.length; i++) {
+          final p = resolvedAudioPaths[i];
           if (p.isNotEmpty && await File(p).exists()) {
-            validAudioFiles.add(p.replaceAll(r'\', '/'));
+            final hasSpecialChars = p.codeUnits.any((c) => c > 127) ||
+                p.contains(' ') ||
+                p.contains("'");
+            if (hasSpecialChars) {
+              final ext = p.contains('.') ? p.substring(p.lastIndexOf('.')) : '.mp3';
+              final safeAudioFile = File('${sessionDir.path}/audio_$i$ext');
+              try {
+                await File(p).copy(safeAudioFile.path);
+                validAudioFiles.add(safeAudioFile.path.replaceAll(r'\', '/'));
+              } catch (_) {
+                validAudioFiles.add(p.replaceAll(r'\', '/'));
+              }
+            } else {
+              validAudioFiles.add(p.replaceAll(r'\', '/'));
+            }
           }
         }
 
         final filterChains = <String>[];
-        final ffmpegArgs = <String>['-y'];
+        final ffmpegArgs = <String>[
+          '-y',
+          '-threads', '0',
+          '-filter_complex_threads', '0',
+        ];
         final totalDurationStr = totalDurationSec.toStringAsFixed(3);
 
         if (isCustomVideo) {
@@ -429,7 +466,7 @@ class VideoExportService implements IVideoExportService {
           '-r', '30',
           '-threads', '0',
           '-movflags', '+faststart',
-          outputPath,
+          renderOutputPath,
         ]);
 
         final sessionCompleter = Completer<dynamic>();
@@ -456,7 +493,7 @@ class VideoExportService implements IVideoExportService {
               sessionCompleter.complete(session);
             }
           },
-          (log) {},
+          null,
           (statistics) {
             if (_isCancelled) return;
             final currentRenderedMs = max(0, statistics.getTime());
@@ -501,22 +538,20 @@ class VideoExportService implements IVideoExportService {
           throw Exception('تعذر رندر مقطع الفيديو: $logs');
         }
 
-        if (!outputMp4File.existsSync() || outputMp4File.lengthSync() < 1024) {
+        if (!renderOutputFile.existsSync() || renderOutputFile.lengthSync() < 1024) {
           throw Exception(isEn ? 'Final video file not found' : 'تعذر العثور على ملف الفيديو النهائي');
         }
 
-        String finalOutputPath = '';
-        if (await outputMp4File.exists() && await outputMp4File.length() > 0) {
-          finalOutputPath = outputMp4File.path;
-        } else {
-          throw Exception(isEn ? 'Final video file not found' : 'تعذر العثور على ملف الفيديو النهائي');
-        }
+        final surahName = QuranMetadata.getSurahName(config.surahNumber);
+        final finalOutputMp4File = File(
+            '${tempDir.path}/Tabattal_${surahName}_${config.startAyah}-${config.endAyah}_$timestamp.mp4');
+        await renderOutputFile.copy(finalOutputMp4File.path);
 
         controller.add(VideoRenderProgress(
           phase: VideoRenderPhase.completed,
           progress: 1.0,
           statusMessage: isEn ? 'Video created successfully!' : 'تم إنشاء مقطع الفيديو بنجاح!',
-          outputPath: finalOutputPath,
+          outputPath: finalOutputMp4File.path,
         ));
       } catch (e) {
         if (_isCancelled) {
@@ -536,46 +571,107 @@ class VideoExportService implements IVideoExportService {
     return controller.stream;
   }
 
-  /// Saves the generated video file directly to device gallery via MediaStore (Zero permissions required).
-  static Future<bool> saveToGallery({
+  /// Saves the generated video file.
+  /// On Desktop (Windows/macOS/Linux), opens the native Save File Dialog so the user can freely choose any destination directory and filename.
+  /// On Mobile, saves to the system gallery via MediaStore / Photos.
+  /// Returns `true` if saved successfully, `false` if an error occurred, or `null` if the user cancelled the dialog.
+  static Future<bool?> saveVideo({
     required String filePath,
+    required String suggestedName,
     String? album,
   }) async {
-    try {
-      final file = File(filePath);
-      if (!await file.exists() || await file.length() == 0) {
-        debugPrint('saveToGallery error: file not found or empty: $filePath');
+    final file = File(filePath);
+    if (!await file.exists() || await file.length() == 0) {
+      debugPrint('saveVideo error: file not found or empty: $filePath');
+      return false;
+    }
+
+    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      try {
+        final cleanSuggestedName = suggestedName.endsWith('.mp4')
+            ? suggestedName
+            : '$suggestedName.mp4';
+        final saveLocation = await getSaveLocation(
+          suggestedName: cleanSuggestedName,
+          acceptedTypeGroups: const [
+            XTypeGroup(
+              label: 'MP4 Video',
+              extensions: ['mp4'],
+              mimeTypes: ['video/mp4'],
+            ),
+          ],
+        );
+
+        if (saveLocation == null) {
+          // User dismissed or cancelled the save dialog
+          return null;
+        }
+
+        final destinationFile = File(saveLocation.path);
+        final parentDir = destinationFile.parent;
+        if (!await parentDir.exists()) {
+          await parentDir.create(recursive: true);
+        }
+
+        await file.copy(destinationFile.path);
+        return true;
+      } catch (e) {
+        debugPrint('Desktop saveVideo error: $e');
         return false;
       }
-
+    } else {
+      // Mobile platform (Android / iOS): Save directly to device gallery via Gal (MediaStore)
       try {
-        await Gal.putVideo(filePath, album: album);
-        return true;
-      } catch (albumError) {
-        debugPrint('Gal with album error: $albumError, retrying without album');
-        await Gal.putVideo(filePath);
-        return true;
+        try {
+          await Gal.putVideo(filePath, album: album);
+          return true;
+        } catch (albumError) {
+          debugPrint('Gal with album error: $albumError, retrying without album');
+          await Gal.putVideo(filePath);
+          return true;
+        }
+      } catch (e) {
+        debugPrint('Gal saveVideo error: $e');
+        return false;
       }
-    } catch (e) {
-      debugPrint('Gal saveToGallery error: $e');
-      return false;
     }
   }
 
-  /// Shares the generated video file to social media or gallery.
+  /// Shares the generated video file without accompanying caption text.
   static Future<void> shareOutput({
     required String filePath,
-    required String title,
+    String? title,
   }) async {
     final file = File(filePath);
     if (await file.exists()) {
       final isVideo = filePath.toLowerCase().endsWith('.mp4');
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(filePath, mimeType: isVideo ? 'video/mp4' : 'image/png')],
-          title: title,
-        ),
-      );
+      final normalizedPath = Platform.isWindows
+          ? file.path.replaceAll('/', '\\')
+          : file.path;
+      final fileName = file.uri.pathSegments.isNotEmpty
+          ? file.uri.pathSegments.last
+          : (isVideo ? 'Tabattal_Video.mp4' : 'Tabattal_Image.png');
+      if (Platform.isWindows) {
+        const channel = MethodChannel('dev.fluttercommunity.plus/share');
+        await channel.invokeMethod<String>('share', <String, dynamic>{
+          'paths': [normalizedPath],
+          'mimeTypes': [isVideo ? 'video/mp4' : 'image/png'],
+          'title': fileName,
+          'text': '',
+        });
+      } else {
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [
+              XFile(
+                normalizedPath,
+                mimeType: isVideo ? 'video/mp4' : 'image/png',
+                name: fileName,
+              ),
+            ],
+          ),
+        );
+      }
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -741,12 +742,21 @@ class _VerseCardGeneratorSheetContentMobileState
         endAyah: _endAyah,
       );
 
-      if (mounted) {
+      if (mounted && success != null) {
         final l10n = AppLocalizations.of(context)!;
+        final isDesktopOrWeb = kIsWeb ||
+            (!kIsWeb &&
+                (Platform.isWindows ||
+                    Platform.isLinux ||
+                    Platform.isMacOS));
         setState(() {
           _statusMessage = success
-              ? l10n.verseCardImageSavedGallerySuccess
-              : l10n.verseCardImageSavedGalleryError;
+              ? (isDesktopOrWeb
+                  ? l10n.verseCardImageDownloadedSuccess
+                  : l10n.verseCardImageSavedGallerySuccess)
+              : (isDesktopOrWeb
+                  ? l10n.verseCardImageDownloadedError
+                  : l10n.verseCardImageSavedGalleryError);
           _isSuccessStatus = success;
         });
       }
@@ -830,17 +840,28 @@ class _VerseCardGeneratorSheetContentMobileState
             if (videoState.pendingExportAction == VideoExportAction.share) {
               await VideoExportService.shareOutput(
                 filePath: outputPath,
-                title: l10n.videoStudioShareCaption,
               );
             } else {
-              final saved = await VideoExportService.saveToGallery(
+              final surahName = QuranMetadata.getSurahName(_surahNumber);
+              final suggestedName = 'Tabattal_${surahName}_$_startAyah-$_endAyah.mp4';
+              final saved = await VideoExportService.saveVideo(
                 filePath: outputPath,
+                suggestedName: suggestedName,
               );
-              if (mounted) {
+              if (mounted && saved != null) {
+                final isDesktopOrWeb = kIsWeb ||
+                    (!kIsWeb &&
+                        (Platform.isWindows ||
+                            Platform.isLinux ||
+                            Platform.isMacOS));
                 setState(() {
                   _statusMessage = saved
-                      ? l10n.videoStudioSavedSuccess
-                      : l10n.videoStudioSavedError;
+                      ? (isDesktopOrWeb
+                          ? l10n.videoStudioDownloadedSuccess
+                          : l10n.videoStudioSavedSuccess)
+                      : (isDesktopOrWeb
+                          ? l10n.videoStudioDownloadedError
+                          : l10n.videoStudioSavedError);
                   _isSuccessStatus = saved;
                 });
               }
