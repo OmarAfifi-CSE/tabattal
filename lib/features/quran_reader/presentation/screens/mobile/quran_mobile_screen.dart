@@ -18,7 +18,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/services.dart';
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../../core/services/update_service.dart';
+import '../../../../../core/services/app_update_service.dart';
 import '../../../../../core/utils/app_snack_bar.dart';
 import '../../../../../core/services/quran_font_service.dart';
 
@@ -63,9 +63,7 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        UpdateService.checkForUpdates(context);
-      }
+      AppUpdateService.checkForUpdates();
     });
   }
 

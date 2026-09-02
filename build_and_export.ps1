@@ -53,7 +53,8 @@ function Get-EnvVariable {
 
 $appName = Get-AppName
 $version = Get-AppVersion
-$androidOutputFolder = "..\B- Releases\Tabattal"
+$releaseOutputFolder = "..\B- Releases\Tabattal"
+$androidOutputFolder = $releaseOutputFolder
 $docsAppFolder = "docs\app"
 $webBaseHref = "/app/"
 
@@ -63,19 +64,21 @@ Write-Host "================================================================" -F
 
 # --- Choice: Format ---
 Write-Host "`nSelect Build Target:" -ForegroundColor Yellow
-Write-Host "1) APK  (Android Package - for testing on device)" -ForegroundColor Green
-Write-Host "2) AAB  (Android App Bundle - for Google Play Store)" -ForegroundColor Blue
-Write-Host "3) WEB  (Flutter Web - auto deploy to docs/app for GitHub Pages)" -ForegroundColor Cyan
-Write-Host "4) ALL  (APK + AAB + WEB)" -ForegroundColor Magenta
+Write-Host "1) APK     (Android Package - for testing on device)" -ForegroundColor Green
+Write-Host "2) AAB     (Android App Bundle - for Google Play Store)" -ForegroundColor Blue
+Write-Host "3) WEB     (Flutter Web - auto deploy to docs/app for GitHub Pages)" -ForegroundColor Cyan
+Write-Host "4) WINDOWS (Windows Release -> 0- Flutter Release)" -ForegroundColor Yellow
+Write-Host "5) ALL     (APK + AAB + WEB + WINDOWS)" -ForegroundColor Magenta
 $formatChoice = Read-Host "Enter your choice [Default is 1]"
 
 if ([string]::IsNullOrWhiteSpace($formatChoice)) {
     $formatChoice = '1'
 }
 
-$buildApk = ($formatChoice -eq '1' -or $formatChoice -eq '4')
-$buildAab = ($formatChoice -eq '2' -or $formatChoice -eq '4')
-$buildWeb = ($formatChoice -eq '3' -or $formatChoice -eq '4')
+$buildApk = ($formatChoice -eq '1' -or $formatChoice -eq '5')
+$buildAab = ($formatChoice -eq '2' -or $formatChoice -eq '5')
+$buildWeb = ($formatChoice -eq '3' -or $formatChoice -eq '5')
+$buildWin = ($formatChoice -eq '4' -or $formatChoice -eq '5')
 
 # --- Choice: Clean Mode ---
 Write-Host "`nSelect Build Mode:" -ForegroundColor Yellow
@@ -235,6 +238,46 @@ if ($buildWeb) {
     }
 }
 
+# --- Build Windows ---
+if ($buildWin) {
+    Write-Host "`n[BUILD] Building Windows Release (Obfuscated)..." -ForegroundColor Cyan
+    flutter build windows --release --obfuscate --split-debug-info=build\windows\symbols
+    Check-CommandSuccess "Flutter Build Windows"
+
+    $winSource = "build\windows\x64\runner\Release"
+    $winReleaseBase = $releaseOutputFolder
+    $flutterReleaseDir = Join-Path $winReleaseBase "0- Flutter Release"
+
+    if (Test-Path $winSource) {
+        if (!(Test-Path $flutterReleaseDir)) {
+            New-Item -ItemType Directory -Path $flutterReleaseDir -Force | Out-Null
+        }
+
+        Write-Host "Cleaning destination folder: $flutterReleaseDir..." -ForegroundColor Yellow
+        Remove-Item -Path "$flutterReleaseDir\*" -Recurse -Force -ErrorAction SilentlyContinue
+
+        Write-Host "Exporting Windows build files to '0- Flutter Release'..." -ForegroundColor White
+        Copy-Item -Path "$winSource\*" -Destination $flutterReleaseDir -Recurse -Force
+        Check-CommandSuccess "Copy Windows Release Files"
+
+        # Ensure app icon exists in release base folder for Inno Setup
+        $iconSrc = "windows\runner\resources\app_icon.ico"
+        $iconDest = Join-Path $winReleaseBase "app_icon.ico"
+        if ((Test-Path $iconSrc) -and !(Test-Path $iconDest)) {
+            Copy-Item $iconSrc -Destination $iconDest -Force
+        }
+
+        # Sync Inno Setup script to release folder
+        $repoIssPath = "windows\installer\tabattal_setup.iss"
+        $issDest = Join-Path $winReleaseBase "tabattal_setup.iss"
+        if (Test-Path $repoIssPath) {
+            Copy-Item $repoIssPath -Destination $issDest -Force
+        }
+
+        Write-Host "[SUCCESS] Windows Flutter Release exported to '$flutterReleaseDir'." -ForegroundColor Green
+    }
+}
+
 # --- Summary ---
 $endTime = Get-Date
 $duration = $endTime - $startTime
@@ -249,6 +292,9 @@ if ($buildApk -or $buildAab) {
 if ($buildWeb) {
     Write-Host " [WEB] Output: $docsAppFolder (GitHub Pages ready)" -ForegroundColor White
 }
+if ($buildWin) {
+    Write-Host " [WINDOWS] Output: $releaseOutputFolder" -ForegroundColor White
+}
 Write-Host "================================================================" -ForegroundColor Green
 
 try {
@@ -257,6 +303,6 @@ try {
     $wshell.Popup($msg, 0, "Tabattal Build System", 64) | Out-Null
 } catch {}
 
-if (($buildApk -or $buildAab) -and (Test-Path $androidOutputFolder)) {
-    Invoke-Item $androidOutputFolder
+if (($buildApk -or $buildAab -or $buildWin) -and (Test-Path $releaseOutputFolder)) {
+    Invoke-Item $releaseOutputFolder
 }

@@ -89,14 +89,15 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.omarafifi" "\0"
+            VALUE "CompanyName", "Omar Afifi" "\0"
             VALUE "FileDescription", "Tabattal" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "Tabattal" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.omarafifi. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Omar Afifi. All rights reserved." "\0"
             VALUE "OriginalFilename", "Tabattal.exe" "\0"
             VALUE "ProductName", "Tabattal" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
+            VALUE "OfficialWebsite", "https://tabattal.omar-afifi.com/" "\0"
         END
     END
     BLOCK "VarFileInfo"
