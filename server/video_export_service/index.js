@@ -582,9 +582,11 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
       }
     }
 
+    // MP3 in MP4 container is rejected by Apple AVFoundation (iOS/macOS).
+    // Only native AAC (.m4a/.aac) can be safely stream-copied; MP3 must be encoded to AAC.
     const isCopySafeAudio = validAudioFiles.every(p => {
       const lower = p.toLowerCase();
-      return lower.endsWith('.mp3') || lower.endsWith('.m4a') || lower.endsWith('.aac');
+      return lower.endsWith('.m4a') || lower.endsWith('.aac');
     });
 
     const filter = filterChains.join(';\n');
@@ -599,7 +601,7 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
       if (isCopySafeAudio) {
         ffmpegArgs.push('-c:a', 'copy');
       } else {
-        ffmpegArgs.push('-c:a', 'aac', '-b:a', '128k');
+        ffmpegArgs.push('-c:a', 'aac', '-b:a', '192k', '-ar', '44100');
       }
       ffmpegArgs.push('-shortest');
     }

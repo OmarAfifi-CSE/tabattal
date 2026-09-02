@@ -437,9 +437,11 @@ class VideoExportService implements IVideoExportService {
         ffmpegArgs.addAll(['-filter_complex_script', filterScriptInput]);
         ffmpegArgs.addAll(['-map', '[v]']);
 
+        // MP3 in MP4 container is rejected by Apple AVFoundation (iOS/macOS).
+        // Only native AAC (.m4a/.aac) can be safely stream-copied; MP3 must be encoded to AAC.
         final isCopySafeAudio = validAudioFiles.every((p) {
           final lower = p.toLowerCase();
-          return lower.endsWith('.mp3') || lower.endsWith('.m4a') || lower.endsWith('.aac');
+          return lower.endsWith('.m4a') || lower.endsWith('.aac');
         });
 
         if (hasAudio) {
@@ -447,7 +449,7 @@ class VideoExportService implements IVideoExportService {
           if (isCopySafeAudio) {
             ffmpegArgs.addAll(['-c:a', 'copy']);
           } else {
-            ffmpegArgs.addAll(['-c:a', 'aac', '-b:a', '128k']);
+            ffmpegArgs.addAll(['-c:a', 'aac', '-b:a', '192k', '-ar', '44100']);
           }
           ffmpegArgs.add('-shortest');
         }
