@@ -204,11 +204,14 @@ class TabattalApp extends StatelessWidget {
                           builder: (context, child) {
                             final directedChild =
                                 appDirectionalityBuilder(context, child);
-                            return Column(
-                              children: [
-                                const DesktopTitleBar(),
-                                Expanded(child: directedChild),
-                              ],
+                            return ColoredBox(
+                              color: AppColors.background,
+                              child: Column(
+                                children: [
+                                  const DesktopTitleBar(),
+                                  Expanded(child: directedChild),
+                                ],
+                              ),
                             );
                           },
                           home: const QuranDesktopScreen(),
@@ -248,11 +251,14 @@ class TabattalApp extends StatelessWidget {
                                 (Platform.isWindows ||
                                     Platform.isLinux ||
                                     Platform.isMacOS)) {
-                              return Column(
-                                children: [
-                                  const DesktopTitleBar(),
-                                  Expanded(child: directedChild),
-                                ],
+                              return ColoredBox(
+                                color: AppColors.background,
+                                child: Column(
+                                  children: [
+                                    const DesktopTitleBar(),
+                                    Expanded(child: directedChild),
+                                  ],
+                                ),
                               );
                             }
                             return directedChild;
@@ -289,11 +295,14 @@ class TabattalApp extends StatelessWidget {
                             (Platform.isWindows ||
                                 Platform.isLinux ||
                                 Platform.isMacOS)) {
-                          return Column(
-                            children: [
-                              const DesktopTitleBar(),
-                              Expanded(child: directedChild),
-                            ],
+                          return ColoredBox(
+                            color: AppColors.background,
+                            child: Column(
+                              children: [
+                                const DesktopTitleBar(),
+                                Expanded(child: directedChild),
+                              ],
+                            ),
                           );
                         }
                         return directedChild;
