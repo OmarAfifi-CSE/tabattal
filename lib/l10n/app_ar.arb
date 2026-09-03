@@ -572,5 +572,13 @@
   "videoStudioVideoNotFound": "تعذر العثور على ملف الفيديو النهائي",
   "videoStudioAudioTimelineIncomplete": "قائمة مدد الآيات غير مكتملة",
   "videoStudioAudioMeasureFailed": "فشل في قياس مدة الملف الصوتي للتلاوة",
+  "videoStudioNetworkError": "تعذر الاتصال بالخادم لجلب بيانات التلاوة. يُرجى التحقق من اتصالك بالإنترنت والمحاولة مجددًا.",
+  "videoStudioReciterTimingUnavailable": "لا تتوفر تسجيلات توقيت دقيقة بالكلمة لهذا القارئ حاليًا.",
+  "videoStudioVerseTimingError": "تعذر جلب التوقيت الحقيقي الدقيق لكلمات الآية من الخادم. يُرجى التحقق من اتصال الإنترنت.",
+  "videoStudioAudioDownloadError": "تعذر تنزيل الملف الصوتي للتلاوة. يُرجى التحقق من اتصالك بالإنترنت والمحاولة مجددًا.",
+  "videoStudioAudioCancelled": "تم إلغاء تجهيز الملفات الصوتية.",
+  "videoStudioRenderProcessingError": "حدث خطأ أثناء معالجة وترميز الفيديو. يُرجى المحاولة مرة أخرى.",
+  "videoStudioWebExportError": "تعذر تصدير الفيديو في هذا المتصفح. يُرجى استخدام متصفح حديث مثل Google Chrome.",
+  "videoStudioRetry": "إعادة المحاولة",
   "searchFilterAll": "الكل"
 }

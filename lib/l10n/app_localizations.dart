@@ -1960,6 +1960,54 @@ abstract class AppLocalizations {
   /// **'فشل في قياس مدة الملف الصوتي للتلاوة'**
   String get videoStudioAudioMeasureFailed;
 
+  /// No description provided for @videoStudioNetworkError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر الاتصال بالخادم لجلب بيانات التلاوة. يُرجى التحقق من اتصالك بالإنترنت والمحاولة مجددًا.'**
+  String get videoStudioNetworkError;
+
+  /// No description provided for @videoStudioReciterTimingUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا تتوفر تسجيلات توقيت دقيقة بالكلمة لهذا القارئ حاليًا.'**
+  String get videoStudioReciterTimingUnavailable;
+
+  /// No description provided for @videoStudioVerseTimingError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر جلب التوقيت الحقيقي الدقيق لكلمات الآية من الخادم. يُرجى التحقق من اتصال الإنترنت.'**
+  String get videoStudioVerseTimingError;
+
+  /// No description provided for @videoStudioAudioDownloadError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تنزيل الملف الصوتي للتلاوة. يُرجى التحقق من اتصالك بالإنترنت والمحاولة مجددًا.'**
+  String get videoStudioAudioDownloadError;
+
+  /// No description provided for @videoStudioAudioCancelled.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إلغاء تجهيز الملفات الصوتية.'**
+  String get videoStudioAudioCancelled;
+
+  /// No description provided for @videoStudioRenderProcessingError.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء معالجة وترميز الفيديو. يُرجى المحاولة مرة أخرى.'**
+  String get videoStudioRenderProcessingError;
+
+  /// No description provided for @videoStudioWebExportError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تصدير الفيديو في هذا المتصفح. يُرجى استخدام متصفح حديث مثل Google Chrome.'**
+  String get videoStudioWebExportError;
+
+  /// No description provided for @videoStudioRetry.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة المحاولة'**
+  String get videoStudioRetry;
+
   /// No description provided for @searchFilterAll.
   ///
   /// In ar, this message translates to:

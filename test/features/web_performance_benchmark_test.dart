@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tabattal/core/constants/quran_constants.dart';
@@ -157,7 +158,38 @@ void main() {
     });
 
     test('4. Word Timing Deduplication & In-Flight Concurrency Verification', () async {
-      final timingService = WordTimingService();
+      WordTimingService.clearCache();
+      final dio = Dio();
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            handler.resolve(
+              Response(
+                requestOptions: options,
+                statusCode: 200,
+                data: {
+                  'audio_file': {
+                    'timestamps': [
+                      {
+                        'verse_key': '1:1',
+                        'timestamp_from': 0,
+                        'timestamp_to': 4000,
+                        'segments': [
+                          [1, 0, 800],
+                          [2, 800, 1500],
+                          [3, 1500, 2400],
+                          [4, 2400, 4000],
+                        ],
+                      }
+                    ]
+                  }
+                },
+              ),
+            );
+          },
+        ),
+      );
+      final timingService = WordTimingService(dio: dio);
       final verse = VerseModel(
         id: 1,
         verseNumber: 1,

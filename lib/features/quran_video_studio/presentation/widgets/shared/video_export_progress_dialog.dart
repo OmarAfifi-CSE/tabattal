@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../domain/entities/video_render_progress.dart';
+import '../../utils/video_studio_error_helper.dart';
 
 class VideoExportProgressDialog extends StatefulWidget {
   final VideoRenderProgress progress;
@@ -370,8 +371,10 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
       BuildContext context, VideoRenderProgress progress) {
     final l10n = AppLocalizations.of(context)!;
     if (progress.isFailed) {
-      return progress.errorMessage ??
-          (progress.statusMessage.isNotEmpty ? progress.statusMessage : l10n.videoStudioProgressFailed);
+      return VideoStudioErrorHelper.getLocalizedError(
+        context,
+        progress.errorMessage ?? progress.statusMessage,
+      );
     }
 
     switch (progress.step) {
@@ -409,7 +412,10 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
       case VideoProgressStep.completed:
         return l10n.videoStudioProgressCompleted;
       case VideoProgressStep.failed:
-        return progress.errorMessage ?? (progress.statusMessage.isNotEmpty ? progress.statusMessage : l10n.videoStudioProgressFailed);
+        return VideoStudioErrorHelper.getLocalizedError(
+          context,
+          progress.errorMessage ?? progress.statusMessage,
+        );
       case VideoProgressStep.cancelled:
         return l10n.videoStudioCancelExport;
       case VideoProgressStep.initial:

@@ -104,13 +104,23 @@ class VideoExportService implements IVideoExportService {
                 : 'تعذر تحديد المدة الصوتية الدقيقة للآية ${verse.verseNumber}');
           }
           final totalDur = verseDurations[i];
-
-          final timings = await wordTimingService.getWordTimings(
-            surahNumber: config.surahNumber,
-            verse: verse,
-            reciterPath: config.reciterPath,
-            totalAyahDuration: totalDur,
-          );
+          final List<WordTimingSegment> timings;
+          if (config.textDisplayMode == VideoTextDisplayMode.staticFull) {
+            timings = [
+              WordTimingSegment(
+                wordPosition: 1,
+                startMs: 0,
+                endMs: totalDur.inMilliseconds,
+              ),
+            ];
+          } else {
+            timings = await wordTimingService.getWordTimings(
+              surahNumber: config.surahNumber,
+              verse: verse,
+              reciterPath: config.reciterPath,
+              totalAyahDuration: totalDur,
+            );
+          }
 
           return {
             'verse': verse,

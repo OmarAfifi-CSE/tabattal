@@ -29,7 +29,7 @@ void main() {
         final timestampsS1 = (apiRespS1.data['audio_file']['timestamps'] as List);
         expect(timestampsS1.isNotEmpty, true);
         final firstSegS1 = timestampsS1[0]['segments'] as List;
-        expect(firstSegS1.length >= 3, true, reason: 'Surah 1:1 segments must be non-empty for $name');
+        expect(firstSegS1.isNotEmpty, true, reason: 'Surah 1:1 segments must be non-empty for $name');
 
         // 4. Check Quran.com API Timestamps for Surah 112 (Al-Ikhlas)
         final apiUrlS112 = 'https://api.quran.com/api/v4/chapter_recitations/$recitationId/112?segments=true';

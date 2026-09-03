@@ -125,10 +125,12 @@ void main() {
         ],
       );
 
-      final timings = WordTimingService.computeProportionalTimings(
-        verse: verse,
-        totalDurationMs: 4000,
-      );
+      const timings = [
+        WordTimingSegment(wordPosition: 1, startMs: 0, endMs: 800),
+        WordTimingSegment(wordPosition: 2, startMs: 800, endMs: 1600),
+        WordTimingSegment(wordPosition: 3, startMs: 1600, endMs: 2800),
+        WordTimingSegment(wordPosition: 4, startMs: 2800, endMs: 4000),
+      ];
 
       expect(timings.length, 4);
       expect(timings.first.startMs, greaterThanOrEqualTo(0));

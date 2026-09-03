@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import '../../features/quran_video_studio/domain/entities/video_enums.dart';
 
 class ReciterCatalog {
   const ReciterCatalog._();
@@ -57,7 +58,6 @@ class ReciterCatalog {
       'محمود خليل الحصري': 'Husary_Muallim_128kbps',
       'محمد صديق المنشاوي': 'Minshawy_Teacher_128kbps',
       'أيمن سويد': 'Ayman_Sowaid_64kbps',
-      'خليفة الطنيجي': 'khalefa_al_tunaiji_64kbps',
     },
     'رواية ورش': {
       'ياسين الجزائري': 'warsh/warsh_yassin_al_jazaery_64kbps',
@@ -113,7 +113,6 @@ class ReciterCatalog {
     'محمد عبد الكريم': 'Muhammad Abdul Kareem',
     'محسن القاسم': 'Muhsin Al-Qasim',
     'أيمن سويد': 'Ayman Sowaid',
-    'خليفة الطنيجي': 'Khalifa Al-Tunaiji',
     'ياسين الجزائري': 'Yassin Al-Jazaery',
     'إبراهيم الدوسري': 'Ibrahim Al-Dossari',
     'إبراهيم ووك (إنجليزي)': 'Ibrahim Walk (English)',
@@ -148,6 +147,11 @@ class ReciterCatalog {
         'category': 'مرتل',
         'path': 'Saood_ash-Shuraym_128kbps',
       },
+      {
+        'name': 'هاني الرفاعي',
+        'category': 'مرتل',
+        'path': 'Hani_Rifai_192kbps',
+      },
     ],
     'مجود': [
       {
@@ -162,6 +166,220 @@ class ReciterCatalog {
       },
     ],
   };
+
+  /// Verified high-fidelity reciters for full ayah video mode
+  static const Map<String, List<Map<String, String>>> fullAyahVideoRecitersByCategory = {
+    'مرتل': [
+      {
+        'name': 'محمد صديق المنشاوي',
+        'category': 'مرتل',
+        'path': 'Minshawy_Murattal_128kbps',
+      },
+      {
+        'name': 'محمود خليل الحصري',
+        'category': 'مرتل',
+        'path': 'Husary_128kbps',
+      },
+      {
+        'name': 'عبد الباسط عبد الصمد',
+        'category': 'مرتل',
+        'path': 'Abdul_Basit_Murattal_192kbps',
+      },
+      {
+        'name': 'ماهر المعيقلي',
+        'category': 'مرتل',
+        'path': 'MaherAlMuaiqly128kbps',
+      },
+      {
+        'name': 'ياسر الدوسري',
+        'category': 'مرتل',
+        'path': 'Yasser_Ad-Dussary_128kbps',
+      },
+      {
+        'name': 'أحمد العجمي',
+        'category': 'مرتل',
+        'path': 'Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net',
+      },
+      {
+        'name': 'سعد الغامدي',
+        'category': 'مرتل',
+        'path': 'Ghamadi_40kbps',
+      },
+      {
+        'name': 'ناصر القطامي',
+        'category': 'مرتل',
+        'path': 'Nasser_Alqatami_128kbps',
+      },
+      {
+        'name': 'فارس عباد',
+        'category': 'مرتل',
+        'path': 'Fares_Abbad_64kbps',
+      },
+      {
+        'name': 'أبو بكر الشاطري',
+        'category': 'مرتل',
+        'path': 'Abu_Bakr_Ash-Shaatree_128kbps',
+      },
+      {
+        'name': 'سعود الشريم',
+        'category': 'مرتل',
+        'path': 'Saood_ash-Shuraym_128kbps',
+      },
+      {
+        'name': 'هاني الرفاعي',
+        'category': 'مرتل',
+        'path': 'Hani_Rifai_192kbps',
+      },
+      {
+        'name': 'علي الحذيفي',
+        'category': 'مرتل',
+        'path': 'Hudhaify_128kbps',
+      },
+      {
+        'name': 'محمد أيوب',
+        'category': 'مرتل',
+        'path': 'Muhammad_Ayyoub_128kbps',
+      },
+      {
+        'name': 'عبدالله عواد الجهني',
+        'category': 'مرتل',
+        'path': 'Abdullaah_3awwaad_Al-Juhaynee_128kbps',
+      },
+      {
+        'name': 'محمود علي البنا',
+        'category': 'مرتل',
+        'path': 'mahmoud_ali_al_banna_32kbps',
+      },
+      {
+        'name': 'محمد محمود الطبلاوي',
+        'category': 'مرتل',
+        'path': 'Mohammad_al_Tablaway_128kbps',
+      },
+      {
+        'name': 'خالد القحطاني',
+        'category': 'مرتل',
+        'path': 'Khaalid_Abdullaah_al-Qahtaanee_192kbps',
+      },
+      {
+        'name': 'علي جابر',
+        'category': 'مرتل',
+        'path': 'Ali_Jaber_64kbps',
+      },
+      {
+        'name': 'إبراهيم الأخضر',
+        'category': 'مرتل',
+        'path': 'Ibrahim_Akhdar_32kbps',
+      },
+      {
+        'name': 'عبدالله المطرود',
+        'category': 'مرتل',
+        'path': 'Abdullah_Matroud_128kbps',
+      },
+      {
+        'name': 'محمد جبريل',
+        'category': 'مرتل',
+        'path': 'Muhammad_Jibreel_128kbps',
+      },
+      {
+        'name': 'عبد الله بصفر',
+        'category': 'مرتل',
+        'path': 'Abdullah_Basfar_192kbps',
+      },
+      {
+        'name': 'صلاح بو خاطر',
+        'category': 'مرتل',
+        'path': 'Salaah_AbdulRahman_Bukhatir_128kbps',
+      },
+      {
+        'name': 'نبيل الرفاعي',
+        'category': 'مرتل',
+        'path': 'Nabil_Rifa3i_48kbps',
+      },
+      {
+        'name': 'سهل ياسين',
+        'category': 'مرتل',
+        'path': 'Sahl_Yassin_128kbps',
+      },
+      {
+        'name': 'ياسر سلامة',
+        'category': 'مرتل',
+        'path': 'Yaser_Salamah_128kbps',
+      },
+      {
+        'name': 'علي حجاج السويسي',
+        'category': 'مرتل',
+        'path': 'Ali_Hajjaj_AlSuesy_128kbps',
+      },
+      {
+        'name': 'أكرم العلاقمي',
+        'category': 'مرتل',
+        'path': 'Akram_AlAlaqimy_128kbps',
+      },
+      {
+        'name': 'محمد عبد الكريم',
+        'category': 'مرتل',
+        'path': 'Muhammad_AbdulKareem_128kbps',
+      },
+      {
+        'name': 'محسن القاسم',
+        'category': 'مرتل',
+        'path': 'Muhsin_Al_Qasim_192kbps',
+      },
+    ],
+    'مجود': [
+      {
+        'name': 'محمد صديق المنشاوي',
+        'category': 'مجود',
+        'path': 'Minshawy_Mujawwad_192kbps',
+      },
+      {
+        'name': 'عبد الباسط عبد الصمد',
+        'category': 'مجود',
+        'path': 'Abdul_Basit_Mujawwad_128kbps',
+      },
+      {
+        'name': 'محمود خليل الحصري',
+        'category': 'مجود',
+        'path': 'Husary_128kbps_Mujawwad',
+      },
+    ],
+    'المصحف المعلم': [
+      {
+        'name': 'محمود خليل الحصري',
+        'category': 'المصحف المعلم',
+        'path': 'Husary_Muallim_128kbps',
+      },
+      {
+        'name': 'محمد صديق المنشاوي',
+        'category': 'المصحف المعلم',
+        'path': 'Minshawy_Teacher_128kbps',
+      },
+      {
+        'name': 'أيمن سويد',
+        'category': 'المصحف المعلم',
+        'path': 'Ayman_Sowaid_64kbps',
+      },
+    ],
+  };
+
+  /// Returns reciters available for the given video text display mode
+  static Map<String, List<Map<String, String>>> getVideoRecitersByCategory(VideoTextDisplayMode mode) {
+    if (mode == VideoTextDisplayMode.staticFull) {
+      return fullAyahVideoRecitersByCategory;
+    }
+    return verifiedVideoRecitersByCategory;
+  }
+
+  /// Checks if the reciter is supported for the given display mode
+  static bool isReciterSupportedForMode(String reciterPath, VideoTextDisplayMode mode) {
+    final list = getVideoRecitersByCategory(mode);
+    for (final reciters in list.values) {
+      for (final r in reciters) {
+        if (r['path'] == reciterPath) return true;
+      }
+    }
+    return false;
+  }
 
   /// Returns the English name for any reciter
   static String getReciterNameEnglish(String arabicName) {

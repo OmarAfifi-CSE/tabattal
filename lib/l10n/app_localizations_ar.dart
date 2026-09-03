@@ -1047,5 +1047,35 @@ class AppLocalizationsAr extends AppLocalizations {
       'فشل في قياس مدة الملف الصوتي للتلاوة';
 
   @override
+  String get videoStudioNetworkError =>
+      'تعذر الاتصال بالخادم لجلب بيانات التلاوة. يُرجى التحقق من اتصالك بالإنترنت والمحاولة مجددًا.';
+
+  @override
+  String get videoStudioReciterTimingUnavailable =>
+      'لا تتوفر تسجيلات توقيت دقيقة بالكلمة لهذا القارئ حاليًا.';
+
+  @override
+  String get videoStudioVerseTimingError =>
+      'تعذر جلب التوقيت الحقيقي الدقيق لكلمات الآية من الخادم. يُرجى التحقق من اتصال الإنترنت.';
+
+  @override
+  String get videoStudioAudioDownloadError =>
+      'تعذر تنزيل الملف الصوتي للتلاوة. يُرجى التحقق من اتصالك بالإنترنت والمحاولة مجددًا.';
+
+  @override
+  String get videoStudioAudioCancelled => 'تم إلغاء تجهيز الملفات الصوتية.';
+
+  @override
+  String get videoStudioRenderProcessingError =>
+      'حدث خطأ أثناء معالجة وترميز الفيديو. يُرجى المحاولة مرة أخرى.';
+
+  @override
+  String get videoStudioWebExportError =>
+      'تعذر تصدير الفيديو في هذا المتصفح. يُرجى استخدام متصفح حديث مثل Google Chrome.';
+
+  @override
+  String get videoStudioRetry => 'إعادة المحاولة';
+
+  @override
   String get searchFilterAll => 'الكل';
 }

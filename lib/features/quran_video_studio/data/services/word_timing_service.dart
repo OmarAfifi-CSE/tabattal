@@ -44,6 +44,8 @@ class WordTimingService {
     'Abdul_Basit_Mujawwad_128kbps': 1,
     'Abu_Bakr_Ash-Shaatree_128kbps': 4,
     'Saood_ash-Shuraym_128kbps': 10,
+    'Yasser_Ad-Dussary_128kbps': 97,
+    'Hani_Rifai_192kbps': 5,
   };
 
   /// Known Quran.com API recitation IDs mapped from reciter identifiers with verified word timings
@@ -67,10 +69,18 @@ class WordTimingService {
     if (lower.contains('shuraym') || lower.contains('shuraim')) {
       return 10;
     }
+    if (lower.contains('dussary') || lower.contains('dossari')) {
+      return 97;
+    }
+    if (lower.contains('rifai') || lower.contains('rifa3i')) {
+      return 5;
+    }
     return null;
   }
 
-  /// Retrieves word timing segments for a verse and reciter, guaranteeing non-empty return.
+  /// Retrieves verified, millisecond-accurate word timing segments for a verse and reciter.
+  /// Strictly requires authentic timing from the recitation API and throws an exception
+  /// if verified data is unavailable, ensuring zero estimation or guesswork.
   Future<List<WordTimingSegment>> getWordTimings({
     required int surahNumber,
     required VerseModel verse,
@@ -84,160 +94,93 @@ class WordTimingService {
     }
 
     final recitationId = getQuranDotComRecitationId(reciterPath);
-    if (recitationId != null) {
-      final chapterKey = '$recitationId:$surahNumber';
+    if (recitationId == null) {
+      throw Exception('لا تتوفر تسجيلات توقيت حقيقية بالكلمة للقارئ المختار ($reciterPath).');
+    }
 
-      // Check if entire chapter is already cached or in-flight
-      if (!_chapterCache.containsKey(chapterKey)) {
-        if (_inFlightChapterRequests.containsKey(chapterKey)) {
-          await _inFlightChapterRequests[chapterKey];
-        } else {
-          final completerFuture = () async {
-            try {
-              final url = 'https://api.quran.com/api/v4/chapter_recitations/$recitationId/$surahNumber?segments=true';
-              final response = await _dio.get(url);
-              if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
-                final audioFile = response.data['audio_file'] as Map<String, dynamic>?;
-                final timestamps = audioFile?['timestamps'] as List<dynamic>?;
-                if (timestamps != null && timestamps.isNotEmpty) {
-                  final chapterMap = <String, List<WordTimingSegment>>{};
-                  for (final t in timestamps) {
-                    final vMap = t as Map<String, dynamic>;
-                    final vKey = vMap['verse_key'] as String? ?? '';
-                    final rawSegments = vMap['segments'] as List<dynamic>?;
-                    if (rawSegments != null && rawSegments.isNotEmpty) {
-                      double? firstSegStart;
-                      for (final s in rawSegments) {
-                        if (s is List && s.length >= 3) {
-                          firstSegStart = (s[1] as num).toDouble();
-                          break;
-                        }
-                      }
-                      final baseStart = firstSegStart ?? (vMap['timestamp_from'] as num?)?.toDouble() ?? 0.0;
+    final chapterKey = '$recitationId:$surahNumber';
 
-                      final segments = <WordTimingSegment>[];
-                      for (int i = 0; i < rawSegments.length; i++) {
-                        if (rawSegments[i] is! List) continue;
-                        final list = rawSegments[i] as List<dynamic>;
-                        if (list.length < 3) continue;
-
-                        final wordPos = (list[0] as num).toInt();
-                        final double segStart = (list[1] as num).toDouble();
-                        final double segEnd = (list[2] as num).toDouble();
-                        final int rawStart = (segStart - baseStart).round();
-                        final int rawEnd = (segEnd - baseStart).round();
-
-                        segments.add(
-                          WordTimingSegment(
-                            wordPosition: wordPos,
-                            startMs: max(0, rawStart),
-                            endMs: max(max(0, rawStart), rawEnd),
-                          ),
-                        );
-                      }
-
-                      if (segments.isNotEmpty) {
-                        chapterMap[vKey] = segments;
+    // Check if entire chapter is already cached or in-flight
+    if (!_chapterCache.containsKey(chapterKey)) {
+      if (_inFlightChapterRequests.containsKey(chapterKey)) {
+        await _inFlightChapterRequests[chapterKey];
+      } else {
+        final completerFuture = () async {
+          try {
+            final url = 'https://api.quran.com/api/v4/chapter_recitations/$recitationId/$surahNumber?segments=true';
+            final response = await _dio.get(url);
+            if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+              final audioFile = response.data['audio_file'] as Map<String, dynamic>?;
+              final timestamps = audioFile?['timestamps'] as List<dynamic>?;
+              if (timestamps != null && timestamps.isNotEmpty) {
+                final chapterMap = <String, List<WordTimingSegment>>{};
+                for (final t in timestamps) {
+                  final vMap = t as Map<String, dynamic>;
+                  final vKey = vMap['verse_key'] as String? ?? '';
+                  final rawSegments = vMap['segments'] as List<dynamic>?;
+                  if (rawSegments != null && rawSegments.isNotEmpty) {
+                    double? firstSegStart;
+                    for (final s in rawSegments) {
+                      if (s is List && s.length >= 3) {
+                        firstSegStart = (s[1] as num).toDouble();
+                        break;
                       }
                     }
-                  }
-                  _chapterCache[chapterKey] = chapterMap;
-                }
-              }
-            } catch (_) {
-              // Graceful fallback to proportional calculation on network error
-            } finally {
-              _inFlightChapterRequests.remove(chapterKey);
-            }
-          }();
-          _inFlightChapterRequests[chapterKey] = completerFuture;
-          await completerFuture;
-        }
-      }
+                    final baseStart = firstSegStart ?? (vMap['timestamp_from'] as num?)?.toDouble() ?? 0.0;
 
-      if (_chapterCache.containsKey(chapterKey) && _chapterCache[chapterKey]!.containsKey(verseKey)) {
-        final segments = _chapterCache[chapterKey]![verseKey]!;
+                    final segments = <WordTimingSegment>[];
+                    for (int i = 0; i < rawSegments.length; i++) {
+                      if (rawSegments[i] is! List) continue;
+                      final list = rawSegments[i] as List<dynamic>;
+                      if (list.length < 3) continue;
+
+                      final wordPos = (list[0] as num).toInt();
+                      final double segStart = (list[1] as num).toDouble();
+                      final double segEnd = (list[2] as num).toDouble();
+                      final int rawStart = (segStart - baseStart).round();
+                      final int rawEnd = (segEnd - baseStart).round();
+
+                      segments.add(
+                        WordTimingSegment(
+                          wordPosition: wordPos,
+                          startMs: max(0, rawStart),
+                          endMs: max(max(0, rawStart), rawEnd),
+                        ),
+                      );
+                    }
+
+                    if (segments.isNotEmpty) {
+                      chapterMap[vKey] = segments;
+                    }
+                  }
+                }
+                _chapterCache[chapterKey] = chapterMap;
+              }
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              debugPrint('WordTimingService error fetching segments for $chapterKey: $e');
+            }
+          } finally {
+            _inFlightChapterRequests.remove(chapterKey);
+          }
+        }();
+        _inFlightChapterRequests[chapterKey] = completerFuture;
+        await completerFuture;
+      }
+    }
+
+    if (_chapterCache.containsKey(chapterKey) && _chapterCache[chapterKey]!.containsKey(verseKey)) {
+      final segments = _chapterCache[chapterKey]![verseKey]!;
+      if (segments.isNotEmpty) {
         _verseCache[directCacheKey] = segments;
         return segments;
       }
     }
 
-
-    // Phonetically calibrated proportional word timing fallback algorithm
-    final fallbackSegments = computeProportionalTimings(
-      verse: verse,
-      totalDurationMs: totalAyahDuration.inMilliseconds,
+    throw Exception(
+      'تعذر جلب التوقيت الحقيقي الدقيق لآية $verseKey بصوت القارئ المختار من الخادم. يُرجى التحقق من الاتصال بالإنترنت.',
     );
-
-    _verseCache[directCacheKey] = fallbackSegments;
-    return fallbackSegments;
-  }
-
-
-  /// Calculates proportional time slices calibrated to Arabic recitation phonetic phonology, madd, and intro/outro pauses.
-  static List<WordTimingSegment> computeProportionalTimings({
-    required VerseModel verse,
-    required int totalDurationMs,
-  }) {
-    final words = verse.words;
-    if (words.isEmpty) {
-      return [
-        WordTimingSegment(
-          wordPosition: 1,
-          startMs: 0,
-          endMs: max(totalDurationMs, 1000),
-        ),
-      ];
-    }
-
-    // Weight each word by character length, Madd marks, and Shaddah
-    final weights = words.map((w) {
-      final text = w.textUthmani;
-      int weight = text.replaceAll(RegExp(r'[\u064B-\u065F\u0670]'), '').length * 2;
-      // Extra weight for Madd marks
-      if (text.contains('~') || text.contains('\u06E1') || text.contains('\u0653')) {
-        weight += 6;
-      }
-      for (final char in text.runes) {
-        final c = String.fromCharCode(char);
-        if (c == 'ا' || c == 'و' || c == 'ي' || c == 'ى' || c == 'آ') {
-          weight += 2;
-        }
-        if (c == '\u0651') {
-          weight += 2;
-        }
-      }
-      return max(weight, 4);
-    }).toList();
-
-    final totalWeight = weights.fold<int>(0, (sum, w) => sum + w);
-    final totalMs = max(totalDurationMs, words.length * 400);
-
-    // Account for reciter breath/silence at intro (~150ms) and outro (~200ms)
-    final introSilenceMs = min(200, (totalMs * 0.030).round());
-    final outroSilenceMs = min(250, (totalMs * 0.035).round());
-    final speechDuration = max(totalMs - introSilenceMs - outroSilenceMs, words.length * 300);
-
-    final segments = <WordTimingSegment>[];
-    int currentStartMs = introSilenceMs;
-
-    for (int i = 0; i < words.length; i++) {
-      final wordFraction = weights[i] / totalWeight;
-      final wordDuration = (speechDuration * wordFraction).round();
-      final endMs = i == words.length - 1 ? (totalMs - outroSilenceMs) : (currentStartMs + wordDuration);
-
-      segments.add(
-        WordTimingSegment(
-          wordPosition: i + 1,
-          startMs: currentStartMs,
-          endMs: endMs,
-        ),
-      );
-
-      currentStartMs = endMs;
-    }
-
-    return segments;
   }
 
 

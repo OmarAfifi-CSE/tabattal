@@ -34,6 +34,7 @@ import '../../../../quran_video_studio/presentation/widgets/web/video_options_se
 import '../../../../quran_video_studio/presentation/widgets/web/video_range_picker_web.dart';
 import '../../../../quran_video_studio/presentation/widgets/web/video_reciter_selector_web.dart';
 import '../../../../quran_video_studio/presentation/widgets/web/video_theme_selector_web.dart';
+import '../../../../quran_video_studio/presentation/utils/video_studio_error_helper.dart';
 
 import '../shared/helpers/verse_card_text_utils.dart';
 import '../shared/models/verse_card_theme.dart';
@@ -819,7 +820,10 @@ class _VerseCardGeneratorSheetWebContentState
           }
           if (mounted) {
             setState(() {
-              _statusMessage = videoState.errorMessage;
+              _statusMessage = VideoStudioErrorHelper.getLocalizedError(
+                context,
+                videoState.errorMessage,
+              );
               _isSuccessStatus = false;
             });
           }
@@ -1382,6 +1386,7 @@ class _VerseCardGeneratorSheetWebContentState
             VideoReciterSelectorWeb(
               selectedReciter: config.reciterName,
               selectedCategory: config.reciterCategory,
+              displayMode: config.textDisplayMode,
               onReciterSelected: (name, category, path) {
                 _clearStatusBanner();
                 context.read<VideoStudioBloc>().add(

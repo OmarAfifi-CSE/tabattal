@@ -217,3 +217,7 @@ class VideoStudioSeekRequested extends VideoStudioEvent {
   @override
   List<Object?> get props => [position];
 }
+
+class VideoStudioRetryRequested extends VideoStudioEvent {
+  const VideoStudioRetryRequested();
+}

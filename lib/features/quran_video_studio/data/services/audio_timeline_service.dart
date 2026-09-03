@@ -59,6 +59,9 @@ class AudioTimelineService {
       await audioDir.create(recursive: true);
     }
 
+    final docsDir = await getApplicationDocumentsDirectory();
+    final userDownloadedDir = Directory('${docsDir.path}/audio/$reciterPath');
+
     final List<String> localFilePaths = [];
 
     for (int i = 0; i < totalAyahs; i++) {
@@ -67,13 +70,23 @@ class AudioTimelineService {
       }
 
       final ayah = startAyah + i;
+      final verseId = surahNumber * 1000 + ayah;
+      final userDownloadedFile = File('${userDownloadedDir.path}/$verseId.mp3');
+
+      // Check if user already downloaded this verse in the Quran Reader
+      if (await userDownloadedFile.exists() && await userDownloadedFile.length() > 0) {
+        localFilePaths.add(userDownloadedFile.path);
+        onProgress?.call((i + 1) / totalAyahs);
+        continue;
+      }
+
       final surahStr = surahNumber.toString().padLeft(3, '0');
       final ayahStr = ayah.toString().padLeft(3, '0');
       final url = 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
       final filePath = '${audioDir.path}/$surahStr$ayahStr.mp3';
       final file = File(filePath);
 
-      if (!await file.exists()) {
+      if (!await file.exists() || await file.length() == 0) {
         await _dio.download(
           url,
           filePath,
@@ -101,6 +114,13 @@ class AudioTimelineService {
     if (kIsWeb) return url;
 
     try {
+      final docsDir = await getApplicationDocumentsDirectory();
+      final verseId = surahNumber * 1000 + ayahNumber;
+      final userDownloadedFile = File('${docsDir.path}/audio/$reciterPath/$verseId.mp3');
+      if (await userDownloadedFile.exists() && await userDownloadedFile.length() > 0) {
+        return userDownloadedFile.path;
+      }
+
       final tempDir = await getTemporaryDirectory();
       final audioDir = Directory('${tempDir.path}/video_studio_audio/$reciterPath');
       if (!await audioDir.exists()) {

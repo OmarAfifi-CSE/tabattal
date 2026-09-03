@@ -739,10 +739,7 @@ class CanvasOverlayGenerator {
     final Color badgeAccentColor = _resolveAccentColor(config);
     final bool isEn = config.isEnglish;
 
-    final timings = wordTimings ?? WordTimingService.computeProportionalTimings(
-      verse: verse,
-      totalDurationMs: 5000,
-    );
+    final timings = wordTimings ?? const <WordTimingSegment>[];
 
     // Vertical limits calibrated symmetrically around 50% screen height
     // to guarantee the verse sits in the true visual & mathematical center of the video frame.

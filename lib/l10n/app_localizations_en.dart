@@ -1051,5 +1051,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to measure recitation audio file duration';
 
   @override
+  String get videoStudioNetworkError =>
+      'Could not connect to the server to fetch recitation data. Please check your internet connection and try again.';
+
+  @override
+  String get videoStudioReciterTimingUnavailable =>
+      'Authentic word-by-word timing is not available for this reciter.';
+
+  @override
+  String get videoStudioVerseTimingError =>
+      'Could not retrieve authentic word timing for this verse from the server. Please check your internet connection.';
+
+  @override
+  String get videoStudioAudioDownloadError =>
+      'Failed to download recitation audio file. Please check your internet connection and try again.';
+
+  @override
+  String get videoStudioAudioCancelled => 'Audio preparation was cancelled.';
+
+  @override
+  String get videoStudioRenderProcessingError =>
+      'An error occurred while processing and encoding the video. Please try again.';
+
+  @override
+  String get videoStudioWebExportError =>
+      'Failed to export video in this browser. Please try a modern browser like Google Chrome.';
+
+  @override
+  String get videoStudioRetry => 'Retry';
+
+  @override
   String get searchFilterAll => 'All';
 }

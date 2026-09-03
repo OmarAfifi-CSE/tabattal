@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/constants/reciter_catalog.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../domain/entities/video_enums.dart';
 import '../../../../../l10n/app_localizations.dart';
 
 class VideoReciterSelectorWeb extends StatefulWidget {
   final String selectedReciter;
   final String? selectedCategory;
+  final VideoTextDisplayMode displayMode;
   final void Function(String name, String category, String path)
       onReciterSelected;
 
@@ -14,6 +16,7 @@ class VideoReciterSelectorWeb extends StatefulWidget {
     super.key,
     required this.selectedReciter,
     this.selectedCategory,
+    this.displayMode = VideoTextDisplayMode.lineByLine,
     required this.onReciterSelected,
   });
 
@@ -25,6 +28,9 @@ class VideoReciterSelectorWeb extends StatefulWidget {
 class _VideoReciterSelectorWebState
     extends State<VideoReciterSelectorWeb> {
   late String _activeCategory;
+
+  Map<String, List<Map<String, String>>> get _recitersByCategory =>
+      ReciterCatalog.getVideoRecitersByCategory(widget.displayMode);
 
   @override
   void initState() {
@@ -57,17 +63,13 @@ class _VideoReciterSelectorWebState
             child: Directionality(
               textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
               child: DefaultTabController(
-                initialIndex: ReciterCatalog
-                    .verifiedVideoRecitersByCategory.keys
+                initialIndex: _recitersByCategory.keys
                     .toList()
                     .indexOf(_activeCategory)
                     .clamp(
                         0,
-                        ReciterCatalog
-                                .verifiedVideoRecitersByCategory.keys.length -
-                            1),
-                length: ReciterCatalog
-                    .verifiedVideoRecitersByCategory.keys.length,
+                        _recitersByCategory.keys.length - 1),
+                length: _recitersByCategory.keys.length,
                 child: Padding(
                   padding: EdgeInsets.all(16.0.r),
                   child: Column(
@@ -104,8 +106,7 @@ class _VideoReciterSelectorWebState
                         indicatorColor: AppColors.accentGold,
                         labelStyle: TextStyle(
                             fontSize: 12.0.sp, fontWeight: FontWeight.w600),
-                        tabs: ReciterCatalog
-                            .verifiedVideoRecitersByCategory.keys
+                        tabs: _recitersByCategory.keys
                             .map((cat) => Tab(
                                 text: isEn
                                     ? ReciterCatalog.getCategoryNameEnglish(cat)
@@ -114,8 +115,7 @@ class _VideoReciterSelectorWebState
                       ),
                       Expanded(
                         child: TabBarView(
-                          children: ReciterCatalog
-                              .verifiedVideoRecitersByCategory.entries
+                          children: _recitersByCategory.entries
                               .map((entry) {
                             final cat = entry.key;
                             final reciters = entry.value;
@@ -192,7 +192,7 @@ class _VideoReciterSelectorWebState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final currentReciters =
-        ReciterCatalog.verifiedVideoRecitersByCategory[_activeCategory] ?? [];
+        _recitersByCategory[_activeCategory] ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,10 +240,10 @@ class _VideoReciterSelectorWebState
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             itemCount:
-                ReciterCatalog.verifiedVideoRecitersByCategory.keys.length,
+                _recitersByCategory.keys.length,
             separatorBuilder: (_, _) => SizedBox(width: 8.0.w),
             itemBuilder: (context, index) {
-              final cat = ReciterCatalog.verifiedVideoRecitersByCategory.keys
+              final cat = _recitersByCategory.keys
                   .elementAt(index);
               final isCatSelected = cat == _activeCategory;
               final isEn = Localizations.localeOf(context).languageCode == 'en';
@@ -254,7 +254,7 @@ class _VideoReciterSelectorWebState
                     _activeCategory = cat;
                   });
                   final reciters =
-                      ReciterCatalog.verifiedVideoRecitersByCategory[cat]!;
+                      _recitersByCategory[cat]!;
                   final matchingInCat = reciters
                       .where((r) => r['name'] == widget.selectedReciter)
                       .firstOrNull;
