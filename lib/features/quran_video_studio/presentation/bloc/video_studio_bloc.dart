@@ -66,7 +66,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     _positionTicker?.cancel();
     _playbackStartTime = DateTime.now();
     _playbackStartPosition = _currentVersePosition;
-    _positionTicker = Timer.periodic(const Duration(milliseconds: 35), (_) {
+    _positionTicker = Timer.periodic(const Duration(milliseconds: 20), (_) {
       if (_playbackStartTime == null) return;
       final elapsed = DateTime.now().difference(_playbackStartTime!);
       final pos = _playbackStartPosition + elapsed;

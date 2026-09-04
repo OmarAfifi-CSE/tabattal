@@ -363,6 +363,8 @@ class CanvasOverlayGenerator {
     String? tafsirText,
     double contentOpacity = 1.0,
     int playbackPositionMs = 0,
+    int? totalDurationMs,
+    bool isPlaying = false,
     List<WordTimingSegment>? wordTimings,
     int? overrideLineIndex,
   }) {
@@ -398,6 +400,8 @@ class CanvasOverlayGenerator {
       effectiveTranslation,
       baseScale,
       playbackPositionMs: playbackPositionMs,
+      totalDurationMs: totalDurationMs,
+      isPlaying: isPlaying,
       wordTimings: wordTimings,
       overrideLineIndex: overrideLineIndex,
     );
@@ -729,6 +733,8 @@ class CanvasOverlayGenerator {
     String? translation,
     double baseScale, {
     int playbackPositionMs = 0,
+    int? totalDurationMs,
+    bool isPlaying = false,
     List<WordTimingSegment>? wordTimings,
     int? overrideLineIndex,
   }) {
@@ -838,9 +844,14 @@ class CanvasOverlayGenerator {
     double lineCrossfadeOpacity = 1.0;
 
     if (isLineByLine && verse.words.isNotEmpty) {
-      lineSegments = WordTimingService.groupIntoLineSegments(verse: verse, wordTimings: timings);
+      lineSegments = WordTimingService.groupIntoLineSegments(
+        verse: verse,
+        wordTimings: timings,
+        totalAyahDurationMs: totalDurationMs,
+      );
       if (overrideLineIndex != null && overrideLineIndex >= 0 && overrideLineIndex < lineSegments.length) {
         activeLine = lineSegments[overrideLineIndex];
+        lineCrossfadeOpacity = 1.0;
       } else {
         for (int i = 0; i < lineSegments.length; i++) {
           final line = lineSegments[i];
@@ -856,12 +867,16 @@ class CanvasOverlayGenerator {
         final lineStart = activeLine.startMs;
         final lineEnd = activeLine.endMs;
         final lineDur = max(lineEnd - lineStart, 400);
-        final fadeMs = min(200, (lineDur * 0.16).round());
+        final lineDurSec = lineDur / 1000.0;
+        final safeFadeSec = 0.30.clamp(0.05, lineDurSec * 0.20);
+        final fadeMs = (safeFadeSec * 1000).round();
 
-        if (playbackPositionMs < lineStart + fadeMs && fadeMs > 0 && activeLine != lineSegments.first) {
+        if (!isPlaying && playbackPositionMs == 0) {
+          lineCrossfadeOpacity = 1.0;
+        } else if (playbackPositionMs < lineStart + fadeMs && fadeMs > 0) {
           final t = (playbackPositionMs - lineStart) / fadeMs;
           lineCrossfadeOpacity = Curves.easeInOutCubic.transform(t.clamp(0.0, 1.0));
-        } else if (playbackPositionMs > lineEnd - fadeMs && fadeMs > 0 && activeLine != lineSegments.last) {
+        } else if (playbackPositionMs > lineEnd - fadeMs && fadeMs > 0) {
           final t = (lineEnd - playbackPositionMs) / fadeMs;
           lineCrossfadeOpacity = Curves.easeInOutCubic.transform(t.clamp(0.0, 1.0));
         } else {
@@ -870,11 +885,18 @@ class CanvasOverlayGenerator {
       }
     } else {
       // Whole verse mode:
-      // Always 100% solid & fully visible at rest and at the beginning of playback.
-      // Smooth cubic fade-out only at the tail end when transitioning between verses.
-      final totalMs = timings.isNotEmpty ? timings.last.endMs : 4000;
-      const fadeMs = 200;
-      if (playbackPositionMs > totalMs - fadeMs && fadeMs > 0 && totalMs > fadeMs * 2) {
+      // Smooth cubic fade-in at the start and fade-out at the tail end matching export video engine
+      final totalMs = totalDurationMs ?? (timings.isNotEmpty ? timings.last.endMs : 4000);
+      final durSec = max(totalMs, 400) / 1000.0;
+      final safeFadeSec = 0.30.clamp(0.05, durSec * 0.20);
+      final fadeMs = (safeFadeSec * 1000).round();
+
+      if (!isPlaying && playbackPositionMs == 0) {
+        lineCrossfadeOpacity = 1.0;
+      } else if (playbackPositionMs < fadeMs && fadeMs > 0) {
+        final t = playbackPositionMs / fadeMs;
+        lineCrossfadeOpacity = Curves.easeInOutCubic.transform(t.clamp(0.0, 1.0));
+      } else if (playbackPositionMs > totalMs - fadeMs && fadeMs > 0 && totalMs > fadeMs * 2) {
         final t = (totalMs - playbackPositionMs) / fadeMs;
         lineCrossfadeOpacity = Curves.easeInOutCubic.transform(t.clamp(0.0, 1.0));
       } else {
@@ -1145,12 +1167,12 @@ class CanvasOverlayGenerator {
     final double startY = topLimit + ((availableHeight - cached.totalContentHeight) / 2);
     double currentY = startY;
 
-    // Draw Verse Text with smooth line fade
-    final bool isLineFading = lineCrossfadeOpacity < 0.999;
-    if (isLineFading) {
+    // Wrap entire center content block (verse, tafsir, translation) in saveLayer for clean, unified crossfade
+    final bool isContentFading = lineCrossfadeOpacity < 0.999;
+    if (isContentFading) {
       canvas.saveLayer(
-        Rect.fromLTWH(0, currentY - 10, width, cached.versePainter.height + 20),
-        Paint()..color = Color.fromRGBO(0, 0, 0, lineCrossfadeOpacity),
+        Rect.fromLTWH(0, startY - 20, width, cached.totalContentHeight + 40),
+        Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: lineCrossfadeOpacity.clamp(0.0, 1.0)),
       );
     }
 
@@ -1158,10 +1180,6 @@ class CanvasOverlayGenerator {
       canvas,
       Offset((width - cached.versePainter.width) / 2, currentY),
     );
-
-    if (isLineFading) {
-      canvas.restore();
-    }
     currentY += cached.versePainter.height;
 
     // Draw Tafsir
@@ -1247,6 +1265,10 @@ class CanvasOverlayGenerator {
         canvas,
         Offset((width - cached.translationTextPainter!.width) / 2, currentY),
       );
+    }
+
+    if (isContentFading) {
+      canvas.restore();
     }
   }
 

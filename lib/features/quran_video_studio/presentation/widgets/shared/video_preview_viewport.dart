@@ -122,7 +122,7 @@ class VideoPreviewViewport extends StatelessWidget {
                                 ),
                               ),
 
-                              // 2. Dynamic Center Content Layer (100% Solid & Real-time Word Tracking without initial fade)
+                              // 2. Dynamic Center Content Layer (Real-time Word Tracking & Smooth Studio Crossfade)
                               RepaintBoundary(
                                 child: CustomPaint(
                                   painter: VideoDynamicContentPainter(
@@ -132,6 +132,10 @@ class VideoPreviewViewport extends StatelessWidget {
                                     tafsirText: verse?.tafsir,
                                     translationText: verse?.translation,
                                     playbackPositionMs: position.inMilliseconds,
+                                    totalDurationMs: state.currentVerseIndex < state.verseDurations.length
+                                        ? state.verseDurations[state.currentVerseIndex].inMilliseconds
+                                        : null,
+                                    isPlaying: state.isPlaying,
                                     wordTimings: state.currentVerseWordTimings,
                                   ),
                                 ),

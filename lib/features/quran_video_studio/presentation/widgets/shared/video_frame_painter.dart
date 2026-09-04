@@ -101,6 +101,8 @@ class VideoDynamicContentPainter extends CustomPainter {
   final String? tafsirText;
   final String? translationText;
   final int playbackPositionMs;
+  final int? totalDurationMs;
+  final bool isPlaying;
   final List<WordTimingSegment>? wordTimings;
   final int? overrideLineIndex;
 
@@ -111,6 +113,8 @@ class VideoDynamicContentPainter extends CustomPainter {
     this.tafsirText,
     this.translationText,
     this.playbackPositionMs = 0,
+    this.totalDurationMs,
+    this.isPlaying = false,
     this.wordTimings,
     this.overrideLineIndex,
   });
@@ -127,6 +131,8 @@ class VideoDynamicContentPainter extends CustomPainter {
       tafsirText: tafsirText ?? verse?.tafsir,
       translationText: translationText ?? verse?.translation,
       playbackPositionMs: playbackPositionMs,
+      totalDurationMs: totalDurationMs,
+      isPlaying: isPlaying,
       wordTimings: wordTimings,
       overrideLineIndex: overrideLineIndex,
     );
@@ -140,6 +146,8 @@ class VideoDynamicContentPainter extends CustomPainter {
         oldDelegate.tafsirText != tafsirText ||
         oldDelegate.translationText != translationText ||
         oldDelegate.playbackPositionMs != playbackPositionMs ||
+        oldDelegate.totalDurationMs != totalDurationMs ||
+        oldDelegate.isPlaying != isPlaying ||
         oldDelegate.wordTimings != wordTimings ||
         oldDelegate.overrideLineIndex != overrideLineIndex;
   }

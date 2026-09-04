@@ -172,7 +172,7 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                                     ),
                                   ),
 
-                                  // 2. Dynamic Center Content Layer (100% Solid & Real-time Text Tracking)
+                                  // 2. Dynamic Center Content Layer (Real-time Text Tracking & Smooth Studio Crossfade)
                                   RepaintBoundary(
                                     child: CustomPaint(
                                       painter: VideoDynamicContentPainter(
@@ -182,6 +182,10 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                                         tafsirText: verse?.tafsir,
                                         translationText: verse?.translation,
                                         playbackPositionMs: position.inMilliseconds,
+                                        totalDurationMs: state.currentVerseIndex < state.verseDurations.length
+                                            ? state.verseDurations[state.currentVerseIndex].inMilliseconds
+                                            : null,
+                                        isPlaying: state.isPlaying,
                                         wordTimings: state.currentVerseWordTimings,
                                       ),
                                     ),
