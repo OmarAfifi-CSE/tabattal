@@ -7,6 +7,7 @@ class OverlayPositionDelegate extends SingleChildLayoutDelegate {
   final Size menuSize;
   final double topPadding;
   final double bottomPadding;
+  final bool centerHorizontally;
 
   OverlayPositionDelegate({
     required this.tapPosition,
@@ -14,6 +15,7 @@ class OverlayPositionDelegate extends SingleChildLayoutDelegate {
     required this.menuSize,
     this.topPadding = 0.0,
     this.bottomPadding = 0.0,
+    this.centerHorizontally = true,
   });
 
   @override
@@ -26,42 +28,38 @@ class OverlayPositionDelegate extends SingleChildLayoutDelegate {
     final minTop = math.max(topPadding + 10.0, 16.0);
     final maxBottom = size.height - math.max(bottomPadding + 10.0, 16.0);
 
-    double left = tapPosition.dx;
+    double left = centerHorizontally
+        ? (tapPosition.dx - (childSize.width / 2))
+        : tapPosition.dx;
     double top;
 
-    // Check if the verse is tall (e.g. Ayat Al-Dayn spanning full page or multi-line block)
-    final bool isTallVerse =
-        verseRect != null && verseRect!.height > (size.height * 0.35);
+    const double verticalSpacing = 8.0;
 
-    if (isTallVerse) {
-      // For massive verses, position intelligently relative to user's tap point
-      if (tapPosition.dy + 35 + childSize.height <= maxBottom) {
-        top = tapPosition.dy + 35;
-      } else if (tapPosition.dy - childSize.height - 35 >= minTop) {
-        top = tapPosition.dy - childSize.height - 35;
-      } else {
-        top = minTop + (maxBottom - minTop - childSize.height) / 2;
+    if (verseRect != null && verseRect!.height > 0) {
+      // 1. Prefer opening cleanly BELOW the verse if it fits on screen
+      if (verseRect!.bottom + verticalSpacing + childSize.height <= maxBottom) {
+        top = verseRect!.bottom + verticalSpacing;
       }
-    } else if (verseRect != null && verseRect!.height > 0) {
-      // Standard verse: prefer opening below the verse bounding box
-      top = verseRect!.bottom + 10;
-      if (top + childSize.height > maxBottom) {
-        // If opening below goes off-screen, try opening above the verse
-        top = verseRect!.top - childSize.height - 10;
-        if (top < minTop) {
-          // If above also overflows, position relative to tap position
-          if (tapPosition.dy + 35 + childSize.height <= maxBottom) {
-            top = tapPosition.dy + 35;
-          } else {
-            top = minTop;
-          }
+      // 2. Otherwise, prefer opening cleanly ABOVE the verse if it fits
+      else if (verseRect!.top - childSize.height - verticalSpacing >= minTop) {
+        top = verseRect!.top - childSize.height - verticalSpacing;
+      }
+      // 3. Both above and below overflow (massive multi-line verse taking most of the screen)
+      else {
+        // Position relative to user's tap point so the menu remains accessible
+        if (tapPosition.dy + verticalSpacing + childSize.height <= maxBottom) {
+          top = tapPosition.dy + verticalSpacing;
+        } else if (tapPosition.dy - childSize.height - verticalSpacing >= minTop) {
+          top = tapPosition.dy - childSize.height - verticalSpacing;
+        } else {
+          top = minTop + (maxBottom - minTop - childSize.height) / 2;
         }
       }
     } else {
       // Fallback relative to tapPosition
-      top = tapPosition.dy + 35;
+      top = tapPosition.dy + verticalSpacing;
       if (top + childSize.height > maxBottom) {
-        top = tapPosition.dy - childSize.height - 35;
+        top = tapPosition.dy - childSize.height - verticalSpacing;
       }
     }
 
@@ -82,6 +80,7 @@ class OverlayPositionDelegate extends SingleChildLayoutDelegate {
     return tapPosition != oldDelegate.tapPosition ||
         verseRect != oldDelegate.verseRect ||
         topPadding != oldDelegate.topPadding ||
-        bottomPadding != oldDelegate.bottomPadding;
+        bottomPadding != oldDelegate.bottomPadding ||
+        centerHorizontally != oldDelegate.centerHorizontally;
   }
 }

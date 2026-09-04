@@ -433,9 +433,6 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         }
       }
 
-      // ignore: deprecated_member_use
-      final playlist = ConcatenatingAudioSource(children: initialSources);
-
       final isEn = _prefs.appLocale == 'en';
       final String initialTitle;
       if (verseQueue.first.ayah == 0) {
@@ -469,7 +466,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
       await _audioPlayer.stop();
       if (_playlistGeneration != myGen) return;
-      await _audioPlayer.setAudioSource(playlist, initialIndex: 0);
+      await _audioPlayer.setAudioSources(initialSources, initialIndex: 0);
       if (_playlistGeneration != myGen) return;
       await _audioPlayer.setLoopMode(
         _currentRepeatCount == -1 ? LoopMode.one : LoopMode.off,
@@ -491,7 +488,6 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         final surahLength = QuranMetadata.surahLengthOf(verse.surah);
         if (lastPreloadedAyah < surahLength) {
           _backgroundPrefill(
-            playlist: playlist,
             reciter: _currentReciter,
             surah: verse.surah,
             startAyah: lastPreloadedAyah + 1,
@@ -511,11 +507,9 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   }
 
   /// Downloads the remaining ayahs of [surah] sequentially and appends them
-  /// to [playlist]. Runs ONLY within the same surah — never crosses into the
+  /// to [_audioPlayer]. Runs ONLY within the same surah — never crosses into the
   /// next surah. [generation] is used to self-cancel if a new PlayVerse fires.
   Future<void> _backgroundPrefill({
-    // ignore: deprecated_member_use
-    required ConcatenatingAudioSource playlist,
     required String reciter,
     required int surah,
     required int startAyah,
@@ -554,8 +548,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       if (_playlistGeneration != generation) return;
 
       for (int r = 0; r < repeat; r++) {
-        // ignore: deprecated_member_use
-        await playlist.add(_createAudioSource(path));
+        await _audioPlayer.addAudioSource(_createAudioSource(path));
         // Verify generation AFTER the async add before touching shared state.
         if (_playlistGeneration != generation) return;
         _currentVerseIds = [..._currentVerseIds, v];
@@ -581,9 +574,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
       await _audioPlayer.stop();
 
-      await _audioPlayer.setAudioSource(
-        // ignore: deprecated_member_use
-        ConcatenatingAudioSource(children: playlist),
+      await _audioPlayer.setAudioSources(
+        playlist,
         initialIndex: event.startIndex,
       );
       _audioPlayer.play();

@@ -193,10 +193,12 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
     });
   }
 
-  /// Computes the screen rect occupied by [verseKey] using the page column layout.
+  /// Computes the screen rect occupied by [verseKey] using the page column layout,
+  /// mapped precisely to the [overlayBox] coordinate space.
   Rect _calculateVerseScreenRect(
     String verseKey,
     Offset fallbackPosition,
+    RenderBox? overlayBox,
   ) {
     int minLine = 16;
     int maxLine = 0;
@@ -219,11 +221,10 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
       return Rect.fromCenter(center: fallbackPosition, width: 0, height: 0);
     }
 
-    if (widget.pageNumber == 1 || widget.pageNumber == 2) {
-      final flex = renderBox as RenderFlex;
+    if (renderBox is RenderFlex) {
       double canvasTop = 0;
       double canvasBottom = renderBox.size.height;
-      RenderBox? child = flex.firstChild;
+      RenderBox? child = renderBox.firstChild;
       int childIndex = 1;
       while (child != null) {
         final childData = child.parentData! as FlexParentData;
@@ -233,28 +234,46 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
         }
         if (childIndex >= maxLine) break;
         childIndex++;
-        child = flex.childAfter(child);
+        child = renderBox.childAfter(child);
       }
+
+      final topOffset = renderBox.localToGlobal(
+        Offset(0, canvasTop),
+        ancestor: overlayBox,
+      );
+      final bottomOffset = renderBox.localToGlobal(
+        Offset(0, canvasBottom),
+        ancestor: overlayBox,
+      );
+
+      final overlayWidth =
+          overlayBox?.size.width ?? MediaQuery.sizeOf(context).width;
+
       return Rect.fromLTRB(
         0,
-        flex.localToGlobal(Offset(0, canvasTop)).dy,
-        MediaQuery.sizeOf(context).width,
-        flex.localToGlobal(Offset(0, canvasBottom)).dy,
+        topOffset.dy,
+        overlayWidth,
+        bottomOffset.dy,
       );
     }
 
     final lineHeight = renderBox.size.height / 15;
     final topOffset = renderBox.localToGlobal(
       Offset(0, (minLine - 1) * lineHeight),
+      ancestor: overlayBox,
     );
     final bottomOffset = renderBox.localToGlobal(
       Offset(0, maxLine * lineHeight),
+      ancestor: overlayBox,
     );
+
+    final overlayWidth =
+        overlayBox?.size.width ?? MediaQuery.sizeOf(context).width;
 
     return Rect.fromLTRB(
       0,
       topOffset.dy,
-      MediaQuery.sizeOf(context).width,
+      overlayWidth,
       bottomOffset.dy,
     );
   }
@@ -270,8 +289,16 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
     QuranPageWidgetDesktop._activeMenuDismissCallback = () => _removeVerseMenu();
     setState(() => _activeVerseId = verseId);
 
+    final overlayState = Overlay.of(context);
+    final overlayBox =
+        overlayState.context.findRenderObject() as RenderBox?;
+    final overlayPosition = overlayBox != null
+        ? overlayBox.globalToLocal(tapPosition)
+        : tapPosition;
+
     final verseKey = ArabicTextUtils.verseIdToVerseKey(verseId);
-    final verseRect = _calculateVerseScreenRect(verseKey, tapPosition);
+    final verseRect =
+        _calculateVerseScreenRect(verseKey, overlayPosition, overlayBox);
 
     final pageLines = QuranPageCache.get(widget.pageNumber)?.lines ?? const [];
     final verseWords = pageLines
@@ -310,7 +337,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
           BlocProvider.value(value: hifzBloc),
         ],
         child: VerseActionMenuDesktop(
-          position: tapPosition,
+          position: overlayPosition,
           verseRect: verseRect,
           verse: partialVerseForMenu,
           pageRepaintKey: _pageRepaintKey,
@@ -324,7 +351,7 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
       ),
     );
 
-    Overlay.of(context).insert(_activeOverlayEntry!);
+    overlayState.insert(_activeOverlayEntry!);
   }
 
   void _removeVerseMenu({bool keepHighlight = false}) {

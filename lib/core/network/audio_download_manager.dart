@@ -23,7 +23,9 @@ class AudioDownloadManager {
   /// Returns the base directory for a specific reciter
   Future<String> getReciterDirectory(String category, String reciterKey) async {
     if (kIsWeb) return ''; // Not supported on web
-    final dir = await getApplicationDocumentsDirectory();
+    final dir = !kIsWeb && Platform.isWindows
+        ? await getApplicationSupportDirectory()
+        : await getApplicationDocumentsDirectory();
     final reciterPath = getReciterPath(category, reciterKey);
     final targetDir = Directory('${dir.path}/audio/$reciterPath');
     if (!await targetDir.exists()) {
@@ -43,6 +45,24 @@ class AudioDownloadManager {
     final file = File('$dirPath/$verseId.mp3');
     if (await file.exists()) {
       return file.path;
+    }
+    // Backward-compatibility fallback for Windows: check previous documents location if not found in AppData
+    if (Platform.isWindows) {
+      try {
+        final docsDir = await getApplicationDocumentsDirectory();
+        final reciterPath = getReciterPath(category, reciterKey);
+        final legacyFile =
+            File('${docsDir.path}/audio/$reciterPath/$verseId.mp3');
+        if (await legacyFile.exists()) {
+          try {
+            await legacyFile.copy(file.path);
+            await legacyFile.delete();
+            return file.path;
+          } catch (_) {
+            return legacyFile.path;
+          }
+        }
+      } catch (_) {}
     }
     return null;
   }

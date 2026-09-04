@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'l10n/app_localizations.dart';
 
 import 'features/quran_reader/presentation/screens/mobile/quran_mobile_screen.dart';
@@ -38,6 +39,16 @@ import 'features/quran_reader/presentation/bloc/quran_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (!kIsWeb && Platform.isWindows) {
+    JustAudioMediaKit.ensureInitialized(
+      windows: true,
+      linux: false,
+      android: false,
+      iOS: false,
+      macOS: false,
+    );
+  }
 
   // Silence all debug logging in release mode for security and performance
   if (kReleaseMode) {

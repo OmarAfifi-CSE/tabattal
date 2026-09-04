@@ -794,11 +794,9 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isLandscape =
-        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
-    final menuWidth = isLandscape ? 165.0.w : 205.w;
-    final menuHeight = isLandscape ? 260.0.h : 330.h;
-    final menuSize = Size(menuWidth, menuHeight);
+    const menuWidth = 192.0;
+    const menuHeight = 280.0;
+    const menuSize = Size(menuWidth, menuHeight);
 
     return Stack(
       children: [
@@ -816,30 +814,31 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
             menuSize: menuSize,
             topPadding: MediaQuery.paddingOf(context).top,
             bottomPadding: MediaQuery.paddingOf(context).bottom,
+            centerHorizontally: true,
           ),
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: ScaleTransition(
               scale: _scaleAnimation,
-              alignment: Alignment.topRight,
+              alignment: Alignment.topCenter,
               child: Material(
-              borderRadius: BorderRadius.circular((isLandscape ? 12.0 : 16.0).r),
+              borderRadius: BorderRadius.circular(12.0),
               color: Colors.transparent,
               child: Container(
                 width: menuWidth,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceCream,
-                  borderRadius: BorderRadius.circular((isLandscape ? 12.0 : 16.0).r),
+                  borderRadius: BorderRadius.circular(12.0),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.textPrimary.withValues(alpha: 0.15),
-                      blurRadius: (isLandscape ? 14.0 : 20.0).r,
-                      offset: Offset(0, (isLandscape ? 4.0 : 8.0).h),
+                      blurRadius: 16.0,
+                      offset: const Offset(0, 5.0),
                     ),
                   ],
                   border: Border.all(
                     color: AppColors.verseMarkerGold,
-                    width: (isLandscape ? 1.0 : 1.5).w,
+                    width: 1.2,
                   ),
                 ),
                 child: Directionality(
@@ -882,8 +881,8 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                         closeMenu: false,
                       ),
                       Divider(
-                        height: 1.h,
-                        thickness: 1,
+                        height: 1.0,
+                        thickness: 1.0,
                         color: AppColors.divider,
                       ),
                       if (Localizations.localeOf(context).languageCode == 'ar')
@@ -923,8 +922,8 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                           closeMenu: false,
                         ),
                       Divider(
-                        height: 1.h,
-                        thickness: 1,
+                        height: 1.0,
+                        thickness: 1.0,
                         color: AppColors.divider,
                       ),
                       BlocBuilder<AudioBloc, AudioState>(
@@ -953,8 +952,8 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                         },
                       ),
                       Divider(
-                        height: 1.h,
-                        thickness: 1,
+                        height: 1.0,
+                        thickness: 1.0,
                         color: AppColors.divider,
                       ),
                       BlocBuilder<HifzBloc, HifzState>(
@@ -976,8 +975,8 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                         },
                       ),
                       Divider(
-                        height: 1.h,
-                        thickness: 1,
+                        height: 1.0,
+                        thickness: 1.0,
                         color: AppColors.divider,
                       ),
                       _buildMenuItem(
@@ -1005,8 +1004,8 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                         },
                       ),
                       Divider(
-                        height: 1.h,
-                        thickness: 1,
+                        height: 1.0,
+                        thickness: 1.0,
                         color: AppColors.divider,
                       ),
                       BlocBuilder<BookmarkBloc, BookmarkState>(
@@ -1057,32 +1056,29 @@ class _VerseActionMenuItemDesktop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLandscape =
-        MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
-
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: (isLandscape ? 12.0 : 14.0).w,
-          vertical: (isLandscape ? 8.0 : 10.0).h,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 14.0,
+          vertical: 9.0,
         ),
         child: Row(
           children: [
             Icon(
               icon,
               color: iconColor ?? AppColors.bronzeIcon,
-              size: (isLandscape ? 18.0 : 20.0).sp,
+              size: 19.0,
             ),
-            SizedBox(width: (isLandscape ? 8.0 : 10.0).w),
+            const SizedBox(width: 10.0),
             Expanded(
               child: Text(
                 text,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: (isLandscape ? 13.5 : 14.5).sp,
+                  fontSize: 14.0,
                   color: AppColors.inkBrown,
                   fontWeight: FontWeight.normal,
                 ),

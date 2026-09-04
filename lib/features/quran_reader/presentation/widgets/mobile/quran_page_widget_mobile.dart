@@ -275,11 +275,10 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
     // uniform height/15 estimate gives completely wrong screen positions.
     // Walk the RenderFlex render tree to get exact canvas-space child offsets,
     // then convert to screen space via localToGlobal (handles FittedBox scaling).
-    if (widget.pageNumber == 1 || widget.pageNumber == 2) {
-      final flex = renderBox as RenderFlex;
+    if (renderBox is RenderFlex) {
       double canvasTop = 0;
       double canvasBottom = renderBox.size.height;
-      RenderBox? child = flex.firstChild;
+      RenderBox? child = renderBox.firstChild;
       int childIndex = 1;
       while (child != null) {
         final childData = child.parentData! as FlexParentData;
@@ -289,13 +288,13 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
         }
         if (childIndex >= maxLine) break;
         childIndex++;
-        child = flex.childAfter(child);
+        child = renderBox.childAfter(child);
       }
       return Rect.fromLTRB(
         0,
-        flex.localToGlobal(Offset(0, canvasTop)).dy,
+        renderBox.localToGlobal(Offset(0, canvasTop)).dy,
         MediaQuery.sizeOf(context).width,
-        flex.localToGlobal(Offset(0, canvasBottom)).dy,
+        renderBox.localToGlobal(Offset(0, canvasBottom)).dy,
       );
     }
 

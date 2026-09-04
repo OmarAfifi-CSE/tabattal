@@ -214,11 +214,10 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
       return Rect.fromCenter(center: fallbackPosition, width: 0, height: 0);
     }
 
-    if (widget.pageNumber == 1 || widget.pageNumber == 2) {
-      final flex = renderBox as RenderFlex;
+    if (renderBox is RenderFlex) {
       double canvasTop = 0;
       double canvasBottom = renderBox.size.height;
-      RenderBox? child = flex.firstChild;
+      RenderBox? child = renderBox.firstChild;
       int childIndex = 1;
       while (child != null) {
         final childData = child.parentData! as FlexParentData;
@@ -228,13 +227,13 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
         }
         if (childIndex >= maxLine) break;
         childIndex++;
-        child = flex.childAfter(child);
+        child = renderBox.childAfter(child);
       }
       return Rect.fromLTRB(
         0,
-        flex.localToGlobal(Offset(0, canvasTop)).dy,
+        renderBox.localToGlobal(Offset(0, canvasTop)).dy,
         MediaQuery.sizeOf(context).width,
-        flex.localToGlobal(Offset(0, canvasBottom)).dy,
+        renderBox.localToGlobal(Offset(0, canvasBottom)).dy,
       );
     }
 
