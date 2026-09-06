@@ -9,8 +9,14 @@ import '../constants/reciter_catalog.dart';
 class AudioDownloadManager {
   final Dio _dio = Dio();
 
-  // Active prefetch tasks to avoid duplicate downloads
-  final Map<int, Future<String>> _activePrefetches = {};
+  // Active prefetch tasks to avoid duplicate downloads.
+  // Keyed by category + reciter + verse: the same verseId exists under every
+  // reciter directory with different bytes, so keying by verseId alone would
+  // hand reciter B the file downloaded for reciter A.
+  final Map<String, Future<String>> _activePrefetches = {};
+
+  String _prefetchKey(String category, String reciterKey, int verseId) =>
+      '$category|$reciterKey|$verseId';
 
   /// Grouped Mapping of recitation styles to backend paths
   static Map<String, Map<String, String>> get reciterCategories =>
@@ -138,14 +144,23 @@ class AudioDownloadManager {
       );
     }
 
-    // Check if we are already downloading this verse
-    if (_activePrefetches.containsKey(verseId)) {
-      return await _activePrefetches[verseId]!;
+    // Check if we are already downloading this exact verse file
+    final prefetchKey = _prefetchKey(category, reciterKey, verseId);
+    if (_activePrefetches.containsKey(prefetchKey)) {
+      final existing = await _activePrefetches[prefetchKey]!;
+      // A background prefetch swallows its own errors into ''; never hand
+      // that back as a path — fall through to a real download attempt below.
+      if (existing.isNotEmpty) return existing;
     }
 
-    // Register active download
+    // Register active download. Attach a silent error handler immediately so
+    // a failure with no second waiter yet never surfaces as an unhandled
+    // async error (Dart reports completeError futures without any listener).
+    // Real waiters still receive the error normally through their own await.
     final completer = Completer<String>();
-    _activePrefetches[verseId] = completer.future;
+    _activePrefetches[prefetchKey] = completer.future;
+    // ignore: discarded_futures
+    _activePrefetches[prefetchKey]!.then((_) {}, onError: (_) {});
 
     try {
       await _dio.download(
@@ -165,7 +180,7 @@ class AudioDownloadManager {
         await tempFile.rename(savePath);
       }
 
-      _activePrefetches.remove(verseId);
+      _activePrefetches.remove(prefetchKey);
       completer.complete(savePath);
       return savePath;
     } catch (e) {
@@ -174,7 +189,7 @@ class AudioDownloadManager {
       if (await tempFile.exists()) {
         await tempFile.delete();
       }
-      _activePrefetches.remove(verseId);
+      _activePrefetches.remove(prefetchKey);
       completer.completeError(e);
       if (e is DioException && CancelToken.isCancel(e)) {
         rethrow;
@@ -324,9 +339,10 @@ class AudioDownloadManager {
       if (surah > 114) break;
 
       final verseId = surah * 1000 + ayah;
+      final prefetchKey = _prefetchKey(category, reciterKey, verseId);
 
       // If we are already prefetching this verse, skip
-      if (_activePrefetches.containsKey(verseId)) continue;
+      if (_activePrefetches.containsKey(prefetchKey)) continue;
 
       // Check if file already exists locally
       final localPath = await getLocalVersePath(category, reciterKey, verseId);
@@ -341,10 +357,10 @@ class AudioDownloadManager {
             ayah,
             null,
           ).catchError((_) => '').whenComplete(() {
-            _activePrefetches.remove(verseId);
+            _activePrefetches.remove(prefetchKey);
           });
 
-      _activePrefetches[verseId] = downloadTask;
+      _activePrefetches[prefetchKey] = downloadTask;
     }
   }
 }

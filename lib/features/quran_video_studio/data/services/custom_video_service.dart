@@ -1,9 +1,11 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import 'package:file_selector/file_selector.dart' as fs;
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import '../../../../core/utils/desktop_file_picker_helper.dart';
 
 /// Helper service for picking and downloading custom background videos.
 class CustomVideoService {
@@ -21,20 +23,38 @@ class CustomVideoService {
     ),
   );
 
-  /// Picks a video file from the device gallery.
+  /// Picks a video file from the device gallery or native file system.
   static Future<String?> pickVideoFromGallery() async {
     try {
+      if (!kIsWeb &&
+          (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+        try {
+          const typeGroup = fs.XTypeGroup(
+            label: 'Videos',
+            extensions: ['mp4', 'mov', 'mkv', 'webm', 'avi', 'wmv'],
+          );
+          final file = await fs.openFile(acceptedTypeGroups: [typeGroup]);
+          return file != null ? p.normalize(file.path) : null;
+        } catch (e) {
+          debugPrint('file_selector openFile failed: $e');
+          if (Platform.isWindows) {
+            final fallback = await DesktopFilePickerHelper.pickFileWindows(
+              filter:
+                  'Video Files (*.mp4;*.mov;*.mkv;*.webm;*.avi;*.wmv)|*.mp4;*.mov;*.mkv;*.webm;*.avi;*.wmv|All Files (*.*)|*.*',
+              title: 'اختر ملف فيديو',
+            );
+            return fallback != null ? p.normalize(fallback) : null;
+          }
+          return null;
+        }
+      }
+
       final picker = ImagePicker();
       final XFile? pickedFile = await picker.pickVideo(
         source: ImageSource.gallery,
-        maxDuration: (!kIsWeb &&
-                (Platform.isWindows ||
-                    Platform.isLinux ||
-                    Platform.isMacOS))
-            ? null
-            : const Duration(minutes: 10),
+        maxDuration: const Duration(minutes: 10),
       );
-      return pickedFile?.path;
+      return pickedFile != null ? p.normalize(pickedFile.path) : null;
     } catch (e) {
       debugPrint('Error picking video: $e');
       return null;

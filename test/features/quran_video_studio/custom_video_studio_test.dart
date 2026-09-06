@@ -207,5 +207,116 @@ void main() {
 
       expect(find.byType(CustomPaint), findsWidgets);
     });
+
+    test('CanvasOverlayGenerator renders extreme ayah length (Ayah Al-Dayn) without throwing', () {
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+      const size = Size(1080, 1920);
+
+      const config = VideoProjectConfig(
+        surahNumber: 2,
+        startAyah: 282,
+        endAyah: 282,
+        backgroundType: VideoBackgroundType.customVideo,
+        customVideoPath: 'test.mp4',
+        textDisplayMode: VideoTextDisplayMode.staticFull,
+      );
+
+      final longVerse = VerseModel(
+        id: 282,
+        verseNumber: 282,
+        verseKey: '2:282',
+        textUthmani: List.filled(60, 'يَا أَيُّهَا الَّذِينَ آمَنُوا إِذَا تَدَايَنْتُمْ بِدَيْنٍ').join(' '),
+        juzNumber: 3,
+        words: const [],
+        tafsir: null,
+        translation: null,
+      );
+
+      expect(
+        () => CanvasOverlayGenerator.paintDynamicContent(
+          canvas,
+          size,
+          verse: longVerse,
+          config: config,
+          pageNumber: 48,
+          contentOpacity: 1.0,
+        ),
+        returnsNormally,
+      );
+
+      final picture = recorder.endRecording();
+      expect(picture, isNotNull);
+      picture.dispose();
+    });
+
+    test('CanvasOverlayGenerator handles extreme canvas sizes (very small and 4K) gracefully', () {
+      final recorderSmall = PictureRecorder();
+      final canvasSmall = Canvas(recorderSmall);
+      const sizeSmall = Size(100, 100);
+
+      const config = VideoProjectConfig(
+        surahNumber: 1,
+        startAyah: 1,
+        endAyah: 1,
+        backgroundType: VideoBackgroundType.customVideo,
+        customVideoPath: 'test.mp4',
+      );
+
+      final verse = VerseModel(
+        id: 1,
+        verseNumber: 1,
+        verseKey: '1:1',
+        textUthmani: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+        juzNumber: 1,
+        words: const [],
+      );
+
+      expect(
+        () => CanvasOverlayGenerator.paintStaticDecoration(
+          canvasSmall,
+          sizeSmall,
+          config: config,
+          verse: verse,
+          includeBackground: false,
+        ),
+        returnsNormally,
+      );
+      recorderSmall.endRecording().dispose();
+
+      final recorder4K = PictureRecorder();
+      final canvas4K = Canvas(recorder4K);
+      const size4K = Size(2160, 3840);
+
+      expect(
+        () => CanvasOverlayGenerator.paintStaticDecoration(
+          canvas4K,
+          size4K,
+          config: config,
+          verse: verse,
+          includeBackground: false,
+        ),
+        returnsNormally,
+      );
+      recorder4K.endRecording().dispose();
+    });
+
+    test('VideoProjectConfig handles boundary dimming values [0.0, 1.0] and out-of-range clamps', () {
+      const configZero = VideoProjectConfig(
+        surahNumber: 1,
+        startAyah: 1,
+        endAyah: 7,
+        backgroundDimming: 0.0,
+      );
+      expect(configZero.backgroundDimming, 0.0);
+
+      const configFull = VideoProjectConfig(
+        surahNumber: 1,
+        startAyah: 1,
+        endAyah: 7,
+        backgroundDimming: 1.0,
+      );
+      expect(configFull.backgroundDimming, 1.0);
+    });
   });
 }

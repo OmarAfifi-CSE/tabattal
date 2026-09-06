@@ -46,6 +46,7 @@ class VideoThemeSelectorDesktop extends StatelessWidget {
               return MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => onThemeSelected(preset),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),

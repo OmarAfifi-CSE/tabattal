@@ -57,6 +57,7 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
   }
 
   Future<void> _handlePickGallery() async {
+    if (_isLoading) return;
     final l10n = AppLocalizations.of(context)!;
     setState(() {
       _errorMessage = null;
@@ -68,8 +69,8 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
       final path = await CustomVideoService.pickVideoFromGallery();
       if (!mounted) return;
       if (path != null) {
-        widget.onVideoSelected(path);
         Navigator.pop(context);
+        widget.onVideoSelected(path);
       }
     } catch (e) {
       if (mounted) {
@@ -85,6 +86,7 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
   }
 
   Future<void> _handleDownloadUrl() async {
+    if (_isLoading) return;
     final l10n = AppLocalizations.of(context)!;
     final url = _urlController.text.trim();
     if (url.isEmpty) {
@@ -110,8 +112,8 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
         },
       );
       if (!mounted) return;
-      widget.onVideoSelected(path);
       Navigator.pop(context);
+      widget.onVideoSelected(path);
     } catch (e) {
       if (mounted) {
         setState(() {

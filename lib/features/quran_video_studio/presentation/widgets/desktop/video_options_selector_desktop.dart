@@ -272,36 +272,47 @@ class VideoOptionsSelectorDesktop extends StatelessWidget {
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 14.0.w, vertical: 6.0.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                size: 20.0.sp,
-                color: AppColors.accentGold,
+    return InkWell(
+      onTap: () => onChanged(!value),
+      borderRadius: BorderRadius.circular(10.0.r),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 14.0.w, vertical: 6.0.h),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Icon(
+                    icon,
+                    size: 20.0.sp,
+                    color: AppColors.accentGold,
+                  ),
+                  SizedBox(width: 10.0.w),
+                  Expanded(
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15.0.sp,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: 10.0.w),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 15.0.sp,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.accentGold,
-            activeTrackColor: AppColors.accentGold.withValues(alpha: 0.4),
-          ),
-        ],
+            ),
+            SizedBox(width: 8.0.w),
+            Switch(
+              value: value,
+              onChanged: onChanged,
+              activeThumbColor: AppColors.accentGold,
+              activeTrackColor: AppColors.accentGold.withValues(alpha: 0.4),
+            ),
+          ],
+        ),
       ),
     );
   }

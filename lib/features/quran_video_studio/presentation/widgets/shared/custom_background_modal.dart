@@ -56,6 +56,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
   }
 
   Future<void> _handlePickGallery() async {
+    if (_isLoading) return;
     final l10n = AppLocalizations.of(context)!;
     setState(() {
       _errorMessage = null;
@@ -66,8 +67,8 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
       final path = await CustomImageService.pickImageFromGallery();
       if (!mounted) return;
       if (path != null) {
-        widget.onImageSelected(path);
         Navigator.pop(context);
+        widget.onImageSelected(path);
       }
     } catch (e) {
       if (mounted) {
@@ -83,6 +84,7 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
   }
 
   Future<void> _handleDownloadUrl() async {
+    if (_isLoading) return;
     final l10n = AppLocalizations.of(context)!;
     final url = _urlController.text.trim();
     if (url.isEmpty) {
@@ -98,8 +100,8 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
     try {
       final path = await CustomImageService.downloadImageFromUrl(url);
       if (!mounted) return;
-      widget.onImageSelected(path);
       Navigator.pop(context);
+      widget.onImageSelected(path);
     } catch (e) {
       if (mounted) {
         setState(() {

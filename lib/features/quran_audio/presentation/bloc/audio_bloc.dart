@@ -70,6 +70,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   StreamSubscription? _playerStateSubscription;
   StreamSubscription? _currentIndexSubscription;
   StreamSubscription? _playbackEventSubscription;
+  StreamSubscription? _errorStreamSubscription;
   StreamSubscription? _actionSubscription;
   Timer? _sleepTimer;
 
@@ -104,6 +105,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     on<SetSleepTimer>(_onSetSleepTimer);
     on<CancelSleepTimer>(_onCancelSleepTimer);
     on<AudioErrorEvent>((event, emit) => emit(AudioError(event.message)));
+    on<AudioPlatformError>(_onPlatformError);
 
     _initStreams();
   }
@@ -153,7 +155,54 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         // the wrong ayah (e.g., ayah 4 of the next surah).
         if (_playlistGeneration != _activePlaylistGeneration) return;
 
-        // The playlist finished
+        // On Windows with just_audio_windows: each ayah plays sequentially
+        if (!kIsWeb && Platform.isWindows) {
+          if (_currentVerseIds.isNotEmpty) {
+            final currentVerse = _currentVerseIds[_currentIndex];
+            final repeat = _currentRepeatCount > 0 ? _currentRepeatCount : 1;
+
+            if (_currentRepeatCount == -1) {
+              _audioPlayer.seek(Duration.zero);
+              _audioPlayer.play();
+              return;
+            }
+
+            if (currentVerse.ayah == 0) {
+              // Basmalah always plays exactly ONCE (mobile parity: it sits
+              // outside the repeat loop) — never repeated, never stopping
+              // play-once playback before Ayah 1.
+              _playedCount = 0;
+              add(PlayVerse('', VerseRef(currentVerse.surah, 1).verseId, skipBasmalah: true));
+              return;
+            }
+
+            _playedCount++;
+            if (_playedCount < repeat) {
+              _audioPlayer.seek(Duration.zero);
+              _audioPlayer.play();
+              return;
+            }
+
+            _playedCount = 0;
+
+            if (_isPlayingOnce) {
+              add(const StopAudio());
+              return;
+            }
+
+            final surahLength = QuranMetadata.surahLengthOf(currentVerse.surah);
+            if (currentVerse.ayah < surahLength) {
+              add(PlayVerse('', VerseRef(currentVerse.surah, currentVerse.ayah + 1).verseId, skipBasmalah: true));
+            } else if (currentVerse.surah < 114) {
+              add(PlayVerse('', VerseRef(currentVerse.surah + 1, 1).verseId));
+            } else {
+              add(const StopAudio());
+            }
+          }
+          return;
+        }
+
+        // The playlist finished (Mobile / Web)
         if (_currentVerseIds.isNotEmpty && _currentRepeatCount != -1 && !_isPlayingOnce) {
           // Snapshot the last verse in the list — NOT _currentIndex — because by the time
           // `completed` fires the index stream may have already updated _currentIndex.
@@ -250,6 +299,44 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         }
       },
     );
+
+    // just_audio 0.10+ delivers async native failures through errorStream
+    // (playback events carrying errorCode), NOT through playbackEventStream
+    // onError. Without this subscription, corrupt-file/mid-playback native
+    // failures are completely silent on every platform.
+    _errorStreamSubscription = _audioPlayer.errorStream.listen((e) {
+      add(AudioPlatformError(e));
+    });
+  }
+
+  /// Handles async native failures from [AudioPlayer.errorStream].
+  ///
+  /// These arrive detached from any request, so three guards apply before
+  /// touching shared playback state (otherwise a stale error would kill a
+  /// newer, healthy playback — the same class of bug as F11):
+  /// 1. The failing generation must still be the active one.
+  /// 2. Something must actually be playing/loading (never disturb idle,
+  ///    paused, or already-error states).
+  /// 3. If the failure names a playlist index, it must be the current one.
+  Future<void> _onPlatformError(
+    AudioPlatformError event,
+    Emitter<AudioState> emit,
+  ) async {
+    if (_playlistGeneration != _activePlaylistGeneration) return;
+    if (state is! AudioPlaying && state is! AudioLoading) return;
+    final e = event.error;
+    if (e.index != null &&
+        _currentVerseIds.isNotEmpty &&
+        (_currentIndex < 0 ||
+            _currentIndex >= _currentVerseIds.length ||
+            e.index != _currentIndex)) {
+      return;
+    }
+    if (_isNetworkError(e)) {
+      await _handleAudioError(e, emit, defaultErrorKey: "audioErrorNoInternet");
+    } else {
+      await _handleAudioError(e, emit, defaultErrorKey: "audioErrorFileNotFound");
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -374,7 +461,15 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   // keeping network usage minimal (sequential, one file at a time).
   // ---------------------------------------------------------------------------
   Future<void> _onPlayVerse(PlayVerse event, Emitter<AudioState> emit) async {
-    emit(AudioLoading());
+    // Only show the global loading state when starting fresh. Auto-advance
+    // (fired by the `completed` handler while the player is still in the
+    // completed state) must NOT flash a loading spinner between ayahs —
+    // on Windows every ayah is its own PlayVerse (single-source playback).
+    final bool isAutoAdvance =
+        _audioPlayer.processingState == ProcessingState.completed;
+    if (!isAutoAdvance) {
+      emit(AudioLoading());
+    }
     // Grab a unique generation token. If a new PlayVerse fires while we are
     // awaiting anything, _playlistGeneration changes and all in-flight work
     // (this handler + the background prefill) self-cancels cleanly.
@@ -401,12 +496,18 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
       final int repeat = _currentRepeatCount > 0 ? _currentRepeatCount : 1;
 
-      // --- Step 1: Pre-download first 3 ayahs (+ Basmalah) in PARALLEL ---
+      // --- Step 1: Pre-download first ayahs (+ Basmalah) in PARALLEL ---
+      // On Windows only ONE source is ever loaded (initialSources[0]), and
+      // every advance runs a fresh PlayVerse — so awaiting 3 downloads here
+      // would let a LATER ayah's failure block the CURRENT ayah's playback.
+      // Download only what this event needs to start; the rest is prefetched
+      // in the background after playback begins (see below).
+      final bool windowsSingleSource = !kIsWeb && Platform.isWindows;
       final List<Future<String>> downloadFutures = [];
       if (needsBasmalah) {
         downloadFutures.add(_ensureLocalPath(1, 0, 1000));
       }
-      final int preloadCount = _isPlayingOnce ? 1 : 3;
+      final int preloadCount = _isPlayingOnce ? 1 : (windowsSingleSource ? 1 : 3);
       final List<VerseRef> versesToPreload = _nextVerses(verse, preloadCount);
       for (final v in versesToPreload) {
         downloadFutures.add(_ensureLocalPath(v.surah, v.ayah, v.verseId));
@@ -464,9 +565,21 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       _currentVerseIds = verseQueue;
       _currentIndex = 0;
 
-      await _audioPlayer.stop();
-      if (_playlistGeneration != myGen) return;
-      await _audioPlayer.setAudioSources(initialSources, initialIndex: 0);
+      // NOTE: no stop() before setAudioSource on Windows. just_audio's stop()
+      // deactivates and DISPOSES the native platform player; the next
+      // setAudioSource must then recreate it, adding an audible gap between
+      // ayahs. setAudioSource alone swaps the file inside the SAME native
+      // player (instant). Mobile/Web keep stop()+setAudioSources for the
+      // gapless ConcatenatingAudioSource pipeline.
+      if (!kIsWeb && Platform.isWindows) {
+        if (initialSources.isNotEmpty) {
+          await _audioPlayer.setAudioSource(initialSources[0]);
+        }
+      } else {
+        await _audioPlayer.stop();
+        if (_playlistGeneration != myGen) return;
+        await _audioPlayer.setAudioSources(initialSources, initialIndex: 0);
+      }
       if (_playlistGeneration != myGen) return;
       await _audioPlayer.setLoopMode(
         _currentRepeatCount == -1 ? LoopMode.one : LoopMode.off,
@@ -479,29 +592,48 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       _activePlaylistGeneration = myGen;
       emit(AudioPlaying(_currentVerseIds.first.verseId));
 
-      // --- Step 3: Background-append remaining ayahs (SAME surah ONLY) ---
-      // We deliberately never cross into the next surah here. The `completed`
-      // event handler is the single, correct place that triggers the next-surah
-      // transition WITH basmalah.
-      if (_currentRepeatCount != -1 && versesToPreload.isNotEmpty && !_isPlayingOnce) {
-        final lastPreloadedAyah = versesToPreload.last.ayah;
-        final surahLength = QuranMetadata.surahLengthOf(verse.surah);
-        if (lastPreloadedAyah < surahLength) {
-          _backgroundPrefill(
-            reciter: _currentReciter,
-            surah: verse.surah,
-            startAyah: lastPreloadedAyah + 1,
-            repeat: repeat,
-            lookahead: 5,
-            generation: myGen,
-          );
+      // Prefetch next ayahs in the background on Windows for seamless gapless playback.
+      // Only warms the disk cache — failures are swallowed so they can never
+      // block or break the verse that is already playing.
+      if (!kIsWeb && Platform.isWindows) {
+        final currentVerse = verseQueue.first;
+        VerseRef? nextRef = currentVerse.ayah == 0
+            ? VerseRef(currentVerse.surah, 1)
+            : currentVerse.next;
+        for (int i = 0; i < 2 && nextRef != null; i++) {
+          final prefetchRef = nextRef;
+          unawaited(_ensureLocalPath(prefetchRef.surah, prefetchRef.ayah, prefetchRef.verseId).catchError((_) => ''));
+          nextRef = nextRef.next;
+        }
+      } else {
+        // --- Step 3: Background-append remaining ayahs (SAME surah ONLY) ---
+        // We deliberately never cross into the next surah here. The `completed`
+        // event handler is the single, correct place that triggers the next-surah
+        // transition WITH basmalah.
+        if (_currentRepeatCount != -1 && versesToPreload.isNotEmpty && !_isPlayingOnce) {
+          final lastPreloadedAyah = versesToPreload.last.ayah;
+          final surahLength = QuranMetadata.surahLengthOf(verse.surah);
+          if (lastPreloadedAyah < surahLength) {
+            _backgroundPrefill(
+              reciter: _currentReciter,
+              surah: verse.surah,
+              startAyah: lastPreloadedAyah + 1,
+              repeat: repeat,
+              lookahead: 5,
+              generation: myGen,
+            );
+          }
         }
       }
     } on PlayerException catch (e) {
+      // A superseded PlayVerse must never clean up a newer one's playback:
+      // its downloads may fail AFTER the next verse already started.
+      if (_playlistGeneration != myGen) return;
       await _handleAudioError(e, emit, defaultErrorKey: "audioErrorFileNotFound");
     } on PlayerInterruptedException catch (_) {
       // Interrupted by a new play request — expected
     } catch (e) {
+      if (_playlistGeneration != myGen) return;
       await _handleAudioError(e, emit);
     }
   }
@@ -539,9 +671,12 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       try {
         path = await _ensureLocalPath(v.surah, v.ayah, v.verseId);
       } catch (_) {
-        // Download failed — skip this ayah. Do NOT add it to verseIds either
-        // since playlist source and verseId list MUST stay perfectly in sync.
-        continue;
+        // Download failed — STOP the sequence here instead of silently
+        // skipping the ayah. Skipping would desync the playlist (verse N+2
+        // playing right after N) with no error surfaced. When playback
+        // reaches the missing ayah, the `completed` recovery path replays it
+        // from scratch with proper error reporting.
+        return;
       }
 
       // Check again after the download await — a new PlayVerse may have fired.
@@ -572,12 +707,19 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           .map((path) => _createAudioSource(path))
           .toList();
 
-      await _audioPlayer.stop();
-
-      await _audioPlayer.setAudioSources(
-        playlist,
-        initialIndex: event.startIndex,
-      );
+      // Same Windows rule as _onPlayVerse: skip stop() so the native player
+      // is reused (see _onPlayVerse for the full rationale).
+      if (!kIsWeb && Platform.isWindows) {
+        if (playlist.isNotEmpty && _currentIndex < playlist.length) {
+          await _audioPlayer.setAudioSource(playlist[_currentIndex]);
+        }
+      } else {
+        await _audioPlayer.stop();
+        await _audioPlayer.setAudioSources(
+          playlist,
+          initialIndex: event.startIndex,
+        );
+      }
       _audioPlayer.play();
       emit(AudioPlaying(_currentVerseIds[_currentIndex].verseId));
     } on PlayerException catch (e) {
@@ -734,6 +876,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     _playerStateSubscription?.cancel();
     _currentIndexSubscription?.cancel();
     _playbackEventSubscription?.cancel();
+    _errorStreamSubscription?.cancel();
     _actionSubscription?.cancel();
     _sleepTimer?.cancel();
     _audioPlayer.dispose();

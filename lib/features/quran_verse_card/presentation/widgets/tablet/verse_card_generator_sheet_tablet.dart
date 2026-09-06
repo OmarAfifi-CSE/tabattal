@@ -36,6 +36,7 @@ import '../../../../quran_video_studio/presentation/widgets/tablet/video_options
 import '../../../../quran_video_studio/presentation/widgets/tablet/video_range_picker_tablet.dart';
 import '../../../../quran_video_studio/presentation/widgets/tablet/video_reciter_selector_tablet.dart';
 import '../../../../quran_video_studio/presentation/widgets/tablet/video_theme_selector_tablet.dart';
+import '../../../../quran_video_studio/presentation/widgets/shared/video_timeline_scrubber.dart';
 import '../../../../quran_video_studio/presentation/utils/video_studio_error_helper.dart';
 
 import '../shared/helpers/verse_card_text_utils.dart';
@@ -830,7 +831,14 @@ class _VerseCardGeneratorSheetTabletContentState
     final screenH = size.height;
     final maxSheetHeight = screenH * 0.92;
 
-    return BlocConsumer<VideoStudioBloc, VideoStudioState>(
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) {
+          context.read<VideoStudioBloc>().add(const VideoStudioPlaybackPaused());
+        }
+      },
+      child: BlocConsumer<VideoStudioBloc, VideoStudioState>(
       listener: (context, videoState) async {
         if (videoState.errorMessage != null && videoState.errorMessage!.isNotEmpty) {
           if (_isExportDialogOpen) {
@@ -890,7 +898,7 @@ class _VerseCardGeneratorSheetTabletContentState
 
         return Directionality(
           textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
-          child: ConstrainedBox(
+            child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxSheetHeight),
             child: Container(
               decoration: BoxDecoration(
@@ -945,7 +953,10 @@ class _VerseCardGeneratorSheetTabletContentState
                         ),
                       ),
                       IconButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () {
+                          context.read<VideoStudioBloc>().add(const VideoStudioPlaybackPaused());
+                          Navigator.pop(context);
+                        },
                         icon: Icon(Icons.close_rounded, size: isLandscape ? 22.0 : 26.sp),
                         splashRadius: 20,
                       ),
@@ -1188,8 +1199,9 @@ class _VerseCardGeneratorSheetTabletContentState
           ),
         );
       },
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildPreviewArea(VideoStudioState videoState, {bool isLandscape = false}) {
     switch (_selectedFormat) {
@@ -2120,53 +2132,63 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: StreamBuilder<Duration>(
-                      stream: context.read<VideoStudioBloc>().playbackPositionStream,
-                      initialData: context.read<VideoStudioBloc>().currentVersePosition,
-                      builder: (context, snapshot) {
-                        final position = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
-                        final cumulativePos = state.calculateCumulativePosition(state.currentVerseIndex, position);
-
-                        return Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            if (config.backgroundType == VideoBackgroundType.customVideo &&
-                                config.customVideoPath != null &&
-                                config.customVideoPath!.isNotEmpty)
-                              RepaintBoundary(
-                                child: VideoBackgroundPlayerView(
-                                  videoPath: config.customVideoPath!,
-                                  isPlaying: state.isPlaying,
-                                  dimming: config.backgroundDimming,
-                                  resetSignal: state.playbackResetTrigger,
-                                  currentPosition: cumulativePos,
-                                ),
-                              ),
-                            RepaintBoundary(
-                              child: CustomPaint(
-                                painter: VideoStaticFramePainter(
-                                  config: config,
-                                  verse: verse,
-                                  includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
-                                ),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (config.backgroundType == VideoBackgroundType.customVideo &&
+                            config.customVideoPath != null &&
+                            config.customVideoPath!.isNotEmpty)
+                          RepaintBoundary(
+                            child: IgnorePointer(
+                              child: VideoBackgroundPlayerView(
+                                key: ValueKey('tablet_custom_video_bg_${config.customVideoPath}'),
+                                videoPath: config.customVideoPath!,
+                                isPlaying: state.isPlaying,
+                                dimming: config.backgroundDimming,
+                                resetSignal: state.playbackResetTrigger,
+                                currentPosition: state.calculateCumulativePosition(state.currentVerseIndex, context.read<VideoStudioBloc>().currentVersePosition),
+                                seekSignal: state.seekTrigger,
+                                seekPosition: state.lastSeekPosition,
                               ),
                             ),
-                            RepaintBoundary(
-                              child: CustomPaint(
+                          ),
+                        RepaintBoundary(
+                          child: CustomPaint(
+                            painter: VideoStaticFramePainter(
+                              config: config,
+                              verse: verse,
+                              includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
+                            ),
+                          ),
+                        ),
+                        RepaintBoundary(
+                          child: StreamBuilder<Duration>(
+                            stream: context.read<VideoStudioBloc>().playbackPositionStream,
+                            initialData: context.read<VideoStudioBloc>().currentVersePosition,
+                            builder: (context, snapshot) {
+                              final bloc = context.read<VideoStudioBloc>();
+                              final liveState = bloc.state;
+                              final position = snapshot.data ?? bloc.currentVersePosition;
+                              final activeVerse = liveState.currentVerse ?? verse;
+                              return CustomPaint(
                                 painter: VideoDynamicContentPainter(
-                                  verse: verse,
-                                  config: config,
+                                  verse: activeVerse,
+                                  config: liveState.config,
                                   pageNumber: pageNumber,
-                                  tafsirText: verse?.tafsir,
-                                  translationText: verse?.translation,
+                                  tafsirText: activeVerse?.tafsir,
+                                  translationText: activeVerse?.translation,
                                   playbackPositionMs: position.inMilliseconds,
-                                  wordTimings: state.currentVerseWordTimings,
+                                  totalDurationMs: liveState.currentVerseIndex < liveState.verseDurations.length
+                                      ? liveState.verseDurations[liveState.currentVerseIndex].inMilliseconds
+                                      : null,
+                                  isPlaying: liveState.isPlaying,
+                                  wordTimings: liveState.currentVerseWordTimings,
                                 ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -2203,76 +2225,9 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                 children: [
                   // Real-time Video Playback Timeline Scrubber
                   if (state.totalVideoDuration > Duration.zero)
-                    StreamBuilder<Duration>(
-                      stream: context.read<VideoStudioBloc>().playbackPositionStream,
-                      initialData: context.read<VideoStudioBloc>().currentVersePosition,
-                      builder: (context, snapshot) {
-                        final pos = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
-                        final cumulativePos = state.calculateCumulativePosition(state.currentVerseIndex, pos);
-                        final posStr = VideoStudioState.formatDurationToMinutesSeconds(cumulativePos);
-                        final totalStr = state.formattedTotalDuration ?? '0:00';
-                        final totalMs = state.totalVideoDuration.inMilliseconds.toDouble();
-                        final currentMs = cumulativePos.inMilliseconds.toDouble().clamp(0.0, totalMs > 0 ? totalMs : 0.0);
-
-                        return Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: isLandscape ? 28.0.w : 32.w,
-                                child: Text(
-                                  posStr,
-                                  style: TextStyle(
-                                    fontSize: isLandscape ? 9.5.sp : 10.5.sp,
-                                    color: AppColors.textSecondary,
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w600,
-                                    fontFeatures: const [FontFeature.tabularFigures()],
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: SliderTheme(
-                                  data: SliderTheme.of(context).copyWith(
-                                    trackHeight: isLandscape ? 2.5.h : 3.h,
-                                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: isLandscape ? 4.r : 5.r),
-                                    overlayShape: RoundSliderOverlayShape(overlayRadius: isLandscape ? 8.r : 10.r),
-                                    activeTrackColor: AppColors.accentGold,
-                                    inactiveTrackColor: AppColors.accentGold.withValues(alpha: 0.18),
-                                    thumbColor: AppColors.accentGold,
-                                  ),
-                                  child: Slider(
-                                    value: currentMs,
-                                    min: 0.0,
-                                    max: totalMs > 0 ? totalMs : 1.0,
-                                    onChanged: (val) {
-                                      context.read<VideoStudioBloc>().add(
-                                            VideoStudioSeekRequested(
-                                              Duration(milliseconds: val.round()),
-                                            ),
-                                          );
-                                    },
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                width: isLandscape ? 28.0.w : 32.w,
-                                child: Text(
-                                  totalStr,
-                                  textAlign: TextAlign.end,
-                                  style: TextStyle(
-                                    fontSize: isLandscape ? 9.5.sp : 10.5.sp,
-                                    color: AppColors.textSecondary,
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w600,
-                                    fontFeatures: const [FontFeature.tabularFigures()],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                    VideoTimelineScrubber(
+                      state: state,
+                      isLandscape: isLandscape,
                     ),
 
                   // Verse indicator / step text
@@ -2346,9 +2301,17 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                               constraints: const BoxConstraints(),
                             ),
                             SizedBox(width: isLandscape ? 10.0.w : 14.w),
-                            InkWell(
-                              onTap: onTogglePlay,
-                              borderRadius: BorderRadius.circular(isLandscape ? 16.0.r : 22.r),
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () {
+                                if (state.isPlaying) {
+                                  context
+                                      .read<VideoStudioBloc>()
+                                      .add(const VideoStudioPlaybackPaused());
+                                } else {
+                                  onTogglePlay();
+                                }
+                              },
                               child: Container(
                                 width: isLandscape ? 36.0.r : 44.r,
                                 height: isLandscape ? 36.0.r : 44.r,

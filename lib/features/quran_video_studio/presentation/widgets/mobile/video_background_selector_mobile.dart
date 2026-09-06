@@ -37,14 +37,18 @@ class VideoBackgroundSelectorMobile extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              l10n.videoStudioThemeAndBg,
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+            Expanded(
+              child: Text(
+                l10n.videoStudioThemeAndBg,
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            SizedBox(width: 8.w),
             if (hasCustomVideo)
               Text(
                 l10n.videoBgCustomVideoActive,
@@ -71,11 +75,10 @@ class VideoBackgroundSelectorMobile extends StatelessWidget {
             // Option 1: Default Theme Gradient Background
             Expanded(
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
-                  if (hasCustomImage) {
+                  if (config.hasCustomMedia) {
                     onCustomImageChanged(null);
-                  }
-                  if (hasCustomVideo) {
                     onCustomVideoChanged?.call(null);
                   }
                 },
@@ -135,6 +138,7 @@ class VideoBackgroundSelectorMobile extends StatelessWidget {
             // Option 2: Custom Photo (Gallery / URL)
             Expanded(
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   CustomBackgroundModal.show(
                     context,
@@ -168,6 +172,7 @@ class VideoBackgroundSelectorMobile extends StatelessWidget {
                               Colors.black.withValues(alpha: 0.45),
                               BlendMode.darken,
                             ),
+                            onError: (_, _) {},
                           )
                         : null,
                   ),
@@ -210,6 +215,7 @@ class VideoBackgroundSelectorMobile extends StatelessWidget {
             // Option 3: Custom Video (Gallery / URL)
             Expanded(
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   CustomVideoModal.show(
                     context,

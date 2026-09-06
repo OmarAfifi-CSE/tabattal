@@ -34,6 +34,7 @@ abstract class QuranLocalDataSource {
   Future<void> insertTafsirs(List<Map<String, dynamic>> tafsirs);
   Future<double> getTafsirDownloadProgress(int resourceId);
   Future<int> getMaxDownloadedChapter(int resourceId);
+  Future<Set<int>> getDownloadedChapters(int resourceId);
   Future<int> getDownloadedVerseCount(int resourceId);
   Future<void> markTafsirAsCompleted(int resourceId);
 }
@@ -509,13 +510,23 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   Future<double> getTafsirDownloadProgress(int resourceId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      if (prefs.getBool('tafsir_completed_$resourceId') == true) {
+      final chapters = await getDownloadedChapters(resourceId);
+      // Coverage is measured by DISTINCT chapters present — never by MAX.
+      // A single 114:* row used to report 114/114 = 100%.
+      if (chapters.length >= QuranConstants.totalSurahs) {
+        if (prefs.getBool('tafsir_completed_$resourceId') != true) {
+          await prefs.setBool('tafsir_completed_$resourceId', true);
+        }
         return 1.0;
       }
-
-      final maxChapter = await getMaxDownloadedChapter(resourceId);
-      final progress = maxChapter / QuranConstants.totalSurahs;
-      return progress > 1.0 ? 1.0 : progress;
+      if (prefs.getBool('tafsir_completed_$resourceId') == true) {
+        // Stale completion flag (e.g. the rows were wiped by a database
+        // upgrade while the flag survived in prefs): heal it so progress is
+        // truthful again and re-download becomes possible.
+        await prefs.remove('tafsir_completed_$resourceId');
+      }
+      final progress = chapters.length / QuranConstants.totalSurahs;
+      return progress.clamp(0.0, 1.0);
     } catch (e) {
       return 0.0;
     }
@@ -538,6 +549,23 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       return Sqflite.firstIntValue(result) ?? 0;
     } catch (e) {
       return 0;
+    }
+  }
+
+  @override
+  Future<Set<int>> getDownloadedChapters(int resourceId) async {
+    try {
+      final db = await databaseHelper.database;
+      final rows = await db.rawQuery(
+        "SELECT DISTINCT CAST(substr(verse_key, 1, instr(verse_key, ':') - 1) AS INTEGER) as chap FROM tafsir WHERE resource_id = ? AND instr(verse_key, ':') > 0",
+        [resourceId],
+      );
+      return {
+        for (final row in rows)
+          if (row['chap'] is int && (row['chap'] as int) > 0) row['chap'] as int,
+      };
+    } catch (e) {
+      return {};
     }
   }
 

@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:dio/dio.dart';
+// ignore_for_file: depend_on_referenced_packages
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 import 'package:tabattal/core/constants/quran_constants.dart';
 import 'package:tabattal/core/constants/quran_metadata.dart';
 import 'package:tabattal/core/theme/mushaf_theme.dart';
@@ -134,27 +137,38 @@ void main() {
     });
 
     test('3. Audio Duration Cache & Parallel Measurement Latency', () async {
-      final audioService = AudioTimelineService();
-      const testUrls = [
-        'https://everyayah.com/data/Minshawy_Murattal_128kbps/001001.mp3',
-        'https://everyayah.com/data/Minshawy_Murattal_128kbps/001002.mp3',
-        'https://everyayah.com/data/Minshawy_Murattal_128kbps/001003.mp3',
-        'https://everyayah.com/data/Minshawy_Murattal_128kbps/001004.mp3',
-        'https://everyayah.com/data/Minshawy_Murattal_128kbps/001005.mp3',
-      ];
+      // Hermetic: a fake platform (no network, no native decoder) answering a
+      // fixed 30s duration. Failed probes must NOT be cached (see the
+      // playback-truth regression tests), so this measures the true cache-hit
+      // path deterministically instead of depending on live downloads.
+      final previousPlatform = JustAudioPlatform.instance;
+      JustAudioPlatform.instance = _BenchAudioPlatform();
+      try {
+        final audioService = AudioTimelineService();
+        const testUrls = [
+          'https://everyayah.com/data/Minshawy_Murattal_128kbps/001001.mp3',
+          'https://everyayah.com/data/Minshawy_Murattal_128kbps/001002.mp3',
+          'https://everyayah.com/data/Minshawy_Murattal_128kbps/001003.mp3',
+          'https://everyayah.com/data/Minshawy_Murattal_128kbps/001004.mp3',
+          'https://everyayah.com/data/Minshawy_Murattal_128kbps/001005.mp3',
+        ];
 
-      // 1. Prime cache
-      final durations = await audioService.measureDurations(audioFilePaths: testUrls);
-      expect(durations.length, 5);
+        // 1. Prime cache
+        final durations = await audioService.measureDurations(audioFilePaths: testUrls);
+        expect(durations.length, 5);
+        expect(durations.every((d) => d == const Duration(seconds: 30)), isTrue);
 
-      // 2. Measure cache lookup speed (must be sub-millisecond < 5ms for 5 items)
-      final stopwatch = Stopwatch()..start();
-      final cachedDurations = await audioService.measureDurations(audioFilePaths: testUrls);
-      stopwatch.stop();
+        // 2. Measure cache lookup speed (must be sub-millisecond < 5ms for 5 items)
+        final stopwatch = Stopwatch()..start();
+        final cachedDurations = await audioService.measureDurations(audioFilePaths: testUrls);
+        stopwatch.stop();
 
-      expect(cachedDurations.length, 5);
-      expect(stopwatch.elapsedMilliseconds, lessThan(5),
-          reason: 'Cached duration retrieval took ${stopwatch.elapsedMilliseconds}ms, should be instant 0ms');
+        expect(cachedDurations.length, 5);
+        expect(stopwatch.elapsedMilliseconds, lessThan(5),
+            reason: 'Cached duration retrieval took ${stopwatch.elapsedMilliseconds}ms, should be instant 0ms');
+      } finally {
+        JustAudioPlatform.instance = previousPlatform;
+      }
     });
 
     test('4. Word Timing Deduplication & In-Flight Concurrency Verification', () async {
@@ -246,4 +260,109 @@ void main() {
           reason: 'Theme luminance and contrast calculations took ${stopwatch.elapsedMilliseconds}ms');
     });
   });
+}
+
+/// Deterministic fake audio platform for duration benchmarks: answers a
+/// fixed duration without network or native decoders.
+class _BenchAudioPlatform extends JustAudioPlatform {
+  @override
+  Future<AudioPlayerPlatform> init(InitRequest request) async =>
+      _BenchAudioPlayer(request.id);
+
+  @override
+  Future<DisposePlayerResponse> disposePlayer(
+      DisposePlayerRequest request) async =>
+      DisposePlayerResponse();
+
+  @override
+  Future<DisposeAllPlayersResponse> disposeAllPlayers(
+      DisposeAllPlayersRequest request) async =>
+      DisposeAllPlayersResponse();
+}
+
+class _BenchAudioPlayer extends AudioPlayerPlatform {
+  _BenchAudioPlayer(super.id);
+
+  final _events = StreamController<PlaybackEventMessage>.broadcast();
+
+  void _broadcastReady() {
+    _events.add(PlaybackEventMessage(
+      processingState: ProcessingStateMessage.ready,
+      updateTime: DateTime.now(),
+      updatePosition: Duration.zero,
+      bufferedPosition: const Duration(seconds: 30),
+      duration: const Duration(seconds: 30),
+      currentIndex: 0,
+      icyMetadata: null,
+      androidAudioSessionId: null,
+    ));
+  }
+
+  @override
+  Stream<PlaybackEventMessage> get playbackEventMessageStream =>
+      _events.stream;
+
+  @override
+  Future<LoadResponse> load(LoadRequest request) async {
+    _broadcastReady();
+    return LoadResponse(duration: const Duration(seconds: 30));
+  }
+
+  @override
+  Future<PlayResponse> play(PlayRequest request) async => PlayResponse();
+
+  @override
+  Future<PauseResponse> pause(PauseRequest request) async => PauseResponse();
+
+  @override
+  Future<SeekResponse> seek(SeekRequest request) async => SeekResponse();
+
+  @override
+  Future<SetVolumeResponse> setVolume(SetVolumeRequest request) async =>
+      SetVolumeResponse();
+
+  @override
+  Future<SetSpeedResponse> setSpeed(SetSpeedRequest request) async =>
+      SetSpeedResponse();
+
+  @override
+  Future<SetPitchResponse> setPitch(SetPitchRequest request) async =>
+      SetPitchResponse();
+
+  @override
+  Future<SetSkipSilenceResponse> setSkipSilence(
+          SetSkipSilenceRequest request) async =>
+      SetSkipSilenceResponse();
+
+  @override
+  Future<SetLoopModeResponse> setLoopMode(SetLoopModeRequest request) async =>
+      SetLoopModeResponse();
+
+  @override
+  Future<SetShuffleModeResponse> setShuffleMode(
+          SetShuffleModeRequest request) async =>
+      SetShuffleModeResponse();
+
+  @override
+  Future<SetShuffleOrderResponse> setShuffleOrder(
+          SetShuffleOrderRequest request) async =>
+      SetShuffleOrderResponse();
+
+  @override
+  Future<SetAutomaticallyWaitsToMinimizeStallingResponse>
+      setAutomaticallyWaitsToMinimizeStalling(
+              SetAutomaticallyWaitsToMinimizeStallingRequest request) async =>
+          SetAutomaticallyWaitsToMinimizeStallingResponse();
+
+  @override
+  Future<SetCanUseNetworkResourcesForLiveStreamingWhilePausedResponse>
+      setCanUseNetworkResourcesForLiveStreamingWhilePaused(
+              SetCanUseNetworkResourcesForLiveStreamingWhilePausedRequest
+                  request) async =>
+          SetCanUseNetworkResourcesForLiveStreamingWhilePausedResponse();
+
+  @override
+  Future<SetAndroidAudioAttributesResponse> setAndroidAudioAttributes(
+          SetAndroidAudioAttributesRequest request) async =>
+      SetAndroidAudioAttributesResponse();
 }

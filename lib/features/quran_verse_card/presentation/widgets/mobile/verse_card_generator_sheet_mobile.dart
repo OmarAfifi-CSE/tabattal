@@ -818,7 +818,14 @@ class _VerseCardGeneratorSheetContentMobileState
     final viewInsetsBottom = MediaQuery.viewInsetsOf(context).bottom;
     final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.88;
 
-    return BlocConsumer<VideoStudioBloc, VideoStudioState>(
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) {
+          context.read<VideoStudioBloc>().add(const VideoStudioPlaybackPaused());
+        }
+      },
+      child: BlocConsumer<VideoStudioBloc, VideoStudioState>(
       listener: (context, videoState) async {
         if (videoState.errorMessage != null && videoState.errorMessage!.isNotEmpty) {
           if (_isExportDialogOpen) {
@@ -876,7 +883,7 @@ class _VerseCardGeneratorSheetContentMobileState
       builder: (context, videoState) {
         return Directionality(
           textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
-          child: ConstrainedBox(
+            child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxSheetHeight),
             child: Container(
               decoration: BoxDecoration(
@@ -931,7 +938,10 @@ class _VerseCardGeneratorSheetContentMobileState
                         ),
                       ),
                       IconButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () {
+                          context.read<VideoStudioBloc>().add(const VideoStudioPlaybackPaused());
+                          Navigator.pop(context);
+                        },
                         icon: const Icon(Icons.close_rounded),
                         splashRadius: 20,
                       ),
@@ -1066,8 +1076,9 @@ class _VerseCardGeneratorSheetContentMobileState
           ),
         );
       },
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildPreviewArea(VideoStudioState videoState) {
     switch (_selectedFormat) {

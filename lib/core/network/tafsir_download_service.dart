@@ -19,20 +19,24 @@ class TafsirDownloadService {
     bool hasError = false;
 
     Future<int> startChapterForResume() async {
-      int maxChapter = await localDataSource.getMaxDownloadedChapter(
+      // Resume from the FIRST missing chapter — never from MAX. Starting from
+      // MAX would permanently skip every chapter below a high outlier (e.g.
+      // viewing chapter 100 first would skip 1–97 forever).
+      final downloaded = await localDataSource.getDownloadedChapters(
         resourceId,
       );
-      return maxChapter > QuranConstants.tafsirDownloadConcurrency
-          ? maxChapter - QuranConstants.tafsirDownloadConcurrency
-          : 1;
+      for (int c = 1; c <= QuranConstants.totalSurahs; c++) {
+        if (!downloaded.contains(c)) return c;
+      }
+      return QuranConstants.totalSurahs + 1;
     }
 
     Future<void> emitProgress() async {
-      int maxChapter = await localDataSource.getMaxDownloadedChapter(
+      // Coverage-based progress (distinct chapters present), consistent with
+      // getTafsirDownloadProgress — never MAX-based.
+      final progress = await localDataSource.getTafsirDownloadProgress(
         resourceId,
       );
-      double progress = maxChapter / QuranConstants.totalSurahs;
-      if (progress > 1.0) progress = 1.0;
       if (!controller.isClosed && !hasError) {
         controller.add(Progressing(progress));
       }

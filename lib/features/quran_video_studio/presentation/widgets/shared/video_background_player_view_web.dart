@@ -11,6 +11,8 @@ class VideoBackgroundPlayerViewWeb extends StatefulWidget {
   final double dimming;
   final int resetSignal;
   final Duration? currentPosition;
+  final int seekSignal;
+  final Duration? seekPosition;
 
   const VideoBackgroundPlayerViewWeb({
     super.key,
@@ -19,6 +21,8 @@ class VideoBackgroundPlayerViewWeb extends StatefulWidget {
     this.dimming = 0.35,
     this.resetSignal = 0,
     this.currentPosition,
+    this.seekSignal = 0,
+    this.seekPosition,
   });
 
   @override
@@ -31,9 +35,28 @@ class _VideoBackgroundPlayerViewWebState
   web.HTMLVideoElement? _videoElement;
   bool _isVideoReady = false;
   bool _hasError = false;
+  // Tracks whether the mount-time timeline position was applied. A freshly
+  // mounted player must start AT the current position (e.g. fullscreen opened
+  // mid-preview); seekSignal only fires on *changes* after mount.
+  bool _initialSeekApplied = false;
+
+  void _applyInitialSeekIfNeeded() {
+    if (_initialSeekApplied) return;
+    final target = widget.seekPosition ?? widget.currentPosition;
+    if (target == null || target <= Duration.zero) return;
+    final video = _videoElement;
+    if (video == null) return;
+    final videoDuration = video.duration;
+    if (videoDuration.isNaN || videoDuration <= 0) return;
+    _initialSeekApplied = true;
+    try {
+      video.currentTime = (target.inMilliseconds / 1000.0) % videoDuration;
+    } catch (_) {}
+  }
 
   void _configureVideo(web.HTMLVideoElement video) {
     _videoElement = video;
+    _initialSeekApplied = false;
     video
       ..muted = true
       ..defaultMuted = true
@@ -111,6 +134,7 @@ class _VideoBackgroundPlayerViewWebState
       if (mounted && !_isVideoReady) {
         setState(() => _isVideoReady = true);
       }
+      _applyInitialSeekIfNeeded();
       syncPlayback();
     }).toJS;
 
@@ -149,7 +173,10 @@ class _VideoBackgroundPlayerViewWebState
 
     if (_videoElement != null) {
       if (oldWidget.videoPath != widget.videoPath) {
-        setState(() => _isVideoReady = false);
+        setState(() {
+          _isVideoReady = false;
+          _initialSeekApplied = false;
+        });
         _videoElement!.src = widget.videoPath;
         _videoElement!.load();
         if (widget.isPlaying) {
@@ -183,17 +210,36 @@ class _VideoBackgroundPlayerViewWebState
             _videoElement!.pause();
           } catch (_) {}
         }
-      } else if (widget.currentPosition != null &&
+      } else if (oldWidget.seekSignal != widget.seekSignal && widget.seekPosition != null) {
+        final videoDuration = _videoElement!.duration;
+        if (!videoDuration.isNaN && videoDuration > 0) {
+          final targetSec = (widget.seekPosition!.inMilliseconds / 1000.0) % videoDuration;
+          _videoElement!.currentTime = targetSec;
+          if (widget.isPlaying) {
+            try {
+              _videoElement!.play();
+            } catch (_) {}
+          } else {
+            try {
+              _videoElement!.pause();
+            } catch (_) {}
+          }
+        }
+      } else if (!widget.isPlaying &&
+          widget.currentPosition != null &&
           oldWidget.currentPosition != widget.currentPosition) {
         final videoDuration = _videoElement!.duration;
         if (!videoDuration.isNaN && videoDuration > 0) {
           final targetSec = (widget.currentPosition!.inMilliseconds / 1000.0) % videoDuration;
           final diffSec = (_videoElement!.currentTime - targetSec).abs();
-          if (!widget.isPlaying || diffSec > 0.35) {
+          if (diffSec > 1.0) {
             _videoElement!.currentTime = targetSec;
           }
         }
       }
+      // Late-arriving initial position (e.g. parent rebuilt after metadata):
+      // cheap no-op once applied.
+      _applyInitialSeekIfNeeded();
     }
   }
 

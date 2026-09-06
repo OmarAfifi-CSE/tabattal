@@ -10,6 +10,7 @@ import '../../bloc/video_studio_event.dart';
 import '../../bloc/video_studio_state.dart';
 import 'video_background_player_view.dart';
 import 'video_frame_painter.dart';
+import 'video_timeline_scrubber.dart';
 
 /// Renders the 100% WYSIWYG video frame on a hardware-accelerated Canvas.
 /// The output matches the exported MP4 video down to the exact subpixel.
@@ -87,62 +88,68 @@ class VideoPreviewViewport extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: StreamBuilder<Duration>(
-                        stream: context.read<VideoStudioBloc>().playbackPositionStream,
-                        initialData: context.read<VideoStudioBloc>().currentVersePosition,
-                        builder: (context, snapshot) {
-                          final position = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
-                          final cumulativePos = state.calculateCumulativePosition(state.currentVerseIndex, position);
-
-                          return Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              // 0. Video Background Player Layer (if custom video is active)
-                              if (config.backgroundType == VideoBackgroundType.customVideo &&
-                                  config.customVideoPath != null &&
-                                  config.customVideoPath!.isNotEmpty)
-                                RepaintBoundary(
-                                  child: VideoBackgroundPlayerView(
-                                    videoPath: config.customVideoPath!,
-                                    isPlaying: state.isPlaying,
-                                    dimming: config.backgroundDimming,
-                                    resetSignal: state.playbackResetTrigger,
-                                    currentPosition: cumulativePos,
-                                  ),
-                                ),
-
-                              // 1. Static Base Frame Layer (Background / Luxury Card, Badges, Watermark - 100% Solid & Fixed)
-                              RepaintBoundary(
-                                child: CustomPaint(
-                                  painter: VideoStaticFramePainter(
-                                    config: config,
-                                    verse: verse,
-                                    includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
-                                  ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // 0. Video Background Player Layer (if custom video is active)
+                          if (config.backgroundType == VideoBackgroundType.customVideo &&
+                              config.customVideoPath != null &&
+                              config.customVideoPath!.isNotEmpty)
+                            RepaintBoundary(
+                              child: IgnorePointer(
+                                child: VideoBackgroundPlayerView(
+                                  key: ValueKey('shared_custom_video_bg_${config.customVideoPath}'),
+                                  videoPath: config.customVideoPath!,
+                                  isPlaying: state.isPlaying,
+                                  dimming: config.backgroundDimming,
+                                  resetSignal: state.playbackResetTrigger,
+                                  currentPosition: state.calculateCumulativePosition(state.currentVerseIndex, context.read<VideoStudioBloc>().currentVersePosition),
+                                  seekSignal: state.seekTrigger,
+                                  seekPosition: state.lastSeekPosition,
                                 ),
                               ),
+                            ),
 
-                              // 2. Dynamic Center Content Layer (Real-time Word Tracking & Smooth Studio Crossfade)
-                              RepaintBoundary(
-                                child: CustomPaint(
+                          // 1. Static Base Frame Layer (Background / Luxury Card, Badges, Watermark - 100% Solid & Fixed)
+                          RepaintBoundary(
+                            child: CustomPaint(
+                              painter: VideoStaticFramePainter(
+                                config: config,
+                                verse: verse,
+                                includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
+                              ),
+                            ),
+                          ),
+
+                          // 2. Dynamic Center Content Layer (Real-time Word Tracking & Smooth Studio Crossfade)
+                          RepaintBoundary(
+                            child: StreamBuilder<Duration>(
+                              stream: context.read<VideoStudioBloc>().playbackPositionStream,
+                              initialData: context.read<VideoStudioBloc>().currentVersePosition,
+                              builder: (context, snapshot) {
+                                final bloc = context.read<VideoStudioBloc>();
+                                final liveState = bloc.state;
+                                final position = snapshot.data ?? bloc.currentVersePosition;
+                                final activeVerse = liveState.currentVerse ?? verse;
+                                return CustomPaint(
                                   painter: VideoDynamicContentPainter(
-                                    verse: verse,
-                                    config: config,
+                                    verse: activeVerse,
+                                    config: liveState.config,
                                     pageNumber: pageNumber,
-                                    tafsirText: verse?.tafsir,
-                                    translationText: verse?.translation,
+                                    tafsirText: activeVerse?.tafsir,
+                                    translationText: activeVerse?.translation,
                                     playbackPositionMs: position.inMilliseconds,
-                                    totalDurationMs: state.currentVerseIndex < state.verseDurations.length
-                                        ? state.verseDurations[state.currentVerseIndex].inMilliseconds
+                                    totalDurationMs: liveState.currentVerseIndex < liveState.verseDurations.length
+                                        ? liveState.verseDurations[liveState.currentVerseIndex].inMilliseconds
                                         : null,
-                                    isPlaying: state.isPlaying,
-                                    wordTimings: state.currentVerseWordTimings,
+                                    isPlaying: liveState.isPlaying,
+                                    wordTimings: liveState.currentVerseWordTimings,
                                   ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -170,76 +177,8 @@ class VideoPreviewViewport extends StatelessWidget {
                 children: [
                   // Real-time Video Playback Timeline Scrubber
                   if (state.totalVideoDuration > Duration.zero)
-                    StreamBuilder<Duration>(
-                      stream: context.read<VideoStudioBloc>().playbackPositionStream,
-                      initialData: context.read<VideoStudioBloc>().currentVersePosition,
-                      builder: (context, snapshot) {
-                        final pos = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
-                        final cumulativePos = state.calculateCumulativePosition(state.currentVerseIndex, pos);
-                        final posStr = VideoStudioState.formatDurationToMinutesSeconds(cumulativePos);
-                        final totalStr = state.formattedTotalDuration ?? '0:00';
-                        final totalMs = state.totalVideoDuration.inMilliseconds.toDouble();
-                        final currentMs = cumulativePos.inMilliseconds.toDouble().clamp(0.0, totalMs > 0 ? totalMs : 0.0);
-
-                        return Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 32.w,
-                                child: Text(
-                                  posStr,
-                                  style: TextStyle(
-                                    fontSize: 10.5.sp,
-                                    color: AppColors.textSecondary,
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w600,
-                                    fontFeatures: const [FontFeature.tabularFigures()],
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: SliderTheme(
-                                  data: SliderTheme.of(context).copyWith(
-                                    trackHeight: 3.h,
-                                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: 5.r),
-                                    overlayShape: RoundSliderOverlayShape(overlayRadius: 10.r),
-                                    activeTrackColor: AppColors.accentGold,
-                                    inactiveTrackColor: AppColors.accentGold.withValues(alpha: 0.18),
-                                    thumbColor: AppColors.accentGold,
-                                  ),
-                                  child: Slider(
-                                    value: currentMs,
-                                    min: 0.0,
-                                    max: totalMs > 0 ? totalMs : 1.0,
-                                    onChanged: (val) {
-                                      context.read<VideoStudioBloc>().add(
-                                            VideoStudioSeekRequested(
-                                              Duration(milliseconds: val.round()),
-                                            ),
-                                          );
-                                    },
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                width: 32.w,
-                                child: Text(
-                                  totalStr,
-                                  textAlign: TextAlign.end,
-                                  style: TextStyle(
-                                    fontSize: 10.5.sp,
-                                    color: AppColors.textSecondary,
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w600,
-                                    fontFeatures: const [FontFeature.tabularFigures()],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                    VideoTimelineScrubber(
+                      state: state,
                     ),
 
                   // Verse indicator / step text
@@ -320,9 +259,9 @@ class VideoPreviewViewport extends StatelessWidget {
                             SizedBox(width: 14.w),
 
                             // Main Play / Pause Button
-                            InkWell(
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
                               onTap: onTogglePlay,
-                              borderRadius: BorderRadius.circular(22.r),
                               child: Container(
                                 width: 44.r,
                                 height: 44.r,

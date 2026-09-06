@@ -70,11 +70,10 @@ class VideoBackgroundSelectorDesktop extends StatelessWidget {
             // Option 1: Default Theme Gradient Background
             Expanded(
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
-                  if (hasCustomImage) {
+                  if (config.hasCustomMedia) {
                     onCustomImageChanged(null);
-                  }
-                  if (hasCustomVideo) {
                     onCustomVideoChanged?.call(null);
                   }
                 },
@@ -138,6 +137,7 @@ class VideoBackgroundSelectorDesktop extends StatelessWidget {
             // Option 2: Custom Photo (Gallery / URL)
             Expanded(
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   CustomBackgroundModal.show(
                     context,
@@ -171,6 +171,7 @@ class VideoBackgroundSelectorDesktop extends StatelessWidget {
                               Colors.black.withValues(alpha: 0.45),
                               BlendMode.darken,
                             ),
+                            onError: (_, _) {},
                           )
                         : null,
                   ),
@@ -216,6 +217,7 @@ class VideoBackgroundSelectorDesktop extends StatelessWidget {
             // Option 3: Custom Video (Gallery / URL)
             Expanded(
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   CustomVideoModal.show(
                     context,

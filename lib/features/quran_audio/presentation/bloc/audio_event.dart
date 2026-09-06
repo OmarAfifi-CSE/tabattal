@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:just_audio/just_audio.dart' show PlayerException;
 
 abstract class AudioEvent extends Equatable {
   const AudioEvent();
@@ -63,6 +64,20 @@ class AudioErrorEvent extends AudioEvent {
 
   @override
   List<Object> get props => [message];
+}
+
+/// Async native playback failure surfaced via [AudioPlayer.errorStream].
+/// Unlike method-call errors (thrown synchronously from load/play/seek and
+/// handled with generation checks in _onPlayVerse), these arrive detached
+/// from any request, so the handler must re-validate generation and state
+/// before touching shared playback state.
+class AudioPlatformError extends AudioEvent {
+  final PlayerException error;
+
+  const AudioPlatformError(this.error);
+
+  @override
+  List<Object> get props => [error.code, error.message ?? '', error.index ?? -1];
 }
 
 class ChangeReciter extends AudioEvent {

@@ -1,8 +1,8 @@
 name: tabattal
-description: "A comprehensive Quran application featuring reading, audio playback, and studying tools."
+description: "A premium, high-performance cross-platform Quran application featuring luxury Mushaf reading, synchronized audio recitation, Hifz study tools, and an advanced Quran Video Studio."
 publish_to: 'none'
 
-version: 1.3.6+10
+version: 1.3.7+11
 
 environment:
   sdk: ^3.12.1
@@ -37,8 +37,7 @@ dependencies:
 
   # --- Audio Playback Suite (Mobile, Web & Desktop) ---
   just_audio: ^0.10.5
-  just_audio_media_kit: ^2.1.0
-  media_kit_libs_windows_audio: ^1.0.9
+  just_audio_windows: ^0.2.3
   audio_service: ^0.18.18
 
   # --- Quran Video Studio & Media Processing ---

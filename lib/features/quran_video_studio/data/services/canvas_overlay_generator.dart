@@ -185,6 +185,25 @@ class CanvasOverlayGenerator {
     final int width = config.aspectRatio.getTargetWidth(config.videoQuality);
     final int height = config.aspectRatio.getTargetHeight(config.videoQuality);
 
+    // Warm the layout cache with the EXACT same parameters first: the crop
+    // bounds below are read from this cache, and on a cold cache the 35%
+    // height guess would clip real content (first-export cropping bug).
+    // The dry run only measures (no rasterization of the result).
+    final warmRecorder = ui.PictureRecorder();
+    paintDynamicContent(
+      Canvas(warmRecorder, Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble())),
+      Size(width.toDouble(), height.toDouble()),
+      verse: verse,
+      config: config,
+      pageNumber: pageNumber,
+      translationText: translationText,
+      tafsirText: tafsirText,
+      playbackPositionMs: playbackPositionMs,
+      wordTimings: wordTimings,
+      overrideLineIndex: overrideLineIndex,
+    );
+    warmRecorder.endRecording();
+
     final bounds = computeDynamicContentBounds(
       Size(width.toDouble(), height.toDouble()),
       verse: verse,
@@ -524,8 +543,8 @@ class CanvasOverlayGenerator {
       final Color cardBorderColor;
 
       if (hasCustomMedia) {
-        cardBgColor = const Color(0xFF0B0F14).withValues(alpha: 0.60);
-        cardBorderColor = theme.accentColor.withValues(alpha: 0.55);
+        cardBgColor = const Color(0xFF0B0F14).withValues(alpha: 0.45);
+        cardBorderColor = theme.accentColor.withValues(alpha: 0.50);
       } else {
         cardBgColor = theme.cardBackgroundColor;
         cardBorderColor = theme.borderColor;
@@ -1358,7 +1377,7 @@ class CanvasOverlayGenerator {
       );
     }
 
-    // When card frame is active over custom media, card container is dark glass (0xFF0B0F14 at 60% opacity)
+    // When card frame is active over custom media, card container is dark glass (0xFF0B0F14 at 45% opacity)
     if (config.showCardFrame) {
       return (
         primaryTextColor: const Color(0xFFFFFFFF),
@@ -1387,26 +1406,34 @@ class CanvasOverlayGenerator {
     final double destW = destRect.width;
     final double destH = destRect.height;
 
+    if (destW <= 0 || destH <= 0 || imgW <= 0 || imgH <= 0) return;
+
     final double scale = max(destW / imgW, destH / imgH);
+    if (scale <= 0 || scale.isNaN || scale.isInfinite) return;
+
     final double scaledW = imgW * scale;
     final double scaledH = imgH * scale;
 
-    final double srcX = (scaledW - destW) / (2 * scale);
-    final double srcY = (scaledH - destH) / (2 * scale);
-    final double srcW = destW / scale;
-    final double srcH = destH / scale;
+    final double rawSrcX = (scaledW - destW) / (2 * scale);
+    final double rawSrcY = (scaledH - destH) / (2 * scale);
+    final double rawSrcW = destW / scale;
+    final double rawSrcH = destH / scale;
 
-    final srcRect = Rect.fromLTWH(
-      srcX.clamp(0.0, imgW),
-      srcY.clamp(0.0, imgH),
-      srcW.clamp(0.0, imgW),
-      srcH.clamp(0.0, imgH),
-    );
-    canvas.drawImageRect(
-      image,
-      srcRect,
-      destRect,
-      Paint()..filterQuality = FilterQuality.high,
-    );
+    final double safeLeft = rawSrcX.clamp(0.0, max(0.0, imgW - 0.001));
+    final double safeTop = rawSrcY.clamp(0.0, max(0.0, imgH - 0.001));
+    final double safeRight = (rawSrcX + rawSrcW).clamp(safeLeft + 0.001, imgW);
+    final double safeBottom = (rawSrcY + rawSrcH).clamp(safeTop + 0.001, imgH);
+
+    final srcRect = Rect.fromLTRB(safeLeft, safeTop, safeRight, safeBottom);
+    try {
+      canvas.drawImageRect(
+        image,
+        srcRect,
+        destRect,
+        Paint()..filterQuality = FilterQuality.high,
+      );
+    } catch (e) {
+      debugPrint('Error painting image cover: $e');
+    }
   }
 }

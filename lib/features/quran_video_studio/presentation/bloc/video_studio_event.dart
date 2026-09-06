@@ -152,6 +152,10 @@ class VideoStudioPlaybackToggled extends VideoStudioEvent {
   const VideoStudioPlaybackToggled();
 }
 
+class VideoStudioPlaybackPaused extends VideoStudioEvent {
+  const VideoStudioPlaybackPaused();
+}
+
 class VideoStudioPlaybackReset extends VideoStudioEvent {
   const VideoStudioPlaybackReset();
 }
@@ -171,11 +175,15 @@ class VideoStudioPlaybackStateChanged extends VideoStudioEvent {
 
 class VideoStudioActiveVerseIndexChanged extends VideoStudioEvent {
   final int activeIndex;
+  final bool isUserInitiated;
 
-  const VideoStudioActiveVerseIndexChanged(this.activeIndex);
+  const VideoStudioActiveVerseIndexChanged(
+    this.activeIndex, {
+    this.isUserInitiated = true,
+  });
 
   @override
-  List<Object?> get props => [activeIndex];
+  List<Object?> get props => [activeIndex, isUserInitiated];
 }
 
 class VideoStudioQualityChanged extends VideoStudioEvent {

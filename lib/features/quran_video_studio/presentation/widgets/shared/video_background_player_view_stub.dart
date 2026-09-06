@@ -7,6 +7,8 @@ class VideoBackgroundPlayerViewWeb extends StatelessWidget {
   final double dimming;
   final int resetSignal;
   final Duration? currentPosition;
+  final int seekSignal;
+  final Duration? seekPosition;
 
   const VideoBackgroundPlayerViewWeb({
     super.key,
@@ -15,6 +17,8 @@ class VideoBackgroundPlayerViewWeb extends StatelessWidget {
     this.dimming = 0.35,
     this.resetSignal = 0,
     this.currentPosition,
+    this.seekSignal = 0,
+    this.seekPosition,
   });
 
   @override

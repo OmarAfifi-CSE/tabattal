@@ -10,6 +10,7 @@ import '../../bloc/video_studio_event.dart';
 import '../../bloc/video_studio_state.dart';
 import 'video_background_player_view.dart';
 import 'video_frame_painter.dart';
+import 'video_timeline_scrubber.dart';
 
 class VideoFullscreenPreviewModal extends StatelessWidget {
   const VideoFullscreenPreviewModal({super.key});
@@ -45,28 +46,31 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
           verse?.verseNumber ?? config.startAyah,
         );
 
-        return Scaffold(
-          backgroundColor: Colors.black,
-          body: SafeArea(
-            child: Column(
-              children: [
-                // 1. Top Header Bar with Close Button
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          // Pause audio if playing before closing
-                          if (state.isPlaying) {
-                            context
-                                .read<VideoStudioBloc>()
-                                .add(const VideoStudioPlaybackToggled());
-                          }
-                          Navigator.of(context).pop();
-                        },
-                        icon: Container(
+        final bloc = context.read<VideoStudioBloc>();
+        return PopScope(
+          canPop: true,
+          onPopInvokedWithResult: (didPop, _) {
+            if (didPop) {
+              bloc.add(const VideoStudioPlaybackPaused());
+            }
+          },
+          child: Scaffold(
+            backgroundColor: Colors.black,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  // 1. Top Header Bar with Close Button
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            bloc.add(const VideoStudioPlaybackPaused());
+                            Navigator.of(context).pop();
+                          },
+                          icon: Container(
                           padding: EdgeInsets.all(6.r),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
@@ -137,62 +141,68 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child: StreamBuilder<Duration>(
-                            stream: context.read<VideoStudioBloc>().playbackPositionStream,
-                            initialData: context.read<VideoStudioBloc>().currentVersePosition,
-                            builder: (context, snapshot) {
-                              final position = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
-                              final cumulativePos = state.calculateCumulativePosition(state.currentVerseIndex, position);
-
-                              return Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  // 0. Video Background Player Layer (if custom video is active)
-                                  if (config.backgroundType == VideoBackgroundType.customVideo &&
-                                      config.customVideoPath != null &&
-                                      config.customVideoPath!.isNotEmpty)
-                                    RepaintBoundary(
-                                      child: VideoBackgroundPlayerView(
-                                        videoPath: config.customVideoPath!,
-                                        isPlaying: state.isPlaying,
-                                        dimming: config.backgroundDimming,
-                                        resetSignal: state.playbackResetTrigger,
-                                        currentPosition: cumulativePos,
-                                      ),
-                                    ),
-
-                                  // 1. Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
-                                  RepaintBoundary(
-                                    child: CustomPaint(
-                                      painter: VideoStaticFramePainter(
-                                        config: config,
-                                        verse: verse,
-                                        includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
-                                      ),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              // 0. Video Background Player Layer (if custom video is active)
+                              if (config.backgroundType == VideoBackgroundType.customVideo &&
+                                  config.customVideoPath != null &&
+                                  config.customVideoPath!.isNotEmpty)
+                                RepaintBoundary(
+                                  child: IgnorePointer(
+                                    child: VideoBackgroundPlayerView(
+                                      key: ValueKey('fullscreen_custom_video_bg_${config.customVideoPath}'),
+                                      videoPath: config.customVideoPath!,
+                                      isPlaying: state.isPlaying,
+                                      dimming: config.backgroundDimming,
+                                      resetSignal: state.playbackResetTrigger,
+                                      currentPosition: state.calculateCumulativePosition(state.currentVerseIndex, context.read<VideoStudioBloc>().currentVersePosition),
+                                      seekSignal: state.seekTrigger,
+                                      seekPosition: state.lastSeekPosition,
                                     ),
                                   ),
+                                ),
 
-                                  // 2. Dynamic Center Content Layer (Real-time Text Tracking & Smooth Studio Crossfade)
-                                  RepaintBoundary(
-                                    child: CustomPaint(
+                              // 1. Static Base Frame Layer (Background, Luxury Card, Badges, Watermark - 100% Solid & Fixed)
+                              RepaintBoundary(
+                                child: CustomPaint(
+                                  painter: VideoStaticFramePainter(
+                                    config: config,
+                                    verse: verse,
+                                    includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
+                                  ),
+                                ),
+                              ),
+
+                              // 2. Dynamic Center Content Layer (Real-time Text Tracking & Smooth Studio Crossfade)
+                              RepaintBoundary(
+                                child: StreamBuilder<Duration>(
+                                  stream: context.read<VideoStudioBloc>().playbackPositionStream,
+                                  initialData: context.read<VideoStudioBloc>().currentVersePosition,
+                                  builder: (context, snapshot) {
+                                    final bloc = context.read<VideoStudioBloc>();
+                                    final liveState = bloc.state;
+                                    final position = snapshot.data ?? bloc.currentVersePosition;
+                                    final activeVerse = liveState.currentVerse ?? verse;
+                                    return CustomPaint(
                                       painter: VideoDynamicContentPainter(
-                                        verse: verse,
-                                        config: config,
+                                        verse: activeVerse,
+                                        config: liveState.config,
                                         pageNumber: pageNumber,
-                                        tafsirText: verse?.tafsir,
-                                        translationText: verse?.translation,
+                                        tafsirText: activeVerse?.tafsir,
+                                        translationText: activeVerse?.translation,
                                         playbackPositionMs: position.inMilliseconds,
-                                        totalDurationMs: state.currentVerseIndex < state.verseDurations.length
-                                            ? state.verseDurations[state.currentVerseIndex].inMilliseconds
+                                        totalDurationMs: liveState.currentVerseIndex < liveState.verseDurations.length
+                                            ? liveState.verseDurations[liveState.currentVerseIndex].inMilliseconds
                                             : null,
-                                        isPlaying: state.isPlaying,
-                                        wordTimings: state.currentVerseWordTimings,
+                                        isPlaying: liveState.isPlaying,
+                                        wordTimings: liveState.currentVerseWordTimings,
                                       ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -225,76 +235,9 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                       children: [
                         // Real-time Video Playback Timeline Scrubber
                         if (state.totalVideoDuration > Duration.zero)
-                          StreamBuilder<Duration>(
-                            stream: context.read<VideoStudioBloc>().playbackPositionStream,
-                            initialData: context.read<VideoStudioBloc>().currentVersePosition,
-                            builder: (context, snapshot) {
-                              final pos = snapshot.data ?? context.read<VideoStudioBloc>().currentVersePosition;
-                              final cumulativePos = state.calculateCumulativePosition(state.currentVerseIndex, pos);
-                              final posStr = VideoStudioState.formatDurationToMinutesSeconds(cumulativePos);
-                              final totalStr = state.formattedTotalDuration ?? '0:00';
-                              final totalMs = state.totalVideoDuration.inMilliseconds.toDouble();
-                              final currentMs = cumulativePos.inMilliseconds.toDouble().clamp(0.0, totalMs > 0 ? totalMs : 0.0);
-
-                              return Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-                                child: Row(
-                                  children: [
-                                    SizedBox(
-                                      width: 32.w,
-                                      child: Text(
-                                        posStr,
-                                        style: TextStyle(
-                                          fontSize: 10.5.sp,
-                                          color: Colors.white70,
-                                          fontFamily: 'Outfit',
-                                          fontWeight: FontWeight.w600,
-                                          fontFeatures: const [FontFeature.tabularFigures()],
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: SliderTheme(
-                                        data: SliderTheme.of(context).copyWith(
-                                          trackHeight: 3.h,
-                                          thumbShape: RoundSliderThumbShape(enabledThumbRadius: 5.r),
-                                          overlayShape: RoundSliderOverlayShape(overlayRadius: 10.r),
-                                          activeTrackColor: AppColors.accentGold,
-                                          inactiveTrackColor: Colors.white24,
-                                          thumbColor: AppColors.accentGold,
-                                        ),
-                                        child: Slider(
-                                          value: currentMs,
-                                          min: 0.0,
-                                          max: totalMs > 0 ? totalMs : 1.0,
-                                          onChanged: (val) {
-                                            context.read<VideoStudioBloc>().add(
-                                                  VideoStudioSeekRequested(
-                                                    Duration(milliseconds: val.round()),
-                                                  ),
-                                                );
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: 32.w,
-                                      child: Text(
-                                        totalStr,
-                                        textAlign: TextAlign.end,
-                                        style: TextStyle(
-                                          fontSize: 10.5.sp,
-                                          color: Colors.white70,
-                                          fontFamily: 'Outfit',
-                                          fontWeight: FontWeight.w600,
-                                          fontFeatures: const [FontFeature.tabularFigures()],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
+                          VideoTimelineScrubber(
+                            state: state,
+                            isDark: true,
                           ),
 
                         // Verse indicator / step text
@@ -373,13 +316,13 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                                   SizedBox(width: 16.w),
 
                                   // Main Play/Pause Action Button
-                                  InkWell(
+                                  GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
                                     onTap: () {
                                       context
                                           .read<VideoStudioBloc>()
                                           .add(const VideoStudioPlaybackToggled());
                                     },
-                                    borderRadius: BorderRadius.circular(28.r),
                                     child: Container(
                                       width: 52.r,
                                       height: 52.r,
@@ -437,18 +380,19 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                             ),
 
                             // 3. Fullscreen Minimize / Exit Action Button on the opposite side (End edge)
-                            Align(
-                              alignment: AlignmentDirectional.centerEnd,
-                              child: IconButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                icon: const Icon(Icons.fullscreen_exit_rounded),
-                                color: AppColors.accentGold,
-                                iconSize: 26.r,
-                                tooltip: l10n.videoStudioFullscreenPreview,
-                              ),
-                            ),
+                             Align(
+                               alignment: AlignmentDirectional.centerEnd,
+                               child: IconButton(
+                                 onPressed: () {
+                                   bloc.add(const VideoStudioPlaybackPaused());
+                                   Navigator.of(context).pop();
+                                 },
+                                 icon: const Icon(Icons.fullscreen_exit_rounded),
+                                 color: AppColors.accentGold,
+                                 iconSize: 26.r,
+                                 tooltip: l10n.videoStudioFullscreenPreview,
+                               ),
+                             ),
                           ],
                         ),
                       ],
@@ -458,8 +402,9 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
               ],
             ),
           ),
-        );
-      },
+        ),
+      );
+    },
     );
   }
 }

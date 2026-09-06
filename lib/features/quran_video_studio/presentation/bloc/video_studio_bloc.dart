@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../../../core/constants/quran_metadata.dart';
 import '../../../../core/constants/reciter_catalog.dart';
+import '../../../quran_reader/data/models/verse_model.dart';
 import '../../domain/entities/video_enums.dart';
 import '../../domain/entities/video_project_config.dart';
 import '../../domain/entities/video_render_progress.dart';
@@ -27,8 +29,24 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   Duration _currentVersePosition = Duration.zero;
   DateTime? _playbackStartTime;
   Duration _playbackStartPosition = Duration.zero;
-  bool _isSeeking = false;
+  // Re-entrancy guards as COUNTERS, not bools: `VideoStudioSeekRequested` is
+  // restartable(), so a cancelled handler keeps running in the background and
+  // its finally block would clear a shared bool while a newer handler is still
+  // in flight — prematurely releasing the guard and letting stream listeners
+  // act on transient native player states (the intermittent play-icon
+  // flicker). Counters only return to zero when ALL handlers are done.
+  int _seekDepth = 0;
+  int _verseSwitchDepth = 0;
   int? _pendingSeekVerseIndex;
+  // Shared load generation: reciter/range/retry/init loads overlap freely
+  // (restartable() is per event TYPE), so every load carries the generation
+  // captured at its start and commits nothing once superseded.
+  int _loadGeneration = 0;
+  // Index into audioFilePaths of the file ACTUALLY loaded in the native
+  // player on Windows (single-source mode). The player object alone can't
+  // tell us which verse file it holds, so resume/restart paths must compare
+  // against this instead of assuming audioSource != null means "correct".
+  int? _loadedVerseIndex;
 
   VideoStudioBloc({
     required this.repository,
@@ -47,7 +65,8 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     on<VideoStudioTextDisplayModeChanged>(_onTextDisplayModeChanged);
     on<VideoStudioQualityChanged>(_onQualityChanged);
     on<VideoStudioOptionToggled>(_onOptionToggled);
-    on<VideoStudioPlaybackToggled>(_onPlaybackToggled);
+    on<VideoStudioPlaybackToggled>(_onPlaybackToggled, transformer: sequential());
+    on<VideoStudioPlaybackPaused>(_onPlaybackPaused, transformer: sequential());
     on<VideoStudioPlaybackReset>(_onPlaybackReset);
     on<VideoStudioPlaybackStateChanged>(_onPlaybackStateChanged);
     on<VideoStudioActiveVerseIndexChanged>(_onActiveVerseIndexChanged);
@@ -61,6 +80,8 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
 
   Stream<Duration> get playbackPositionStream => _positionController.stream;
   Duration get currentVersePosition => _currentVersePosition;
+  @visibleForTesting
+  bool get isPositionTickerActive => _positionTicker != null;
 
   void _startPositionTicker() {
     _positionTicker?.cancel();
@@ -78,16 +99,9 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       final total = state.audioFilePaths.length;
       if (total > 0 && state.currentVerseIndex >= total - 1) {
         final duration = _previewPlayer.duration ?? Duration.zero;
-        if (duration > Duration.zero && pos >= duration - const Duration(milliseconds: 150)) {
+        if (duration > Duration.zero && pos >= duration) {
           if (state.isPlaying) {
-            _stopPositionTicker();
-            _currentVersePosition = Duration.zero;
-            _previewPlayer.pause();
-            if (!_positionController.isClosed) {
-              _positionController.add(Duration.zero);
-            }
-            _previewPlayer.seek(Duration.zero, index: 0);
-            add(const VideoStudioPlaybackStateChanged(false, isReset: true));
+            add(const VideoStudioPlaybackReset());
           }
         }
       }
@@ -109,15 +123,15 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
 
   void _initAudioListeners() {
     _playerStateSubscription = _previewPlayer.playerStateStream.listen((playerState) {
-      if (playerState.processingState == ProcessingState.completed) {
-        _stopPositionTicker();
-        _currentVersePosition = Duration.zero;
-        _previewPlayer.pause();
-        if (!_positionController.isClosed) {
-          _positionController.add(Duration.zero);
+      if (playerState.processingState == ProcessingState.completed && state.isPlaying && _verseSwitchDepth == 0 && _seekDepth == 0) {
+        if (!kIsWeb && Platform.isWindows && state.currentVerseIndex < state.verses.length - 1) {
+          // Windows drives one audio source per verse. Advance through the
+          // SAME event the verse strip uses so there is exactly ONE swap of
+          // the source (the handler reloads it and resumes playback).
+          add(VideoStudioActiveVerseIndexChanged(state.currentVerseIndex + 1, isUserInitiated: false));
+          return;
         }
-        _previewPlayer.seek(Duration.zero, index: 0);
-        add(const VideoStudioPlaybackStateChanged(false, isReset: true));
+        add(const VideoStudioPlaybackReset());
       } else {
         final isPlaying = playerState.playing && playerState.processingState != ProcessingState.completed;
         if (isPlaying) {
@@ -125,16 +139,23 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
             _startPositionTicker();
           }
         } else {
-          _stopPositionTicker();
+          if (_seekDepth == 0 && _verseSwitchDepth == 0) {
+            _stopPositionTicker();
+          }
         }
-        if (isPlaying != state.isPlaying) {
+        if (_seekDepth == 0 && _verseSwitchDepth == 0 && isPlaying != state.isPlaying) {
           add(VideoStudioPlaybackStateChanged(isPlaying));
         }
       }
     });
 
     _currentIndexSubscription = _previewPlayer.currentIndexStream.listen((index) {
-      if (_isSeeking || _pendingSeekVerseIndex != null) return;
+      if (_seekDepth > 0 || _pendingSeekVerseIndex != null || _verseSwitchDepth > 0) return;
+      // On Windows we drive a single audio source, so currentIndex is always 0
+      // and must never be mapped back onto currentVerseIndex (it would rewind
+      // to verse 0 mid-playback). Verse advancement is handled by the
+      // `completed` listener instead.
+      if (!kIsWeb && Platform.isWindows) return;
       if (index != null &&
           index >= 0 &&
           index < state.verses.length &&
@@ -144,10 +165,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           _playbackStartTime = DateTime.now();
           _playbackStartPosition = Duration.zero;
         }
-        if (!_positionController.isClosed) {
-          _positionController.add(Duration.zero);
-        }
-        add(VideoStudioActiveVerseIndexChanged(index));
+        add(VideoStudioActiveVerseIndexChanged(index, isUserInitiated: false));
       }
     });
   }
@@ -161,7 +179,12 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         isPlaying: event.isPlaying,
         currentVerseIndex: 0,
         playbackResetTrigger: state.playbackResetTrigger + 1,
+        seekTrigger: state.seekTrigger + 1,
+        lastSeekPosition: Duration.zero,
       ));
+      if (!_positionController.isClosed) {
+        _positionController.add(Duration.zero);
+      }
     } else {
       emit(state.copyWith(isPlaying: event.isPlaying));
     }
@@ -191,7 +214,8 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   ) async {
     _stopPositionTicker();
     _currentVersePosition = Duration.zero;
-    _isSeeking = false;
+    _seekDepth = 0;
+    _verseSwitchDepth = 0;
     _pendingSeekVerseIndex = null;
     if (!_positionController.isClosed) {
       _positionController.add(Duration.zero);
@@ -224,7 +248,8 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   ) async {
     _stopPositionTicker();
     _currentVersePosition = Duration.zero;
-    _isSeeking = false;
+    _seekDepth = 0;
+    _verseSwitchDepth = 0;
     _pendingSeekVerseIndex = null;
     if (!_positionController.isClosed) {
       _positionController.add(Duration.zero);
@@ -290,6 +315,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     Emitter<VideoStudioState> emit,
   ) async {
     CanvasOverlayGenerator.clearLayoutCache();
+    CustomImageService.setActiveImagePath(event.imagePath);
     if (event.imagePath == null) {
       emit(
         state.copyWith(
@@ -300,8 +326,12 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         ),
       );
     } else {
-      await CustomImageService.loadUiImage(event.imagePath!);
-      await CustomImageService.calculateImageLuminance(event.imagePath!);
+      try {
+        await CustomImageService.loadUiImage(event.imagePath!);
+        await CustomImageService.calculateImageLuminance(event.imagePath!);
+      } catch (e) {
+        debugPrint('Error loading custom image: $e');
+      }
       emit(
         state.copyWith(
           config: state.config.copyWith(
@@ -412,6 +442,17 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
 
     if (state.audioFilePaths.isEmpty) return;
 
+    // If actively playing (or native player is playing), pause immediately
+    final bool isActuallyPlaying = state.isPlaying || _previewPlayer.playing;
+    if (isActuallyPlaying) {
+      _stopPositionTicker();
+      emit(state.copyWith(isPlaying: false));
+      try {
+        await _previewPlayer.pause();
+      } catch (_) {}
+      return;
+    }
+
     final totalVerses = state.audioFilePaths.length;
     final isLastVerse = state.currentVerseIndex >= totalVerses - 1;
     final currentPos = _previewPlayer.position;
@@ -422,41 +463,64 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     final isCompleted = _previewPlayer.processingState == ProcessingState.completed ||
         (isLastVerse && isAtOrNearEnd);
 
-    // If at the end of the recitation span, immediately restart from Verse 0 on a single tap
+    // If at the end of the recitation span, restart from Verse 0 on single tap
     if (isCompleted) {
       try {
         _currentVersePosition = Duration.zero;
         if (!_positionController.isClosed) {
           _positionController.add(Duration.zero);
         }
-        await _previewPlayer.seek(Duration.zero, index: 0);
+        if (!kIsWeb && Platform.isWindows) {
+          if (state.audioFilePaths.isNotEmpty) {
+            _verseSwitchDepth++;
+            try {
+              await _previewPlayer.setAudioSource(_createAudioSource(state.audioFilePaths[0]));
+              _loadedVerseIndex = 0;
+            } finally {
+              _verseSwitchDepth--;
+            }
+            await _previewPlayer.seek(Duration.zero);
+          }
+        } else {
+          await _previewPlayer.seek(Duration.zero, index: 0);
+        }
         _playbackStartTime = DateTime.now();
         _playbackStartPosition = Duration.zero;
         _startPositionTicker();
-        await _previewPlayer.play();
         emit(state.copyWith(
           currentVerseIndex: 0,
           isPlaying: true,
         ));
+        unawaited(_previewPlayer.play());
       } catch (_) {
         _stopPositionTicker();
         emit(state.copyWith(isPlaying: false));
       }
       return;
-    }
-
-    // If actively playing, pause
-    if (state.isPlaying) {
-      _stopPositionTicker();
-      try {
-        await _previewPlayer.pause();
-      } catch (_) {}
-      emit(state.copyWith(isPlaying: false));
     } else {
       // Start or resume playback
       try {
         final safeIndex = state.currentVerseIndex.clamp(0, totalVerses - 1);
-        if (_previewPlayer.currentIndex != safeIndex) {
+        if (!kIsWeb && Platform.isWindows) {
+          if (state.audioFilePaths.isNotEmpty) {
+            // audioSource != null is NOT enough: after a natural completion
+            // the player still holds the LAST verse file while the UI reset
+            // to verse 0. Always re-assert that the loaded file matches the
+            // verse we are about to play.
+            if (_previewPlayer.audioSource == null || _loadedVerseIndex != safeIndex) {
+              _verseSwitchDepth++;
+              try {
+                await _previewPlayer.setAudioSource(_createAudioSource(state.audioFilePaths[safeIndex]));
+                _loadedVerseIndex = safeIndex;
+              } finally {
+                _verseSwitchDepth--;
+              }
+            }
+            if (_currentVersePosition > Duration.zero) {
+              await _previewPlayer.seek(_currentVersePosition);
+            }
+          }
+        } else if (_previewPlayer.currentIndex != safeIndex) {
           _currentVersePosition = Duration.zero;
           if (!_positionController.isClosed) {
             _positionController.add(Duration.zero);
@@ -466,13 +530,24 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         _playbackStartTime = DateTime.now();
         _playbackStartPosition = _currentVersePosition;
         _startPositionTicker();
-        await _previewPlayer.play();
         emit(state.copyWith(isPlaying: true));
+        unawaited(_previewPlayer.play());
       } catch (_) {
         _stopPositionTicker();
         emit(state.copyWith(isPlaying: false));
       }
     }
+  }
+
+  Future<void> _onPlaybackPaused(
+    VideoStudioPlaybackPaused event,
+    Emitter<VideoStudioState> emit,
+  ) async {
+    _stopPositionTicker();
+    emit(state.copyWith(isPlaying: false));
+    try {
+      await _previewPlayer.pause();
+    } catch (_) {}
   }
 
   Future<void> _onPlaybackReset(
@@ -481,18 +556,27 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   ) async {
     _stopPositionTicker();
     _currentVersePosition = Duration.zero;
-    _isSeeking = false;
+    _seekDepth = 0;
+    _verseSwitchDepth = 0;
     _pendingSeekVerseIndex = null;
-    if (!_positionController.isClosed) {
-      _positionController.add(Duration.zero);
-    }
 
     try {
       if (_previewPlayer.playing) {
         await _previewPlayer.pause();
       }
       if (state.audioFilePaths.isNotEmpty) {
-        await _previewPlayer.seek(Duration.zero, index: 0);
+        if (!kIsWeb && Platform.isWindows) {
+          _verseSwitchDepth++;
+          try {
+            await _previewPlayer.setAudioSource(_createAudioSource(state.audioFilePaths[0]));
+            _loadedVerseIndex = 0;
+          } finally {
+            _verseSwitchDepth--;
+          }
+          await _previewPlayer.seek(Duration.zero);
+        } else {
+          await _previewPlayer.seek(Duration.zero, index: 0);
+        }
       }
     } catch (_) {}
 
@@ -500,31 +584,112 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       currentVerseIndex: 0,
       isPlaying: false,
       playbackResetTrigger: state.playbackResetTrigger + 1,
+      seekTrigger: state.seekTrigger + 1,
+      lastSeekPosition: Duration.zero,
     ));
+
+    if (!_positionController.isClosed) {
+      _positionController.add(Duration.zero);
+    }
   }
 
   Future<void> _onActiveVerseIndexChanged(
     VideoStudioActiveVerseIndexChanged event,
     Emitter<VideoStudioState> emit,
   ) async {
-    if (_isSeeking || _pendingSeekVerseIndex != null) return;
+    _pendingSeekVerseIndex = null;
     final safeIndex = event.activeIndex.clamp(0, state.verses.isNotEmpty ? state.verses.length - 1 : 0);
     _currentVersePosition = Duration.zero;
-    if (_previewPlayer.playing) {
+    final wasPlaying = state.isPlaying || _previewPlayer.playing;
+    if (wasPlaying) {
       _playbackStartTime = DateTime.now();
       _playbackStartPosition = Duration.zero;
     }
+    final targetSeekPos = state.calculateCumulativePosition(safeIndex, Duration.zero);
+    final newSeekTrigger = event.isUserInitiated ? state.seekTrigger + 1 : state.seekTrigger;
+    emit(state.copyWith(
+      currentVerseIndex: safeIndex,
+      seekTrigger: newSeekTrigger,
+      lastSeekPosition: targetSeekPos,
+      isPlaying: wasPlaying,
+    ));
     if (!_positionController.isClosed) {
       _positionController.add(Duration.zero);
     }
-    emit(state.copyWith(currentVerseIndex: safeIndex));
+    if (!kIsWeb && Platform.isWindows && state.audioFilePaths.isNotEmpty) {
+      // Last request wins: NEVER skip the swap just because another swap is
+      // in flight (bloc 9 processes events concurrently). just_audio
+      // interrupts the older load; whichever load finishes last owns the
+      // player, and the staleness check below guarantees only the newest
+      // request starts playback. Dropping the newest swap here is exactly
+      // what desyncs UI index from loaded audio.
+      _verseSwitchDepth++;
+      try {
+        // Always swap the source on Windows: each verse is its own file.
+        // NOTE: no stop() here — stop() disposes the native player and a
+        // fresh one is created on the next load, adding a large gap between
+        // verses. setAudioSource alone swaps the source in the SAME native
+        // player (instant), and play() resumes immediately after.
+        await _previewPlayer.setAudioSource(_createAudioSource(state.audioFilePaths[safeIndex]));
+        _loadedVerseIndex = safeIndex;
+        // A newer verse request may have arrived while loading: only the
+        // newest request may start playback, otherwise stale audio would
+        // play under a newer verse's UI.
+        if (safeIndex != state.currentVerseIndex) return;
+        if (wasPlaying) {
+          _playbackStartTime = DateTime.now();
+          _playbackStartPosition = Duration.zero;
+          _startPositionTicker();
+          await _previewPlayer.play();
+        }
+      } catch (_) {
+      } finally {
+        _verseSwitchDepth--;
+      }
+    } else if (state.audioFilePaths.isNotEmpty) {
+      if (event.isUserInitiated) {
+        _verseSwitchDepth++;
+        try {
+          if (_previewPlayer.currentIndex != safeIndex) {
+            await _previewPlayer.seek(Duration.zero, index: safeIndex);
+          } else {
+            await _previewPlayer.seek(Duration.zero);
+          }
+          if (safeIndex != state.currentVerseIndex) return;
+          if (wasPlaying) {
+            _playbackStartTime = DateTime.now();
+            _playbackStartPosition = Duration.zero;
+            _startPositionTicker();
+            if (!_previewPlayer.playing) {
+              await _previewPlayer.play();
+            }
+          }
+        } catch (_) {
+        } finally {
+          _verseSwitchDepth--;
+        }
+      } else {
+        // Natural playlist progression in just_audio: player is already
+        // playing safeIndex without gap. Do NOT seek or restart, only maintain
+        // the ticker if wasPlaying.
+        if (wasPlaying && _positionTicker == null) {
+          _startPositionTicker();
+        }
+      }
+    }
   }
 
   Future<void> _onSeekRequested(
     VideoStudioSeekRequested event,
     Emitter<VideoStudioState> emit,
   ) async {
-    if (state.verseDurations.isEmpty || state.audioFilePaths.isEmpty) return;
+    if (state.verseDurations.isEmpty || state.audioFilePaths.isEmpty) {
+      emit(state.copyWith(
+        seekTrigger: state.seekTrigger + 1,
+        lastSeekPosition: event.position,
+      ));
+      return;
+    }
 
     int accumulatedMs = 0;
     int targetVerseIndex = 0;
@@ -545,29 +710,73 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
 
     final totalVerses = state.audioFilePaths.length;
     final safeIndex = targetVerseIndex.clamp(0, totalVerses - 1);
+    final wasPlaying = state.isPlaying || _previewPlayer.playing;
+    // Capture BEFORE emitting — after the emit below, state.currentVerseIndex
+    // equals safeIndex, so comparing them later would always be equal and the
+    // verse's audio file would never actually be swapped on Windows.
+    final bool needsSourceSwap = safeIndex != state.currentVerseIndex;
 
-    _isSeeking = true;
+    _seekDepth++;
     _pendingSeekVerseIndex = safeIndex;
     _currentVersePosition = verseOffset;
 
-    if (_previewPlayer.playing) {
+    if (wasPlaying) {
       _playbackStartTime = DateTime.now();
       _playbackStartPosition = verseOffset;
     }
+    emit(state.copyWith(
+      currentVerseIndex: safeIndex,
+      seekTrigger: state.seekTrigger + 1,
+      lastSeekPosition: event.position,
+      isPlaying: wasPlaying,
+    ));
     if (!_positionController.isClosed) {
       _positionController.add(verseOffset);
     }
-    emit(state.copyWith(currentVerseIndex: safeIndex));
 
     try {
-      if (_previewPlayer.currentIndex != safeIndex) {
-        await _previewPlayer.seek(verseOffset, index: safeIndex);
+      if (!kIsWeb && Platform.isWindows) {
+        if (state.audioFilePaths.isNotEmpty) {
+          if (_previewPlayer.audioSource == null || needsSourceSwap) {
+            _verseSwitchDepth++;
+            try {
+              // Swap without stop(): stop() tears down the native player and
+              // recreates it on next load (audible gap). setAudioSource alone
+              // swaps the file inside the same player.
+              await _previewPlayer.setAudioSource(_createAudioSource(state.audioFilePaths[safeIndex]));
+              _loadedVerseIndex = safeIndex;
+            } finally {
+              _verseSwitchDepth--;
+            }
+          }
+          await _previewPlayer.seek(verseOffset);
+          if (wasPlaying) {
+            _playbackStartTime = DateTime.now();
+            _playbackStartPosition = verseOffset;
+            _startPositionTicker();
+            if (!_previewPlayer.playing) {
+              await _previewPlayer.play();
+            }
+          }
+        }
       } else {
-        await _previewPlayer.seek(verseOffset);
+        if (_previewPlayer.currentIndex != safeIndex) {
+          await _previewPlayer.seek(verseOffset, index: safeIndex);
+        } else {
+          await _previewPlayer.seek(verseOffset);
+        }
+        if (wasPlaying && !_previewPlayer.playing) {
+          _playbackStartTime = DateTime.now();
+          _playbackStartPosition = verseOffset;
+          _startPositionTicker();
+          await _previewPlayer.play();
+        }
       }
     } catch (_) {
     } finally {
-      _isSeeking = false;
+      // Counter-based: a restartable()-cancelled handler only decrements its
+      // own increment — the guard stays up while any newer seek runs on.
+      _seekDepth--;
       _pendingSeekVerseIndex = null;
     }
   }
@@ -580,34 +789,45 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   }
 
   Future<void> _loadAudioAndVersesForCurrentSpan(Emitter<VideoStudioState> emit) async {
+    // Shared load generation: reciter/range/retry/init loads overlap freely
+    // (restartable() is per event TYPE), so a stale load must never commit.
+    // Snapshot the config up-front — reading state.config after awaits would
+    // mix a newer range/reciter with this older load's verses and audio.
+    final int myLoadGen = ++_loadGeneration;
+    final VideoProjectConfig loadConfig = state.config;
+    final List<VerseModel> previousVerses = List<VerseModel>.of(state.verses);
     emit(state.copyWith(isPreparingAudio: true, clearError: true));
 
     try {
       final verses = await repository.loadVersesForSpan(
-        surahNumber: state.config.surahNumber,
-        startAyah: state.config.startAyah,
-        endAyah: state.config.endAyah,
+        surahNumber: loadConfig.surahNumber,
+        startAyah: loadConfig.startAyah,
+        endAyah: loadConfig.endAyah,
       );
+      if (myLoadGen != _loadGeneration || emit.isDone) return;
 
-      final effectiveVerses = verses.isNotEmpty ? verses : state.verses;
+      final effectiveVerses = verses.isNotEmpty ? verses : previousVerses;
 
       // Immediately sync verses into state to prevent stale range if export starts
-      if (!emit.isDone && effectiveVerses.isNotEmpty) {
+      if (effectiveVerses.isNotEmpty) {
         emit(state.copyWith(verses: effectiveVerses));
       }
 
       final paths = await repository.prepareVerseAudioFiles(
-        reciterPath: state.config.reciterPath,
-        surahNumber: state.config.surahNumber,
-        startAyah: state.config.startAyah,
-        endAyah: state.config.endAyah,
+        reciterPath: loadConfig.reciterPath,
+        surahNumber: loadConfig.surahNumber,
+        startAyah: loadConfig.startAyah,
+        endAyah: loadConfig.endAyah,
       );
+      if (myLoadGen != _loadGeneration || emit.isDone) return;
 
       final durations = await repository.measureVerseDurations(audioFilePaths: paths);
+      if (myLoadGen != _loadGeneration || emit.isDone) return;
       final Map<int, List<WordTimingSegment>> timingsMap = {};
 
-      final isEn = state.config.isEnglish;
+      final isEn = loadConfig.isEnglish;
       for (int i = 0; i < effectiveVerses.length; i++) {
+        if (myLoadGen != _loadGeneration || emit.isDone) return;
         final v = effectiveVerses[i];
         if (i >= durations.length || durations[i] == Duration.zero) {
           throw Exception(isEn
@@ -616,7 +836,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         }
         final dur = durations[i];
         final List<WordTimingSegment> timings;
-        if (state.config.textDisplayMode == VideoTextDisplayMode.staticFull) {
+        if (loadConfig.textDisplayMode == VideoTextDisplayMode.staticFull) {
           timings = [
             WordTimingSegment(
               wordPosition: 1,
@@ -626,24 +846,34 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           ];
         } else {
           timings = await _wordTimingService.getWordTimings(
-            surahNumber: state.config.surahNumber,
+            surahNumber: loadConfig.surahNumber,
             verse: v,
-            reciterPath: state.config.reciterPath,
+            reciterPath: loadConfig.reciterPath,
             totalAyahDuration: dur,
           );
+          if (myLoadGen != _loadGeneration || emit.isDone) return;
         }
         timingsMap[v.verseNumber] = timings;
       }
 
-      if (!emit.isDone) {
-        _stopPositionTicker();
-        _currentVersePosition = Duration.zero;
-        if (!_positionController.isClosed) {
-          _positionController.add(Duration.zero);
-        }
-        if (paths.isNotEmpty) {
-          try {
-            await _previewPlayer.stop();
+      if (myLoadGen != _loadGeneration || emit.isDone) return;
+      _stopPositionTicker();
+      _currentVersePosition = Duration.zero;
+      if (!_positionController.isClosed) {
+        _positionController.add(Duration.zero);
+      }
+      if (paths.isNotEmpty) {
+        try {
+          await _previewPlayer.stop();
+          if (!kIsWeb && Platform.isWindows) {
+            _verseSwitchDepth++;
+            try {
+              await _previewPlayer.setAudioSource(_createAudioSource(paths[0]));
+              _loadedVerseIndex = 0;
+            } finally {
+              _verseSwitchDepth--;
+            }
+          } else {
             // ignore: deprecated_member_use
             final playlist = ConcatenatingAudioSource(
               children: paths.map(_createAudioSource).toList(),
@@ -652,37 +882,36 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
               playlist,
               initialIndex: 0,
             );
-          } catch (e) {
-            if (kDebugMode) {
-              debugPrint('Failed to set audio source for preview player: $e');
-            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('Failed to set audio source for preview player: $e');
           }
         }
+      }
 
-        emit(
-          state.copyWith(
-            verses: effectiveVerses,
-            audioFilePaths: paths,
-            verseDurations: durations,
-            wordTimingsMap: timingsMap,
-            isPreparingAudio: false,
-            currentVerseIndex: 0,
-          ),
-        );
-      }
+      emit(
+        state.copyWith(
+          verses: effectiveVerses,
+          audioFilePaths: paths,
+          verseDurations: durations,
+          wordTimingsMap: timingsMap,
+          isPreparingAudio: false,
+          currentVerseIndex: 0,
+        ),
+      );
     } catch (e) {
-      if (!emit.isDone) {
-        final cleanMsg = e.toString().replaceAll('Exception:', '').trim();
-        final defaultMsg = state.config.isEnglish
-            ? 'Failed to load recitation for selected reciter'
-            : 'تعذر تحميل التلاوة الصوتية للقارئ المحدد';
-        emit(
-          state.copyWith(
-            isPreparingAudio: false,
-            errorMessage: cleanMsg.isNotEmpty ? cleanMsg : defaultMsg,
-          ),
-        );
-      }
+      if (myLoadGen != _loadGeneration || emit.isDone) return;
+      final cleanMsg = e.toString().replaceAll('Exception:', '').trim();
+      final defaultMsg = loadConfig.isEnglish
+          ? 'Failed to load recitation for selected reciter'
+          : 'تعذر تحميل التلاوة الصوتية للقارئ المحدد';
+      emit(
+        state.copyWith(
+          isPreparingAudio: false,
+          errorMessage: cleanMsg.isNotEmpty ? cleanMsg : defaultMsg,
+        ),
+      );
     }
   }
 
@@ -715,34 +944,49 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       ),
     ));
 
-    // Strictly ensure all verses and audio files for the exact selected range are loaded
+    // Strictly ensure all verses and audio files for the exact selected range are loaded.
+    // This preparation runs BEFORE the export subscription exists, so any
+    // failure here must surface as a failed progress state explicitly —
+    // otherwise the export button would stay stuck on "rendering" forever.
     final expectedCount = state.config.endAyah - state.config.startAyah + 1;
     var currentVerses = state.verses;
     var currentAudios = state.audioFilePaths;
     var currentDurations = state.verseDurations;
 
-    final isVersesStale = currentVerses.length != expectedCount ||
-        (currentVerses.isNotEmpty &&
-            (currentVerses.first.verseNumber != state.config.startAyah ||
-                currentVerses.last.verseNumber != state.config.endAyah));
+    try {
+      final isVersesStale = currentVerses.length != expectedCount ||
+          (currentVerses.isNotEmpty &&
+              (currentVerses.first.verseNumber != state.config.startAyah ||
+                  currentVerses.last.verseNumber != state.config.endAyah));
 
-    if (isVersesStale || currentVerses.isEmpty) {
-      currentVerses = await repository.loadVersesForSpan(
-        surahNumber: state.config.surahNumber,
-        startAyah: state.config.startAyah,
-        endAyah: state.config.endAyah,
-      );
-    }
+      if (isVersesStale || currentVerses.isEmpty) {
+        currentVerses = await repository.loadVersesForSpan(
+          surahNumber: state.config.surahNumber,
+          startAyah: state.config.startAyah,
+          endAyah: state.config.endAyah,
+        );
+      }
 
-    final isAudiosStale = currentAudios.length != expectedCount;
-    if (isAudiosStale || currentAudios.isEmpty) {
-      currentAudios = await repository.prepareVerseAudioFiles(
-        reciterPath: state.config.reciterPath,
-        surahNumber: state.config.surahNumber,
-        startAyah: state.config.startAyah,
-        endAyah: state.config.endAyah,
-      );
-      currentDurations = await repository.measureVerseDurations(audioFilePaths: currentAudios);
+      final isAudiosStale = currentAudios.length != expectedCount;
+      if (isAudiosStale || currentAudios.isEmpty) {
+        currentAudios = await repository.prepareVerseAudioFiles(
+          reciterPath: state.config.reciterPath,
+          surahNumber: state.config.surahNumber,
+          startAyah: state.config.startAyah,
+          endAyah: state.config.endAyah,
+        );
+        currentDurations = await repository.measureVerseDurations(audioFilePaths: currentAudios);
+      }
+    } catch (e) {
+      final rawMsg = e.toString().replaceFirst('Exception: ', '').trim();
+      emit(state.copyWith(
+        exportProgress: VideoRenderProgress(
+          phase: VideoRenderPhase.failed,
+          step: VideoProgressStep.failed,
+          errorMessage: rawMsg.isNotEmpty ? rawMsg : null,
+        ),
+      ));
+      return;
     }
 
     await emit.forEach<VideoRenderProgress>(
@@ -797,7 +1041,12 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     await _playerStateSubscription?.cancel();
     await _currentIndexSubscription?.cancel();
     await _positionController.close();
-    await _previewPlayer.dispose();
+    try {
+      await _previewPlayer.stop();
+    } catch (_) {}
+    try {
+      await _previewPlayer.dispose();
+    } catch (_) {}
     return super.close();
   }
 }

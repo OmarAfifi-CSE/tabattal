@@ -19,6 +19,8 @@ class VideoStudioState extends Equatable {
   final VideoExportAction? pendingExportAction;
   final String? errorMessage;
   final int playbackResetTrigger;
+  final int seekTrigger;
+  final Duration? lastSeekPosition;
 
   const VideoStudioState({
     required this.config,
@@ -33,6 +35,8 @@ class VideoStudioState extends Equatable {
     this.pendingExportAction,
     this.errorMessage,
     this.playbackResetTrigger = 0,
+    this.seekTrigger = 0,
+    this.lastSeekPosition,
   });
 
   VerseModel? get currentVerse {
@@ -98,6 +102,9 @@ class VideoStudioState extends Equatable {
     String? errorMessage,
     bool clearError = false,
     int? playbackResetTrigger,
+    int? seekTrigger,
+    Duration? lastSeekPosition,
+    bool clearSeekPosition = false,
   }) {
     return VideoStudioState(
       config: config ?? this.config,
@@ -112,6 +119,8 @@ class VideoStudioState extends Equatable {
       pendingExportAction: pendingExportAction ?? this.pendingExportAction,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       playbackResetTrigger: playbackResetTrigger ?? this.playbackResetTrigger,
+      seekTrigger: seekTrigger ?? this.seekTrigger,
+      lastSeekPosition: clearSeekPosition ? null : (lastSeekPosition ?? this.lastSeekPosition),
     );
   }
 
@@ -129,6 +138,8 @@ class VideoStudioState extends Equatable {
         pendingExportAction,
         errorMessage,
         playbackResetTrigger,
+        seekTrigger,
+        lastSeekPosition,
       ];
 }
 

@@ -96,11 +96,20 @@ class VideoExportService implements IVideoExportService {
         }
 
         final resolvedAudioResults = await Future.wait(audioTasks);
+        // Every verse MUST keep its own audio file at the same index — dropping
+        // a missing file here would silently shift all later ayahs out of sync
+        // with their text and timings. Fail loudly instead, naming the verse.
         final resolvedAudioPaths = <String>[];
-        for (final p in resolvedAudioResults) {
-          if (p != null && p.isNotEmpty) {
-            resolvedAudioPaths.add(p);
+        final isEnMsg = config.isEnglish;
+        for (int i = 0; i < resolvedAudioResults.length; i++) {
+          final p = resolvedAudioResults[i];
+          if (p == null || p.isEmpty) {
+            final missingVerse = i < verses.length ? verses[i].verseNumber : i + 1;
+            throw Exception(isEnMsg
+                ? 'Missing audio for verse $missingVerse (Surah ${config.surahNumber}). Check the connection and retry the export.'
+                : 'تعذّر العثور على صوت الآية $missingVerse (سورة ${config.surahNumber}). تحقق من الاتصال وأعد محاولة التصدير.');
           }
+          resolvedAudioPaths.add(p);
         }
 
         if (_isCancelled) {

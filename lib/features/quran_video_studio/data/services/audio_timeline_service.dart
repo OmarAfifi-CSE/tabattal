@@ -169,9 +169,15 @@ class AudioTimelineService {
         } catch (_) {}
       }
 
-      final resolved = (d != null && d > Duration.zero) ? d : const Duration(seconds: 4);
-      _durationCache[path] = resolved;
-      return resolved;
+      // A failed probe must NEVER be cached: caching the 4s fallback would
+      // poison every later lookup (including after the backend recovers and
+      // could report the real duration). Fallbacks are returned uncached so
+      // the next call re-measures.
+      if (d != null && d > Duration.zero) {
+        _durationCache[path] = d;
+        return d;
+      }
+      return const Duration(seconds: 4);
     });
 
     final results = await Future.wait(futures);

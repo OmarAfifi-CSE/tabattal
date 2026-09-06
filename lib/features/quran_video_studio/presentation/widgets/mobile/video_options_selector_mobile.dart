@@ -255,24 +255,31 @@ class VideoOptionsSelectorMobile extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                size: 16.sp,
-                color: AppColors.accentGold,
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
+          Expanded(
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 16.sp,
+                  color: AppColors.accentGold,
                 ),
-              ),
-            ],
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+          SizedBox(width: 8.w),
           Switch(
             value: value,
             onChanged: onChanged,

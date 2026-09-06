@@ -72,6 +72,20 @@ class DatabaseHelper {
       // Write bytes via databaseFactory (zero redundant allocations)
       await databaseFactory.writeDatabaseBytes(path, dbBytes);
 
+      // The shipped DB replaces the working copy wholesale — any rows the user
+      // downloaded before (e.g. tafsir) are gone with it. Completion flags
+      // live in SharedPreferences, OUTSIDE the DB, so they must be cleared in
+      // the same step or progress would report 100% over an empty table.
+      try {
+        final keys = prefs
+            .getKeys()
+            .where((k) => k.startsWith('tafsir_completed_'))
+            .toList();
+        for (final k in keys) {
+          await prefs.remove(k);
+        }
+      } catch (_) {}
+
       await prefs.setInt('db_version', currentDbVersion);
     }
 

@@ -7,6 +7,7 @@ const path = require('path');
 const os = require('os');
 const { spawn, spawnSync, execSync } = require('child_process');
 const axios = require('axios');
+const dns = require('dns');
 const { isAllowedOrigin } = require('./cors_policy');
 
 const app = express();
@@ -236,19 +237,34 @@ function runFfmpegWithProgress(args, cwd, jobId, totalDurationSec) {
   });
 }
 
-async function downloadFile(url, destPath) {
+async function downloadFile(url, destPath, options = {}) {
+  const { verifyFinalUrl = false, maxRedirects = 10 } = options;
+  if (verifyFinalUrl) {
+    await assertPublicHttpUrl(url);
+  }
   const response = await axios({
     method: 'GET',
     url: url,
     responseType: 'stream',
     timeout: 60000,
-    maxRedirects: 10,
+    maxRedirects: maxRedirects,
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
       'Accept': 'video/webm,video/ogg,video/*;q=0.9,audio/*;q=0.8,*/*;q=0.5',
       'Accept-Language': 'en-US,en;q=0.9,ar;q=0.8',
     }
   });
+
+  if (verifyFinalUrl) {
+    // Re-validate after redirects: a benign host must not bounce us into
+    // loopback / link-local / private space (redirect-based SSRF).
+    const finalUrl = response?.request?.res?.responseUrl
+      || response?.request?.responseUrl
+      || response?.request?.path;
+    if (typeof finalUrl === 'string' && finalUrl.length > 0) {
+      await assertPublicHttpUrl(finalUrl);
+    }
+  }
 
   return new Promise((resolve, reject) => {
     const writer = fs.createWriteStream(destPath);
@@ -267,6 +283,90 @@ async function downloadFile(url, destPath) {
     });
     writer.on('error', reject);
   });
+}
+
+// --- SSRF protection for user-supplied URLs (custom background video) ---
+// Only public http(s) destinations are allowed. Literal private IPs are
+// rejected outright; hostnames are resolved and EVERY returned address must
+// be public (blocks DNS tricks pointing at loopback/LAN).
+function isPublicIpv4(parts) {
+  if (parts.length !== 4) return false;
+  const [a, b, c, d] = parts;
+  if ([a, b, c, d].some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return false;
+  if (a === 10) return false; // RFC1918
+  if (a === 172 && b >= 16 && b <= 31) return false; // RFC1918
+  if (a === 192 && b === 168) return false; // RFC1918
+  if (a === 127) return false; // loopback
+  if (a === 169 && b === 254) return false; // link-local
+  if (a === 0) return false; // current network
+  if (a >= 224) return false; // multicast + reserved
+  if (a === 100 && b >= 64 && b <= 127) return false; // CGNAT
+  if (a === 192 && b === 0 && (c === 0 || c === 2)) return false; // special/docs
+  if (a === 198 && (b === 18 || b === 19)) return false; // benchmarking
+  if (a === 198 && b === 51 && c === 100) return false; // TEST-NET-2
+  if (a === 203 && b === 0 && c === 113) return false; // TEST-NET-3
+  if (a === 192 && b === 88 && c === 99) return false; // deprecated relay
+  return true;
+}
+
+function isPublicIpLiteral(host) {
+  const h = String(host || '').toLowerCase().replace(/^\[|\]$/g, '');
+  if (h === 'localhost') return false;
+  // IPv4-mapped IPv6 embeds a v4 address — classify the inner address.
+  const mapped = h.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+  const v4 = mapped ? mapped[1] : h;
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(v4)) {
+    return isPublicIpv4(v4.split('.').map((n) => parseInt(n, 10)));
+  }
+  if (h.includes(':')) {
+    if (h === '::' || h === '::1') return false; // unspecified / loopback
+    const compact = h.replace(/:/g, '');
+    if (/^fe[89ab]/i.test(compact)) return false; // fe80::/10 link-local
+    if (/^fc/i.test(compact) || /^fd/i.test(compact)) return false; // unique-local
+    if (/^ff/i.test(compact)) return false; // multicast
+    return true;
+  }
+  return true; // not an IP literal — caller resolves via DNS
+}
+
+async function assertPublicHttpUrl(urlStr) {
+  let parsed;
+  try {
+    parsed = new URL(urlStr);
+  } catch (_) {
+    throw new Error(`BLOCKED_URL: malformed URL rejected.`);
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error(`BLOCKED_URL: only http(s) destinations are allowed.`);
+  }
+  const host = parsed.hostname;
+  if (!host) {
+    throw new Error(`BLOCKED_URL: missing host rejected.`);
+  }
+  const looksLikeIp = /^\d+\.\d+\.\d+\.\d+$/.test(host) ||
+    host.includes(':') ||
+    host.toLowerCase() === 'localhost';
+  if (looksLikeIp) {
+    if (!isPublicIpLiteral(host)) {
+      throw new Error(`BLOCKED_URL: internal/reserved destination rejected.`);
+    }
+    return;
+  }
+  let records;
+  try {
+    records = await dns.promises.lookup(host, { all: true, verbatim: true });
+  } catch (_) {
+    throw new Error(`BLOCKED_URL: hostname could not be resolved.`);
+  }
+  if (!records || records.length === 0) {
+    throw new Error(`BLOCKED_URL: hostname could not be resolved.`);
+  }
+  for (const r of records) {
+    const addr = r.family === 6 ? `[${r.address}]` : r.address;
+    if (!isPublicIpLiteral(addr)) {
+      throw new Error(`BLOCKED_URL: hostname resolves to an internal address.`);
+    }
+  }
 }
 
 // Health check endpoint
@@ -288,6 +388,20 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
   try {
     fs.mkdirSync(sessionDir, { recursive: true });
 
+    // Centralized session cleanup: every early return below must run this
+    // first, otherwise temp dirs and uploaded files leak on validation
+    // failures (only the success path keeps files until the response ends).
+    const cleanupSession = () => {
+      try {
+        if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
+      } catch (_) {}
+      try {
+        for (const file of req.files || []) {
+          if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+        }
+      } catch (_) {}
+    };
+
     // Parse and validate metadata
     let metadata = {};
     if (req.body.metadata) {
@@ -303,13 +417,37 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
 
     // Security constraints
     if (surahNumber < 1 || surahNumber > 114) {
+      cleanupSession();
       return res.status(400).json({
         code: 'INVALID_SURAH',
         messageAr: 'رقم السورة غير صالح.',
         messageEn: 'Invalid surah number provided.'
       });
     }
+    // Bounded verse range: integers only, ordered, and capped at the same
+    // 10-ayah export window the app enforces client-side. Without this, a
+    // single request could allocate an unbounded array + Promise.all storm.
+    if (!Number.isInteger(startAyah) || !Number.isInteger(endAyah) ||
+        startAyah < 1 || endAyah < startAyah || (endAyah - startAyah + 1) > 10) {
+      cleanupSession();
+      return res.status(400).json({
+        code: 'INVALID_RANGE',
+        messageAr: 'نطاق الآيات غير صالح (آية بداية ≤ آية نهاية، بحد أقصى 10 آيات).',
+        messageEn: 'Invalid ayah range (start <= end, max 10 ayahs per export).'
+      });
+    }
+    // reciterPath is interpolated into download URLs: restrict to safe path
+    // characters so it cannot smuggle queries, fragments, or traversals.
+    if (typeof reciterPath !== 'string' || !/^[A-Za-z0-9_\-]+$/.test(reciterPath)) {
+      cleanupSession();
+      return res.status(400).json({
+        code: 'INVALID_RECITER',
+        messageAr: 'مسار القارئ غير صالح.',
+        messageEn: 'Invalid reciter path provided.'
+      });
+    }
     if (unitConfigs.length > 50) {
+      cleanupSession();
       return res.status(400).json({
         code: 'EXCEEDED_SEGMENT_LIMIT',
         messageAr: 'عدد مقاطع الفيديو يتجاوز الحد الأقصى المسموح به (50 مقطعًا).',
@@ -326,6 +464,7 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
     const baseFrameFile = (req.files || []).find(f => f.fieldname === 'base_frame');
     const baseFrameSrc = baseFrameFile ? baseFrameFile.path : fileMap['base_frame'];
     if (!baseFrameSrc || !fs.existsSync(baseFrameSrc)) {
+      cleanupSession();
       return res.status(400).json({
         code: 'MISSING_BASE_FRAME',
         messageAr: 'صورة الإطار الأساسي مفقودة.',
@@ -392,11 +531,14 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
     const audioMap = {};
     const validAudioFiles = [];
 
-    await Promise.all(distinctVerses.map(async (vNum) => {
+    // Bounded concurrency (not an unbounded Promise.all storm): at most 4
+    // simultaneous verse downloads; https URLs here are server-constructed
+    // from the validated surah/ayah range, never raw user input.
+    await mapConcurrent(distinctVerses, 4, async (vNum) => {
       const sStr = String(surahNumber).padStart(3, '0');
       const aStr = String(vNum).padStart(3, '0');
       const audioDest = path.join(sessionDir, `audio_${sStr}_${aStr}.mp3`);
-      
+
       const primaryUrl = `https://everyayah.com/data/${reciterPath}/${sStr}${aStr}.mp3`;
       const fallbackUrl = `https://audio.qurancdn.com/Alafasy/mp3/${sStr}${aStr}.mp3`;
 
@@ -415,7 +557,7 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
         const exactDur = getExactAudioDuration(audioDest);
         audioMap[vNum] = { path: audioDest, duration: exactDur };
       }
-    }));
+    });
 
     for (const vNum of distinctVerses) {
       if (audioMap[vNum]?.path) {
@@ -439,9 +581,11 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
       } else if (metadata.customVideoUrl && (metadata.customVideoUrl.startsWith('http://') || metadata.customVideoUrl.startsWith('https://'))) {
         customVideoDest = path.join(sessionDir, 'custom_video.mp4');
         try {
-          await downloadFile(metadata.customVideoUrl, customVideoDest);
+          await assertPublicHttpUrl(metadata.customVideoUrl);
+          await downloadFile(metadata.customVideoUrl, customVideoDest, { verifyFinalUrl: true, maxRedirects: 5 });
         } catch (vErr) {
           console.error(`Custom video download failed from ${metadata.customVideoUrl}: ${vErr.message}`);
+          cleanupSession();
           return res.status(400).json({
             code: 'CUSTOM_VIDEO_DOWNLOAD_FAILED',
             messageAr: 'تعذر تنزيل ملف الفيديو المخصص من الرابط المحدد. يرجى التأكد من صلاحية الرابط والمحاولة مجددًا.',
@@ -628,6 +772,7 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
 
     if (!fs.existsSync(outputMp4)) {
       if (jobId) activeJobs.delete(jobId);
+      cleanupSession();
       return res.status(500).json({
         code: 'FFMPEG_OUTPUT_MISSING',
         messageAr: 'فشل في تجميع ملف الفيديو النهائي.',
@@ -656,13 +801,10 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
 
   } catch (error) {
     console.error(`Export video error: ${error.message}`);
-    // Clean up on error
-    try {
-      if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
-      for (const file of req.files || []) {
-        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-      }
-    } catch (_) {}
+    // Centralized cleanup covers validation failures, download failures, and
+    // ffmpeg errors alike. (The success path keeps files until the response
+    // stream closes — see the fileStream 'close' handler above.)
+    cleanupSession();
 
     res.status(500).json({ 
       code: 'SERVER_ERROR',
