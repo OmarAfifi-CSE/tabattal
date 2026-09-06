@@ -10,6 +10,8 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../bloc/audio_bloc.dart';
 import '../../bloc/audio_event.dart';
 import '../shared/audio_selector_button.dart';
+import '../../../../../core/bloc/volume/app_volume_cubit.dart';
+import '../../../../../core/bloc/volume/app_volume_state.dart';
 
 // ─── Public API ─────────────────────────────────────────────────────────────
 
@@ -20,6 +22,7 @@ import '../shared/audio_selector_button.dart';
 void showAudioSettingsSheetWeb(BuildContext context, {int? verseId}) {
   final audioBloc = context.read<AudioBloc>();
   final audioPrefs = context.read<AudioPreferencesService>();
+  final appVolumeCubit = context.read<AppVolumeCubit>();
   final isEn = Localizations.localeOf(context).languageCode == 'en';
   final isLandscape =
       MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
@@ -38,7 +41,10 @@ void showAudioSettingsSheetWeb(BuildContext context, {int? verseId}) {
           child: Directionality(
             textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
             child: MultiBlocProvider(
-              providers: [BlocProvider.value(value: audioBloc)],
+              providers: [
+                BlocProvider.value(value: audioBloc),
+                BlocProvider.value(value: appVolumeCubit),
+              ],
               child: _AudioSettingsSheetContent(
                 verseId: verseId,
                 audioPrefs: audioPrefs,
@@ -60,7 +66,10 @@ void showAudioSettingsSheetWeb(BuildContext context, {int? verseId}) {
       builder: (_) => Directionality(
         textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
         child: MultiBlocProvider(
-          providers: [BlocProvider.value(value: audioBloc)],
+          providers: [
+            BlocProvider.value(value: audioBloc),
+            BlocProvider.value(value: appVolumeCubit),
+          ],
           child: _AudioSettingsSheetContent(
             verseId: verseId,
             audioPrefs: audioPrefs,
@@ -346,6 +355,103 @@ class _AudioSettingsSheetContentState
                       ),
                     ],
                   ),
+                ),
+                SizedBox(height: (isLandscape ? 10.0 : 14.0).h),
+
+                // ── App Volume Slider ──
+                BlocBuilder<AppVolumeCubit, AppVolumeState>(
+                  builder: (context, volumeState) {
+                    final isMuted = volumeState.isMuted || volumeState.volume == 0.0;
+                    final percent = (volumeState.volume * 100).round();
+                    return Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: (isLandscape ? 14.0 : 18.0).w,
+                        vertical: (isLandscape ? 6.0 : 10.0).h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceCream,
+                        borderRadius: BorderRadius.circular(14.r),
+                        border: Border.all(
+                          color: AppColors.accentGold.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => context.read<AppVolumeCubit>().toggleMute(),
+                                    child: Icon(
+                                      isMuted
+                                          ? Icons.volume_off_rounded
+                                          : volumeState.volume < 0.5
+                                              ? Icons.volume_down_rounded
+                                              : Icons.volume_up_rounded,
+                                      color: isMuted
+                                          ? AppColors.inkBrown.withValues(alpha: 0.5)
+                                          : AppColors.accentGold,
+                                      size: (isLandscape ? 22.0 : 26.0).sp,
+                                    ),
+                                  ),
+                                  SizedBox(width: (isLandscape ? 10.0 : 12.0).w),
+                                  Text(
+                                    AppLocalizations.of(context)!.appVolume,
+                                    style: TextStyle(
+                                      fontSize: (isLandscape ? 14.5 : 18.0).sp,
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                isMuted ? AppLocalizations.of(context)!.mute : '$percent%',
+                                style: TextStyle(
+                                  fontSize: (isLandscape ? 13.0 : 16.0).sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: isMuted
+                                      ? AppColors.inkBrown.withValues(alpha: 0.6)
+                                      : AppColors.accentGold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SliderTheme(
+                            data: SliderThemeData(
+                              trackHeight: 3.5,
+                              activeTrackColor: isMuted
+                                  ? AppColors.inkBrown.withValues(alpha: 0.3)
+                                  : AppColors.accentGold,
+                              inactiveTrackColor:
+                                  AppColors.accentGold.withValues(alpha: 0.15),
+                              thumbColor: isMuted
+                                  ? AppColors.inkBrown.withValues(alpha: 0.6)
+                                  : AppColors.accentGold,
+                              thumbShape: const RoundSliderThumbShape(
+                                enabledThumbRadius: 6.0,
+                              ),
+                              overlayShape: const RoundSliderOverlayShape(
+                                overlayRadius: 14.0,
+                              ),
+                            ),
+                            child: Slider(
+                              value: volumeState.volume,
+                              min: 0.0,
+                              max: 1.0,
+                              onChanged: (val) {
+                                context.read<AppVolumeCubit>().setVolume(val);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
                 SizedBox(height: (isLandscape ? 14.0 : 22.0).h),
 

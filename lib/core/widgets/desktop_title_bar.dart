@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:window_manager/window_manager.dart';
 import '../../features/settings/presentation/bloc/settings_bloc.dart';
+import 'desktop_title_bar_volume_control.dart';
 
 /// Luxury custom desktop window title bar for Tabattal.
 ///
@@ -177,6 +178,9 @@ class _DesktopTitleBarState extends State<DesktopTitleBar> with WindowListener {
                 ),
               ),
             ),
+
+            // Volume Control
+            const DesktopTitleBarVolumeControl(),
 
             // 3. Desktop Window Controls (Minimize, Maximize / Restore, Close)
             Row(

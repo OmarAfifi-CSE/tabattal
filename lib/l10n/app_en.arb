@@ -581,5 +581,21 @@
   "videoStudioRenderProcessingError": "An error occurred while processing and encoding the video. Please try again.",
   "videoStudioWebExportError": "Failed to export video in this browser. Please try a modern browser like Google Chrome.",
   "videoStudioRetry": "Retry",
-  "searchFilterAll": "All"
+  "searchFilterAll": "All",
+  "appVolume": "App Volume",
+  "mute": "Mute",
+  "unmute": "Unmute",
+  "volumePercent": "Volume: {percent}%",
+  "@volumePercent": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "volumeTooltip": "App Volume: {percent}% • Click to mute",
+  "@volumeTooltip": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "volumeMutedTooltip": "App Volume: Muted • Click to unmute"
 }

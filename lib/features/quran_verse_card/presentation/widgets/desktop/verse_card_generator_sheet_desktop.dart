@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../../../../core/bloc/volume/app_volume_cubit.dart';
 import '../../../../../core/constants/quran_metadata.dart';
 import '../../../../../core/database/database_helper.dart';
 import '../../../../../core/services/quran_font_service.dart';
@@ -122,22 +123,29 @@ class VerseCardGeneratorSheetDesktop extends StatelessWidget {
     final surahNum = int.tryParse(verse.verseKey.split(':')[0]) ?? 1;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     return BlocProvider(
-      create: (context) => VideoStudioBloc(
-        repository: VideoStudioRepositoryImpl(),
-        initialConfig: VideoProjectConfig(
-          surahNumber: surahNum,
-          startAyah: verse.verseNumber,
-          endAyah: verse.verseNumber,
-          isEnglish: isEn,
-        ),
-      )..add(
-          VideoStudioInitRequested(
+      create: (context) {
+        AppVolumeCubit? volumeCubit;
+        try {
+          volumeCubit = context.read<AppVolumeCubit>();
+        } catch (_) {}
+        return VideoStudioBloc(
+          repository: VideoStudioRepositoryImpl(),
+          initialConfig: VideoProjectConfig(
             surahNumber: surahNum,
             startAyah: verse.verseNumber,
             endAyah: verse.verseNumber,
-            verses: initialVerses ?? [verse],
+            isEnglish: isEn,
           ),
-        ),
+          appVolumeCubit: volumeCubit,
+        )..add(
+            VideoStudioInitRequested(
+              surahNumber: surahNum,
+              startAyah: verse.verseNumber,
+              endAyah: verse.verseNumber,
+              verses: initialVerses ?? [verse],
+            ),
+          );
+      },
       child: _VerseCardGeneratorSheetDesktopContent(
         verse: verse,
         tafsirText: tafsirText,

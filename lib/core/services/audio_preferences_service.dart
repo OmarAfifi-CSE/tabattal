@@ -9,11 +9,13 @@ class AudioPreferencesService {
   static const String _keyLastPage = 'last_read_page'; // For saving last page
   static const String _keyLocale = 'app_locale';
   static const String _keyPlayOnce = 'audio_play_once';
+  static const String _keyVolume = 'audio_app_volume';
 
   static const String defaultCategory = 'مرتل';
   static const String defaultReciter = 'محمد صديق المنشاوي';
   static const int defaultRepeatCount =
       0; // 0 = continue reading, -1 = infinite, >0 = count
+  static const double defaultVolume = 1.0;
 
   final SharedPreferences _prefs;
 
@@ -69,5 +71,11 @@ class AudioPreferencesService {
 
   Future<void> savePlayOnce(bool value) async {
     await _prefs.setBool(_keyPlayOnce, value);
+  }
+
+  double get volume => _prefs.getDouble(_keyVolume) ?? defaultVolume;
+
+  Future<void> saveVolume(double volume) async {
+    await _prefs.setDouble(_keyVolume, volume);
   }
 }

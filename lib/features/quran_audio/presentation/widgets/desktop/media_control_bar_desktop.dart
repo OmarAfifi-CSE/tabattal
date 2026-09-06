@@ -12,6 +12,7 @@ import '../../bloc/audio_bloc.dart';
 import '../../bloc/audio_event.dart';
 import '../../bloc/audio_state.dart';
 import '../shared/sleep_timer_selector_menu.dart';
+import '../shared/audio_volume_capsule.dart';
 import 'audio_settings_sheet_desktop.dart';
 
 class MediaControlBarDesktop extends StatefulWidget {
@@ -319,6 +320,17 @@ class _DesktopLandscapeHorizonBar extends StatelessWidget {
               ],
             ),
           ),
+
+          SizedBox(width: 6.w),
+          Container(
+            width: 1.w,
+            height: 16.h,
+            color: AppColors.bronzeIcon.withValues(alpha: 0.25),
+          ),
+          SizedBox(width: 6.w),
+
+          // ── App Volume Capsule ──
+          const AudioVolumeCapsule(height: 26.0, sliderWidth: 50.0),
 
           SizedBox(width: 6.w),
           Container(
@@ -729,6 +741,12 @@ class _DesktopSleepTimerAndClose extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        const AudioVolumeCapsule(
+          height: 24.0,
+          sliderWidth: 42.0,
+          showPercent: false,
+        ),
+        SizedBox(width: 4.w),
         SleepTimerSelectorMenu(
           selectedMinutes: sleepTimerMinutes,
           onSelected: onSleepTimerSelected,

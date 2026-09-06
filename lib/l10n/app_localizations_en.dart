@@ -1082,4 +1082,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchFilterAll => 'All';
+
+  @override
+  String get appVolume => 'App Volume';
+
+  @override
+  String get mute => 'Mute';
+
+  @override
+  String get unmute => 'Unmute';
+
+  @override
+  String volumePercent(int percent) {
+    return 'Volume: $percent%';
+  }
+
+  @override
+  String volumeTooltip(int percent) {
+    return 'App Volume: $percent% • Click to mute';
+  }
+
+  @override
+  String get volumeMutedTooltip => 'App Volume: Muted • Click to unmute';
 }

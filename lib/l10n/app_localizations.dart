@@ -2013,6 +2013,42 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الكل'**
   String get searchFilterAll;
+
+  /// No description provided for @appVolume.
+  ///
+  /// In ar, this message translates to:
+  /// **'صوت التطبيق'**
+  String get appVolume;
+
+  /// No description provided for @mute.
+  ///
+  /// In ar, this message translates to:
+  /// **'كتم الصوت'**
+  String get mute;
+
+  /// No description provided for @unmute.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء كتم الصوت'**
+  String get unmute;
+
+  /// No description provided for @volumePercent.
+  ///
+  /// In ar, this message translates to:
+  /// **'مستوى الصوت: {percent}٪'**
+  String volumePercent(int percent);
+
+  /// No description provided for @volumeTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'صوت التطبيق: {percent}٪ • انقر للكتم'**
+  String volumeTooltip(int percent);
+
+  /// No description provided for @volumeMutedTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'صوت التطبيق: مكتوم • انقر لإلغاء الكتم'**
+  String get volumeMutedTooltip;
 }
 
 class _AppLocalizationsDelegate

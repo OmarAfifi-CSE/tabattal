@@ -1078,4 +1078,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get searchFilterAll => 'الكل';
+
+  @override
+  String get appVolume => 'صوت التطبيق';
+
+  @override
+  String get mute => 'كتم الصوت';
+
+  @override
+  String get unmute => 'إلغاء كتم الصوت';
+
+  @override
+  String volumePercent(int percent) {
+    return 'مستوى الصوت: $percent٪';
+  }
+
+  @override
+  String volumeTooltip(int percent) {
+    return 'صوت التطبيق: $percent٪ • انقر للكتم';
+  }
+
+  @override
+  String get volumeMutedTooltip => 'صوت التطبيق: مكتوم • انقر لإلغاء الكتم';
 }

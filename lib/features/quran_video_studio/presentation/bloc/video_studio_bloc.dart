@@ -4,6 +4,7 @@ import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
+import '../../../../core/bloc/volume/app_volume_cubit.dart';
 import '../../../../core/constants/quran_metadata.dart';
 import '../../../../core/constants/reciter_catalog.dart';
 import '../../../quran_reader/data/models/verse_model.dart';
@@ -47,11 +48,14 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   // tell us which verse file it holds, so resume/restart paths must compare
   // against this instead of assuming audioSource != null means "correct".
   int? _loadedVerseIndex;
+  final AppVolumeCubit? appVolumeCubit;
 
   VideoStudioBloc({
     required this.repository,
     required VideoProjectConfig initialConfig,
+    this.appVolumeCubit,
   }) : super(VideoStudioState(config: initialConfig)) {
+    appVolumeCubit?.registerPlayer(_previewPlayer);
     on<VideoStudioInitRequested>(_onInitRequested);
     on<VideoStudioReciterChanged>(_onReciterChanged, transformer: restartable());
     on<VideoStudioVerseRangeChanged>(_onVerseRangeChanged, transformer: restartable());
@@ -1037,6 +1041,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
 
   @override
   Future<void> close() async {
+    appVolumeCubit?.unregisterPlayer(_previewPlayer);
     _stopPositionTicker();
     await _playerStateSubscription?.cancel();
     await _currentIndexSubscription?.cancel();

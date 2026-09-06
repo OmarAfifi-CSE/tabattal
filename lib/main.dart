@@ -30,6 +30,7 @@ import 'core/bloc/locale/locale_cubit.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/settings/presentation/bloc/settings_state.dart';
 import 'features/quran_hifz/presentation/bloc/hifz_bloc.dart';
+import 'core/bloc/volume/app_volume_cubit.dart';
 
 import 'features/quran_reader/presentation/bloc/quran_bloc.dart';
 
@@ -130,6 +131,15 @@ class TabattalApp extends StatelessWidget {
             create: (_) => SettingsBloc(prefs: container.sharedPreferences),
           ),
           BlocProvider<HifzBloc>(create: (_) => HifzBloc()),
+          BlocProvider<AppVolumeCubit>(
+            create: (context) {
+              final cubit = AppVolumeCubit(
+                audioPrefs: context.read<AudioPreferencesService>(),
+              );
+              cubit.registerPlayer(container.audioHandler.player);
+              return cubit;
+            },
+          ),
         ],
         child: BlocBuilder<SettingsBloc, SettingsState>(
           builder: (context, settingsState) {

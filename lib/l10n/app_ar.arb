@@ -580,5 +580,21 @@
   "videoStudioRenderProcessingError": "حدث خطأ أثناء معالجة وترميز الفيديو. يُرجى المحاولة مرة أخرى.",
   "videoStudioWebExportError": "تعذر تصدير الفيديو في هذا المتصفح. يُرجى استخدام متصفح حديث مثل Google Chrome.",
   "videoStudioRetry": "إعادة المحاولة",
-  "searchFilterAll": "الكل"
+  "searchFilterAll": "الكل",
+  "appVolume": "صوت التطبيق",
+  "mute": "كتم الصوت",
+  "unmute": "إلغاء كتم الصوت",
+  "volumePercent": "مستوى الصوت: {percent}٪",
+  "@volumePercent": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "volumeTooltip": "صوت التطبيق: {percent}٪ • انقر للكتم",
+  "@volumeTooltip": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "volumeMutedTooltip": "صوت التطبيق: مكتوم • انقر لإلغاء الكتم"
 }
