@@ -37,7 +37,11 @@ void showAudioSettingsSheetTablet(BuildContext context, {int? verseId}) {
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 440.w, maxHeight: 560.h),
+          constraints: BoxConstraints(
+            maxWidth: 480.w,
+            maxHeight:
+                math.min(760.h, MediaQuery.sizeOf(context).height * 0.92),
+          ),
           child: Directionality(
             textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
             child: MultiBlocProvider(
@@ -201,7 +205,9 @@ class _AudioSettingsSheetContentState
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: isLandscape ? 420.h : MediaQuery.sizeOf(context).height * 0.88,
+          maxHeight: isLandscape
+              ? math.min(740.h, MediaQuery.sizeOf(context).height * 0.90)
+              : MediaQuery.sizeOf(context).height * 0.88,
         ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),

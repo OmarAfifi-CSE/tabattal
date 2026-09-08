@@ -194,7 +194,7 @@ class _DesktopLandscapeHorizonBar extends StatelessWidget {
           GestureDetector(
             onTap: () => showAudioSettingsSheetDesktop(context),
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
               decoration: BoxDecoration(
                 color: AppColors.surfaceCream.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(14.r),
@@ -203,25 +203,25 @@ class _DesktopLandscapeHorizonBar extends StatelessWidget {
                   width: 0.8.r,
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.multitrack_audio_rounded,
-                    color: AppColors.bronzeDark,
-                    size: 15.sp,
-                  ),
-                  SizedBox(width: 4.w),
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: 120.w),
-                    child: BlocBuilder<AudioBloc, AudioState>(
-                      builder: (context, state) {
-                        final audioBloc = context.read<AudioBloc>();
-                        final reciterName = ReciterLocalization.localize(
-                          context,
-                          audioBloc.currentReciter,
-                        );
-                        return Text(
+              child: BlocBuilder<AudioBloc, AudioState>(
+                builder: (context, state) {
+                  final audioBloc = context.read<AudioBloc>();
+                  final reciterName = ReciterLocalization.localize(
+                    context,
+                    audioBloc.currentReciter,
+                  );
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.multitrack_audio_rounded,
+                        color: AppColors.bronzeDark,
+                        size: 15.sp,
+                      ),
+                      SizedBox(width: 4.w),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: 130.w),
+                        child: Text(
                           reciterName,
                           style: AppTextStyles.menuItemText.copyWith(
                             color: AppColors.inkBrown,
@@ -231,17 +231,23 @@ class _DesktopLandscapeHorizonBar extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           textDirection:
                               isEn ? TextDirection.ltr : TextDirection.rtl,
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(width: 2.w),
-                  Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: AppColors.bronzeIcon,
-                    size: 16.sp,
-                  ),
-                ],
+                        ),
+                      ),
+                      SizedBox(width: 5.w),
+                      SurahAudioSourceBadge(
+                        surahNumber: audioBloc.currentPlayingSurah ?? 1,
+                        category: audioBloc.currentCategory,
+                        reciterKey: audioBloc.currentReciter,
+                      ),
+                      SizedBox(width: 3.w),
+                      Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.bronzeIcon,
+                        size: 16.sp,
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -434,78 +440,85 @@ class _DesktopLandscapeWhisperingPill extends StatelessWidget {
     return GestureDetector(
       onTap: onToggleExpanded,
       child: Container(
-        height: 32.h,
+        height: 36.h,
         padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
         decoration: BoxDecoration(
           color: AppColors.cardCream,
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(18.r),
           border: Border.all(
             color: AppColors.bronzeIcon,
             width: 1.2.r,
           ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            BlocBuilder<AudioBloc, AudioState>(
-              builder: (context, state) {
-                final isPlaying = state is AudioPlaying;
-                final isLoading = state is AudioLoading;
-                return _DesktopPlayPauseButton(
+        child: BlocBuilder<AudioBloc, AudioState>(
+          builder: (context, state) {
+            final audioBloc = context.read<AudioBloc>();
+            final isPlaying = state is AudioPlaying;
+            final isLoading = state is AudioLoading;
+            final reciterName = ReciterLocalization.localize(
+              context,
+              audioBloc.currentReciter,
+            );
+
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _DesktopPlayPauseButton(
                   isPlaying: isPlaying,
                   isLoading: isLoading,
-                  size: 22.r,
-                  iconSize: 13.sp,
-                );
-              },
-            ),
-            SizedBox(width: 6.w),
-            ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 110.w),
-              child: BlocBuilder<AudioBloc, AudioState>(
-                builder: (context, state) {
-                  final audioBloc = context.read<AudioBloc>();
-                  final reciterName = ReciterLocalization.localize(
-                    context,
-                    audioBloc.currentReciter,
-                  );
-                  return Text(
+                  size: 24.r,
+                  iconSize: 14.sp,
+                ),
+                SizedBox(width: 6.w),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 120.w),
+                  child: Text(
                     reciterName,
                     style: AppTextStyles.menuItemText.copyWith(
                       color: AppColors.inkBrown,
-                      fontSize: 11.5.sp,
+                      fontSize: 12.0.sp,
                       fontWeight: FontWeight.w600,
                     ),
                     overflow: TextOverflow.ellipsis,
                     textDirection:
                         isEn ? TextDirection.ltr : TextDirection.rtl,
-                  );
-                },
-              ),
-            ),
-            SizedBox(width: 4.w),
-            Icon(
-              Icons.keyboard_arrow_up_rounded,
-              color: AppColors.inkBrown,
-              size: 16.sp,
-            ),
-            SizedBox(width: 4.w),
-            GestureDetector(
-              onTap: () => context.read<AudioBloc>().add(const StopAudio()),
-              child: Container(
-                padding: EdgeInsets.all(2.r),
-                decoration: BoxDecoration(
-                  color: AppColors.textPrimary.withValues(alpha: 0.06),
-                  shape: BoxShape.circle,
+                  ),
                 ),
-                child: Icon(
-                  Icons.close,
+                SizedBox(width: 5.w),
+                ReciterCategoryBadge(
+                  category: audioBloc.currentCategory,
+                ),
+                SizedBox(width: 5.w),
+                SurahAudioSourceBadge(
+                  surahNumber: audioBloc.currentPlayingSurah ?? 1,
+                  category: audioBloc.currentCategory,
+                  reciterKey: audioBloc.currentReciter,
+                ),
+                SizedBox(width: 6.w),
+                Icon(
+                  Icons.keyboard_arrow_up_rounded,
                   color: AppColors.inkBrown,
-                  size: 12.sp,
+                  size: 18.sp,
                 ),
-              ),
-            ),
-          ],
+                SizedBox(width: 4.w),
+                GestureDetector(
+                  onTap: () => context.read<AudioBloc>().add(const StopAudio()),
+                  child: Container(
+                    padding: EdgeInsets.all(2.5.r),
+                    decoration: BoxDecoration(
+                      color: AppColors.textPrimary.withValues(alpha: 0.06),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.close,
+                      color: AppColors.inkBrown,
+                      size: 13.sp,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
