@@ -137,3 +137,34 @@ class NextSurah extends AudioEvent {
 class PreviousSurah extends AudioEvent {
   const PreviousSurah();
 }
+
+class SurahDeletedEvent extends AudioEvent {
+  final int surahNumber;
+  final String category;
+  final String reciterKey;
+
+  const SurahDeletedEvent({
+    required this.surahNumber,
+    required this.category,
+    required this.reciterKey,
+  });
+
+  @override
+  List<Object> get props => [surahNumber, category, reciterKey];
+}
+
+class SurahDownloadedEvent extends AudioEvent {
+  final int surahNumber;
+  final String category;
+  final String reciterKey;
+
+  const SurahDownloadedEvent({
+    required this.surahNumber,
+    required this.category,
+    required this.reciterKey,
+  });
+
+  @override
+  List<Object> get props => [surahNumber, category, reciterKey];
+}
+

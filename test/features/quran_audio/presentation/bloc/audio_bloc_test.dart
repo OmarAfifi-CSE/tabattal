@@ -539,5 +539,87 @@ void main() {
 
       await sub.cancel();
     });
+
+    test('SurahDeletedEvent hot-swaps active playing local surah to remote stream without error', () async {
+      mockDownload.mockLocalSurah = '/local/surahs/001.mp3';
+
+      final states = <AudioState>[];
+      final sub = bloc.stream.listen(states.add);
+
+      // Start playing local surah 1
+      bloc.add(const PlayVerse('', 1001));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      expect(states.any((s) => s is AudioPlaying && s.currentVerseId == 1001), isTrue);
+
+      // Now user deletes surah 1
+      bloc.add(const SurahDeletedEvent(
+        surahNumber: 1,
+        category: 'murattal',
+        reciterKey: 'abdul_basit',
+      ));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      // Playback remains in AudioPlaying state without throwing AudioError
+      expect(states.last, isA<AudioPlaying>().having((s) => s.currentVerseId, 'currentVerseId', 1001));
+      expect(states.any((s) => s is AudioError), isFalse);
+
+      await sub.cancel();
+    });
+
+    test('PlayVerse within same surah falls back to remote stream if local file was deleted', () async {
+      mockDownload.mockLocalSurah = '/local/surahs/non_existent_001.mp3';
+
+      final states = <AudioState>[];
+      final sub = bloc.stream.listen(states.add);
+
+      // Start playing
+      bloc.add(const PlayVerse('', 1001));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      expect(states.any((s) => s is AudioPlaying && s.currentVerseId == 1001), isTrue);
+
+      // Now mock that the local file is no longer on disk / deleted
+      mockDownload.mockLocalSurah = null;
+
+      // User jumps to ayah 3 within the same surah
+      bloc.add(const PlayVerse('', 1003));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      // Successfully transitioned to ayah 3 via remote stream without error
+      expect(states.last, isA<AudioPlaying>().having((s) => s.currentVerseId, 'currentVerseId', 1003));
+      expect(states.any((s) => s is AudioError), isFalse);
+
+      await sub.cancel();
+    });
+
+    test('SurahDownloadedEvent auto-promotes active stream to local offline file without error', () async {
+      mockDownload.mockLocalSurah = null; // Start with streaming
+
+      final states = <AudioState>[];
+      final sub = bloc.stream.listen(states.add);
+
+      // Start playing via stream
+      bloc.add(const PlayVerse('', 1001));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      expect(states.any((s) => s is AudioPlaying && s.currentVerseId == 1001), isTrue);
+
+      // Now surah finishes downloading
+      mockDownload.mockLocalSurah = '/local/surahs/001.mp3';
+      bloc.add(const SurahDownloadedEvent(
+        surahNumber: 1,
+        category: 'murattal',
+        reciterKey: 'abdul_basit',
+      ));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      // Playback continues playing smoothly as local file
+      expect(states.last, isA<AudioPlaying>().having((s) => s.currentVerseId, 'currentVerseId', 1001));
+      expect(states.any((s) => s is AudioError), isFalse);
+
+      await sub.cancel();
+    });
   });
 }
+

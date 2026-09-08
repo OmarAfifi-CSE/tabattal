@@ -597,5 +597,51 @@
       "percent": { "type": "int" }
     }
   },
-  "volumeMutedTooltip": "App Volume: Muted • Click to unmute"
+  "volumeMutedTooltip": "App Volume: Muted • Click to unmute",
+  "audioSourceLive": "Stream",
+  "audioSourceOffline": "Offline",
+  "audioSourceLiveTooltip": "Live stream via Internet",
+  "audioSourceOfflineTooltip": "Downloaded locally (Offline)",
+  "audioDownloadSuccess": "Surah {surahName} downloaded successfully",
+  "@audioDownloadSuccess": {
+    "placeholders": {
+      "surahName": { "type": "String" }
+    }
+  },
+  "audioDownloadError": "Failed to download recitation. Please check your internet connection.",
+  "audioDeleteSuccess": "Recitation file for Surah {surahName} deleted from local storage",
+  "@audioDeleteSuccess": {
+    "placeholders": {
+      "surahName": { "type": "String" }
+    }
+  },
+  "audioSurahDownloadedTitle": "Surah {surahName} downloaded locally",
+  "@audioSurahDownloadedTitle": {
+    "placeholders": {
+      "surahName": { "type": "String" }
+    }
+  },
+  "audioSurahDownloadedSubtitle": "Ready for immediate offline listening",
+  "audioDeleteFromDeviceTooltip": "Delete from device",
+  "audioLiveStreamTitle": "Live Stream (Requires internet connection)",
+  "audioLiveStreamSubtitle": "You can download Surah {surahName} for offline listening",
+  "@audioLiveStreamSubtitle": {
+    "placeholders": {
+      "surahName": { "type": "String" }
+    }
+  },
+  "audioDownloadSurahButton": "Download Surah {surahName} for offline listening",
+  "@audioDownloadSurahButton": {
+    "placeholders": {
+      "surahName": { "type": "String" }
+    }
+  },
+  "audioDownloadingProgress": "Downloading Surah {surahName}... {percent}%",
+  "@audioDownloadingProgress": {
+    "placeholders": {
+      "surahName": { "type": "String" },
+      "percent": { "type": "int" }
+    }
+  },
+  "audioCancelDownloadTooltip": "Cancel download"
 }

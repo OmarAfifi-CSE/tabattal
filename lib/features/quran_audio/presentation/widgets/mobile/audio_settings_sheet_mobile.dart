@@ -5,10 +5,12 @@ import '../../../../../core/network/audio_download_manager.dart';
 import '../../../../../core/services/audio_preferences_service.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/reciter_localization.dart';
+import '../../../../../core/utils/verse_ref.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../bloc/audio_bloc.dart';
 import '../../bloc/audio_event.dart';
 import '../shared/audio_selector_button.dart';
+import '../shared/surah_download_status_card.dart';
 
 // ─── Public API ─────────────────────────────────────────────────────────────
 
@@ -152,6 +154,10 @@ class _AudioSettingsSheetContentState
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     final categories = AudioDownloadManager.reciterCategories.keys.toList();
     final reciters = _recitersForCategory;
+    final audioBloc = context.read<AudioBloc>();
+    final targetSurah = widget.verseId != null
+        ? VerseRef.fromId(widget.verseId!).surah
+        : (audioBloc.currentPlayingSurah ?? 1);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -282,7 +288,15 @@ class _AudioSettingsSheetContentState
                 ],
               ),
             ),
-            SizedBox(height: 18.h),
+            SizedBox(height: 10.h),
+
+            // ── Download Status & 1-Tap Offline Download
+            SurahDownloadStatusCard(
+              surahNumber: targetSurah,
+              category: _selectedCategory,
+              reciterKey: _selectedReciter,
+            ),
+            SizedBox(height: 12.h),
 
             // ── Play / Apply button
             ElevatedButton.icon(

@@ -2049,6 +2049,96 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'صوت التطبيق: مكتوم • انقر لإلغاء الكتم'**
   String get volumeMutedTooltip;
+
+  /// No description provided for @audioSourceLive.
+  ///
+  /// In ar, this message translates to:
+  /// **'بث'**
+  String get audioSourceLive;
+
+  /// No description provided for @audioSourceOffline.
+  ///
+  /// In ar, this message translates to:
+  /// **'محلي'**
+  String get audioSourceOffline;
+
+  /// No description provided for @audioSourceLiveTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'بث مباشر عبر الإنترنت'**
+  String get audioSourceLiveTooltip;
+
+  /// No description provided for @audioSourceOfflineTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'محملة محليًا (بدون إنترنت)'**
+  String get audioSourceOfflineTooltip;
+
+  /// No description provided for @audioDownloadSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تحميل سورة {surahName} كاملةً بنجاح'**
+  String audioDownloadSuccess(String surahName);
+
+  /// No description provided for @audioDownloadError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تحميل السورة، يرجى التأكد من اتصال الإنترنت'**
+  String get audioDownloadError;
+
+  /// No description provided for @audioDeleteSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حذف ملف تلاوة سورة {surahName} من التخزين المحلي'**
+  String audioDeleteSuccess(String surahName);
+
+  /// No description provided for @audioSurahDownloadedTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة {surahName} محملة محليًا'**
+  String audioSurahDownloadedTitle(String surahName);
+
+  /// No description provided for @audioSurahDownloadedSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاهزة للاستماع فورًا دون إنترنت'**
+  String get audioSurahDownloadedSubtitle;
+
+  /// No description provided for @audioDeleteFromDeviceTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف من الجهاز'**
+  String get audioDeleteFromDeviceTooltip;
+
+  /// No description provided for @audioLiveStreamTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'بث مباشر (يتطلب اتصالًا بالإنترنت)'**
+  String get audioLiveStreamTitle;
+
+  /// No description provided for @audioLiveStreamSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكنك تحميل سورة {surahName} للاستماع دون اتصال'**
+  String audioLiveStreamSubtitle(String surahName);
+
+  /// No description provided for @audioDownloadSurahButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحميل سورة {surahName} للاستماع بدون إنترنت'**
+  String audioDownloadSurahButton(String surahName);
+
+  /// No description provided for @audioDownloadingProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري تحميل سورة {surahName}... {percent}٪'**
+  String audioDownloadingProgress(String surahName, int percent);
+
+  /// No description provided for @audioCancelDownloadTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء التحميل'**
+  String get audioCancelDownloadTooltip;
 }
 
 class _AppLocalizationsDelegate

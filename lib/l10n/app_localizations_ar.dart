@@ -1100,4 +1100,62 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get volumeMutedTooltip => 'صوت التطبيق: مكتوم • انقر لإلغاء الكتم';
+
+  @override
+  String get audioSourceLive => 'بث';
+
+  @override
+  String get audioSourceOffline => 'محلي';
+
+  @override
+  String get audioSourceLiveTooltip => 'بث مباشر عبر الإنترنت';
+
+  @override
+  String get audioSourceOfflineTooltip => 'محملة محليًا (بدون إنترنت)';
+
+  @override
+  String audioDownloadSuccess(String surahName) {
+    return 'تم تحميل سورة $surahName كاملةً بنجاح';
+  }
+
+  @override
+  String get audioDownloadError =>
+      'تعذر تحميل السورة، يرجى التأكد من اتصال الإنترنت';
+
+  @override
+  String audioDeleteSuccess(String surahName) {
+    return 'تم حذف ملف تلاوة سورة $surahName من التخزين المحلي';
+  }
+
+  @override
+  String audioSurahDownloadedTitle(String surahName) {
+    return 'سورة $surahName محملة محليًا';
+  }
+
+  @override
+  String get audioSurahDownloadedSubtitle => 'جاهزة للاستماع فورًا دون إنترنت';
+
+  @override
+  String get audioDeleteFromDeviceTooltip => 'حذف من الجهاز';
+
+  @override
+  String get audioLiveStreamTitle => 'بث مباشر (يتطلب اتصالًا بالإنترنت)';
+
+  @override
+  String audioLiveStreamSubtitle(String surahName) {
+    return 'يمكنك تحميل سورة $surahName للاستماع دون اتصال';
+  }
+
+  @override
+  String audioDownloadSurahButton(String surahName) {
+    return 'تحميل سورة $surahName للاستماع بدون إنترنت';
+  }
+
+  @override
+  String audioDownloadingProgress(String surahName, int percent) {
+    return 'جاري تحميل سورة $surahName... $percent٪';
+  }
+
+  @override
+  String get audioCancelDownloadTooltip => 'إلغاء التحميل';
 }

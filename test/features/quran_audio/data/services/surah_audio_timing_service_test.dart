@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:tabattal/core/database/database_helper.dart';
 import 'package:tabattal/features/quran_audio/data/models/surah_timing_model.dart';
 import 'package:tabattal/features/quran_audio/data/services/surah_audio_timing_service.dart';
 
@@ -33,10 +35,21 @@ class _MockDioAdapter implements HttpClientAdapter {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  sqfliteFfiInit();
 
-  setUp(() {
+  late Database testDb;
+
+  setUp(() async {
     SurahAudioTimingService.clearMemoryCache();
     SharedPreferences.setMockInitialValues({});
+    testDb = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
+    await DatabaseHelper.ensureAudioTimingsTable(testDb);
+    DatabaseHelper.setTestDatabase(testDb);
+  });
+
+  tearDown(() async {
+    DatabaseHelper.setTestDatabase(null);
+    await testDb.close();
   });
 
   group('SurahAudioTimingService Tests', () {
@@ -61,7 +74,7 @@ void main() {
       expect(SurahAudioTimingService.resolveRecitationId('Unknown_Reciter_999'), isNull);
     });
 
-    test('Fetches from API, parses timestamps, and stores to SharedPreferences cache', () async {
+    test('Fetches from API, parses timestamps, and stores to SQLite surah_audio_timings cache', () async {
       final mockData = {
         'audio_file': {
           'audio_url': 'https://download.quranicaudio.com/quran/minshawi/001.mp3',
@@ -99,15 +112,19 @@ void main() {
       expect(timings.verseTimings[0].ayah, 1);
       expect(timings.verseTimings[1].start, const Duration(seconds: 5));
 
-      // Verify persistent cache in SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final cachedStr = prefs.getString('surah_timings_9:1');
-      expect(cachedStr, isNotNull);
-      expect(cachedStr!.contains('001.mp3'), isTrue);
+      // Verify persistent cache in SQLite
+      final rows = await testDb.query(
+        'surah_audio_timings',
+        where: 'reciter_path = ? AND surah_number = ?',
+        whereArgs: ['Minshawy_Murattal_128kbps', 1],
+      );
+      expect(rows.isNotEmpty, isTrue);
+      expect(rows.first['audio_url'], 'https://download.quranicaudio.com/quran/minshawi/001.mp3');
+      expect((rows.first['verse_timings'] as String).contains('1:1'), isFalse); // JSON uses ayah/surah
+      expect((rows.first['verse_timings'] as String).contains('"ayah":1'), isTrue);
     });
 
-    test('Loads directly from SharedPreferences cache without network request', () async {
-      final prefs = await SharedPreferences.getInstance();
+    test('Loads directly from SQLite surah_audio_timings cache without network request', () async {
       const existingTimings = SurahTimings(
         surah: 112,
         audioUrl: 'https://download.quranicaudio.com/quran/minshawi/112.mp3',
@@ -118,7 +135,14 @@ void main() {
           VerseTimestamp(surah: 112, ayah: 4, start: Duration(seconds: 9), end: Duration(seconds: 13)),
         ],
       );
-      await prefs.setString('surah_timings_9:112', jsonEncode(existingTimings.toJson()));
+
+      await testDb.insert('surah_audio_timings', {
+        'reciter_path': 'Minshawy_Murattal_128kbps',
+        'surah_number': 112,
+        'audio_url': existingTimings.audioUrl,
+        'verse_timings': jsonEncode(existingTimings.verseTimings.map((e) => e.toJson()).toList()),
+        'created_at': DateTime.now().millisecondsSinceEpoch,
+      });
 
       // Dio that throws if fetch is attempted
       final dio = Dio();
@@ -135,6 +159,27 @@ void main() {
       expect(result!.surah, 112);
       expect(result.verseTimings.length, 4);
       expect(result.audioUrl, 'https://download.quranicaudio.com/quran/minshawi/112.mp3');
+    });
+
+    test('Seeds all 41 reciter paths across 114 surahs into SQLite and retrieves default URL', () async {
+      await SurahAudioTimingService.seedAllSurahs(testDb);
+
+      // Verify row count = 41 paths * 114 surahs = 4,674 records
+      final rows = await testDb.rawQuery('SELECT COUNT(*) as cnt FROM surah_audio_timings');
+      final count = rows.first['cnt'] as int;
+      expect(count, 4674);
+
+      // Non-timestamped reciter loads seeded URL directly from SQLite with 0 network calls
+      final dio = Dio();
+      dio.httpClientAdapter = _MockDioAdapter({}, statusCode: 500);
+      final service = SurahAudioTimingService(dio: dio);
+
+      final result = await service.getSurahTimings(
+        reciterPath: 'Hudhaify_128kbps',
+        surahNumber: 1,
+      );
+      expect(result, isNotNull);
+      expect(result!.audioUrl, contains('huthayfi/001.mp3'));
     });
   });
 }

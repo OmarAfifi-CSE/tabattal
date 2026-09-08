@@ -23,4 +23,23 @@ void main() {
 
     expect(missing, isEmpty);
   });
+
+  test('resolveDefaultAudioUrl produces non-empty URLs for all 114 surahs for all reciters', () {
+    final missingUrls = <String>[];
+
+    for (final categoryEntry in ReciterCatalog.reciterCategories.entries) {
+      for (final reciterEntry in categoryEntry.value.entries) {
+        final reciterPath = reciterEntry.value;
+
+        for (int s = 1; s <= 114; s++) {
+          final url = SurahAudioTimingService.resolveDefaultAudioUrl(reciterPath, s);
+          if (url == null || url.isEmpty || !url.startsWith('http')) {
+            missingUrls.add('$reciterPath surah $s');
+          }
+        }
+      }
+    }
+
+    expect(missingUrls, isEmpty);
+  });
 }

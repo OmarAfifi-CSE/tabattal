@@ -13,6 +13,7 @@ import '../../bloc/audio_event.dart';
 import '../../bloc/audio_state.dart';
 import '../shared/sleep_timer_selector_menu.dart';
 import '../shared/audio_volume_capsule.dart';
+import '../shared/surah_download_status_card.dart';
 import 'audio_settings_sheet_web.dart';
 
 class MediaControlBarWeb extends StatefulWidget {
@@ -605,10 +606,6 @@ class _WebMiniPlayer extends StatelessWidget {
               context,
               audioBloc.currentReciter,
             );
-            final categoryName = ReciterLocalization.localize(
-              context,
-              audioBloc.currentCategory,
-            );
 
             return Row(
               children: [
@@ -621,18 +618,33 @@ class _WebMiniPlayer extends StatelessWidget {
                         size: 18.sp,
                       ),
                       SizedBox(width: 6.w),
-                      Expanded(
-                        child: Text(
-                          '$reciterName • $categoryName',
-                          overflow: TextOverflow.ellipsis,
-                          textDirection:
-                              isEn ? TextDirection.ltr : TextDirection.rtl,
-                          style: AppTextStyles.menuItemText.copyWith(
-                            color: AppColors.inkBrown,
-                            fontSize: 13.5.sp,
-                            fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment:
+                              isEn ? Alignment.centerLeft : Alignment.centerRight,
+                          child: Text(
+                            reciterName,
+                            maxLines: 1,
+                            textDirection:
+                                isEn ? TextDirection.ltr : TextDirection.rtl,
+                            style: AppTextStyles.menuItemText.copyWith(
+                              color: AppColors.inkBrown,
+                              fontSize: 13.5.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
+                      ),
+                      SizedBox(width: 5.w),
+                      ReciterCategoryBadge(
+                        category: audioBloc.currentCategory,
+                      ),
+                      SizedBox(width: 5.w),
+                      SurahAudioSourceBadge(
+                        surahNumber: audioBloc.currentPlayingSurah ?? 1,
+                        category: audioBloc.currentCategory,
+                        reciterKey: audioBloc.currentReciter,
                       ),
                     ],
                   ),
@@ -699,19 +711,36 @@ class _WebReciterButton extends StatelessWidget {
                     context,
                     audioBloc.currentReciter,
                   );
-                  return Text(
-                    reciterName,
-                    textAlign: isEn ? TextAlign.left : TextAlign.right,
-                    style: AppTextStyles.menuItemText.copyWith(
-                      color: AppColors.inkBrown,
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w600,
+                  return FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment:
+                        isEn ? Alignment.centerLeft : Alignment.centerRight,
+                    child: Text(
+                      reciterName,
+                      maxLines: 1,
+                      textAlign: isEn ? TextAlign.left : TextAlign.right,
+                      style: AppTextStyles.menuItemText.copyWith(
+                        color: AppColors.inkBrown,
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textDirection:
+                          isEn ? TextDirection.ltr : TextDirection.rtl,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                    textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
                   );
                 },
               ),
+            ),
+            SizedBox(width: 6.w),
+            BlocBuilder<AudioBloc, AudioState>(
+              builder: (context, state) {
+                final audioBloc = context.read<AudioBloc>();
+                return SurahAudioSourceBadge(
+                  surahNumber: audioBloc.currentPlayingSurah ?? 1,
+                  category: audioBloc.currentCategory,
+                  reciterKey: audioBloc.currentReciter,
+                );
+              },
             ),
           ],
         ),

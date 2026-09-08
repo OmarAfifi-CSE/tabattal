@@ -42,6 +42,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   bool _isPlayingOnce = false;
   bool _isSeekingRepeat = false;
   bool _isSingleVersePlayback = false;
+  String? _currentAudioPath;
 
   late String _currentCategory;
   late String _currentReciter;
@@ -61,6 +62,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   String get currentCategory => _currentCategory;
   int get currentRepeatCount => _currentRepeatCount;
   bool get playOnce => _playOnce;
+  int? get currentPlayingSurah => _currentPlayingSurah;
+  int? get currentPlayingAyah => _currentPlayingAyah;
 
   AudioBloc(
     this._audioHandler,
@@ -92,6 +95,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     on<CancelSleepTimer>(_onCancelSleepTimer);
     on<AudioErrorEvent>((event, emit) => emit(AudioError(event.message)));
     on<AudioPlatformError>(_onPlatformError);
+    on<SurahDeletedEvent>(_onSurahDeleted);
+    on<SurahDownloadedEvent>(_onSurahDownloaded);
 
     _initStreams();
   }
@@ -226,11 +231,24 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     _playbackEventSubscription = _audioPlayer.playbackEventStream.listen(
       (event) {},
       onError: (Object e, StackTrace stackTrace) async {
+        final errStr = e.toString().toLowerCase();
+        final isMissingFile = errStr.contains('filenotfound') ||
+            errStr.contains('enoent') ||
+            errStr.contains('no such file');
+        if (isMissingFile && _currentPlayingSurah != null) {
+          final s = _currentPlayingSurah!;
+          final a = _currentPlayingAyah ?? 1;
+          _currentAudioPath = null;
+          add(PlayVerse('', VerseRef(s, a).verseId));
+          return;
+        }
+
         _playlistGeneration++;
         _activePlaylistGeneration = 0;
         _currentSurahTimings = null;
         _currentPlayingSurah = null;
         _currentPlayingAyah = null;
+        _currentAudioPath = null;
         _playedCount = 0;
         _isSingleVersePlayback = false;
 
@@ -262,24 +280,35 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
     // Case 1: Same surah already active — sub-millisecond instant seek
     if (_currentPlayingSurah == verse.surah && _activePlaylistGeneration > 0) {
-      if (_currentSurahTimings != null && _currentSurahTimings!.verseTimings.isNotEmpty) {
-        final targetVerse =
-            _currentSurahTimings!.getVerse(verse.ayah) ?? _currentSurahTimings!.verseTimings.first;
-        _currentPlayingAyah = targetVerse.ayah;
-        _playedCount = 0;
+      final bool isLocalFileGone = !kIsWeb &&
+          _currentAudioPath != null &&
+          !_currentAudioPath!.startsWith('http') &&
+          !File(_currentAudioPath!).existsSync();
 
-        await _audioPlayer.seek(targetVerse.start);
-      } else {
-        _currentPlayingAyah = verse.ayah;
-        _playedCount = 0;
-      }
+      if (!isLocalFileGone) {
+        try {
+          if (_currentSurahTimings != null && _currentSurahTimings!.verseTimings.isNotEmpty) {
+            final targetVerse =
+                _currentSurahTimings!.getVerse(verse.ayah) ?? _currentSurahTimings!.verseTimings.first;
+            _currentPlayingAyah = targetVerse.ayah;
+            _playedCount = 0;
 
-      if (!_audioPlayer.playing) {
-        unawaited(_audioPlayer.play());
+            await _audioPlayer.seek(targetVerse.start);
+          } else {
+            _currentPlayingAyah = verse.ayah;
+            _playedCount = 0;
+          }
+
+          if (!_audioPlayer.playing) {
+            unawaited(_audioPlayer.play());
+          }
+          emit(AudioPlaying(verse.verseId));
+          unawaited(_updateMediaItem(verse));
+          return;
+        } catch (_) {
+          // File might have been deleted mid-playback or seek failed; fall through to Case 2 reload!
+        }
       }
-      emit(AudioPlaying(verse.verseId));
-      unawaited(_updateMediaItem(verse));
-      return;
     }
 
     // Case 2: New Surah or fresh playback (Full Surah Stream or Offline Files)
@@ -287,6 +316,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     _currentSurahTimings = null;
     _currentPlayingSurah = null;
     _currentPlayingAyah = null;
+    _currentAudioPath = null;
     _playedCount = 0;
     emit(AudioLoading());
 
@@ -397,6 +427,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       _currentSurahTimings = timings;
       _currentPlayingSurah = verse.surah;
       _currentPlayingAyah = targetAyah;
+      _currentAudioPath = audioPath;
       _playedCount = 0;
       _activePlaylistGeneration = myGen;
 
@@ -450,6 +481,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     _currentSurahTimings = null;
     _currentPlayingSurah = null;
     _currentPlayingAyah = null;
+    _currentAudioPath = null;
     _playedCount = 0;
     _isSingleVersePlayback = false;
     try {
@@ -472,9 +504,14 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           _playedCount = 0;
           emit(AudioPlaying(nextVerse.verseId));
           unawaited(_updateMediaItem(VerseRef(_currentPlayingSurah!, nextAyah)));
-          await _audioPlayer.seek(nextVerse.start);
-          if (!_audioPlayer.playing) unawaited(_audioPlayer.play());
-          return;
+          try {
+            await _audioPlayer.seek(nextVerse.start);
+            if (!_audioPlayer.playing) unawaited(_audioPlayer.play());
+            return;
+          } catch (_) {
+            add(PlayVerse('', nextVerse.verseId));
+            return;
+          }
         }
       }
     } else {
@@ -483,8 +520,13 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       final dur = _audioPlayer.duration ?? Duration.zero;
       final newPos = currentPos + const Duration(seconds: 15);
       if (newPos < dur) {
-        await _audioPlayer.seek(newPos);
-        return;
+        try {
+          await _audioPlayer.seek(newPos);
+          return;
+        } catch (_) {
+          add(PlayVerse('', VerseRef(_currentPlayingSurah!, _currentPlayingAyah ?? 1).verseId));
+          return;
+        }
       }
     }
 
@@ -508,26 +550,41 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           _playedCount = 0;
           emit(AudioPlaying(prevVerse.verseId));
           unawaited(_updateMediaItem(VerseRef(_currentPlayingSurah!, prevAyah)));
-          await _audioPlayer.seek(prevVerse.start);
-          if (!_audioPlayer.playing) unawaited(_audioPlayer.play());
-          return;
+          try {
+            await _audioPlayer.seek(prevVerse.start);
+            if (!_audioPlayer.playing) unawaited(_audioPlayer.play());
+            return;
+          } catch (_) {
+            add(PlayVerse('', prevVerse.verseId));
+            return;
+          }
         }
       } else {
         // At first ayah of the surah: rewind to the start of this first ayah
         final firstVerse = _currentSurahTimings!.getVerse(1);
         if (firstVerse != null) {
           emit(AudioPlaying(firstVerse.verseId));
-          await _audioPlayer.seek(firstVerse.start);
-          if (!_audioPlayer.playing) unawaited(_audioPlayer.play());
-          return;
+          try {
+            await _audioPlayer.seek(firstVerse.start);
+            if (!_audioPlayer.playing) unawaited(_audioPlayer.play());
+            return;
+          } catch (_) {
+            add(PlayVerse('', firstVerse.verseId));
+            return;
+          }
         }
       }
     } else {
       // Direct full surah stream without verse timestamps:
       final pos = _audioPlayer.position;
       if (pos.inSeconds > 5) {
-        await _audioPlayer.seek(Duration.zero);
-        return;
+        try {
+          await _audioPlayer.seek(Duration.zero);
+          return;
+        } catch (_) {
+          add(PlayVerse('', VerseRef(_currentPlayingSurah!, _currentPlayingAyah ?? 1).verseId));
+          return;
+        }
       }
       // If within first 5 seconds, fall through to previous surah below
     }
@@ -581,6 +638,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         _activePlaylistGeneration = 0;
         _currentPlayingSurah = null;
         _currentPlayingAyah = null;
+        _currentAudioPath = null;
         _currentSurahTimings = null;
         emit(AudioIdle());
       } else {
@@ -659,6 +717,17 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     if (_playlistGeneration != _activePlaylistGeneration) return;
     if (state is! AudioPlaying && state is! AudioLoading) return;
     final e = event.error;
+    final errStr = e.toString().toLowerCase();
+    final isMissingFile = errStr.contains('filenotfound') ||
+        errStr.contains('enoent') ||
+        errStr.contains('no such file');
+    if (isMissingFile && _currentPlayingSurah != null) {
+      final s = _currentPlayingSurah!;
+      final a = _currentPlayingAyah ?? 1;
+      _currentAudioPath = null;
+      add(PlayVerse('', VerseRef(s, a).verseId));
+      return;
+    }
     if (_isNetworkError(e)) {
       await _handleAudioError(e, emit, defaultErrorKey: "audioErrorNoInternet");
     } else {
@@ -756,11 +825,22 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
             ? VerseRef(_currentPlayingSurah!, _currentPlayingAyah!)
             : null;
 
+    final errStr = error.toString().toLowerCase();
+    final isMissingFile = errStr.contains('filenotfound') ||
+        errStr.contains('enoent') ||
+        errStr.contains('no such file');
+    if (isMissingFile && stoppedVerse != null) {
+      _currentAudioPath = null;
+      add(PlayVerse('', stoppedVerse.verseId));
+      return;
+    }
+
     _playlistGeneration++;
     _activePlaylistGeneration = 0;
     _currentSurahTimings = null;
     _currentPlayingSurah = null;
     _currentPlayingAyah = null;
+    _currentAudioPath = null;
     _playedCount = 0;
 
     final isNetwork = _isNetworkError(error);
@@ -805,6 +885,74 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       emit(const AudioError("audioErrorFileNotFound"));
     } else {
       emit(AudioError(defaultErrorKey));
+    }
+  }
+
+  Future<void> _onSurahDeleted(
+    SurahDeletedEvent event,
+    Emitter<AudioState> emit,
+  ) async {
+    if (_currentPlayingSurah == event.surahNumber &&
+        _currentCategory == event.category &&
+        _currentReciter == event.reciterKey) {
+      if (_currentAudioPath != null && !_currentAudioPath!.startsWith('http')) {
+        final currentPos = _audioPlayer.position;
+        final isPlaying = _audioPlayer.playing;
+        final targetAyah = _currentPlayingAyah ?? 1;
+
+        final reciterPath = AudioDownloadManager.getReciterPath(
+          _currentCategory,
+          _currentReciter,
+        );
+        try {
+          final timings = await _timingService.getSurahTimings(
+            reciterPath: reciterPath,
+            surahNumber: event.surahNumber,
+          );
+          if (timings != null && timings.audioUrl.isNotEmpty) {
+            _currentSurahTimings = timings;
+            _currentAudioPath = timings.audioUrl;
+            final source = _createAudioSource(timings.audioUrl);
+            await _audioPlayer.setAudioSource(source, initialPosition: currentPos);
+            if (isPlaying) {
+              unawaited(_audioPlayer.play());
+            }
+            emit(AudioPlaying(VerseRef(event.surahNumber, targetAyah).verseId));
+            return;
+          }
+        } catch (_) {}
+        _currentAudioPath = null;
+      }
+    }
+  }
+
+  Future<void> _onSurahDownloaded(
+    SurahDownloadedEvent event,
+    Emitter<AudioState> emit,
+  ) async {
+    if (_currentPlayingSurah == event.surahNumber &&
+        _currentCategory == event.category &&
+        _currentReciter == event.reciterKey) {
+      if (_currentAudioPath != null && _currentAudioPath!.startsWith('http')) {
+        final localPath = await _downloadManager.getLocalSurahPath(
+          event.category,
+          event.reciterKey,
+          event.surahNumber,
+        );
+        if (localPath != null && localPath.isNotEmpty) {
+          final currentPos = _audioPlayer.position;
+          final isPlaying = _audioPlayer.playing;
+          final targetAyah = _currentPlayingAyah ?? 1;
+
+          _currentAudioPath = localPath;
+          final source = _createAudioSource(localPath);
+          await _audioPlayer.setAudioSource(source, initialPosition: currentPos);
+          if (isPlaying) {
+            unawaited(_audioPlayer.play());
+          }
+          emit(AudioPlaying(VerseRef(event.surahNumber, targetAyah).verseId));
+        }
+      }
     }
   }
 

@@ -7,6 +7,22 @@ import '../constants/quran_metadata.dart';
 import '../constants/reciter_catalog.dart';
 import '../../features/quran_audio/data/services/surah_audio_timing_service.dart';
 
+class ActiveSurahDownloadTask {
+  final String key;
+  final CancelToken cancelToken;
+  double progress;
+  final StreamController<double> _progressController =
+      StreamController<double>.broadcast();
+
+  Stream<double> get progressStream => _progressController.stream;
+
+  ActiveSurahDownloadTask({
+    required this.key,
+    required this.cancelToken,
+    this.progress = 0.0,
+  });
+}
+
 class AudioDownloadManager {
   final Dio _dio;
   final SurahAudioTimingService _timingService;
@@ -14,6 +30,121 @@ class AudioDownloadManager {
 
   // Cached total audio sizes per surah (bytes) to compute accurate progress
   final Map<String, int> _surahTotalSizes = {};
+
+  // Centralized active ongoing surah download tasks across the app lifecycle
+  static final Map<String, ActiveSurahDownloadTask> _activeSurahDownloads = {};
+
+  static bool isSurahDownloadingStatic(
+    String category,
+    String reciterKey,
+    int surah,
+  ) =>
+      _activeSurahDownloads.containsKey('$category|$reciterKey|$surah');
+
+  bool isSurahDownloading(String category, String reciterKey, int surah) =>
+      _activeSurahDownloads.containsKey(_surahKey(category, reciterKey, surah));
+
+  double getActiveSurahDownloadProgress(
+    String category,
+    String reciterKey,
+    int surah,
+  ) =>
+      _activeSurahDownloads[_surahKey(category, reciterKey, surah)]?.progress ??
+      0.0;
+
+  Stream<double>? getSurahDownloadProgressStream(
+    String category,
+    String reciterKey,
+    int surah,
+  ) =>
+      _activeSurahDownloads[_surahKey(category, reciterKey, surah)]
+          ?.progressStream;
+
+  void cancelSurahDownload(String category, String reciterKey, int surah) {
+    final key = _surahKey(category, reciterKey, surah);
+    final task = _activeSurahDownloads[key];
+    if (task != null) {
+      if (!task.cancelToken.isCancelled) {
+        task.cancelToken.cancel();
+      }
+      _activeSurahDownloads.remove(key);
+    }
+  }
+
+  static CancelToken? _activeBatchCancelToken;
+  static String? _activeBatchCategory;
+  static String? _activeBatchReciter;
+  static bool _isBatchRunning = false;
+
+  static bool isBatchDownloadingStatic(String category, String reciterKey) =>
+      _isBatchRunning &&
+      _activeBatchCategory == category &&
+      _activeBatchReciter == reciterKey;
+
+  bool isBatchDownloading(String category, String reciterKey) =>
+      _isBatchRunning &&
+      _activeBatchCategory == category &&
+      _activeBatchReciter == reciterKey;
+
+  void cancelBatchDownload() {
+    _activeBatchCancelToken?.cancel('Batch download cancelled');
+    _activeBatchCancelToken = null;
+    _isBatchRunning = false;
+    _activeBatchCategory = null;
+    _activeBatchReciter = null;
+  }
+
+  Future<void> startBatchDownload(
+    String category,
+    String reciterKey, {
+    void Function(int surah, double progress)? onSurahProgress,
+    void Function(bool success, int failedCount)? onCompleted,
+  }) async {
+    if (_isBatchRunning) return;
+
+    _isBatchRunning = true;
+    _activeBatchCategory = category;
+    _activeBatchReciter = reciterKey;
+    final batchToken = CancelToken();
+    _activeBatchCancelToken = batchToken;
+
+    int failedCount = 0;
+    try {
+      for (int surah = 1; surah <= 114; surah++) {
+        if (batchToken.isCancelled || !_isBatchRunning) break;
+
+        final numAyahs = QuranMetadata.surahLengths[surah - 1];
+        final isDownloaded = await isSurahDownloaded(
+          category,
+          reciterKey,
+          surah,
+          numAyahs,
+        );
+        if (isDownloaded) continue;
+
+        try {
+          await downloadSurah(
+            category,
+            reciterKey,
+            surah,
+            numAyahs,
+            cancelToken: batchToken,
+            onProgress: (p) => onSurahProgress?.call(surah, p),
+          );
+        } catch (e) {
+          if (batchToken.isCancelled) break;
+          failedCount++;
+        }
+      }
+    } finally {
+      final wasCancelled = batchToken.isCancelled;
+      _isBatchRunning = false;
+      _activeBatchCategory = null;
+      _activeBatchReciter = null;
+      _activeBatchCancelToken = null;
+      onCompleted?.call(!wasCancelled, failedCount);
+    }
+  }
 
   String _surahKey(String category, String reciterKey, int surah) =>
       '$category|$reciterKey|$surah';
@@ -385,161 +516,195 @@ class AudioDownloadManager {
       return;
     }
 
-    if (cancelToken?.isCancelled == true) {
+    final cacheKey = _surahKey(category, reciterKey, surah);
+
+    // If already downloading in background, attach listener and wait
+    if (_activeSurahDownloads.containsKey(cacheKey)) {
+      final existingTask = _activeSurahDownloads[cacheKey]!;
+      if (onProgress != null) {
+        onProgress(existingTask.progress);
+        final sub = existingTask.progressStream.listen(onProgress);
+        try {
+          await existingTask.progressStream.last;
+        } catch (_) {}
+        await sub.cancel();
+      }
+      return;
+    }
+
+    final effectiveCancelToken = cancelToken ?? CancelToken();
+    if (effectiveCancelToken.isCancelled) {
       throw DioException(
         requestOptions: RequestOptions(path: ''),
         type: DioExceptionType.cancel,
       );
     }
 
-    final reciterPath = getReciterPath(category, reciterKey);
-    final timings = await _timingService.getSurahTimings(
-      reciterPath: reciterPath,
-      surahNumber: surah,
+    final task = ActiveSurahDownloadTask(
+      key: cacheKey,
+      cancelToken: effectiveCancelToken,
     );
+    _activeSurahDownloads[cacheKey] = task;
 
-    if (timings == null || timings.audioUrl.isEmpty) {
-      throw Exception(
-        'Audio stream URL not found for Surah $surah ($reciterPath)',
-      );
+    void notifyProgress(double p) {
+      task.progress = p;
+      if (!task._progressController.isClosed) {
+        task._progressController.add(p);
+      }
+      onProgress?.call(p);
     }
 
-    final url = timings.audioUrl;
-    final tempFile = File(tempPath);
-    int existingBytes = 0;
-    if (await tempFile.exists()) {
-      existingBytes = await tempFile.length();
-    }
-
-    final cacheKey = _surahKey(category, reciterKey, surah);
-
-    Response<ResponseBody> response;
     try {
-      response = await _dio.get<ResponseBody>(
-        url,
-        options: Options(
-          responseType: ResponseType.stream,
-          headers:
-              existingBytes > 0 ? {'Range': 'bytes=$existingBytes-'} : null,
-          validateStatus: (status) =>
-              status != null &&
-              ((status >= 200 && status < 300) || status == 416),
-        ),
-        cancelToken: cancelToken,
+      final reciterPath = getReciterPath(category, reciterKey);
+      final timings = await _timingService.getSurahTimings(
+        reciterPath: reciterPath,
+        surahNumber: surah,
       );
-    } catch (e) {
-      if (e is DioException && CancelToken.isCancel(e)) {
-        rethrow;
-      }
-      throw Exception('Failed to download audio for Surah $surah: $e');
-    }
 
-    // If server responded with 416 (Range Not Satisfiable), existing bytes are invalid/corrupt.
-    if (response.statusCode == 416) {
-      if (await tempFile.exists()) {
-        try {
-          await tempFile.delete();
-        } catch (_) {}
+      if (timings == null || timings.audioUrl.isEmpty) {
+        throw Exception(
+          'Audio stream URL not found for Surah $surah ($reciterPath)',
+        );
       }
-      existingBytes = 0;
+
+      final url = timings.audioUrl;
+      final tempFile = File(tempPath);
+      int existingBytes = 0;
+      if (await tempFile.exists()) {
+        existingBytes = await tempFile.length();
+      }
+
+      Response<ResponseBody> response;
       try {
         response = await _dio.get<ResponseBody>(
           url,
           options: Options(
             responseType: ResponseType.stream,
+            headers:
+                existingBytes > 0 ? {'Range': 'bytes=$existingBytes-'} : null,
             validateStatus: (status) =>
-                status != null && (status >= 200 && status < 300),
+                status != null &&
+                ((status >= 200 && status < 300) || status == 416),
           ),
-          cancelToken: cancelToken,
+          cancelToken: effectiveCancelToken,
         );
       } catch (e) {
         if (e is DioException && CancelToken.isCancel(e)) {
           rethrow;
         }
-        throw Exception('Failed to restart download for Surah $surah: $e');
+        throw Exception('Failed to download audio for Surah $surah: $e');
       }
-    }
 
-    final isPartial = response.statusCode == 206;
-    int totalBytes = 0;
-
-    if (isPartial) {
-      final contentRange = response.headers.value('content-range');
-      if (contentRange != null) {
-        final match = RegExp(r'/(\d+)').firstMatch(contentRange);
-        if (match != null) {
-          totalBytes = int.tryParse(match.group(1)!) ?? 0;
+      // If server responded with 416 (Range Not Satisfiable), existing bytes are invalid/corrupt.
+      if (response.statusCode == 416) {
+        if (await tempFile.exists()) {
+          try {
+            await tempFile.delete();
+          } catch (_) {}
+        }
+        existingBytes = 0;
+        try {
+          response = await _dio.get<ResponseBody>(
+            url,
+            options: Options(
+              responseType: ResponseType.stream,
+              validateStatus: (status) =>
+                  status != null && (status >= 200 && status < 300),
+            ),
+            cancelToken: effectiveCancelToken,
+          );
+        } catch (e) {
+          if (e is DioException && CancelToken.isCancel(e)) {
+            rethrow;
+          }
+          throw Exception('Failed to restart download for Surah $surah: $e');
         }
       }
-      if (totalBytes <= 0) {
+
+      final isPartial = response.statusCode == 206;
+      int totalBytes = 0;
+
+      if (isPartial) {
+        final contentRange = response.headers.value('content-range');
+        if (contentRange != null) {
+          final match = RegExp(r'/(\d+)').firstMatch(contentRange);
+          if (match != null) {
+            totalBytes = int.tryParse(match.group(1)!) ?? 0;
+          }
+        }
+        if (totalBytes <= 0) {
+          final cl = response.data?.contentLength ?? -1;
+          if (cl > 0) {
+            totalBytes = existingBytes + cl;
+          } else if (_surahTotalSizes.containsKey(cacheKey)) {
+            totalBytes = _surahTotalSizes[cacheKey]!;
+          }
+        }
+      } else {
+        // Full content from byte 0
+        existingBytes = 0;
         final cl = response.data?.contentLength ?? -1;
         if (cl > 0) {
-          totalBytes = existingBytes + cl;
-        } else if (_surahTotalSizes.containsKey(cacheKey)) {
-          totalBytes = _surahTotalSizes[cacheKey]!;
-        }
-      }
-    } else {
-      // Full content from byte 0
-      existingBytes = 0;
-      final cl = response.data?.contentLength ?? -1;
-      if (cl > 0) {
-        totalBytes = cl;
-      }
-    }
-
-    if (totalBytes > 0) {
-      _surahTotalSizes[cacheKey] = totalBytes;
-    }
-
-    IOSink? sink;
-    try {
-      sink = tempFile.openWrite(
-        mode: isPartial && existingBytes > 0 ? FileMode.append : FileMode.write,
-      );
-
-      int currentBytes = isPartial ? existingBytes : 0;
-      if (totalBytes > 0 && onProgress != null) {
-        onProgress((currentBytes / totalBytes).clamp(0.0, 1.0));
-      }
-
-      final stream = response.data!.stream;
-      await for (final chunk in stream) {
-        if (cancelToken?.isCancelled == true) {
-          throw DioException(
-            requestOptions: RequestOptions(path: url),
-            type: DioExceptionType.cancel,
-          );
-        }
-        sink.add(chunk);
-        currentBytes += chunk.length;
-        if (totalBytes > 0 && onProgress != null) {
-          onProgress((currentBytes / totalBytes).clamp(0.0, 1.0));
+          totalBytes = cl;
         }
       }
 
-      await sink.flush();
-      await sink.close();
-      sink = null;
+      if (totalBytes > 0) {
+        _surahTotalSizes[cacheKey] = totalBytes;
+      }
 
-      if (await tempFile.exists()) {
-        await tempFile.rename(savePath);
+      IOSink? sink;
+      try {
+        sink = tempFile.openWrite(
+          mode: isPartial && existingBytes > 0 ? FileMode.append : FileMode.write,
+        );
+
+        int currentBytes = isPartial ? existingBytes : 0;
+        if (totalBytes > 0) {
+          notifyProgress((currentBytes / totalBytes).clamp(0.0, 1.0));
+        }
+
+        final stream = response.data!.stream;
+        await for (final chunk in stream) {
+          if (effectiveCancelToken.isCancelled) {
+            throw DioException(
+              requestOptions: RequestOptions(path: url),
+              type: DioExceptionType.cancel,
+            );
+          }
+          sink.add(chunk);
+          currentBytes += chunk.length;
+          if (totalBytes > 0) {
+            notifyProgress((currentBytes / totalBytes).clamp(0.0, 1.0));
+          }
+        }
+
+        await sink.flush();
+        await sink.close();
+        sink = null;
+
+        if (await tempFile.exists()) {
+          await tempFile.rename(savePath);
+        }
+        notifyProgress(1.0);
+      } catch (e) {
+        if (sink != null) {
+          try {
+            await sink.flush();
+            await sink.close();
+          } catch (_) {}
+        }
+        // CRITICAL: Preserve tempFile so user can resume download anytime!
+        if (e is DioException && CancelToken.isCancel(e)) {
+          rethrow;
+        }
+        throw Exception('Failed to download audio for Surah $surah: $e');
       }
-      if (onProgress != null) {
-        onProgress(1.0);
+    } finally {
+      _activeSurahDownloads.remove(cacheKey);
+      if (!task._progressController.isClosed) {
+        task._progressController.close();
       }
-    } catch (e) {
-      if (sink != null) {
-        try {
-          await sink.flush();
-          await sink.close();
-        } catch (_) {}
-      }
-      // CRITICAL: Preserve tempFile so user can resume download anytime!
-      if (e is DioException && CancelToken.isCancel(e)) {
-        rethrow;
-      }
-      throw Exception('Failed to download audio for Surah $surah: $e');
     }
   }
 

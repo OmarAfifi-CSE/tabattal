@@ -1,6 +1,7 @@
-import 'package:dio/dio.dart';
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../l10n/app_localizations.dart';
@@ -9,6 +10,8 @@ import '../../../../../core/network/audio_download_manager.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/utils/app_snack_bar.dart';
 import '../../../../../core/utils/reciter_localization.dart';
+import '../../bloc/audio_bloc.dart';
+import '../../bloc/audio_event.dart';
 import '../shared/audio_selector_button.dart';
 
 class QuranAudioManagerViewTablet extends StatefulWidget {
@@ -29,8 +32,7 @@ class _QuranAudioManagerViewTabletState
   // Track download status: 1.0=done, 0.0-0.99=partial/downloading, -1.0=not downloaded
   final Map<int, ValueNotifier<double>> _surahProgress = {};
   final Set<int> _activeDownloads = {};
-  final Map<int, CancelToken> _activeCancelTokens = {};
-  CancelToken? _batchCancelToken;
+  final Map<int, StreamSubscription<double>> _streamSubscriptions = {};
   bool _isLoadingStatus = true;
   bool _isDownloadingAll = false;
 
@@ -45,10 +47,10 @@ class _QuranAudioManagerViewTabletState
 
   @override
   void dispose() {
-    _batchCancelToken?.cancel('View disposed');
-    for (final token in _activeCancelTokens.values) {
-      token.cancel('View disposed');
+    for (final sub in _streamSubscriptions.values) {
+      sub.cancel();
     }
+    _streamSubscriptions.clear();
     for (final n in _surahProgress.values) {
       n.dispose();
     }
@@ -59,6 +61,12 @@ class _QuranAudioManagerViewTabletState
     if (!mounted) return;
     setState(() => _isLoadingStatus = true);
 
+    for (final sub in _streamSubscriptions.values) {
+      sub.cancel();
+    }
+    _streamSubscriptions.clear();
+    _activeDownloads.clear();
+
     for (int i = 1; i <= 114; i++) {
       _surahProgress[i] ??= ValueNotifier(-1.0);
       _surahProgress[i]!.value = -1.0;
@@ -68,24 +76,55 @@ class _QuranAudioManagerViewTabletState
     for (int i = 1; i <= 114; i++) {
       final surah = i;
       final numAyahs = QuranMetadata.surahLengths[surah - 1];
-      futures.add(
-        _downloadManager
-            .getSurahDownloadProgress(
-              _selectedCategory,
-              _selectedReciter,
-              surah,
-              numAyahs,
-            )
-            .then((progress) {
-          if (progress > 0 && mounted) {
-            _surahProgress[surah]!.value = progress;
-          }
-        }),
-      );
+
+      if (_downloadManager.isSurahDownloading(
+        _selectedCategory,
+        _selectedReciter,
+        surah,
+      )) {
+        _activeDownloads.add(surah);
+        _surahProgress[surah]!.value = 0.0;
+        final stream = _downloadManager.getSurahDownloadProgressStream(
+          _selectedCategory,
+          _selectedReciter,
+          surah,
+        );
+        if (stream != null) {
+          _streamSubscriptions[surah] = stream.listen((p) {
+            if (mounted) {
+              _surahProgress[surah]?.value = p;
+              if (p >= 1.0) {
+                setState(() => _activeDownloads.remove(surah));
+              }
+            }
+          });
+        }
+      } else {
+        futures.add(
+          _downloadManager
+              .getSurahDownloadProgress(
+                _selectedCategory,
+                _selectedReciter,
+                surah,
+                numAyahs,
+              )
+              .then((progress) {
+                if (progress > 0 && mounted) {
+                  _surahProgress[surah]!.value = progress;
+                }
+              }),
+        );
+      }
     }
     await Future.wait(futures);
 
-    if (mounted) setState(() => _isLoadingStatus = false);
+    if (mounted) {
+      _isDownloadingAll = _downloadManager.isBatchDownloading(
+        _selectedCategory,
+        _selectedReciter,
+      );
+      setState(() => _isLoadingStatus = false);
+    }
   }
 
   void _onReciterChanged(String newReciter) {
@@ -94,14 +133,8 @@ class _QuranAudioManagerViewTabletState
     _initializeProgressTrackers();
   }
 
-  Future<bool> _downloadSurah(
-    int surah, {
-    bool isBatch = false,
-    CancelToken? cancelToken,
-  }) async {
+  Future<bool> _downloadSurah(int surah) async {
     if (_activeDownloads.contains(surah)) return true;
-    final token = cancelToken ?? CancelToken();
-    _activeCancelTokens[surah] = token;
 
     if (mounted) {
       setState(() => _activeDownloads.add(surah));
@@ -116,13 +149,19 @@ class _QuranAudioManagerViewTabletState
 
     final numAyahs = QuranMetadata.surahLengths[surah - 1];
     bool isSuccess = false;
+    final rootMessenger = ScaffoldMessenger.maybeOf(context);
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final surahName = isEn
+        ? QuranMetadata.getSurahNameEnglish(surah)
+        : QuranMetadata.getSurahName(surah);
+    final l10n = AppLocalizations.of(context)!;
+
     try {
       await _downloadManager.downloadSurah(
         _selectedCategory,
         _selectedReciter,
         surah,
         numAyahs,
-        cancelToken: token,
         onProgress: (p) {
           if (mounted) {
             notifier.value = p;
@@ -130,6 +169,43 @@ class _QuranAudioManagerViewTabletState
         },
       );
       isSuccess = true;
+      if (!mounted && rootMessenger != null && rootMessenger.mounted) {
+        rootMessenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: AppColors.accentGold,
+                  size: 20.r,
+                ),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: Text(
+                    l10n.audioDownloadSuccess(surahName),
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.cardCream,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              side: BorderSide(
+                color: AppColors.accentGold.withValues(alpha: 0.5),
+                width: 1.2,
+              ),
+            ),
+            margin: EdgeInsets.all(16.r),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     } catch (e) {
       isSuccess = false;
       if (mounted) {
@@ -142,7 +218,6 @@ class _QuranAudioManagerViewTabletState
         notifier.value = actualProgress > 0 ? actualProgress : -1.0;
       }
     } finally {
-      _activeCancelTokens.remove(surah);
       if (mounted) {
         setState(() => _activeDownloads.remove(surah));
       } else {
@@ -153,67 +228,106 @@ class _QuranAudioManagerViewTabletState
   }
 
   void _cancelSurahDownload(int surah) {
-    if (_activeCancelTokens.containsKey(surah)) {
-      _activeCancelTokens[surah]?.cancel('User cancelled download');
-      _activeCancelTokens.remove(surah);
-      _activeDownloads.remove(surah);
-      if (mounted) setState(() {});
-    }
+    _downloadManager.cancelSurahDownload(
+      _selectedCategory,
+      _selectedReciter,
+      surah,
+    );
+    _streamSubscriptions[surah]?.cancel();
+    _streamSubscriptions.remove(surah);
+    _activeDownloads.remove(surah);
+    if (mounted) setState(() {});
   }
 
   Future<void> _downloadAll() async {
     final l10n = AppLocalizations.of(context)!;
-    if (_isDownloadingAll) {
-      _batchCancelToken?.cancel('Batch download cancelled');
-      _batchCancelToken = null;
-      setState(() => _isDownloadingAll = false);
-      AppSnackBar.show(
-        context,
-        message: l10n.audioDownloadPaused,
-        icon: Icons.pause_circle_outline_rounded,
-      );
+    if (_downloadManager.isBatchDownloading(_selectedCategory, _selectedReciter)) {
+      _downloadManager.cancelBatchDownload();
+      if (mounted) {
+        setState(() => _isDownloadingAll = false);
+        AppSnackBar.show(
+          context,
+          message: l10n.audioDownloadPaused,
+          icon: Icons.pause_circle_outline_rounded,
+        );
+      }
       return;
     }
 
-    setState(() => _isDownloadingAll = true);
-    _batchCancelToken = CancelToken();
-    AppSnackBar.show(
-      context,
-      message: l10n.audioDownloadStartingAll,
-      icon: Icons.downloading_rounded,
-    );
-
-    int failedCount = 0;
-    for (int surah = 1; surah <= 114; surah++) {
-      if (!mounted || !_isDownloadingAll) break;
-      if (_surahProgress[surah]?.value == 1.0) continue;
-
-      final success = await _downloadSurah(
-        surah,
-        isBatch: true,
-        cancelToken: _batchCancelToken,
+    if (mounted) {
+      setState(() => _isDownloadingAll = true);
+      AppSnackBar.show(
+        context,
+        message: l10n.audioDownloadStartingAll,
+        icon: Icons.downloading_rounded,
       );
-      if (!success) {
-        if (_batchCancelToken?.isCancelled ?? false) break;
-        failedCount++;
-      }
     }
 
-    if (mounted) {
-      setState(() => _isDownloadingAll = false);
-      if (!(_batchCancelToken?.isCancelled ?? false)) {
-        if (failedCount == 0) {
-          AppSnackBar.showSuccess(
-            context,
-            l10n.audioDownloadAllSuccess,
-          );
-        } else {
-          AppSnackBar.showError(
-            context,
-            l10n.audioDownloadFailedCount(failedCount),
-          );
+    final rootMessenger = ScaffoldMessenger.maybeOf(context);
+
+    await _downloadManager.startBatchDownload(
+      _selectedCategory,
+      _selectedReciter,
+      onSurahProgress: (surah, p) {
+        if (mounted) {
+          _surahProgress[surah]?.value = p;
+          if (p >= 1.0) {
+            _activeDownloads.remove(surah);
+          } else {
+            _activeDownloads.add(surah);
+          }
         }
-      }
+      },
+      onCompleted: (success, failedCount) {
+        if (mounted) {
+          setState(() => _isDownloadingAll = false);
+          if (success) {
+            if (failedCount == 0) {
+              AppSnackBar.showSuccess(
+                context,
+                l10n.audioDownloadAllSuccess,
+              );
+            } else {
+              AppSnackBar.showError(
+                context,
+                l10n.audioDownloadFailedCount(failedCount),
+              );
+            }
+          }
+        } else if (success && rootMessenger != null && rootMessenger.mounted) {
+          if (failedCount == 0) {
+            rootMessenger.showSnackBar(
+              SnackBar(
+                content: Text(l10n.audioDownloadAllSuccess),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        }
+      },
+    );
+  }
+
+  Future<void> _deleteSurah(int surah) async {
+    context.read<AudioBloc>().add(
+      SurahDeletedEvent(
+        surahNumber: surah,
+        category: _selectedCategory,
+        reciterKey: _selectedReciter,
+      ),
+    );
+
+    final numAyahs = QuranMetadata.surahLengths[surah - 1];
+    await _downloadManager.deleteSurah(
+      _selectedCategory,
+      _selectedReciter,
+      surah,
+      numAyahs,
+    );
+
+    if (mounted) {
+      _surahProgress[surah]?.value = -1.0;
+      HapticFeedback.lightImpact();
     }
   }
 
@@ -487,6 +601,7 @@ class _QuranAudioManagerViewTabletState
                       isActivelyDownloading: _activeDownloads.contains(surah),
                       onDownload: () => _downloadSurah(surah),
                       onCancel: () => _cancelSurahDownload(surah),
+                      onDelete: () => _deleteSurah(surah),
                     );
                   },
                 ),
@@ -509,6 +624,7 @@ class _QuranAudioManagerViewTabletState
                       isActivelyDownloading: _activeDownloads.contains(surah),
                       onDownload: () => _downloadSurah(surah),
                       onCancel: () => _cancelSurahDownload(surah),
+                      onDelete: () => _deleteSurah(surah),
                     );
                   },
                 ),
@@ -526,6 +642,7 @@ class _AudioManagerSurahItemTablet extends StatelessWidget {
   final bool isActivelyDownloading;
   final VoidCallback onDownload;
   final VoidCallback onCancel;
+  final VoidCallback onDelete;
 
   const _AudioManagerSurahItemTablet({
     required this.surah,
@@ -533,6 +650,7 @@ class _AudioManagerSurahItemTablet extends StatelessWidget {
     required this.isActivelyDownloading,
     required this.onDownload,
     required this.onCancel,
+    required this.onDelete,
   });
 
   @override
@@ -572,14 +690,30 @@ class _AudioManagerSurahItemTablet extends StatelessWidget {
             Widget trailingWidget;
             if (isDownloaded) {
               trailingWidget = SizedBox(
-                width: 68.w,
+                width: 90.w,
                 height: 42.h,
-                child: Center(
-                  child: Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.green,
-                    size: 30.sp,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Icon(
+                      Icons.check_circle_rounded,
+                      color: Colors.green,
+                      size: 28.sp,
+                    ),
+                    SizedBox(width: 8.w),
+                    IconButton(
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        size: 24.sp,
+                        color: AppColors.textSecondary.withValues(alpha: 0.7),
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      visualDensity: VisualDensity.compact,
+                      splashRadius: 20.r,
+                      onPressed: onDelete,
+                    ),
+                  ],
                 ),
               );
             } else if (isActivelyDownloading) {

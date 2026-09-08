@@ -132,7 +132,9 @@ class _QuranAudioManagerViewWebState
       isSuccess = true;
     } catch (e) {
       isSuccess = false;
-      if (mounted) {
+      final isCancelled =
+          token.isCancelled || (e is DioException && CancelToken.isCancel(e));
+      if (mounted && !isCancelled) {
         final actualProgress = await _downloadManager.getSurahDownloadProgress(
           _selectedCategory,
           _selectedReciter,

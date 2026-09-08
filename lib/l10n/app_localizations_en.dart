@@ -1104,4 +1104,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get volumeMutedTooltip => 'App Volume: Muted • Click to unmute';
+
+  @override
+  String get audioSourceLive => 'Stream';
+
+  @override
+  String get audioSourceOffline => 'Offline';
+
+  @override
+  String get audioSourceLiveTooltip => 'Live stream via Internet';
+
+  @override
+  String get audioSourceOfflineTooltip => 'Downloaded locally (Offline)';
+
+  @override
+  String audioDownloadSuccess(String surahName) {
+    return 'Surah $surahName downloaded successfully';
+  }
+
+  @override
+  String get audioDownloadError =>
+      'Failed to download recitation. Please check your internet connection.';
+
+  @override
+  String audioDeleteSuccess(String surahName) {
+    return 'Recitation file for Surah $surahName deleted from local storage';
+  }
+
+  @override
+  String audioSurahDownloadedTitle(String surahName) {
+    return 'Surah $surahName downloaded locally';
+  }
+
+  @override
+  String get audioSurahDownloadedSubtitle =>
+      'Ready for immediate offline listening';
+
+  @override
+  String get audioDeleteFromDeviceTooltip => 'Delete from device';
+
+  @override
+  String get audioLiveStreamTitle =>
+      'Live Stream (Requires internet connection)';
+
+  @override
+  String audioLiveStreamSubtitle(String surahName) {
+    return 'You can download Surah $surahName for offline listening';
+  }
+
+  @override
+  String audioDownloadSurahButton(String surahName) {
+    return 'Download Surah $surahName for offline listening';
+  }
+
+  @override
+  String audioDownloadingProgress(String surahName, int percent) {
+    return 'Downloading Surah $surahName... $percent%';
+  }
+
+  @override
+  String get audioCancelDownloadTooltip => 'Cancel download';
 }

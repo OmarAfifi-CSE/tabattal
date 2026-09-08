@@ -12,6 +12,7 @@ import '../../bloc/audio_bloc.dart';
 import '../../bloc/audio_event.dart';
 import '../../bloc/audio_state.dart';
 import '../shared/sleep_timer_selector_menu.dart';
+import '../shared/surah_download_status_card.dart';
 import 'audio_settings_sheet_mobile.dart';
 
 class MediaControlBarMobile extends StatefulWidget {
@@ -182,10 +183,6 @@ class _MobileMiniPlayer extends StatelessWidget {
               context,
               audioBloc.currentReciter,
             );
-            final categoryName = ReciterLocalization.localize(
-              context,
-              audioBloc.currentCategory,
-            );
 
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -201,18 +198,32 @@ class _MobileMiniPlayer extends StatelessWidget {
                       ),
                       SizedBox(width: 6.w),
                       Flexible(
-                        child: Text(
-                          '$reciterName ($categoryName)',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textDirection:
-                              isEn ? TextDirection.ltr : TextDirection.rtl,
-                          style: AppTextStyles.menuItemText.copyWith(
-                            color: AppColors.inkBrown,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment:
+                              isEn ? Alignment.centerLeft : Alignment.centerRight,
+                          child: Text(
+                            reciterName,
+                            maxLines: 1,
+                            textDirection:
+                                isEn ? TextDirection.ltr : TextDirection.rtl,
+                            style: AppTextStyles.menuItemText.copyWith(
+                              color: AppColors.inkBrown,
+                              fontSize: 13.5.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
+                      ),
+                      SizedBox(width: 5.w),
+                      ReciterCategoryBadge(
+                        category: audioBloc.currentCategory,
+                      ),
+                      SizedBox(width: 5.w),
+                      SurahAudioSourceBadge(
+                        surahNumber: audioBloc.currentPlayingSurah ?? 1,
+                        category: audioBloc.currentCategory,
+                        reciterKey: audioBloc.currentReciter,
                       ),
                     ],
                   ),
@@ -252,8 +263,8 @@ class _MobileReciterButton extends StatelessWidget {
     return GestureDetector(
       onTap: () => showAudioSettingsSheetMobile(context),
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 14.w),
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+        margin: EdgeInsets.symmetric(horizontal: 6.w),
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
         decoration: BoxDecoration(
           border: Border.all(
             color: AppColors.bronzeIcon.withValues(alpha: 0.5),
@@ -266,7 +277,7 @@ class _MobileReciterButton extends StatelessWidget {
             Icon(
               Icons.keyboard_arrow_up_rounded,
               color: AppColors.bronzeIcon,
-              size: 20.sp,
+              size: 18.sp,
             ),
             SizedBox(width: 4.w),
             Expanded(
@@ -279,20 +290,36 @@ class _MobileReciterButton extends StatelessWidget {
                     context,
                     audioBloc.currentReciter,
                   );
-                  return Text(
-                    reciterName,
-                    maxLines: 1,
-                    textAlign: isEn ? TextAlign.left : TextAlign.right,
-                    style: AppTextStyles.menuItemText.copyWith(
-                      color: AppColors.inkBrown,
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
+                  return FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment:
+                        isEn ? Alignment.centerLeft : Alignment.centerRight,
+                    child: Text(
+                      reciterName,
+                      maxLines: 1,
+                      textAlign: isEn ? TextAlign.left : TextAlign.right,
+                      style: AppTextStyles.menuItemText.copyWith(
+                        color: AppColors.inkBrown,
+                        fontSize: 13.5.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textDirection:
+                          isEn ? TextDirection.ltr : TextDirection.rtl,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                    textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
                   );
                 },
               ),
+            ),
+            SizedBox(width: 6.w),
+            BlocBuilder<AudioBloc, AudioState>(
+              builder: (context, state) {
+                final audioBloc = context.read<AudioBloc>();
+                return SurahAudioSourceBadge(
+                  surahNumber: audioBloc.currentPlayingSurah ?? 1,
+                  category: audioBloc.currentCategory,
+                  reciterKey: audioBloc.currentReciter,
+                );
+              },
             ),
           ],
         ),

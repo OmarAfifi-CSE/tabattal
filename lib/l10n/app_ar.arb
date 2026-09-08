@@ -596,5 +596,51 @@
       "percent": { "type": "int" }
     }
   },
-  "volumeMutedTooltip": "صوت التطبيق: مكتوم • انقر لإلغاء الكتم"
+  "volumeMutedTooltip": "صوت التطبيق: مكتوم • انقر لإلغاء الكتم",
+  "audioSourceLive": "بث",
+  "audioSourceOffline": "محلي",
+  "audioSourceLiveTooltip": "بث مباشر عبر الإنترنت",
+  "audioSourceOfflineTooltip": "محملة محليًا (بدون إنترنت)",
+  "audioDownloadSuccess": "تم تحميل سورة {surahName} كاملةً بنجاح",
+  "@audioDownloadSuccess": {
+    "placeholders": {
+      "surahName": { "type": "String" }
+    }
+  },
+  "audioDownloadError": "تعذر تحميل السورة، يرجى التأكد من اتصال الإنترنت",
+  "audioDeleteSuccess": "تم حذف ملف تلاوة سورة {surahName} من التخزين المحلي",
+  "@audioDeleteSuccess": {
+    "placeholders": {
+      "surahName": { "type": "String" }
+    }
+  },
+  "audioSurahDownloadedTitle": "سورة {surahName} محملة محليًا",
+  "@audioSurahDownloadedTitle": {
+    "placeholders": {
+      "surahName": { "type": "String" }
+    }
+  },
+  "audioSurahDownloadedSubtitle": "جاهزة للاستماع فورًا دون إنترنت",
+  "audioDeleteFromDeviceTooltip": "حذف من الجهاز",
+  "audioLiveStreamTitle": "بث مباشر (يتطلب اتصالًا بالإنترنت)",
+  "audioLiveStreamSubtitle": "يمكنك تحميل سورة {surahName} للاستماع دون اتصال",
+  "@audioLiveStreamSubtitle": {
+    "placeholders": {
+      "surahName": { "type": "String" }
+    }
+  },
+  "audioDownloadSurahButton": "تحميل سورة {surahName} للاستماع بدون إنترنت",
+  "@audioDownloadSurahButton": {
+    "placeholders": {
+      "surahName": { "type": "String" }
+    }
+  },
+  "audioDownloadingProgress": "جاري تحميل سورة {surahName}... {percent}٪",
+  "@audioDownloadingProgress": {
+    "placeholders": {
+      "surahName": { "type": "String" },
+      "percent": { "type": "int" }
+    }
+  },
+  "audioCancelDownloadTooltip": "إلغاء التحميل"
 }
