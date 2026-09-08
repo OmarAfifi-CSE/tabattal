@@ -27,9 +27,11 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   StreamSubscription<int?>? _currentIndexSubscription;
   Timer? _positionTicker;
   final StreamController<Duration> _positionController = StreamController<Duration>.broadcast();
+  final StreamController<Duration> _timelinePositionController = StreamController<Duration>.broadcast();
   Duration _currentVersePosition = Duration.zero;
   DateTime? _playbackStartTime;
   Duration _playbackStartPosition = Duration.zero;
+  Duration _playbackStartTimelinePosition = Duration.zero;
   // Re-entrancy guards as COUNTERS, not bools: `VideoStudioSeekRequested` is
   // restartable(), so a cancelled handler keeps running in the background and
   // its finally block would clear a shared bool while a newer handler is still
@@ -83,7 +85,19 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   }
 
   Stream<Duration> get playbackPositionStream => _positionController.stream;
+  Stream<Duration> get timelinePositionStream => _timelinePositionController.stream;
   Duration get currentVersePosition => _currentVersePosition;
+  Duration get currentTimelinePosition {
+    if (state.mergedPreviewAudioPath != null) {
+      if (_playbackStartTime != null) {
+        final elapsed = DateTime.now().difference(_playbackStartTime!);
+        return _playbackStartTimelinePosition + elapsed;
+      }
+      return state.calculateCumulativePosition(state.currentVerseIndex, _currentVersePosition);
+    }
+    return state.calculateCumulativePosition(state.currentVerseIndex, _currentVersePosition);
+  }
+
   @visibleForTesting
   bool get isPositionTickerActive => _positionTicker != null;
 
@@ -91,31 +105,75 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     _positionTicker?.cancel();
     _playbackStartTime = DateTime.now();
     _playbackStartPosition = _currentVersePosition;
+    _playbackStartTimelinePosition = state.calculateCumulativePosition(state.currentVerseIndex, _currentVersePosition);
     _positionTicker = Timer.periodic(const Duration(milliseconds: 20), (_) {
       if (_playbackStartTime == null) return;
+      if (_seekDepth > 0 || _verseSwitchDepth > 0 || _pendingSeekVerseIndex != null) return;
       final elapsed = DateTime.now().difference(_playbackStartTime!);
-      final pos = _playbackStartPosition + elapsed;
-      _currentVersePosition = pos;
-      if (!_positionController.isClosed) {
-        _positionController.add(pos);
-      }
 
-      final total = state.audioFilePaths.length;
-      if (total > 0 && state.currentVerseIndex >= total - 1) {
-        final duration = _previewPlayer.duration ?? Duration.zero;
-        if (duration > Duration.zero && pos >= duration) {
+      if (state.mergedPreviewAudioPath != null) {
+        final currentTimeline = _playbackStartTimelinePosition + elapsed;
+        final totalDuration = state.totalVideoDuration;
+        if (totalDuration > Duration.zero && currentTimeline >= totalDuration) {
           if (state.isPlaying) {
             add(const VideoStudioPlaybackReset());
+          }
+          return;
+        }
+
+        final (activeIdx, verseOffset) = state.findVerseAt(currentTimeline);
+        _currentVersePosition = verseOffset;
+        if (!_positionController.isClosed) {
+          _positionController.add(verseOffset);
+        }
+        if (!_timelinePositionController.isClosed) {
+          _timelinePositionController.add(currentTimeline);
+        }
+
+        if (activeIdx != state.currentVerseIndex) {
+          add(VideoStudioActiveVerseIndexChanged(activeIdx, isUserInitiated: false));
+        }
+      } else {
+        final pos = _playbackStartPosition + elapsed;
+        _currentVersePosition = pos;
+        if (!_positionController.isClosed) {
+          _positionController.add(pos);
+        }
+        final cumulative = state.calculateCumulativePosition(state.currentVerseIndex, pos);
+        if (!_timelinePositionController.isClosed) {
+          _timelinePositionController.add(cumulative);
+        }
+
+        final total = state.audioFilePaths.length;
+        if (total > 0 && state.currentVerseIndex >= total - 1) {
+          final duration = _previewPlayer.duration ?? Duration.zero;
+          if (duration > Duration.zero && pos >= duration) {
+            if (state.isPlaying) {
+              add(const VideoStudioPlaybackReset());
+            }
           }
         }
       }
     });
   }
 
-  void _stopPositionTicker() {
-    if (_playbackStartTime != null) {
+  void _stopPositionTicker({bool commitFinalPosition = true}) {
+    if (commitFinalPosition && _playbackStartTime != null) {
       final elapsed = DateTime.now().difference(_playbackStartTime!);
-      _currentVersePosition = _playbackStartPosition + elapsed;
+      if (state.mergedPreviewAudioPath != null) {
+        final currentTimeline = _playbackStartTimelinePosition + elapsed;
+        final (_, verseOffset) = state.findVerseAt(currentTimeline);
+        _currentVersePosition = verseOffset;
+        if (!_timelinePositionController.isClosed) {
+          _timelinePositionController.add(currentTimeline);
+        }
+      } else {
+        _currentVersePosition = _playbackStartPosition + elapsed;
+        final cumulative = state.calculateCumulativePosition(state.currentVerseIndex, _currentVersePosition);
+        if (!_timelinePositionController.isClosed) {
+          _timelinePositionController.add(cumulative);
+        }
+      }
       if (!_positionController.isClosed) {
         _positionController.add(_currentVersePosition);
       }
@@ -128,6 +186,10 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   void _initAudioListeners() {
     _playerStateSubscription = _previewPlayer.playerStateStream.listen((playerState) {
       if (playerState.processingState == ProcessingState.completed && state.isPlaying && _verseSwitchDepth == 0 && _seekDepth == 0) {
+        if (state.mergedPreviewAudioPath != null) {
+          add(const VideoStudioPlaybackReset());
+          return;
+        }
         if (!kIsWeb && Platform.isWindows && state.currentVerseIndex < state.verses.length - 1) {
           // Windows drives one audio source per verse. Advance through the
           // SAME event the verse strip uses so there is exactly ONE swap of
@@ -138,22 +200,25 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         add(const VideoStudioPlaybackReset());
       } else {
         final isPlaying = playerState.playing && playerState.processingState != ProcessingState.completed;
-        if (isPlaying) {
-          if (_positionTicker == null) {
-            _startPositionTicker();
-          }
-        } else {
-          if (_seekDepth == 0 && _verseSwitchDepth == 0) {
+        if (_seekDepth == 0 && _verseSwitchDepth == 0 && _pendingSeekVerseIndex == null) {
+          if (isPlaying) {
+            if (_positionTicker == null) {
+              _startPositionTicker();
+            }
+          } else {
             _stopPositionTicker();
           }
-        }
-        if (_seekDepth == 0 && _verseSwitchDepth == 0 && isPlaying != state.isPlaying) {
-          add(VideoStudioPlaybackStateChanged(isPlaying));
+          if (isPlaying != state.isPlaying) {
+            add(VideoStudioPlaybackStateChanged(isPlaying));
+          }
         }
       }
     });
 
     _currentIndexSubscription = _previewPlayer.currentIndexStream.listen((index) {
+      // When playing merged audio, the entire track is in a single audio source.
+      // currentIndex is always 0 and must never override currentVerseIndex.
+      if (state.mergedPreviewAudioPath != null) return;
       if (_seekDepth > 0 || _pendingSeekVerseIndex != null || _verseSwitchDepth > 0) return;
       // On Windows we drive a single audio source, so currentIndex is always 0
       // and must never be mapped back onto currentVerseIndex (it would rewind
@@ -471,10 +536,22 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     if (isCompleted) {
       try {
         _currentVersePosition = Duration.zero;
+        _playbackStartPosition = Duration.zero;
+        _playbackStartTimelinePosition = Duration.zero;
         if (!_positionController.isClosed) {
           _positionController.add(Duration.zero);
         }
-        if (!kIsWeb && Platform.isWindows) {
+        if (!_timelinePositionController.isClosed) {
+          _timelinePositionController.add(Duration.zero);
+        }
+
+        if (state.mergedPreviewAudioPath != null) {
+          if (_previewPlayer.audioSource == null) {
+            await _previewPlayer.setAudioSource(_createAudioSource(state.mergedPreviewAudioPath!));
+            _loadedVerseIndex = 0;
+          }
+          await _previewPlayer.seek(Duration.zero);
+        } else if (!kIsWeb && Platform.isWindows) {
           if (state.audioFilePaths.isNotEmpty) {
             _verseSwitchDepth++;
             try {
@@ -488,13 +565,13 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         } else {
           await _previewPlayer.seek(Duration.zero, index: 0);
         }
+
         _playbackStartTime = DateTime.now();
-        _playbackStartPosition = Duration.zero;
-        _startPositionTicker();
         emit(state.copyWith(
           currentVerseIndex: 0,
           isPlaying: true,
         ));
+        _startPositionTicker();
         unawaited(_previewPlayer.play());
       } catch (_) {
         _stopPositionTicker();
@@ -505,7 +582,14 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       // Start or resume playback
       try {
         final safeIndex = state.currentVerseIndex.clamp(0, totalVerses - 1);
-        if (!kIsWeb && Platform.isWindows) {
+        if (state.mergedPreviewAudioPath != null) {
+          if (_previewPlayer.audioSource == null) {
+            await _previewPlayer.setAudioSource(_createAudioSource(state.mergedPreviewAudioPath!));
+            _loadedVerseIndex = 0;
+          }
+          final timelinePos = state.calculateCumulativePosition(safeIndex, _currentVersePosition);
+          await _previewPlayer.seek(timelinePos);
+        } else if (!kIsWeb && Platform.isWindows) {
           if (state.audioFilePaths.isNotEmpty) {
             // audioSource != null is NOT enough: after a natural completion
             // the player still holds the LAST verse file while the UI reset
@@ -558,8 +642,10 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     VideoStudioPlaybackReset event,
     Emitter<VideoStudioState> emit,
   ) async {
-    _stopPositionTicker();
+    _stopPositionTicker(commitFinalPosition: false);
     _currentVersePosition = Duration.zero;
+    _playbackStartPosition = Duration.zero;
+    _playbackStartTimelinePosition = Duration.zero;
     _seekDepth = 0;
     _verseSwitchDepth = 0;
     _pendingSeekVerseIndex = null;
@@ -569,7 +655,9 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         await _previewPlayer.pause();
       }
       if (state.audioFilePaths.isNotEmpty) {
-        if (!kIsWeb && Platform.isWindows) {
+        if (state.mergedPreviewAudioPath != null) {
+          await _previewPlayer.seek(Duration.zero);
+        } else if (!kIsWeb && Platform.isWindows) {
           _verseSwitchDepth++;
           try {
             await _previewPlayer.setAudioSource(_createAudioSource(state.audioFilePaths[0]));
@@ -595,65 +683,116 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     if (!_positionController.isClosed) {
       _positionController.add(Duration.zero);
     }
+    if (!_timelinePositionController.isClosed) {
+      _timelinePositionController.add(Duration.zero);
+    }
   }
 
   Future<void> _onActiveVerseIndexChanged(
     VideoStudioActiveVerseIndexChanged event,
     Emitter<VideoStudioState> emit,
   ) async {
-    _pendingSeekVerseIndex = null;
     final safeIndex = event.activeIndex.clamp(0, state.verses.isNotEmpty ? state.verses.length - 1 : 0);
-    _currentVersePosition = Duration.zero;
-    final wasPlaying = state.isPlaying || _previewPlayer.playing;
-    if (wasPlaying) {
-      _playbackStartTime = DateTime.now();
-      _playbackStartPosition = Duration.zero;
-    }
-    final targetSeekPos = state.calculateCumulativePosition(safeIndex, Duration.zero);
-    final newSeekTrigger = event.isUserInitiated ? state.seekTrigger + 1 : state.seekTrigger;
-    emit(state.copyWith(
-      currentVerseIndex: safeIndex,
-      seekTrigger: newSeekTrigger,
-      lastSeekPosition: targetSeekPos,
-      isPlaying: wasPlaying,
-    ));
-    if (!_positionController.isClosed) {
-      _positionController.add(Duration.zero);
-    }
-    if (!kIsWeb && Platform.isWindows && state.audioFilePaths.isNotEmpty) {
-      // Last request wins: NEVER skip the swap just because another swap is
-      // in flight (bloc 9 processes events concurrently). just_audio
-      // interrupts the older load; whichever load finishes last owns the
-      // player, and the staleness check below guarantees only the newest
-      // request starts playback. Dropping the newest swap here is exactly
-      // what desyncs UI index from loaded audio.
+
+    if (state.mergedPreviewAudioPath != null) {
+      if (!event.isUserInitiated) {
+        // Automatic timeline advance with merged audio: the single continuous
+        // audio track is ALREADY playing across this verse boundary smoothly.
+        // No resets, no seeks, zero gap and zero timeline jump!
+        emit(state.copyWith(currentVerseIndex: safeIndex));
+        return;
+      }
+
+      // User tapped a verse card in the strip or Next/Prev button with merged audio
+      _stopPositionTicker(commitFinalPosition: false);
       _verseSwitchDepth++;
+      _pendingSeekVerseIndex = safeIndex;
       try {
-        // Always swap the source on Windows: each verse is its own file.
-        // NOTE: no stop() here — stop() disposes the native player and a
-        // fresh one is created on the next load, adding a large gap between
-        // verses. setAudioSource alone swaps the source in the SAME native
-        // player (instant), and play() resumes immediately after.
-        await _previewPlayer.setAudioSource(_createAudioSource(state.audioFilePaths[safeIndex]));
-        _loadedVerseIndex = safeIndex;
-        // A newer verse request may have arrived while loading: only the
-        // newest request may start playback, otherwise stale audio would
-        // play under a newer verse's UI.
+        _currentVersePosition = Duration.zero;
+        final targetSeekPos = state.calculateCumulativePosition(safeIndex, Duration.zero);
+        final wasPlaying = state.isPlaying || _previewPlayer.playing;
+
+        _playbackStartTimelinePosition = targetSeekPos;
+        _playbackStartPosition = Duration.zero;
+        _currentVersePosition = Duration.zero;
+
+        emit(state.copyWith(
+          currentVerseIndex: safeIndex,
+          seekTrigger: state.seekTrigger + 1,
+          lastSeekPosition: targetSeekPos,
+          isPlaying: wasPlaying,
+        ));
+        if (!_positionController.isClosed) {
+          _positionController.add(Duration.zero);
+        }
+        if (!_timelinePositionController.isClosed) {
+          _timelinePositionController.add(targetSeekPos);
+        }
+
+        if (_previewPlayer.audioSource == null) {
+          await _previewPlayer.setAudioSource(_createAudioSource(state.mergedPreviewAudioPath!));
+          _loadedVerseIndex = 0;
+        }
+        await _previewPlayer.seek(targetSeekPos);
         if (safeIndex != state.currentVerseIndex) return;
+
         if (wasPlaying) {
           _playbackStartTime = DateTime.now();
           _playbackStartPosition = Duration.zero;
+          _playbackStartTimelinePosition = targetSeekPos;
           _startPositionTicker();
-          await _previewPlayer.play();
+          if (!_previewPlayer.playing) {
+            await _previewPlayer.play();
+          }
         }
       } catch (_) {
       } finally {
         _verseSwitchDepth--;
+        _pendingSeekVerseIndex = null;
       }
-    } else if (state.audioFilePaths.isNotEmpty) {
-      if (event.isUserInitiated) {
-        _verseSwitchDepth++;
-        try {
+      return;
+    }
+
+    // Fallback: unmerged multi-file audio (Web or when merged audio unavailable)
+    _stopPositionTicker(commitFinalPosition: false);
+    _verseSwitchDepth++;
+    _pendingSeekVerseIndex = safeIndex;
+    try {
+      _currentVersePosition = Duration.zero;
+      final wasPlaying = state.isPlaying || _previewPlayer.playing;
+      final targetSeekPos = state.calculateCumulativePosition(safeIndex, Duration.zero);
+      final newSeekTrigger = event.isUserInitiated ? state.seekTrigger + 1 : state.seekTrigger;
+
+      _playbackStartTimelinePosition = targetSeekPos;
+      _playbackStartPosition = Duration.zero;
+      _currentVersePosition = Duration.zero;
+
+      emit(state.copyWith(
+        currentVerseIndex: safeIndex,
+        seekTrigger: newSeekTrigger,
+        lastSeekPosition: targetSeekPos,
+        isPlaying: wasPlaying,
+      ));
+      if (!_positionController.isClosed) {
+        _positionController.add(Duration.zero);
+      }
+      if (!_timelinePositionController.isClosed) {
+        _timelinePositionController.add(targetSeekPos);
+      }
+
+      if (!kIsWeb && Platform.isWindows && state.audioFilePaths.isNotEmpty) {
+        await _previewPlayer.setAudioSource(_createAudioSource(state.audioFilePaths[safeIndex]));
+        _loadedVerseIndex = safeIndex;
+        if (safeIndex != state.currentVerseIndex) return;
+        if (wasPlaying) {
+          _playbackStartTime = DateTime.now();
+          _playbackStartPosition = Duration.zero;
+          _playbackStartTimelinePosition = targetSeekPos;
+          _startPositionTicker();
+          await _previewPlayer.play();
+        }
+      } else if (state.audioFilePaths.isNotEmpty) {
+        if (event.isUserInitiated) {
           if (_previewPlayer.currentIndex != safeIndex) {
             await _previewPlayer.seek(Duration.zero, index: safeIndex);
           } else {
@@ -663,23 +802,25 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           if (wasPlaying) {
             _playbackStartTime = DateTime.now();
             _playbackStartPosition = Duration.zero;
+            _playbackStartTimelinePosition = targetSeekPos;
             _startPositionTicker();
             if (!_previewPlayer.playing) {
               await _previewPlayer.play();
             }
           }
-        } catch (_) {
-        } finally {
-          _verseSwitchDepth--;
-        }
-      } else {
-        // Natural playlist progression in just_audio: player is already
-        // playing safeIndex without gap. Do NOT seek or restart, only maintain
-        // the ticker if wasPlaying.
-        if (wasPlaying && _positionTicker == null) {
-          _startPositionTicker();
+        } else {
+          if (wasPlaying && _positionTicker == null) {
+            _playbackStartTime = DateTime.now();
+            _playbackStartPosition = Duration.zero;
+            _playbackStartTimelinePosition = targetSeekPos;
+            _startPositionTicker();
+          }
         }
       }
+    } catch (_) {
+    } finally {
+      _verseSwitchDepth--;
+      _pendingSeekVerseIndex = null;
     }
   }
 
@@ -695,39 +836,19 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       return;
     }
 
-    int accumulatedMs = 0;
-    int targetVerseIndex = 0;
-    Duration verseOffset = Duration.zero;
-
-    for (int i = 0; i < state.verseDurations.length; i++) {
-      final dur = state.verseDurations[i];
-      final nextAccumulatedMs = accumulatedMs + dur.inMilliseconds;
-      if (event.position.inMilliseconds < nextAccumulatedMs || i == state.verseDurations.length - 1) {
-        targetVerseIndex = i;
-        verseOffset = event.position - Duration(milliseconds: accumulatedMs);
-        if (verseOffset < Duration.zero) verseOffset = Duration.zero;
-        if (verseOffset > dur && dur > Duration.zero) verseOffset = dur;
-        break;
-      }
-      accumulatedMs = nextAccumulatedMs;
-    }
-
+    final (targetVerseIndex, verseOffset) = state.findVerseAt(event.position);
     final totalVerses = state.audioFilePaths.length;
-    final safeIndex = targetVerseIndex.clamp(0, totalVerses - 1);
+    final safeIndex = targetVerseIndex.clamp(0, totalVerses > 0 ? totalVerses - 1 : 0);
     final wasPlaying = state.isPlaying || _previewPlayer.playing;
-    // Capture BEFORE emitting — after the emit below, state.currentVerseIndex
-    // equals safeIndex, so comparing them later would always be equal and the
-    // verse's audio file would never actually be swapped on Windows.
     final bool needsSourceSwap = safeIndex != state.currentVerseIndex;
 
+    _stopPositionTicker(commitFinalPosition: false);
     _seekDepth++;
     _pendingSeekVerseIndex = safeIndex;
     _currentVersePosition = verseOffset;
+    _playbackStartTimelinePosition = event.position;
+    _playbackStartPosition = verseOffset;
 
-    if (wasPlaying) {
-      _playbackStartTime = DateTime.now();
-      _playbackStartPosition = verseOffset;
-    }
     emit(state.copyWith(
       currentVerseIndex: safeIndex,
       seekTrigger: state.seekTrigger + 1,
@@ -737,16 +858,31 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     if (!_positionController.isClosed) {
       _positionController.add(verseOffset);
     }
+    if (!_timelinePositionController.isClosed) {
+      _timelinePositionController.add(event.position);
+    }
 
     try {
-      if (!kIsWeb && Platform.isWindows) {
+      if (state.mergedPreviewAudioPath != null) {
+        if (_previewPlayer.audioSource == null) {
+          await _previewPlayer.setAudioSource(_createAudioSource(state.mergedPreviewAudioPath!));
+          _loadedVerseIndex = 0;
+        }
+        await _previewPlayer.seek(event.position);
+        if (wasPlaying) {
+          _playbackStartTime = DateTime.now();
+          _playbackStartPosition = verseOffset;
+          _playbackStartTimelinePosition = event.position;
+          _startPositionTicker();
+          if (!_previewPlayer.playing) {
+            await _previewPlayer.play();
+          }
+        }
+      } else if (!kIsWeb && Platform.isWindows) {
         if (state.audioFilePaths.isNotEmpty) {
           if (_previewPlayer.audioSource == null || needsSourceSwap) {
             _verseSwitchDepth++;
             try {
-              // Swap without stop(): stop() tears down the native player and
-              // recreates it on next load (audible gap). setAudioSource alone
-              // swaps the file inside the same player.
               await _previewPlayer.setAudioSource(_createAudioSource(state.audioFilePaths[safeIndex]));
               _loadedVerseIndex = safeIndex;
             } finally {
@@ -757,6 +893,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           if (wasPlaying) {
             _playbackStartTime = DateTime.now();
             _playbackStartPosition = verseOffset;
+            _playbackStartTimelinePosition = event.position;
             _startPositionTicker();
             if (!_previewPlayer.playing) {
               await _previewPlayer.play();
@@ -769,17 +906,18 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         } else {
           await _previewPlayer.seek(verseOffset);
         }
-        if (wasPlaying && !_previewPlayer.playing) {
+        if (wasPlaying) {
           _playbackStartTime = DateTime.now();
           _playbackStartPosition = verseOffset;
+          _playbackStartTimelinePosition = event.position;
           _startPositionTicker();
-          await _previewPlayer.play();
+          if (!_previewPlayer.playing) {
+            await _previewPlayer.play();
+          }
         }
       }
     } catch (_) {
     } finally {
-      // Counter-based: a restartable()-cancelled handler only decrements its
-      // own increment — the guard stays up while any newer seek runs on.
       _seekDepth--;
       _pendingSeekVerseIndex = null;
     }
@@ -866,10 +1004,21 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       if (!_positionController.isClosed) {
         _positionController.add(Duration.zero);
       }
+      String? mergedAudioPath;
       if (paths.isNotEmpty) {
+        mergedAudioPath = await repository.prepareMergedAudio(audioFilePaths: paths);
+        if (myLoadGen != _loadGeneration || emit.isDone) return;
         try {
           await _previewPlayer.stop();
-          if (!kIsWeb && Platform.isWindows) {
+          if (mergedAudioPath != null) {
+            _verseSwitchDepth++;
+            try {
+              await _previewPlayer.setAudioSource(_createAudioSource(mergedAudioPath));
+              _loadedVerseIndex = 0;
+            } finally {
+              _verseSwitchDepth--;
+            }
+          } else if (!kIsWeb && Platform.isWindows) {
             _verseSwitchDepth++;
             try {
               await _previewPlayer.setAudioSource(_createAudioSource(paths[0]));
@@ -902,6 +1051,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           wordTimingsMap: timingsMap,
           isPreparingAudio: false,
           currentVerseIndex: 0,
+          mergedPreviewAudioPath: mergedAudioPath,
         ),
       );
     } catch (e) {
@@ -1046,6 +1196,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     await _playerStateSubscription?.cancel();
     await _currentIndexSubscription?.cancel();
     await _positionController.close();
+    await _timelinePositionController.close();
     try {
       await _previewPlayer.stop();
     } catch (_) {}

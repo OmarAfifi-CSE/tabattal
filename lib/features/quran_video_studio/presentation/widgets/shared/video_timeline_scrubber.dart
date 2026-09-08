@@ -30,10 +30,14 @@ class _VideoTimelineScrubberState extends State<VideoTimelineScrubber> {
   bool _isDragging = false;
   double _dragMs = 0.0;
   DateTime _lastThrottledSeek = DateTime.fromMillisecondsSinceEpoch(0);
+  double? _settlingMs;
+  DateTime? _settleStartTime;
 
   void _onDragStart(double val) {
     setState(() {
       _isDragging = true;
+      _settlingMs = null;
+      _settleStartTime = null;
       _dragMs = val;
     });
   }
@@ -44,7 +48,7 @@ class _VideoTimelineScrubberState extends State<VideoTimelineScrubber> {
     });
 
     final now = DateTime.now();
-    if (now.difference(_lastThrottledSeek).inMilliseconds >= 120) {
+    if (now.difference(_lastThrottledSeek).inMilliseconds >= 200) {
       _lastThrottledSeek = now;
       context.read<VideoStudioBloc>().add(
             VideoStudioSeekRequested(
@@ -57,6 +61,8 @@ class _VideoTimelineScrubberState extends State<VideoTimelineScrubber> {
   void _onDragEnd(double val) {
     setState(() {
       _isDragging = false;
+      _settlingMs = val;
+      _settleStartTime = DateTime.now();
     });
     context.read<VideoStudioBloc>().add(
           VideoStudioSeekRequested(
@@ -81,21 +87,33 @@ class _VideoTimelineScrubberState extends State<VideoTimelineScrubber> {
         : AppColors.accentGold.withValues(alpha: 0.18);
 
     return StreamBuilder<Duration>(
-      stream: context.read<VideoStudioBloc>().playbackPositionStream,
-      initialData: context.read<VideoStudioBloc>().currentVersePosition,
+      stream: context.read<VideoStudioBloc>().timelinePositionStream,
+      initialData: context.read<VideoStudioBloc>().currentTimelinePosition,
       builder: (context, snapshot) {
         final bloc = context.read<VideoStudioBloc>();
-        final liveState = bloc.state;
-        final pos = snapshot.data ?? bloc.currentVersePosition;
-        final cumulativePos = liveState.calculateCumulativePosition(liveState.currentVerseIndex, pos);
+        final cumulativePos = snapshot.data ?? bloc.currentTimelinePosition;
+
+        if (_settlingMs != null) {
+          final diff = (cumulativePos.inMilliseconds.toDouble() - _settlingMs!).abs();
+          final timeout = _settleStartTime != null &&
+              DateTime.now().difference(_settleStartTime!).inMilliseconds > 400;
+          if (diff < 250 || timeout) {
+            _settlingMs = null;
+            _settleStartTime = null;
+          }
+        }
 
         final currentMs = _isDragging
             ? _dragMs.clamp(0.0, totalMs)
-            : cumulativePos.inMilliseconds.toDouble().clamp(0.0, totalMs);
+            : (_settlingMs != null
+                ? _settlingMs!.clamp(0.0, totalMs)
+                : cumulativePos.inMilliseconds.toDouble().clamp(0.0, totalMs));
 
         final displayPos = _isDragging
             ? Duration(milliseconds: currentMs.round())
-            : cumulativePos;
+            : (_settlingMs != null
+                ? Duration(milliseconds: _settlingMs!.round())
+                : cumulativePos);
         final posStr = VideoStudioState.formatDurationToMinutesSeconds(displayPos);
 
         return Padding(

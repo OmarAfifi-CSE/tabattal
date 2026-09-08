@@ -44,6 +44,72 @@ class VideoExportService implements IVideoExportService {
     }
   }
 
+  @override
+  Future<String?> createMergedPreviewAudio({
+    required List<String> audioFilePaths,
+  }) async {
+    final validAudioFiles = audioFilePaths.where((p) => p.isNotEmpty).toList();
+    if (validAudioFiles.isEmpty) return null;
+    if (validAudioFiles.length == 1) return validAudioFiles.first;
+
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final previewDir = Directory('${tempDir.path}/video_studio_preview');
+      if (!await previewDir.exists()) {
+        await previewDir.create(recursive: true);
+      }
+
+      final ext = validAudioFiles.first.toLowerCase().endsWith('.m4a') ? 'm4a' : 'mp3';
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final outputFile = File('${previewDir.path}/preview_timeline_$timestamp.$ext');
+      final concatListFile = File('${previewDir.path}/concat_list_$timestamp.txt');
+
+      final buffer = StringBuffer();
+      for (final p in validAudioFiles) {
+        final normalized = p.replaceAll(r'\', '/');
+        buffer.writeln("file '$normalized'");
+      }
+      await concatListFile.writeAsString(buffer.toString());
+
+      final concatInput = concatListFile.path.replaceAll(r'\', '/');
+      final outputPath = outputFile.path.replaceAll(r'\', '/');
+
+      final args = [
+        '-y',
+        '-f', 'concat',
+        '-safe', '0',
+        '-i', concatInput,
+        '-c', 'copy',
+        outputPath,
+      ];
+
+      final completer = Completer<bool>();
+      await FFmpegKit.executeWithArgumentsAsync(
+        args,
+        (session) async {
+          final returnCode = await session.getReturnCode();
+          if (!completer.isCompleted) {
+            completer.complete(returnCode?.isValueSuccess() ?? false);
+          }
+        },
+      );
+
+      final success = await completer.future.timeout(
+        const Duration(seconds: 4),
+        onTimeout: () => false,
+      );
+
+      try {
+        if (await concatListFile.exists()) await concatListFile.delete();
+      } catch (_) {}
+
+      if (success && await outputFile.exists() && await outputFile.length() > 0) {
+        return outputFile.path;
+      }
+    } catch (_) {}
+    return null;
+  }
+
   /// Coordinates video generation, overlay frames, audio muxing, and MP4 video export.
   @override
   Stream<VideoRenderProgress> exportVideo({
@@ -672,26 +738,35 @@ class VideoExportService implements IVideoExportService {
       final fileName = file.uri.pathSegments.isNotEmpty
           ? file.uri.pathSegments.last
           : (isVideo ? 'Tabattal_Video.mp4' : 'Tabattal_Image.png');
-      if (Platform.isWindows) {
-        const channel = MethodChannel('dev.fluttercommunity.plus/share');
-        await channel.invokeMethod<String>('share', <String, dynamic>{
-          'paths': [normalizedPath],
-          'mimeTypes': [isVideo ? 'video/mp4' : 'image/png'],
-          'title': fileName,
-          'text': '',
-        });
-      } else {
-        await SharePlus.instance.share(
-          ShareParams(
-            files: [
-              XFile(
-                normalizedPath,
-                mimeType: isVideo ? 'video/mp4' : 'image/png',
-                name: fileName,
-              ),
-            ],
-          ),
-        );
+      try {
+        if (Platform.isWindows) {
+          try {
+            const channel = MethodChannel('dev.fluttercommunity.plus/share');
+            await channel.invokeMethod<String>('share', <String, dynamic>{
+              'paths': [normalizedPath],
+              'mimeTypes': [isVideo ? 'video/mp4' : 'image/png'],
+              'title': fileName,
+              'text': '',
+            });
+          } catch (_) {
+            // Windows fallback: highlight and select the generated file in Explorer
+            await Process.run('explorer.exe', ['/select,', normalizedPath]);
+          }
+        } else {
+          await SharePlus.instance.share(
+            ShareParams(
+              files: [
+                XFile(
+                  normalizedPath,
+                  mimeType: isVideo ? 'video/mp4' : 'image/png',
+                  name: fileName,
+                ),
+              ],
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('Failed to share output file: $e');
       }
     }
   }

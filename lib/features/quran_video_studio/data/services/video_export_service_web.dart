@@ -63,6 +63,13 @@ class VideoExportService implements IVideoExportService {
     }
   }
 
+  @override
+  Future<String?> createMergedPreviewAudio({
+    required List<String> audioFilePaths,
+  }) async {
+    return null;
+  }
+
   /// Coordinates video generation, frame rendering, cloud FFmpeg encoding, and MP4 download.
   @override
   Stream<VideoRenderProgress> exportVideo({

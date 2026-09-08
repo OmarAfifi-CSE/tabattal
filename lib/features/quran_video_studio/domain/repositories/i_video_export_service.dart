@@ -13,4 +13,9 @@ abstract class IVideoExportService {
 
   /// Cancels in-flight video rendering.
   void cancel();
+
+  /// Merges multiple verse audio files into a single continuous timeline audio file for preview.
+  Future<String?> createMergedPreviewAudio({
+    required List<String> audioFilePaths,
+  });
 }

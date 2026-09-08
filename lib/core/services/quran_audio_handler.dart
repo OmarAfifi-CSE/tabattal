@@ -5,7 +5,6 @@ import 'package:just_audio/just_audio.dart';
 enum QuranAudioAction { nextAyah, prevAyah, nextSurah, prevSurah, timer, stop }
 
 class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
-  final AudioPlayer _player = AudioPlayer();
   final _actionSubject = StreamController<QuranAudioAction>.broadcast();
 
   static const _previousSurahControl = MediaControl(
@@ -44,22 +43,41 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     action: MediaAction.stop,
   );
 
+  AudioPlayer _player = AudioPlayer();
+  StreamSubscription? _playbackSubscription;
+  StreamSubscription? _durationSubscription;
+
   Stream<QuranAudioAction> get actions => _actionSubject.stream;
   AudioPlayer get player => _player;
 
   QuranAudioHandler() {
-    _player.playbackEventStream.map(_transformEvent).listen((state) {
+    _bindPlayerStreams();
+  }
+
+  void _bindPlayerStreams() {
+    _playbackSubscription?.cancel();
+    _durationSubscription?.cancel();
+
+    _playbackSubscription = _player.playbackEventStream.map(_transformEvent).listen((state) {
       if (!playbackState.isClosed) {
         playbackState.add(state);
       }
     });
 
-    _player.durationStream.listen((duration) {
+    _durationSubscription = _player.durationStream.listen((duration) {
       final currentItem = mediaItem.valueOrNull;
       if (currentItem != null && duration != null) {
         mediaItem.add(currentItem.copyWith(duration: duration));
       }
     });
+  }
+
+  /// Rebinds media transport controls and notification state to a new active AudioPlayer
+  /// during seamless Ping-Pong handoff.
+  void switchPlayer(AudioPlayer newPlayer) {
+    if (_player == newPlayer) return;
+    _player = newPlayer;
+    _bindPlayerStreams();
   }
 
   PlaybackState _transformEvent(PlaybackEvent event) {

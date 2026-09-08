@@ -34,4 +34,9 @@ abstract class IVideoStudioRepository {
 
   /// Cancels any in-flight video rendering process.
   void cancelExport();
+
+  /// Merges multiple verse audio files into a single continuous timeline audio file for preview.
+  Future<String?> prepareMergedAudio({
+    required List<String> audioFilePaths,
+  });
 }

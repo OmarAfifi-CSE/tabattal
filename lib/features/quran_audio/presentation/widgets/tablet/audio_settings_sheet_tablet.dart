@@ -155,11 +155,24 @@ class _AudioSettingsSheetContentState
   }
 
   void _applyAndPlay() {
-    context.read<AudioBloc>().add(
-      ChangeReciter(_selectedCategory, _selectedReciter),
-    );
+    final bloc = context.read<AudioBloc>();
     if (widget.verseId != null) {
-      context.read<AudioBloc>().add(PlayVerse('', widget.verseId!));
+      bloc.add(
+        ChangeReciter(
+          _selectedCategory,
+          _selectedReciter,
+          restartPlayback: false,
+        ),
+      );
+      bloc.add(PlayVerse('', widget.verseId!));
+    } else {
+      bloc.add(
+        ChangeReciter(
+          _selectedCategory,
+          _selectedReciter,
+          restartPlayback: true,
+        ),
+      );
     }
     Navigator.pop(context);
   }

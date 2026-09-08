@@ -2302,11 +2302,15 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                                   ? () => onVerseIndexChanged!(currentIndex - 1)
                                   : null,
                               icon: const Icon(Icons.skip_previous_rounded),
-                              iconSize: isLandscape ? 19.0.sp : 22.sp,
+                              iconSize: isLandscape ? 20.0.sp : 22.sp,
                               color: AppColors.accentGold,
                               disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
                               padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                              constraints: BoxConstraints.tightFor(
+                                width: isLandscape ? 32.0.w : 36.w,
+                                height: isLandscape ? 32.0.h : 36.h,
+                              ),
+                              splashRadius: isLandscape ? 16.0.r : 18.r,
                             ),
                             SizedBox(width: isLandscape ? 10.0.w : 14.w),
                             GestureDetector(
@@ -2360,11 +2364,15 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                                   ? () => onVerseIndexChanged!(currentIndex + 1)
                                   : null,
                               icon: const Icon(Icons.skip_next_rounded),
-                              iconSize: isLandscape ? 19.0.sp : 22.sp,
+                              iconSize: isLandscape ? 20.0.sp : 22.sp,
                               color: AppColors.accentGold,
                               disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
                               padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                              constraints: BoxConstraints.tightFor(
+                                width: isLandscape ? 32.0.w : 36.w,
+                                height: isLandscape ? 32.0.h : 36.h,
+                              ),
+                              splashRadius: isLandscape ? 16.0.r : 18.r,
                             ),
                           ],
                         ),

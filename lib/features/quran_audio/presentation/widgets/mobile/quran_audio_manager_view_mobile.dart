@@ -130,9 +130,7 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
       isSuccess = true;
     } catch (e) {
       isSuccess = false;
-      final isCancelled =
-          token.isCancelled || (e is DioException && CancelToken.isCancel(e));
-      if (mounted && !isCancelled) {
+      if (mounted) {
         final actualProgress = await _downloadManager.getSurahDownloadProgress(
           _selectedCategory,
           _selectedReciter,

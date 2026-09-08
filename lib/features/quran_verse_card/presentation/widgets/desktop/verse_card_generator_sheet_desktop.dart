@@ -2812,11 +2812,15 @@ class _VideoPreviewViewportDesktop extends StatelessWidget {
                                   ? () => onVerseIndexChanged!(currentIndex - 1)
                                   : null,
                               icon: const Icon(Icons.skip_previous_rounded),
-                              iconSize: isLandscape ? 19.0 : 22.sp,
+                              iconSize: isLandscape ? 20.0 : 22.sp,
                               color: AppColors.accentGold,
                               disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
                               padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                              constraints: BoxConstraints.tightFor(
+                                width: isLandscape ? 32.0 : 36.w,
+                                height: isLandscape ? 32.0 : 36.h,
+                              ),
+                              splashRadius: isLandscape ? 16.0 : 18.r,
                             ),
                             SizedBox(width: isLandscape ? 10.0 : 14.w),
                             GestureDetector(
@@ -2862,11 +2866,15 @@ class _VideoPreviewViewportDesktop extends StatelessWidget {
                                   ? () => onVerseIndexChanged!(currentIndex + 1)
                                   : null,
                               icon: const Icon(Icons.skip_next_rounded),
-                              iconSize: isLandscape ? 19.0 : 22.sp,
+                              iconSize: isLandscape ? 20.0 : 22.sp,
                               color: AppColors.accentGold,
                               disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
                               padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                              constraints: BoxConstraints.tightFor(
+                                width: isLandscape ? 32.0 : 36.w,
+                                height: isLandscape ? 32.0 : 36.h,
+                              ),
+                              splashRadius: isLandscape ? 16.0 : 18.r,
                             ),
                           ],
                         ),

@@ -254,7 +254,11 @@ class VideoPreviewViewport extends StatelessWidget {
                               color: AppColors.accentGold,
                               disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
                               padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                              constraints: BoxConstraints.tightFor(
+                                width: 36.w,
+                                height: 36.h,
+                              ),
+                              splashRadius: 18.r,
                             ),
                             SizedBox(width: 14.w),
 
@@ -308,7 +312,11 @@ class VideoPreviewViewport extends StatelessWidget {
                               color: AppColors.accentGold,
                               disabledColor: AppColors.textSecondary.withValues(alpha: 0.3),
                               padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                              constraints: BoxConstraints.tightFor(
+                                width: 36.w,
+                                height: 36.h,
+                              ),
+                              splashRadius: 18.r,
                             ),
                           ],
                         ),

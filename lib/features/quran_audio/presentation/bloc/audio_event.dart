@@ -83,11 +83,16 @@ class AudioPlatformError extends AudioEvent {
 class ChangeReciter extends AudioEvent {
   final String categoryName;
   final String reciterName;
+  final bool restartPlayback;
 
-  const ChangeReciter(this.categoryName, this.reciterName);
+  const ChangeReciter(
+    this.categoryName,
+    this.reciterName, {
+    this.restartPlayback = true,
+  });
 
   @override
-  List<Object> get props => [categoryName, reciterName];
+  List<Object> get props => [categoryName, reciterName, restartPlayback];
 }
 
 class ChangeRepeatCount extends AudioEvent {

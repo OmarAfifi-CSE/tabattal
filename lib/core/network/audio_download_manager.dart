@@ -5,9 +5,25 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import '../constants/quran_metadata.dart';
 import '../constants/reciter_catalog.dart';
+import '../../features/quran_audio/data/services/surah_audio_timing_service.dart';
 
 class AudioDownloadManager {
-  final Dio _dio = Dio();
+  final Dio _dio;
+  final SurahAudioTimingService _timingService;
+  final Future<Directory> Function()? _directoryProvider;
+
+  // Cached total audio sizes per surah (bytes) to compute accurate progress
+  final Map<String, int> _surahTotalSizes = {};
+
+  String _surahKey(String category, String reciterKey, int surah) =>
+      '$category|$reciterKey|$surah';
+
+  AudioDownloadManager({
+    Dio? dio,
+    SurahAudioTimingService? timingService,
+    this._directoryProvider,
+  })  : _dio = dio ?? Dio(),
+        _timingService = timingService ?? SurahAudioTimingService(dio: dio);
 
   // Active prefetch tasks to avoid duplicate downloads.
   // Keyed by category + reciter + verse: the same verseId exists under every
@@ -29,9 +45,15 @@ class AudioDownloadManager {
   /// Returns the base directory for a specific reciter
   Future<String> getReciterDirectory(String category, String reciterKey) async {
     if (kIsWeb) return ''; // Not supported on web
-    final dir = !kIsWeb && Platform.isWindows
-        ? await getApplicationSupportDirectory()
-        : await getApplicationDocumentsDirectory();
+    final Directory dir;
+    final provider = _directoryProvider;
+    if (provider != null) {
+      dir = await provider();
+    } else if (!kIsWeb && Platform.isWindows) {
+      dir = await getApplicationSupportDirectory();
+    } else {
+      dir = await getApplicationDocumentsDirectory();
+    }
     final reciterPath = getReciterPath(category, reciterKey);
     final targetDir = Directory('${dir.path}/audio/$reciterPath');
     if (!await targetDir.exists()) {
@@ -49,17 +71,17 @@ class AudioDownloadManager {
     if (kIsWeb) return null;
     final dirPath = await getReciterDirectory(category, reciterKey);
     final file = File('$dirPath/$verseId.mp3');
-    if (await file.exists()) {
+    if (await file.exists() && (await file.length()) > 0) {
       return file.path;
     }
     // Backward-compatibility fallback for Windows: check previous documents location if not found in AppData
-    if (Platform.isWindows) {
+    if (Platform.isWindows && _directoryProvider == null) {
       try {
         final docsDir = await getApplicationDocumentsDirectory();
         final reciterPath = getReciterPath(category, reciterKey);
         final legacyFile =
             File('${docsDir.path}/audio/$reciterPath/$verseId.mp3');
-        if (await legacyFile.exists()) {
+        if (await legacyFile.exists() && (await legacyFile.length()) > 0) {
           try {
             await legacyFile.copy(file.path);
             await legacyFile.delete();
@@ -69,6 +91,26 @@ class AudioDownloadManager {
           }
         }
       } catch (_) {}
+    }
+    return null;
+  }
+
+  /// Returns the local path for a full surah audio file if it exists, otherwise null
+  Future<String?> getLocalSurahPath(
+    String category,
+    String reciterKey,
+    int surah,
+  ) async {
+    if (kIsWeb) return null;
+    final dirPath = await getReciterDirectory(category, reciterKey);
+    final surahStr = surah.toString().padLeft(3, '0');
+    final file = File('$dirPath/$surahStr.mp3');
+    if (await file.exists() && (await file.length()) > 0) {
+      return file.path;
+    }
+    final fileAlt = File('$dirPath/$surah.mp3');
+    if (await fileAlt.exists() && (await fileAlt.length()) > 0) {
+      return fileAlt.path;
     }
     return null;
   }
@@ -106,8 +148,9 @@ class AudioDownloadManager {
     final dirPath = await getReciterDirectory(category, reciterKey);
     final verseId = surah * 1000 + ayah;
     final savePath = '$dirPath/$verseId.mp3';
+    final file = File(savePath);
 
-    if (await File(savePath).exists()) {
+    if (await file.exists() && (await file.length()) > 0) {
       return savePath;
     }
 
@@ -133,7 +176,9 @@ class AudioDownloadManager {
     final tempPath = '$savePath.temp';
 
     // If it already exists and is not a temp file, return
-    if (await File(savePath).exists()) {
+    final saveFile = File(savePath);
+    if (await saveFile.exists() && (await saveFile.length()) > 0) {
+      if (onProgress != null) onProgress(1.0);
       return savePath;
     }
 
@@ -187,7 +232,9 @@ class AudioDownloadManager {
       // Clean up partial temp file if download failed
       final tempFile = File(tempPath);
       if (await tempFile.exists()) {
-        await tempFile.delete();
+        try {
+          await tempFile.delete();
+        } catch (_) {}
       }
       _activePrefetches.remove(prefetchKey);
       completer.completeError(e);
@@ -208,15 +255,8 @@ class AudioDownloadManager {
     int numAyahs,
   ) async {
     if (kIsWeb) return false;
-    final dirPath = await getReciterDirectory(category, reciterKey);
-    for (int ayah = 1; ayah <= numAyahs; ayah++) {
-      final verseId = surah * 1000 + ayah;
-      final file = File('$dirPath/$verseId.mp3');
-      if (!await file.exists()) {
-        return false;
-      }
-    }
-    return true;
+    final path = await getLocalSurahPath(category, reciterKey, surah);
+    return path != null;
   }
 
   /// Deletes all downloaded audio for a specific surah
@@ -228,34 +268,101 @@ class AudioDownloadManager {
   ) async {
     if (kIsWeb) return;
     final dirPath = await getReciterDirectory(category, reciterKey);
+    final surahStr = surah.toString().padLeft(3, '0');
+    final file = File('$dirPath/$surahStr.mp3');
+    if (await file.exists()) {
+      try {
+        await file.delete();
+      } catch (_) {}
+    }
+    final tempFile = File('$dirPath/$surahStr.mp3.temp');
+    if (await tempFile.exists()) {
+      try {
+        await tempFile.delete();
+      } catch (_) {}
+    }
+    final fileAlt = File('$dirPath/$surah.mp3');
+    if (await fileAlt.exists()) {
+      try {
+        await fileAlt.delete();
+      } catch (_) {}
+    }
+    final tempFileAlt = File('$dirPath/$surah.mp3.temp');
+    if (await tempFileAlt.exists()) {
+      try {
+        await tempFileAlt.delete();
+      } catch (_) {}
+    }
+    _surahTotalSizes.remove(_surahKey(category, reciterKey, surah));
+
+    // Backward-compatibility: delete legacy per-ayah files if any exist
     for (int ayah = 1; ayah <= numAyahs; ayah++) {
       final verseId = surah * 1000 + ayah;
-      final file = File('$dirPath/$verseId.mp3');
-      if (await file.exists()) {
-        await file.delete();
+      final verseFile = File('$dirPath/$verseId.mp3');
+      if (await verseFile.exists()) {
+        try {
+          await verseFile.delete();
+        } catch (_) {}
       }
     }
   }
 
   /// Returns download progress for a surah (0.0 to 1.0).
-  /// Counts how many ayahs are already on disk vs total.
   Future<double> getSurahDownloadProgress(
     String category,
     String reciterKey,
     int surah,
     int numAyahs,
   ) async {
-    if (kIsWeb || numAyahs == 0) return 0.0;
+    if (kIsWeb) return 0.0;
+    final path = await getLocalSurahPath(category, reciterKey, surah);
+    if (path != null) return 1.0;
+
     final dirPath = await getReciterDirectory(category, reciterKey);
-    int count = 0;
-    for (int ayah = 1; ayah <= numAyahs; ayah++) {
-      final verseId = surah * 1000 + ayah;
-      if (await File('$dirPath/$verseId.mp3').exists()) count++;
+    final surahStr = surah.toString().padLeft(3, '0');
+    final tempFile = File('$dirPath/$surahStr.mp3.temp');
+    if (await tempFile.exists()) {
+      final tempLen = await tempFile.length();
+      if (tempLen > 0) {
+        final cacheKey = _surahKey(category, reciterKey, surah);
+        int? total = _surahTotalSizes[cacheKey];
+        if (total == null || total <= 0) {
+          try {
+            final reciterPath = getReciterPath(category, reciterKey);
+            final timings = await _timingService.getSurahTimings(
+              reciterPath: reciterPath,
+              surahNumber: surah,
+            );
+            if (timings != null && timings.audioUrl.isNotEmpty) {
+              final headRes = await _dio.head<void>(
+                timings.audioUrl,
+                options: Options(
+                  validateStatus: (s) => s != null && s < 400,
+                  sendTimeout: const Duration(seconds: 4),
+                  receiveTimeout: const Duration(seconds: 4),
+                ),
+              );
+              final cl = headRes.headers.value(Headers.contentLengthHeader);
+              if (cl != null) {
+                total = int.tryParse(cl);
+                if (total != null && total > 0) {
+                  _surahTotalSizes[cacheKey] = total;
+                }
+              }
+            }
+          } catch (_) {}
+        }
+        if (total != null && total > 0) {
+          return (tempLen / total).clamp(0.01, 0.99);
+        }
+        return 0.05;
+      }
     }
-    return count / numAyahs;
+    return 0.0;
   }
 
-  /// Downloads an entire Surah by downloading all its ayahs sequentially
+  /// Downloads an entire Surah as a single continuous audio stream matching SurahAudioTimingService.
+  /// Supports resuming partial downloads from disk using HTTP Range headers.
   Future<void> downloadSurah(
     String category,
     String reciterKey,
@@ -264,44 +371,209 @@ class AudioDownloadManager {
     Function(double)? onProgress,
     CancelToken? cancelToken,
   }) async {
-    int downloadedCount = 0;
+    if (kIsWeb) return;
 
-    // Check what's already downloaded to initialize progress properly
     final dirPath = await getReciterDirectory(category, reciterKey);
-    for (int ayah = 1; ayah <= numAyahs; ayah++) {
-      if (cancelToken?.isCancelled == true) return;
-      final verseId = surah * 1000 + ayah;
-      if (await File('$dirPath/$verseId.mp3').exists()) {
-        downloadedCount++;
-      }
-    }
+    final surahStr = surah.toString().padLeft(3, '0');
+    final savePath = '$dirPath/$surahStr.mp3';
+    final tempPath = '$savePath.temp';
 
-    if (downloadedCount == numAyahs) {
+    // 1. If already completely downloaded, NEVER re-download!
+    final saveFile = File(savePath);
+    if (await saveFile.exists() && (await saveFile.length()) > 0) {
       if (onProgress != null) onProgress(1.0);
       return;
     }
 
-    // Download missing ayahs
-    for (int ayah = 1; ayah <= numAyahs; ayah++) {
-      if (cancelToken?.isCancelled == true) return;
-      final verseId = surah * 1000 + ayah;
-      if (!await File('$dirPath/$verseId.mp3').exists()) {
-        if (cancelToken?.isCancelled == true) return;
-        await downloadVerse(
-          category,
-          reciterKey,
-          surah,
-          ayah,
-          null,
+    if (cancelToken?.isCancelled == true) {
+      throw DioException(
+        requestOptions: RequestOptions(path: ''),
+        type: DioExceptionType.cancel,
+      );
+    }
+
+    final reciterPath = getReciterPath(category, reciterKey);
+    final timings = await _timingService.getSurahTimings(
+      reciterPath: reciterPath,
+      surahNumber: surah,
+    );
+
+    if (timings == null || timings.audioUrl.isEmpty) {
+      throw Exception(
+        'Audio stream URL not found for Surah $surah ($reciterPath)',
+      );
+    }
+
+    final url = timings.audioUrl;
+    final tempFile = File(tempPath);
+    int existingBytes = 0;
+    if (await tempFile.exists()) {
+      existingBytes = await tempFile.length();
+    }
+
+    final cacheKey = _surahKey(category, reciterKey, surah);
+
+    Response<ResponseBody> response;
+    try {
+      response = await _dio.get<ResponseBody>(
+        url,
+        options: Options(
+          responseType: ResponseType.stream,
+          headers:
+              existingBytes > 0 ? {'Range': 'bytes=$existingBytes-'} : null,
+          validateStatus: (status) =>
+              status != null &&
+              ((status >= 200 && status < 300) || status == 416),
+        ),
+        cancelToken: cancelToken,
+      );
+    } catch (e) {
+      if (e is DioException && CancelToken.isCancel(e)) {
+        rethrow;
+      }
+      throw Exception('Failed to download audio for Surah $surah: $e');
+    }
+
+    // If server responded with 416 (Range Not Satisfiable), existing bytes are invalid/corrupt.
+    if (response.statusCode == 416) {
+      if (await tempFile.exists()) {
+        try {
+          await tempFile.delete();
+        } catch (_) {}
+      }
+      existingBytes = 0;
+      try {
+        response = await _dio.get<ResponseBody>(
+          url,
+          options: Options(
+            responseType: ResponseType.stream,
+            validateStatus: (status) =>
+                status != null && (status >= 200 && status < 300),
+          ),
           cancelToken: cancelToken,
         );
-        if (cancelToken?.isCancelled == true) return;
-        downloadedCount++;
-        if (onProgress != null) {
-          onProgress(downloadedCount / numAyahs);
+      } catch (e) {
+        if (e is DioException && CancelToken.isCancel(e)) {
+          rethrow;
         }
+        throw Exception('Failed to restart download for Surah $surah: $e');
       }
     }
+
+    final isPartial = response.statusCode == 206;
+    int totalBytes = 0;
+
+    if (isPartial) {
+      final contentRange = response.headers.value('content-range');
+      if (contentRange != null) {
+        final match = RegExp(r'/(\d+)').firstMatch(contentRange);
+        if (match != null) {
+          totalBytes = int.tryParse(match.group(1)!) ?? 0;
+        }
+      }
+      if (totalBytes <= 0) {
+        final cl = response.data?.contentLength ?? -1;
+        if (cl > 0) {
+          totalBytes = existingBytes + cl;
+        } else if (_surahTotalSizes.containsKey(cacheKey)) {
+          totalBytes = _surahTotalSizes[cacheKey]!;
+        }
+      }
+    } else {
+      // Full content from byte 0
+      existingBytes = 0;
+      final cl = response.data?.contentLength ?? -1;
+      if (cl > 0) {
+        totalBytes = cl;
+      }
+    }
+
+    if (totalBytes > 0) {
+      _surahTotalSizes[cacheKey] = totalBytes;
+    }
+
+    IOSink? sink;
+    try {
+      sink = tempFile.openWrite(
+        mode: isPartial && existingBytes > 0 ? FileMode.append : FileMode.write,
+      );
+
+      int currentBytes = isPartial ? existingBytes : 0;
+      if (totalBytes > 0 && onProgress != null) {
+        onProgress((currentBytes / totalBytes).clamp(0.0, 1.0));
+      }
+
+      final stream = response.data!.stream;
+      await for (final chunk in stream) {
+        if (cancelToken?.isCancelled == true) {
+          throw DioException(
+            requestOptions: RequestOptions(path: url),
+            type: DioExceptionType.cancel,
+          );
+        }
+        sink.add(chunk);
+        currentBytes += chunk.length;
+        if (totalBytes > 0 && onProgress != null) {
+          onProgress((currentBytes / totalBytes).clamp(0.0, 1.0));
+        }
+      }
+
+      await sink.flush();
+      await sink.close();
+      sink = null;
+
+      if (await tempFile.exists()) {
+        await tempFile.rename(savePath);
+      }
+      if (onProgress != null) {
+        onProgress(1.0);
+      }
+    } catch (e) {
+      if (sink != null) {
+        try {
+          await sink.flush();
+          await sink.close();
+        } catch (_) {}
+      }
+      // CRITICAL: Preserve tempFile so user can resume download anytime!
+      if (e is DioException && CancelToken.isCancel(e)) {
+        rethrow;
+      }
+      throw Exception('Failed to download audio for Surah $surah: $e');
+    }
+  }
+
+  /// Automatically caches a surah audio stream in the background when played.
+  /// Runs completely silently without interrupting playback or throwing unhandled errors.
+  Future<void> autoCacheSurah(
+    String category,
+    String reciterKey,
+    int surah,
+  ) async {
+    if (kIsWeb) return;
+    try {
+      final isDownloaded = await isSurahDownloaded(category, reciterKey, surah, 0);
+      if (isDownloaded) return;
+
+      final prefetchKey = 'surah_cache|$category|$reciterKey|$surah';
+      if (_activePrefetches.containsKey(prefetchKey)) {
+        await _activePrefetches[prefetchKey];
+        return;
+      }
+
+      final completer = Completer<String>();
+      _activePrefetches[prefetchKey] = completer.future;
+
+      try {
+        final numAyahs = QuranMetadata.surahLengthOf(surah);
+        await downloadSurah(category, reciterKey, surah, numAyahs);
+        completer.complete('');
+      } catch (_) {
+        completer.complete('');
+      } finally {
+        _activePrefetches.remove(prefetchKey);
+      }
+    } catch (_) {}
   }
 
   /// Constructs the streaming URL for a verse

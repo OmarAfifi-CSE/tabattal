@@ -223,4 +223,39 @@ void main() {
     final slider = tester.widget<Slider>(find.byType(Slider));
     expect(slider.value, 60000.0);
   });
+
+  testWidgets('VideoTimelineScrubber with merged audio reflects continuous timeline and does not jump on verse change', (tester) async {
+    bloc.emit(bloc.state.copyWith(
+      mergedPreviewAudioPath: 'C:\\fake_merged.mp3',
+    ));
+
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.pump();
+
+    // Initial state: 0:00 / 1:00
+    expect(find.text('0:00'), findsOneWidget);
+    expect(find.text('1:00'), findsOneWidget);
+
+    // Seek across verse boundary into verse 1 (e.g. 25 seconds, since verse 0 is 20s)
+    await tester.runAsync(() async {
+      bloc.add(const VideoStudioSeekRequested(Duration(seconds: 25)));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    });
+    await tester.pump();
+
+    expect(find.text('0:25'), findsOneWidget);
+    expect(bloc.state.currentVerseIndex, 1);
+
+    // Non-user-initiated verse change (ticker natural progression) must NOT reset timeline or jump back
+    await tester.runAsync(() async {
+      bloc.add(const VideoStudioActiveVerseIndexChanged(1, isUserInitiated: false));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    });
+    await tester.pump();
+
+    // Still at 0:25, didn't reset to 0:00!
+    expect(find.text('0:25'), findsOneWidget);
+    final slider = tester.widget<Slider>(find.byType(Slider));
+    expect(slider.value, 25000.0);
+  });
 }

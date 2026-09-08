@@ -21,6 +21,7 @@ class VideoStudioState extends Equatable {
   final int playbackResetTrigger;
   final int seekTrigger;
   final Duration? lastSeekPosition;
+  final String? mergedPreviewAudioPath;
 
   const VideoStudioState({
     required this.config,
@@ -37,6 +38,7 @@ class VideoStudioState extends Equatable {
     this.playbackResetTrigger = 0,
     this.seekTrigger = 0,
     this.lastSeekPosition,
+    this.mergedPreviewAudioPath,
   });
 
   VerseModel? get currentVerse {
@@ -82,6 +84,21 @@ class VideoStudioState extends Equatable {
     return Duration(milliseconds: resMs);
   }
 
+  (int verseIndex, Duration verseOffset) findVerseAt(Duration timelinePosition) {
+    if (verseDurations.isEmpty) return (0, Duration.zero);
+    int accumulatedMs = 0;
+    for (int i = 0; i < verseDurations.length; i++) {
+      final durMs = verseDurations[i].inMilliseconds;
+      final nextMs = accumulatedMs + durMs;
+      if (timelinePosition.inMilliseconds < nextMs || i == verseDurations.length - 1) {
+        final offsetMs = (timelinePosition.inMilliseconds - accumulatedMs).clamp(0, durMs > 0 ? durMs : 0);
+        return (i, Duration(milliseconds: offsetMs));
+      }
+      accumulatedMs = nextMs;
+    }
+    return (0, Duration.zero);
+  }
+
   List<WordTimingSegment> get currentVerseWordTimings {
     final v = currentVerse;
     if (v == null) return const [];
@@ -105,6 +122,8 @@ class VideoStudioState extends Equatable {
     int? seekTrigger,
     Duration? lastSeekPosition,
     bool clearSeekPosition = false,
+    String? mergedPreviewAudioPath,
+    bool clearMergedPreviewAudio = false,
   }) {
     return VideoStudioState(
       config: config ?? this.config,
@@ -121,6 +140,9 @@ class VideoStudioState extends Equatable {
       playbackResetTrigger: playbackResetTrigger ?? this.playbackResetTrigger,
       seekTrigger: seekTrigger ?? this.seekTrigger,
       lastSeekPosition: clearSeekPosition ? null : (lastSeekPosition ?? this.lastSeekPosition),
+      mergedPreviewAudioPath: clearMergedPreviewAudio
+          ? null
+          : (mergedPreviewAudioPath ?? this.mergedPreviewAudioPath),
     );
   }
 
@@ -140,6 +162,7 @@ class VideoStudioState extends Equatable {
         playbackResetTrigger,
         seekTrigger,
         lastSeekPosition,
+        mergedPreviewAudioPath,
       ];
 }
 
