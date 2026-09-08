@@ -13,7 +13,7 @@ import '../../bloc/audio_event.dart';
 import '../../bloc/audio_state.dart';
 import '../shared/sleep_timer_selector_menu.dart';
 import '../shared/audio_volume_capsule.dart';
-import '../shared/surah_download_status_card.dart';
+import '../shared/reciter_category_badge.dart';
 import 'audio_settings_sheet_web.dart';
 
 class MediaControlBarWeb extends StatefulWidget {
@@ -640,12 +640,6 @@ class _WebMiniPlayer extends StatelessWidget {
                       ReciterCategoryBadge(
                         category: audioBloc.currentCategory,
                       ),
-                      SizedBox(width: 5.w),
-                      SurahAudioSourceBadge(
-                        surahNumber: audioBloc.currentPlayingSurah ?? 1,
-                        category: audioBloc.currentCategory,
-                        reciterKey: audioBloc.currentReciter,
-                      ),
                     ],
                   ),
                 ),
@@ -730,17 +724,6 @@ class _WebReciterButton extends StatelessWidget {
                   );
                 },
               ),
-            ),
-            SizedBox(width: 6.w),
-            BlocBuilder<AudioBloc, AudioState>(
-              builder: (context, state) {
-                final audioBloc = context.read<AudioBloc>();
-                return SurahAudioSourceBadge(
-                  surahNumber: audioBloc.currentPlayingSurah ?? 1,
-                  category: audioBloc.currentCategory,
-                  reciterKey: audioBloc.currentReciter,
-                );
-              },
             ),
           ],
         ),

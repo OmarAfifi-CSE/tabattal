@@ -13,6 +13,7 @@ import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/utils/app_snack_bar.dart';
 import '../../../../../core/utils/reciter_localization.dart';
 import '../../../../../l10n/app_localizations.dart';
+export 'reciter_category_badge.dart';
 
 /// A luxury, unified card displaying the download status of a surah
 /// (Offline Ready vs Live Streaming) and offering direct 1-tap download with real-time progress.
@@ -639,45 +640,6 @@ class SurahAudioSourceBadge extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-/// A compact visual badge displaying the current recitation category (e.g. "مرتل" / "Murattal"),
-/// designed with the exact same visual styling as [SurahAudioSourceBadge].
-class ReciterCategoryBadge extends StatelessWidget {
-  final String category;
-
-  const ReciterCategoryBadge({
-    super.key,
-    required this.category,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final categoryName = ReciterLocalization.localize(context, category);
-
-    return Tooltip(
-      message: categoryName,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-        decoration: BoxDecoration(
-          color: AppColors.accentGold.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(6.r),
-          border: Border.all(
-            color: AppColors.accentGold.withValues(alpha: 0.4),
-            width: 0.8,
-          ),
-        ),
-        child: Text(
-          categoryName,
-          style: TextStyle(
-            fontSize: 9.5.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColors.accentGold,
-          ),
-        ),
-      ),
     );
   }
 }

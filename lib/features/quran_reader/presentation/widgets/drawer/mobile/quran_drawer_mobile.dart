@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -199,20 +200,21 @@ class QuranDrawerMobile extends StatelessWidget {
                         }
                       },
                     ),
-                    _MobileDrawerItem(
-                      icon: Icons.headphones_rounded,
-                      title: l10n.drawerAudioManager,
-                      subtitle: l10n.drawerAudioManagerSubtitle,
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const QuranAudioManagerViewMobile(),
-                          ),
-                        );
-                      },
-                    ),
+                    if (!kIsWeb)
+                      _MobileDrawerItem(
+                        icon: Icons.headphones_rounded,
+                        title: l10n.drawerAudioManager,
+                        subtitle: l10n.drawerAudioManagerSubtitle,
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const QuranAudioManagerViewMobile(),
+                            ),
+                          );
+                        },
+                      ),
                     _MobileDrawerItem(
                       icon: Icons.movie_creation_outlined,
                       title: l10n.videoStudioTitle,

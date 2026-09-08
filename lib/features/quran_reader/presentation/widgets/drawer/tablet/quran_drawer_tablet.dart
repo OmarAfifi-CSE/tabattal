@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -198,20 +199,21 @@ class QuranDrawerTablet extends StatelessWidget {
                       }
                     },
                   ),
-                  _TabletDrawerItem(
-                    icon: Icons.headphones_rounded,
-                    title: l10n.drawerAudioManager,
-                    subtitle: l10n.drawerAudioManagerSubtitle,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const QuranAudioManagerViewTablet(),
-                        ),
-                      );
-                    },
-                  ),
+                  if (!kIsWeb)
+                    _TabletDrawerItem(
+                      icon: Icons.headphones_rounded,
+                      title: l10n.drawerAudioManager,
+                      subtitle: l10n.drawerAudioManagerSubtitle,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const QuranAudioManagerViewTablet(),
+                          ),
+                        );
+                      },
+                    ),
                   _TabletDrawerItem(
                     iconWidget: ThemeAndLanguageDrawerIconTablet(
                       size: (isLandscape ? 46.0 : 50.0).r,

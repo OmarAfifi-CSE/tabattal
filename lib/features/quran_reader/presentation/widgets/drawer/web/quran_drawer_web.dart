@@ -9,7 +9,6 @@ import '../../../../../settings/presentation/bloc/settings_state.dart';
 import '../../../../../quran_bookmarks/presentation/bloc/bookmark_bloc.dart';
 import '../../../../../quran_bookmarks/presentation/bloc/bookmark_state.dart';
 import '../../../../../quran_search/presentation/screens/web/quran_search_screen_web.dart';
-import '../../../../../quran_audio/presentation/widgets/web/quran_audio_manager_view_web.dart';
 import '../../../../../settings/presentation/widgets/web/theme_and_language_sheet_web.dart';
 import '../../../../../quran_bookmarks/presentation/widgets/web/quran_bookmarks_view_web.dart';
 import 'quran_full_tafsir_view_web.dart';
@@ -196,20 +195,6 @@ class QuranDrawerWeb extends StatelessWidget {
                       } else if (result is int) {
                         onNavigateToPage(result);
                       }
-                    },
-                  ),
-                  _WebDrawerItem(
-                    icon: Icons.headphones_rounded,
-                    title: l10n.drawerAudioManager,
-                    subtitle: l10n.drawerAudioManagerSubtitle,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const QuranAudioManagerViewWeb(),
-                        ),
-                      );
                     },
                   ),
                   _WebDrawerItem(

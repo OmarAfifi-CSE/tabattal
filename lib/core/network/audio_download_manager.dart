@@ -100,6 +100,10 @@ class AudioDownloadManager {
     void Function(int surah, double progress)? onSurahProgress,
     void Function(bool success, int failedCount)? onCompleted,
   }) async {
+    if (kIsWeb) {
+      onCompleted?.call(false, 0);
+      return;
+    }
     if (_isBatchRunning) return;
 
     _isBatchRunning = true;
