@@ -43,7 +43,24 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     action: MediaAction.stop,
   );
 
-  AudioPlayer _player = AudioPlayer();
+  AudioPlayer _player = AudioPlayer(
+    audioLoadConfiguration: const AudioLoadConfiguration(
+      androidLoadControl: AndroidLoadControl(
+        minBufferDuration: Duration(seconds: 3),
+        maxBufferDuration: Duration(seconds: 30),
+        bufferForPlaybackDuration: Duration(milliseconds: 1000),
+        bufferForPlaybackAfterRebufferDuration: Duration(milliseconds: 1500),
+        prioritizeTimeOverSizeThresholds: true,
+        backBufferDuration: Duration(seconds: 2),
+      ),
+      darwinLoadControl: DarwinLoadControl(
+        automaticallyWaitsToMinimizeStalling: true,
+      ),
+    ),
+    androidAudioOffloadPreferences: const AndroidAudioOffloadPreferences(
+      audioOffloadMode: AndroidAudioOffloadMode.disabled,
+    ),
+  );
   StreamSubscription? _playbackSubscription;
   StreamSubscription? _durationSubscription;
 

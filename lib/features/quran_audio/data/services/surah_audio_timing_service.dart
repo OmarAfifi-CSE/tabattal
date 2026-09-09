@@ -61,8 +61,6 @@ class SurahAudioTimingService {
     'Ali_Hajjaj_AlSuesy_128kbps': 128,
     'Akram_AlAlaqimy_128kbps': 127,
     'Muhsin_Al_Qasim_192kbps': 11,
-    'Alafasy_128kbps': 7,
-    'Mishary_Rashid_Alafasy': 7,
 
     // 3. الترجمات الصوتية
     'English/Sahih_Intnl_Ibrahim_Walk_192kbps': 58,
@@ -99,7 +97,6 @@ class SurahAudioTimingService {
         (lower.contains('rifai') || lower.contains('rifa3i'))) {
       return 5;
     }
-    if (lower.contains('alafasy') || lower.contains('afasy')) return 7;
     if (lower.contains('minshaw')) {
       if (lower.contains('mujawwad')) return 8;
       if (lower.contains('teacher') || lower.contains('muallim')) return 168;
@@ -174,9 +171,6 @@ class SurahAudioTimingService {
     final surah = surahNumber.toString();
     final surah3 = surahNumber.toString().padLeft(3, '0');
 
-    if (lower.contains('alafasy') || lower.contains('afasy')) {
-      return 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/$surah.mp3';
-    }
     if (lower.contains('minshaw')) {
       if (lower.contains('mujawwad')) {
         return 'https://download.quranicaudio.com/qdc/siddiq_al-minshawi/mujawwad/$surah3.mp3';

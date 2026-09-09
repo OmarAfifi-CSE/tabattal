@@ -60,8 +60,11 @@ class _MockPlayer extends AudioPlayerPlatform {
     ));
   }
 
+  LoadRequest? lastLoadRequest;
+
   @override
   Future<LoadResponse> load(LoadRequest request) async {
+    lastLoadRequest = request;
     _currentPos = request.initialPosition ?? Duration.zero;
     _currentIndex = request.initialIndex ?? 0;
     broadcast(ProcessingStateMessage.ready, _currentPos, _currentIndex);
@@ -128,6 +131,8 @@ class _MockPreferencesService extends Fake implements AudioPreferencesService {
   bool get playOnce => _once;
   @override
   String get appLocale => 'ar';
+  @override
+  double get volume => 1.0;
 
   @override
   Future<void> saveCategory(String category) async => _cat = category;
@@ -170,6 +175,15 @@ class _MockDownloadManager extends Fake implements AudioDownloadManager {
     String reciterKey,
     int surah,
   ) async {}
+
+  @override
+  Future<String?> getOrPrecacheStreamingSurah({
+    required String category,
+    required String reciterKey,
+    required int surahNumber,
+    required String remoteUrl,
+    Duration timeout = const Duration(seconds: 4),
+  }) async => null;
 
   @override
   Future<String> getVerseAudioPath(
@@ -619,6 +633,28 @@ void main() {
       expect(states.any((s) => s is AudioError), isFalse);
 
       await sub.cancel();
+    });
+
+    test('Streaming mode: playing ayah 1 does not send explicit initialPosition to setAudioSource avoiding native seek-to-0 buffer flush stutter', () async {
+      mockDownload.mockLocalSurah = null; // Streaming mode
+
+      bloc.add(const PlayVerse('', 1001));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      expect(bloc.state, isA<AudioPlaying>().having((s) => s.currentVerseId, 'currentVerseId', 1001));
+      // Must be null to avoid scheduling an explicit seek-to-0 in ExoPlayer/AVPlayer/WinRT
+      expect(mockPlatform.player.lastLoadRequest?.initialPosition, isNull);
+    });
+
+    test('Streaming mode: playing ayah > 1 passes initialPosition matching targetVerse.start', () async {
+      mockDownload.mockLocalSurah = null; // Streaming mode
+
+      bloc.add(const PlayVerse('', 1002));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      expect(bloc.state, isA<AudioPlaying>().having((s) => s.currentVerseId, 'currentVerseId', 1002));
+      // Ayah 2 starts at 5 seconds
+      expect(mockPlatform.player.lastLoadRequest?.initialPosition, equals(const Duration(seconds: 5)));
     });
   });
 }

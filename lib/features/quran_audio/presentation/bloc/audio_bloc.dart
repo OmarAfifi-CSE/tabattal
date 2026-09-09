@@ -229,7 +229,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
     // 3. Playback event stream error handling
     _playbackEventSubscription = _audioPlayer.playbackEventStream.listen(
-      (event) {},
+      null,
       onError: (Object e, StackTrace stackTrace) async {
         final errStr = e.toString().toLowerCase();
         final isMissingFile = errStr.contains('filenotfound') ||
@@ -327,7 +327,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       );
 
       // 1. Check for local full surah audio file on disk first
-      final localPath = await _downloadManager.getLocalSurahPath(
+      String? localPath = await _downloadManager.getLocalSurahPath(
         _currentCategory,
         _currentReciter,
         verse.surah,
@@ -346,7 +346,26 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
       if (_playlistGeneration != myGen) return;
 
-      // 3. Fallback to local individual ayah file if neither full surah nor remote stream is available
+      // 3. Fast Streaming Cache: For short surahs (e.g. Surah 1, 90-114), pre-cache into local file
+      // to eliminate ExoPlayer EOF timeline discontinuity and AudioTrack restart stutter.
+      if ((localPath == null || localPath.isEmpty) &&
+          timings != null &&
+          timings.audioUrl.isNotEmpty) {
+        final cachedStreamingPath =
+            await _downloadManager.getOrPrecacheStreamingSurah(
+          category: _currentCategory,
+          reciterKey: _currentReciter,
+          surahNumber: verse.surah,
+          remoteUrl: timings.audioUrl,
+        );
+        if (cachedStreamingPath != null && cachedStreamingPath.isNotEmpty) {
+          localPath = cachedStreamingPath;
+        }
+      }
+
+      if (_playlistGeneration != myGen) return;
+
+      // 4. Fallback to local individual ayah file if neither full surah nor remote stream is available
       String? localVersePath;
       if ((localPath == null || localPath.isEmpty) &&
           (timings == null || timings.audioUrl.isEmpty)) {
@@ -359,7 +378,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
       if (_playlistGeneration != myGen) return;
 
-      // 4. If no local file on disk and no remote stream available, report no internet
+      // 5. If no local file on disk and no remote stream available, report no internet
       if ((localPath == null || localPath.isEmpty) &&
           (timings == null || timings.audioUrl.isEmpty) &&
           (localVersePath == null || localVersePath.isEmpty)) {
@@ -370,6 +389,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       final Duration initialPosition;
       final int targetAyah;
       final String audioPath;
+      final bool isStartOfSurah;
 
       if (localPath != null && localPath.isNotEmpty) {
         audioPath = localPath;
@@ -378,9 +398,11 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           final targetVerse = timings.getVerse(verse.ayah) ?? timings.verseTimings.first;
           initialPosition = targetVerse.start;
           targetAyah = targetVerse.ayah;
+          isStartOfSurah = targetAyah == 1 || targetVerse == timings.verseTimings.first;
         } else {
           initialPosition = Duration.zero;
           targetAyah = verse.ayah;
+          isStartOfSurah = targetAyah == 1;
           timings ??= SurahTimings(
             surah: verse.surah,
             audioUrl: localPath,
@@ -394,15 +416,18 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           final targetVerse = timings.getVerse(verse.ayah) ?? timings.verseTimings.first;
           initialPosition = targetVerse.start;
           targetAyah = targetVerse.ayah;
+          isStartOfSurah = targetAyah == 1 || targetVerse == timings.verseTimings.first;
         } else {
           initialPosition = Duration.zero;
           targetAyah = verse.ayah;
+          isStartOfSurah = targetAyah == 1;
         }
       } else {
         audioPath = localVersePath!;
         _isSingleVersePlayback = true;
         initialPosition = Duration.zero;
         targetAyah = verse.ayah;
+        isStartOfSurah = true;
         timings = SurahTimings(
           surah: verse.surah,
           audioUrl: localVersePath,
@@ -412,9 +437,25 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
       final AudioSource source = _createAudioSource(audioPath);
 
+      // CRITICAL: When playing from the beginning of the surah or offset is 0,
+      // never pass an explicit initialPosition (Duration.zero).
+      // Passing non-null Duration.zero causes ExoPlayer (Android), AVPlayer (iOS),
+      // and WinRT MediaPlayer (Windows) to schedule an explicit seek-to-0 operation.
+      // On remote HTTP audio streams, this seek flushes the decoded audio pipeline
+      // after ~300ms has already played, causing the reciter to speak two letters,
+      // cut out, and repeat from the beginning.
+      final Duration? effectiveInitialPosition =
+          (!isStartOfSurah && initialPosition > Duration.zero)
+              ? initialPosition
+              : null;
+
+      if (_audioPlayer.playing) {
+        await _audioPlayer.pause();
+      }
+
       await _audioPlayer.setAudioSource(
         source,
-        initialPosition: initialPosition,
+        initialPosition: effectiveInitialPosition,
       );
       if (_playlistGeneration != myGen) return;
 
@@ -913,7 +954,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
             _currentSurahTimings = timings;
             _currentAudioPath = timings.audioUrl;
             final source = _createAudioSource(timings.audioUrl);
-            await _audioPlayer.setAudioSource(source, initialPosition: currentPos);
+            final Duration? effectivePos = (currentPos > Duration.zero) ? currentPos : null;
+            await _audioPlayer.setAudioSource(source, initialPosition: effectivePos);
             if (isPlaying) {
               unawaited(_audioPlayer.play());
             }
@@ -946,7 +988,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
           _currentAudioPath = localPath;
           final source = _createAudioSource(localPath);
-          await _audioPlayer.setAudioSource(source, initialPosition: currentPos);
+          final Duration? effectivePos = (currentPos > Duration.zero) ? currentPos : null;
+          await _audioPlayer.setAudioSource(source, initialPosition: effectivePos);
           if (isPlaying) {
             unawaited(_audioPlayer.play());
           }
@@ -958,7 +1001,15 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
   AudioSource _createAudioSource(String path) {
     if (path.startsWith('http://') || path.startsWith('https://')) {
-      return AudioSource.uri(Uri.parse(path));
+      return ProgressiveAudioSource(
+        Uri.parse(path),
+        options: const ProgressiveAudioSourceOptions(
+          androidExtractorOptions: AndroidExtractorOptions(
+            constantBitrateSeekingEnabled: true,
+            constantBitrateSeekingAlwaysEnabled: true,
+          ),
+        ),
+      );
     } else {
       return AudioSource.file(path);
     }

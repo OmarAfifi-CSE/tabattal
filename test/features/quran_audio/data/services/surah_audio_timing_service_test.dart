@@ -57,7 +57,7 @@ void main() {
       expect(SurahAudioTimingService.resolveRecitationId('Minshawy_Murattal_128kbps'), 9);
       expect(SurahAudioTimingService.resolveRecitationId('Husary_128kbps'), 6);
       expect(SurahAudioTimingService.resolveRecitationId('Abdul_Basit_Mujawwad_128kbps'), 1);
-      expect(SurahAudioTimingService.resolveRecitationId('Alafasy_128kbps'), 7);
+      expect(SurahAudioTimingService.resolveRecitationId('Ghamadi_40kbps'), 13);
       expect(SurahAudioTimingService.resolveRecitationId('MaherAlMuaiqly128kbps'), 159);
       expect(SurahAudioTimingService.resolveRecitationId('Yasser_Ad-Dussary_128kbps'), 174);
       expect(SurahAudioTimingService.resolveRecitationId('Nasser_Alqatami_128kbps'), 104);

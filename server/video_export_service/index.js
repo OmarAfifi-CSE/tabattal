@@ -540,16 +540,16 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
       const audioDest = path.join(sessionDir, `audio_${sStr}_${aStr}.mp3`);
 
       const primaryUrl = `https://everyayah.com/data/${reciterPath}/${sStr}${aStr}.mp3`;
-      const fallbackUrl = `https://audio.qurancdn.com/Alafasy/mp3/${sStr}${aStr}.mp3`;
+      const mirrorUrl = `https://mirrors.quranicaudio.com/everyayah/data/${reciterPath}/${sStr}${aStr}.mp3`;
 
       try {
         await downloadFile(primaryUrl, audioDest);
       } catch (err) {
-        console.warn(`Primary audio download failed for ${primaryUrl}, trying fallback...`);
+        console.warn(`Primary audio download failed for ${primaryUrl}, trying EveryAyah mirror...`);
         try {
-          await downloadFile(fallbackUrl, audioDest);
+          await downloadFile(mirrorUrl, audioDest);
         } catch (fbErr) {
-          console.error(`Fallback audio download failed for ${fallbackUrl}: ${fbErr.message}`);
+          console.error(`EveryAyah audio download failed for ${reciterPath} [${sStr}:${aStr}]: ${fbErr.message}`);
         }
       }
 

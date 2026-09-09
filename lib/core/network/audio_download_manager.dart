@@ -250,6 +250,92 @@ class AudioDownloadManager {
     return null;
   }
 
+  /// Retrieves or precaches a surah audio file into the local fast streaming cache.
+  /// For short surahs (or already cached surahs), this eliminates audio stutter/discontinuity
+  /// on ExoPlayer/Android by converting small remote HTTP streams into local FileDataSources.
+  Future<String?> getOrPrecacheStreamingSurah({
+    required String category,
+    required String reciterKey,
+    required int surahNumber,
+    required String remoteUrl,
+    Duration timeout = const Duration(seconds: 4),
+  }) async {
+    if (kIsWeb) return null;
+
+    // 1. Fast Bailout: Only genuinely tiny surahs (< 1.2 MB: Surah 1 and Surahs 90-114)
+    // require pre-caching to eliminate ExoPlayer's EOF discontinuity race.
+    // Medium and long surahs (Surahs 2-89, even those with <50 ayahs like Qaf or Al-Hujurat)
+    // are 8-15 MB long; they stream directly via HTTP and start playback instantly (<1s)
+    // while continuing to buffer seamlessly in the background.
+    final isTinySurah =
+        surahNumber == 1 || (surahNumber >= 90 && surahNumber <= 114);
+    if (!isTinySurah) return null;
+
+    File? tempFile;
+    try {
+      final cacheDir = await getTemporaryDirectory();
+      if (cacheDir.path.isEmpty || cacheDir.path == '.') return null;
+
+      final streamingDir = Directory('${cacheDir.path}/streaming_cache');
+      if (!await streamingDir.exists()) {
+        await streamingDir.create(recursive: true);
+      }
+
+      final surahStr = surahNumber.toString().padLeft(3, '0');
+      final recPath = getReciterPath(category, reciterKey);
+      final sanitizedRec = recPath.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+      final cachedFilePath =
+          '${streamingDir.path}/${sanitizedRec}_$surahStr.mp3';
+      final cachedFile = File(cachedFilePath);
+
+      // 2. If already cached and valid (>1KB), return immediately
+      if (await cachedFile.exists() && (await cachedFile.length()) > 1024) {
+        return cachedFilePath;
+      }
+
+      // 3. Isolated download with unique timestamp to prevent race collisions on rapid taps
+      final tempSavePath =
+          '$cachedFilePath.${DateTime.now().microsecondsSinceEpoch}.temp';
+      tempFile = File(tempSavePath);
+
+      await _dio.download(
+        remoteUrl,
+        tempSavePath,
+        options: Options(
+          receiveTimeout: timeout,
+          sendTimeout: timeout,
+        ),
+      );
+
+      if (await tempFile.exists()) {
+        final len = await tempFile.length();
+        if (len > 1024) {
+          if (await cachedFile.exists()) {
+            try {
+              await cachedFile.delete();
+            } catch (_) {}
+          }
+          await tempFile.rename(cachedFilePath);
+          return cachedFilePath;
+        } else {
+          try {
+            await tempFile.delete();
+          } catch (_) {}
+        }
+      }
+    } catch (_) {
+      // Pre-cache failed or timed out; fall back seamlessly to remote streaming
+    } finally {
+      if (tempFile != null && await tempFile.exists()) {
+        try {
+          await tempFile.delete();
+        } catch (_) {}
+      }
+    }
+    return null;
+  }
+
+
   /// Constructs the EveryAyah backend URL for a verse or Basmalah.
   static String getEveryAyahUrl(
     String category,
@@ -429,6 +515,22 @@ class AudioDownloadManager {
       } catch (_) {}
     }
     _surahTotalSizes.remove(_surahKey(category, reciterKey, surah));
+
+    // Clean up any matching streaming cache file
+    try {
+      final cacheDir = await getTemporaryDirectory();
+      if (cacheDir.path.isNotEmpty && cacheDir.path != '.') {
+        final recPath = getReciterPath(category, reciterKey);
+        final sanitizedRec = recPath.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+        final cachedFile = File(
+            '${cacheDir.path}/streaming_cache/${sanitizedRec}_$surahStr.mp3');
+        if (await cachedFile.exists()) {
+          try {
+            await cachedFile.delete();
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
 
     // Backward-compatibility: delete legacy per-ayah files if any exist
     for (int ayah = 1; ayah <= numAyahs; ayah++) {
