@@ -57,7 +57,7 @@ Future<DependencyContainer> configureDependencies() async {
             : 'تلاوات القرآن',
         androidNotificationIcon: 'mipmap/ic_launcher',
         androidNotificationOngoing: true,
-        androidStopForegroundOnPause: true,
+        androidStopForegroundOnPause: false,
       ),
     ),
   ]);
