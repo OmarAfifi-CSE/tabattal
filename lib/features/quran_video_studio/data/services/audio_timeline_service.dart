@@ -167,7 +167,7 @@ class AudioTimelineService {
     }
     final userDownloadedDir = Directory('${readerBaseDir.path}/audio/$reciterPath');
 
-    final List<String> localFilePaths = [];
+    final Map<int, String> verseFilePaths = {};
     final List<int> missingAyahs = [];
 
     for (int i = 0; i < totalAyahs; i++) {
@@ -181,8 +181,8 @@ class AudioTimelineService {
       // 1. Check if user already downloaded this verse in the Quran Reader
       final userDownloadedFile = File('${userDownloadedDir.path}/$verseId.mp3');
       if (await userDownloadedFile.exists() && await userDownloadedFile.length() > 0) {
-        localFilePaths.add(userDownloadedFile.path);
-        onProgress?.call((i + 1) / totalAyahs);
+        verseFilePaths[ayah] = userDownloadedFile.path;
+        onProgress?.call((verseFilePaths.length) / totalAyahs);
         continue;
       }
 
@@ -193,8 +193,8 @@ class AudioTimelineService {
 
       // 2. Check if already extracted/cached locally
       if (await file.exists() && await file.length() > 0) {
-        localFilePaths.add(filePath);
-        onProgress?.call((i + 1) / totalAyahs);
+        verseFilePaths[ayah] = filePath;
+        onProgress?.call((verseFilePaths.length) / totalAyahs);
         continue;
       }
 
@@ -217,8 +217,8 @@ class AudioTimelineService {
             filePath,
             cancelToken: _cancelToken,
           );
-          localFilePaths.add(filePath);
-          onProgress?.call(localFilePaths.length / totalAyahs);
+          verseFilePaths[ayah] = filePath;
+          onProgress?.call(verseFilePaths.length / totalAyahs);
         }
       } else {
         // MP3Quran reciters: ONLY extract from the locally downloaded full surah file!
@@ -236,14 +236,21 @@ class AudioTimelineService {
           final filePath = '${audioDir.path}/$surahStr$ayahStr.mp3';
           final file = File(filePath);
           if (await file.exists() && await file.length() > 0) {
-            localFilePaths.add(filePath);
+            verseFilePaths[ayah] = filePath;
           }
         }
       }
     }
 
-    localFilePaths.sort();
-    return localFilePaths;
+    final List<String> orderedFilePaths = [];
+    for (int i = 0; i < totalAyahs; i++) {
+      final ayah = startAyah + i;
+      final path = verseFilePaths[ayah];
+      if (path != null) {
+        orderedFilePaths.add(path);
+      }
+    }
+    return orderedFilePaths;
   }
 
   /// Downloads and caches a single ayah audio MP3.

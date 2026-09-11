@@ -244,7 +244,7 @@ class _ReciterPickerModalState extends State<ReciterPickerModal> {
   void _buildRecitersCache() {
     _cachedReciters = widget.reciters.map((r) {
       final en = ReciterCatalog.getReciterNameEnglish(r);
-      final path = ReciterCatalog.getReciterPathByName(r);
+      final path = ReciterCatalog.getReciterPath(widget.selectedCategory, r);
       final isUntimed = ReciterCatalog.globallyUntimedReciterPaths.contains(path);
       return _ReciterData(
         reciterArabic: r,

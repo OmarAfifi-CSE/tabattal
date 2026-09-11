@@ -223,5 +223,39 @@ void main() {
       expect(await finalFile.exists(), isTrue);
       expect(await finalFile.length(), 200);
     });
+
+    test('getDownloadedSurahReciterPaths detects downloaded MP3Quran surahs efficiently', () async {
+      final manager = AudioDownloadManager(
+        dio: dio,
+        timingService: timingService,
+        directoryProvider: () async => tempDir,
+      );
+
+      // Initially empty
+      final initial = await manager.getDownloadedSurahReciterPaths(1);
+      expect(initial, isEmpty);
+
+      // Create a downloaded surah for an MP3Quran reciter
+      final reciterDir = Directory('${tempDir.path}/audio/mp3quran_test_reciter');
+      await reciterDir.create(recursive: true);
+      final surahFile = File('${reciterDir.path}/001.mp3');
+      await surahFile.writeAsBytes([1, 2, 3]);
+
+      // Create an empty file (0 bytes) for another surah
+      final emptySurahFile = File('${reciterDir.path}/002.mp3');
+      await emptySurahFile.writeAsBytes([]);
+
+      // Create a non-mp3quran folder
+      final otherDir = Directory('${tempDir.path}/audio/EveryAyah_reciter');
+      await otherDir.create(recursive: true);
+      await File('${otherDir.path}/001.mp3').writeAsBytes([1, 2, 3]);
+
+      final resultSurah1 = await manager.getDownloadedSurahReciterPaths(1);
+      expect(resultSurah1, contains('mp3quran_test_reciter'));
+      expect(resultSurah1, isNot(contains('EveryAyah_reciter')));
+
+      final resultSurah2 = await manager.getDownloadedSurahReciterPaths(2);
+      expect(resultSurah2, isEmpty);
+    });
   });
 }

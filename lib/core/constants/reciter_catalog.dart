@@ -680,8 +680,14 @@ static const Map<String, String> reciterEnglishNames = {
     return defaultReciterPath;
   }
 
-  /// Looks up a reciter path by reciter name across all categories
-  static String getReciterPathByName(String reciterName) {
+  /// Looks up a reciter path by reciter name across all categories, or within a specific category if provided
+  static String getReciterPathByName(String reciterName, {String? category}) {
+    if (category != null && reciterCategories.containsKey(category)) {
+      final catMap = reciterCategories[category]!;
+      if (catMap.containsKey(reciterName)) {
+        return catMap[reciterName]!;
+      }
+    }
     for (final catMap in reciterCategories.values) {
       if (catMap.containsKey(reciterName)) {
         return catMap[reciterName]!;

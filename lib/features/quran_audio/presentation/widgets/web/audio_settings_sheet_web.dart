@@ -195,6 +195,7 @@ class _AudioSettingsSheetContentState
     final reciters = _recitersForCategory;
     final isLandscape =
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+    final currentSurah = context.read<AudioBloc>().currentPlayingSurah ?? 1;
 
     return SafeArea(
       top: false,
@@ -315,15 +316,31 @@ class _AudioSettingsSheetContentState
                   labelBuilder: (item) =>
                       ReciterLocalization.localizeByLang(isEn, item),
                 ),
-                if (ReciterCatalog.globallyUntimedReciterPaths.contains(
-                  ReciterCatalog.getReciterPath(_selectedCategory, _selectedReciter),
-                )) ...[
-                  SizedBox(height: 8.h),
-                  const ListeningOnlyNoticeBanner(
-                    margin: EdgeInsets.zero,
-                    compact: true,
-                  ),
-                ],
+                Builder(
+                  builder: (context) {
+                    final reciterPath = ReciterCatalog.getReciterPath(
+                        _selectedCategory, _selectedReciter);
+                    if (!ReciterCatalog.hasTimingForSurah(
+                      reciterPath,
+                      currentSurah,
+                    )) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(height: 8.h),
+                          ListeningOnlyNoticeBanner(
+                            margin: EdgeInsets.zero,
+                            compact: true,
+                            reciterName: _selectedReciter,
+                            reciterPath: reciterPath,
+                            surahNumber: currentSurah,
+                          ),
+                        ],
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
                 SizedBox(height: (isLandscape ? 10.0 : 14.0).h),
 
                 // ── Repeat Selector

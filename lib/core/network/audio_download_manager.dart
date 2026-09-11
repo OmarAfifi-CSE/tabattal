@@ -267,37 +267,36 @@ class AudioDownloadManager {
     final surahStr = surahNumber.toString().padLeft(3, '0');
     final downloadedPaths = <String>{};
 
-    if (await audioDir.exists()) {
-      for (final catMap in ReciterCatalog.reciterCategories.values) {
-        for (final path in catMap.values) {
-          if (!ReciterCatalog.isMp3QuranReciter(path)) continue;
-          final file1 = File('${audioDir.path}/$path/$surahStr.mp3');
-          final file2 = File('${audioDir.path}/$path/$surahNumber.mp3');
-          if ((await file1.exists() && await file1.length() > 0) ||
-              (await file2.exists() && await file2.length() > 0)) {
-            downloadedPaths.add(path);
+    Future<void> scanAudioDir(Directory dir) async {
+      if (!await dir.exists()) return;
+      try {
+        await for (final entity in dir.list(followLinks: false)) {
+          if (entity is Directory) {
+            final reciterPath =
+                entity.uri.pathSegments.where((s) => s.isNotEmpty).lastOrNull;
+            if (reciterPath == null || downloadedPaths.contains(reciterPath)) {
+              continue;
+            }
+            if (!ReciterCatalog.isMp3QuranReciter(reciterPath)) continue;
+
+            final file1 = File('${entity.path}/$surahStr.mp3');
+            final file2 = File('${entity.path}/$surahNumber.mp3');
+            if ((await file1.exists() && await file1.length() > 0) ||
+                (await file2.exists() && await file2.length() > 0)) {
+              downloadedPaths.add(reciterPath);
+            }
           }
         }
-      }
+      } catch (_) {}
     }
+
+    await scanAudioDir(audioDir);
 
     if (Platform.isWindows && _directoryProvider == null) {
       try {
         final docsDir = await getApplicationDocumentsDirectory();
         final legacyAudioDir = Directory('${docsDir.path}/audio');
-        if (await legacyAudioDir.exists()) {
-          for (final catMap in ReciterCatalog.reciterCategories.values) {
-            for (final path in catMap.values) {
-              if (!ReciterCatalog.isMp3QuranReciter(path) || downloadedPaths.contains(path)) continue;
-              final file1 = File('${legacyAudioDir.path}/$path/$surahStr.mp3');
-              final file2 = File('${legacyAudioDir.path}/$path/$surahNumber.mp3');
-              if ((await file1.exists() && await file1.length() > 0) ||
-                  (await file2.exists() && await file2.length() > 0)) {
-                downloadedPaths.add(path);
-              }
-            }
-          }
-        }
+        await scanAudioDir(legacyAudioDir);
       } catch (_) {}
     }
 
