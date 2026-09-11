@@ -26,8 +26,30 @@ class CustomVideoService {
   /// Picks a video file from the device gallery or native file system.
   static Future<String?> pickVideoFromGallery() async {
     try {
-      if (!kIsWeb &&
-          (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      if (kIsWeb) {
+        try {
+          const typeGroup = fs.XTypeGroup(
+            label: 'Videos',
+            extensions: ['mp4', 'mov', 'webm', 'mkv'],
+            mimeTypes: ['video/mp4', 'video/webm', 'video/quicktime'],
+          );
+          final file = await fs.openFile(acceptedTypeGroups: [typeGroup]);
+          if (file != null && file.path.isNotEmpty) {
+            return file.path;
+          }
+        } catch (e) {
+          debugPrint('file_selector openFile on web failed: $e');
+        }
+
+        final picker = ImagePicker();
+        final XFile? pickedFile = await picker.pickVideo(
+          source: ImageSource.gallery,
+          maxDuration: const Duration(minutes: 10),
+        );
+        return pickedFile?.path;
+      }
+
+      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
         try {
           const typeGroup = fs.XTypeGroup(
             label: 'Videos',

@@ -41,13 +41,11 @@ class ResponsiveLayout extends StatelessWidget {
         final width = constraints.maxWidth;
 
         if (kIsWeb) {
-          if (webBody != null) {
-            return webBody!;
-          }
           if (width < webAndDesktopMobileBreakpoint) {
             return mobileBody;
           }
-          return desktopBody;
+          return webBody ??
+              (width >= tabletBreakpoint ? desktopBody : tabletBody);
         }
 
         // On mobile/tablet operating systems (Android & iOS)

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/utils/responsive_layout.dart';
 import '../../../quran_reader/data/models/verse_model.dart';
 import '../../../quran_verse_card/presentation/widgets/desktop/verse_card_generator_sheet_desktop.dart';
 import '../../../quran_verse_card/presentation/widgets/mobile/verse_card_generator_sheet_mobile.dart';
@@ -26,22 +27,29 @@ void showQuranVideoStudioModal(
         );
 
   final width = MediaQuery.sizeOf(context).width;
-  if (kIsWeb || width > 1000) {
-    if (kIsWeb) {
-      showVerseCardGeneratorModalWeb(
+  if (kIsWeb) {
+    if (width < ResponsiveLayout.webAndDesktopMobileBreakpoint) {
+      showVerseCardGeneratorModalMobile(
         context,
         verse: verse,
         initialFormat: ShareFormat.video,
         initialVerses: initialVerses,
       );
     } else {
-      showVerseCardGeneratorModalDesktop(
+      showVerseCardGeneratorModalWeb(
         context,
         verse: verse,
         initialFormat: ShareFormat.video,
         initialVerses: initialVerses,
       );
     }
+  } else if (width > 1000) {
+    showVerseCardGeneratorModalDesktop(
+      context,
+      verse: verse,
+      initialFormat: ShareFormat.video,
+      initialVerses: initialVerses,
+    );
   } else if (width > 600) {
     showVerseCardGeneratorModalTablet(
       context,
@@ -91,6 +99,13 @@ class QuranVideoStudioScreen extends StatelessWidget {
 
     final width = MediaQuery.sizeOf(context).width;
     if (kIsWeb) {
+      if (width < ResponsiveLayout.webAndDesktopMobileBreakpoint) {
+        return VerseCardGeneratorSheetMobile(
+          verse: effectiveVerse,
+          initialFormat: ShareFormat.video,
+          initialVerses: initialVerses,
+        );
+      }
       return VerseCardGeneratorSheetWeb(
         verse: effectiveVerse,
         initialFormat: ShareFormat.video,
@@ -111,7 +126,6 @@ class QuranVideoStudioScreen extends StatelessWidget {
         initialVerses: initialVerses,
       );
     }
-
     return VerseCardGeneratorSheetMobile(
       verse: effectiveVerse,
       initialFormat: ShareFormat.video,

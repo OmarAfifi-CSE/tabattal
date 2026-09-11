@@ -21,6 +21,10 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/services/app_update_service.dart';
 import '../../../../../core/utils/app_snack_bar.dart';
 import '../../../../../core/services/quran_font_service.dart';
+import '../../../../../core/utils/web_launch_intent.dart';
+import '../../../../../core/constants/quran_metadata.dart';
+import '../../../data/models/verse_model.dart';
+import '../../../../quran_verse_card/presentation/widgets/mobile/verse_card_generator_sheet_mobile.dart';
 
 class QuranMobileScreen extends StatefulWidget {
   final int? initialPage;
@@ -42,6 +46,7 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
   int? _highlightTargetPage;
   int _highlightToken = 0;
   bool _isAudioExpanded = true;
+  bool _launchIntentHandled = false;
 
   @override
   void initState() {
@@ -65,6 +70,33 @@ class _QuranMobileScreenState extends State<QuranMobileScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AppUpdateService.checkForUpdates();
     });
+
+    if (kIsWeb &&
+        resolveWebLaunchIntent(Uri.base) == WebLaunchIntent.videoStudio) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _openVideoStudioFromLaunchIntent();
+      });
+    }
+  }
+
+  void _openVideoStudioFromLaunchIntent() {
+    if (!mounted || _launchIntentHandled) return;
+    _launchIntentHandled = true;
+
+    final surahNumber = QuranMetadata.getSurahForPage(_currentPage);
+    showVerseCardGeneratorModalMobile(
+      context,
+      verse: VerseModel(
+        id: 0,
+        verseNumber: 1,
+        verseKey: '$surahNumber:1',
+        textUthmani: '',
+        juzNumber: 1,
+        words: const [],
+      ),
+      pageNumber: _currentPage,
+      initialFormat: ShareFormat.video,
+    );
   }
 
   void _onPageChanged(int newPage) {

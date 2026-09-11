@@ -1,7 +1,9 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/constants/reciter_catalog.dart';
+import '../../../../../core/utils/verse_ref.dart';
 import '../../../../../core/network/audio_download_manager.dart';
 import '../../../../../core/services/audio_preferences_service.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -39,7 +41,11 @@ void showAudioSettingsSheetWeb(BuildContext context, {int? verseId}) {
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 440.w, maxHeight: 560.h),
+          constraints: BoxConstraints(
+            maxWidth: 480.w,
+            maxHeight:
+                math.min(760.h, MediaQuery.sizeOf(context).height * 0.92),
+          ),
           child: Directionality(
             textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
             child: MultiBlocProvider(
@@ -195,14 +201,19 @@ class _AudioSettingsSheetContentState
     final reciters = _recitersForCategory;
     final isLandscape =
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
-    final currentSurah = context.read<AudioBloc>().currentPlayingSurah ?? 1;
+    final audioBloc = context.read<AudioBloc>();
+    final targetSurah = widget.verseId != null
+        ? VerseRef.fromId(widget.verseId!).surah
+        : (audioBloc.currentPlayingSurah ?? 1);
 
     return SafeArea(
       top: false,
       maintainBottomViewPadding: true,
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: isLandscape ? 420.h : MediaQuery.sizeOf(context).height * 0.88,
+          maxHeight: isLandscape
+              ? math.min(740.h, MediaQuery.sizeOf(context).height * 0.90)
+              : MediaQuery.sizeOf(context).height * 0.88,
         ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -322,7 +333,7 @@ class _AudioSettingsSheetContentState
                         _selectedCategory, _selectedReciter);
                     if (!ReciterCatalog.hasTimingForSurah(
                       reciterPath,
-                      currentSurah,
+                      targetSurah,
                     )) {
                       return Column(
                         mainAxisSize: MainAxisSize.min,
@@ -333,7 +344,7 @@ class _AudioSettingsSheetContentState
                             compact: true,
                             reciterName: _selectedReciter,
                             reciterPath: reciterPath,
-                            surahNumber: currentSurah,
+                            surahNumber: targetSurah,
                           ),
                         ],
                       );

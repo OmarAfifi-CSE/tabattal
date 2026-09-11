@@ -12,6 +12,7 @@ import '../../../../../core/database/database_helper.dart';
 import '../../../../../core/services/quran_font_service.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/arabic_text_utils.dart';
+import '../../../../../core/utils/responsive_layout.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../settings/presentation/bloc/settings_bloc.dart';
 import '../../../../quran_audio/presentation/bloc/audio_bloc.dart';
@@ -39,11 +40,12 @@ import '../../../../quran_video_studio/presentation/widgets/shared/video_timelin
 import '../../../../quran_video_studio/presentation/utils/video_studio_error_helper.dart';
 
 import '../shared/helpers/verse_card_text_utils.dart';
-import '../shared/models/verse_card_theme.dart';
 import '../shared/services/verse_card_image_exporter.dart';
 import '../shared/widgets/verse_card_content_preview.dart';
 import '../shared/widgets/verse_card_full_page_preview.dart';
 import '../shared/widgets/verse_card_text_preview.dart';
+
+import '../mobile/verse_card_generator_sheet_mobile.dart';
 
 // Re-export models for external consumers
 export '../shared/models/verse_card_theme.dart';
@@ -64,6 +66,19 @@ void showVerseCardGeneratorModalWeb(
   } catch (_) {}
 
   final screenW = MediaQuery.sizeOf(context).width;
+  if (screenW < ResponsiveLayout.webAndDesktopMobileBreakpoint) {
+    showVerseCardGeneratorModalMobile(
+      context,
+      verse: verse,
+      tafsirText: tafsirText,
+      translationText: translationText,
+      pageRepaintKey: pageRepaintKey,
+      pageNumber: pageNumber,
+      initialFormat: initialFormat,
+      initialVerses: initialVerses,
+    );
+    return;
+  }
   final screenH = MediaQuery.sizeOf(context).height;
   final isLandscape = screenW > screenH;
   final maxDialogW = isLandscape

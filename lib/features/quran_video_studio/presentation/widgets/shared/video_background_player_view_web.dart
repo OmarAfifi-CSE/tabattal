@@ -54,9 +54,26 @@ class _VideoBackgroundPlayerViewWebState
     } catch (_) {}
   }
 
+  static String _sanitizeUrl(String rawPath) {
+    String cleanUrl = rawPath.trim();
+    if (cleanUrl.contains(r'\')) {
+      cleanUrl = cleanUrl.replaceAll(r'\', '/');
+    }
+    if (cleanUrl.startsWith('blob:https:/') &&
+        !cleanUrl.startsWith('blob:https://')) {
+      cleanUrl = cleanUrl.replaceFirst('blob:https:/', 'blob:https://');
+    } else if (cleanUrl.startsWith('blob:http:/') &&
+        !cleanUrl.startsWith('blob:http://')) {
+      cleanUrl = cleanUrl.replaceFirst('blob:http:/', 'blob:http://');
+    }
+    return cleanUrl;
+  }
+
   void _configureVideo(web.HTMLVideoElement video) {
     _videoElement = video;
     _initialSeekApplied = false;
+    _hasError = false;
+    final sanitizedSrc = _sanitizeUrl(widget.videoPath);
     video
       ..muted = true
       ..defaultMuted = true
@@ -68,7 +85,7 @@ class _VideoBackgroundPlayerViewWebState
       ..setAttribute('webkit-playsinline', 'true')
       ..setAttribute('muted', 'true')
       ..setAttribute('loop', 'true')
-      ..src = widget.videoPath
+      ..src = sanitizedSrc
       ..style.width = '100%'
       ..style.height = '100%'
       ..style.objectFit = 'cover'
@@ -176,8 +193,10 @@ class _VideoBackgroundPlayerViewWebState
         setState(() {
           _isVideoReady = false;
           _initialSeekApplied = false;
+          _hasError = false;
         });
-        _videoElement!.src = widget.videoPath;
+        final sanitizedSrc = _sanitizeUrl(widget.videoPath);
+        _videoElement!.src = sanitizedSrc;
         _videoElement!.load();
         if (widget.isPlaying) {
           _videoElement!.play();
@@ -334,7 +353,9 @@ class _VideoBackgroundPlayerViewWebState
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        'تعذر تشغيل الفيديو من هذا الرابط، يرجى التأكد من أنه رابط مباشر (MP4).',
+                        widget.videoPath.trim().startsWith('blob:')
+                            ? 'تعذر تشغيل ملف الفيديو، يرجى التأكد من اختيار صيغة مدعومة (مثل MP4 أو WebM).'
+                            : 'تعذر تشغيل الفيديو من هذا الرابط، يرجى التأكد من أنه رابط مباشر (MP4).',
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 12,
