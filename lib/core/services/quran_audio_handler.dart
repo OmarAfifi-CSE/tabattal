@@ -75,18 +75,24 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     _playbackSubscription?.cancel();
     _durationSubscription?.cancel();
 
-    _playbackSubscription = _player.playbackEventStream.map(_transformEvent).listen((state) {
-      if (!playbackState.isClosed) {
-        playbackState.add(state);
-      }
-    });
+    _playbackSubscription = _player.playbackEventStream.map(_transformEvent).listen(
+      (state) {
+        if (!playbackState.isClosed) {
+          playbackState.add(state);
+        }
+      },
+      onError: (_) {},
+    );
 
-    _durationSubscription = _player.durationStream.listen((duration) {
-      final currentItem = mediaItem.valueOrNull;
-      if (currentItem != null && duration != null) {
-        mediaItem.add(currentItem.copyWith(duration: duration));
-      }
-    });
+    _durationSubscription = _player.durationStream.listen(
+      (duration) {
+        final currentItem = mediaItem.valueOrNull;
+        if (currentItem != null && duration != null) {
+          mediaItem.add(currentItem.copyWith(duration: duration));
+        }
+      },
+      onError: (_) {},
+    );
   }
 
   /// Rebinds media transport controls and notification state to a new active AudioPlayer
@@ -119,7 +125,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
         ProcessingState.buffering: AudioProcessingState.buffering,
         ProcessingState.ready: AudioProcessingState.ready,
         ProcessingState.completed: AudioProcessingState.completed,
-      }[_player.processingState]!,
+      }[event.processingState] ?? AudioProcessingState.idle,
       playing: _player.playing,
       updatePosition: _player.position,
       bufferedPosition: _player.bufferedPosition,
@@ -220,6 +226,8 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   Future<void> updateItem(MediaItem item) async {
-    mediaItem.add(item);
+    try {
+      mediaItem.add(item);
+    } catch (_) {}
   }
 }

@@ -463,7 +463,7 @@ class _QuranAudioManagerViewTabletState
                                     onTap: (_selectedCategory == 'مرتل')
                                         ? () async {
                                             final audioPrefs = context.read<AudioPreferencesService>();
-                                            final chosen = await ReciterPickerModal.show(
+                                            final chosen = await ReciterPickerModal.showAsDialog(
                                               context: context,
                                               selectedCategory: _selectedCategory,
                                               selectedReciter: _selectedReciter,

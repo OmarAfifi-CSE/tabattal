@@ -300,7 +300,7 @@ class _AudioSettingsSheetContentState
                   iconSize: (isLandscape ? 20.0 : 26.0).sp,
                   onTap: (_selectedCategory == 'مرتل')
                       ? () async {
-                          final chosen = await ReciterPickerModal.show(
+                          final chosen = await ReciterPickerModal.showAsDialog(
                             context: context,
                             selectedCategory: _selectedCategory,
                             selectedReciter: _selectedReciter,

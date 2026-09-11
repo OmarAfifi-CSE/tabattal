@@ -465,7 +465,7 @@ class _QuranAudioManagerViewDesktopState
                                             final audioPrefs =
                                                 context.read<AudioPreferencesService>();
                                             final chosen =
-                                                await ReciterPickerModal.show(
+                                                await ReciterPickerModal.showAsDialog(
                                               context: context,
                                               selectedCategory:
                                                   _selectedCategory,

@@ -139,7 +139,7 @@ class VideoBackgroundSelectorDesktop extends StatelessWidget {
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () {
-                  CustomBackgroundModal.show(
+                  CustomBackgroundModal.showAsDialog(
                     context,
                     currentImagePath: config.customImagePath,
                     onImageSelected: (path) => onCustomImageChanged(path),
@@ -219,7 +219,7 @@ class VideoBackgroundSelectorDesktop extends StatelessWidget {
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () {
-                  CustomVideoModal.show(
+                  CustomVideoModal.showAsDialog(
                     context,
                     currentVideoPath: config.customVideoPath,
                     onVideoSelected: (path) => onCustomVideoChanged?.call(path),

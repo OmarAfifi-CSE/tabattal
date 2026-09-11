@@ -736,6 +736,39 @@ void main() {
       expect(mockHandler.lastStoppedTitle, isNot(contains('آية')));
       expect(mockHandler.lastStoppedSubtitle, equals('يلزم الإنترنت لتشغيل السور غير المحملة'));
     });
+
+    test('Switching to untimed reciter emits AudioPlaying with isTimingUnavailable=true and preserves flag on resume and state change', () async {
+      // 1. Play initially with timed reciter
+      mockTiming.returnDirectNoTimings = false;
+      bloc.add(const PlayVerse('', 1001));
+      await Future.delayed(const Duration(milliseconds: 60));
+      expect(bloc.state, isA<AudioPlaying>());
+      expect((bloc.state as AudioPlaying).isTimingUnavailable, isFalse);
+
+      // 2. Switch to untimed reciter
+      mockTiming.returnDirectNoTimings = true;
+      bloc.add(const ChangeReciter('famousReciters', 'ماهر المعيقلي', restartPlayback: true));
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      expect(bloc.state, isA<AudioPlaying>());
+      expect((bloc.state as AudioPlaying).isTimingUnavailable, isTrue);
+
+      // 3. Pause and Resume - should preserve isTimingUnavailable=true
+      bloc.add(const PauseAudio());
+      await Future.delayed(const Duration(milliseconds: 40));
+      expect(bloc.state, isA<AudioPaused>());
+
+      bloc.add(const ResumeAudio());
+      await Future.delayed(const Duration(milliseconds: 40));
+      expect(bloc.state, isA<AudioPlaying>());
+      expect((bloc.state as AudioPlaying).isTimingUnavailable, isTrue);
+
+      // 4. AudioStateChanged event from player stream - should preserve isTimingUnavailable=true
+      bloc.add(const AudioStateChanged(isPlaying: true));
+      await Future.delayed(const Duration(milliseconds: 40));
+      expect(bloc.state, isA<AudioPlaying>());
+      expect((bloc.state as AudioPlaying).isTimingUnavailable, isTrue);
+    });
   });
 }
 

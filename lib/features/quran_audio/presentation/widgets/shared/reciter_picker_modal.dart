@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -85,6 +86,7 @@ class ReciterPickerModal extends StatefulWidget {
   final String selectedReciter;
   final List<String> reciters;
   final AudioPreferencesService audioPrefs;
+  final bool isDialog;
 
   const ReciterPickerModal({
     super.key,
@@ -92,9 +94,10 @@ class ReciterPickerModal extends StatefulWidget {
     required this.selectedReciter,
     required this.reciters,
     required this.audioPrefs,
+    this.isDialog = false,
   });
 
-  /// Shows the reciter picker modal bottom sheet adaptively.
+  /// Displays the reciter picker modal as a bottom sheet (for mobile).
   static Future<String?> show({
     required BuildContext context,
     required String selectedCategory,
@@ -104,7 +107,6 @@ class ReciterPickerModal extends StatefulWidget {
   }) {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final screenHeight = MediaQuery.sizeOf(context).height;
-    final isTabletOrDesktop = screenWidth > 600;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
 
     return showModalBottomSheet<String>(
@@ -119,25 +121,19 @@ class ReciterPickerModal extends StatefulWidget {
           child: Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              width: isTabletOrDesktop ? 540.w : screenWidth,
-              height: isTabletOrDesktop ? 600.h : screenHeight * 0.88,
+              width: screenWidth,
+              height: screenHeight * 0.88,
               decoration: BoxDecoration(
                 color: AppColors.surfaceCream,
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(24.r),
-                  bottom: isTabletOrDesktop ? Radius.circular(24.r) : Radius.zero,
                 ),
-                border: isTabletOrDesktop
-                    ? Border.all(
-                        color: AppColors.accentGold.withValues(alpha: 0.3),
-                        width: 1.2,
-                      )
-                    : Border(
-                        top: BorderSide(
-                          color: AppColors.accentGold.withValues(alpha: 0.3),
-                          width: 1.2,
-                        ),
-                      ),
+                border: Border(
+                  top: BorderSide(
+                    color: AppColors.accentGold.withValues(alpha: 0.3),
+                    width: 1.2,
+                  ),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.15),
@@ -156,7 +152,66 @@ class ReciterPickerModal extends StatefulWidget {
                   selectedReciter: selectedReciter,
                   reciters: reciters,
                   audioPrefs: audioPrefs,
+                  isDialog: false,
                 ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Displays the reciter picker modal as a dialog (for desktop, tablet, and web).
+  static Future<String?> showAsDialog({
+    required BuildContext context,
+    required String selectedCategory,
+    required String selectedReciter,
+    required List<String> reciters,
+    required AudioPreferencesService audioPrefs,
+    double maxWidth = 540,
+    double maxHeight = 640,
+  }) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        return Directionality(
+          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            insetPadding: EdgeInsets.symmetric(
+              horizontal: 24.w,
+              vertical: 24.h,
+            ),
+            child: Container(
+              width: maxWidth.w,
+              height: math.min(maxHeight.h, screenHeight * 0.88),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceCream,
+                borderRadius: BorderRadius.circular(24.r),
+                border: Border.all(
+                  color: AppColors.accentGold.withValues(alpha: 0.3),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 28.r,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: ReciterPickerModal(
+                selectedCategory: selectedCategory,
+                selectedReciter: selectedReciter,
+                reciters: reciters,
+                audioPrefs: audioPrefs,
+                isDialog: true,
               ),
             ),
           ),
@@ -452,21 +507,28 @@ class _ReciterPickerModalState extends State<ReciterPickerModal> {
     return Column(
       children: [
         // ── Drag Handle (Mobile only)
-        SizedBox(height: 10.h),
-        Center(
-          child: Container(
-            width: 44.w,
-            height: 4.h,
-            decoration: BoxDecoration(
-              color: AppColors.accentGold.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(2.r),
+        if (!widget.isDialog) ...[
+          SizedBox(height: 10.h),
+          Center(
+            child: Container(
+              width: 44.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: AppColors.accentGold.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(2.r),
+              ),
             ),
           ),
-        ),
+        ],
 
         // ── Header (Title & Reciters Count)
         Padding(
-          padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 10.h),
+          padding: EdgeInsets.fromLTRB(
+            22.w,
+            widget.isDialog ? 22.h : 12.h,
+            22.w,
+            10.h,
+          ),
           child: Row(
             children: [
               Container(
@@ -604,7 +666,8 @@ class _ReciterPickerModalState extends State<ReciterPickerModal> {
                       16.w,
                       10.h,
                       16.w,
-                      10.h + MediaQuery.viewInsetsOf(context).bottom,
+                      (widget.isDialog ? 20.h : 10.h) +
+                          MediaQuery.viewInsetsOf(context).bottom,
                     ),
                     physics: const BouncingScrollPhysics(),
                     itemCount: flattenedItems.length,

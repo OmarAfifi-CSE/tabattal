@@ -10,14 +10,17 @@ class CustomVideoModal extends StatefulWidget {
   final String? currentVideoPath;
   final ValueChanged<String> onVideoSelected;
   final VoidCallback? onVideoRemoved;
+  final bool isDialog;
 
   const CustomVideoModal({
     super.key,
     this.currentVideoPath,
     required this.onVideoSelected,
     this.onVideoRemoved,
+    this.isDialog = false,
   });
 
+  /// Displays the modal as a bottom sheet (for mobile).
   static Future<void> show(
     BuildContext context, {
     String? currentVideoPath,
@@ -35,6 +38,41 @@ class CustomVideoModal extends StatefulWidget {
         currentVideoPath: currentVideoPath,
         onVideoSelected: onVideoSelected,
         onVideoRemoved: onVideoRemoved,
+        isDialog: false,
+      ),
+    );
+  }
+
+  /// Displays the modal as a dialog (for desktop, tablet, and web).
+  static Future<void> showAsDialog(
+    BuildContext context, {
+    String? currentVideoPath,
+    required ValueChanged<String> onVideoSelected,
+    VoidCallback? onVideoRemoved,
+    double maxWidth = 480,
+    double maxHeight = 620,
+  }) {
+    return showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: AppColors.cardCream,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24.r),
+        ),
+        insetPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth.w, maxHeight: maxHeight.h),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24.r),
+            child: CustomVideoModal(
+              currentVideoPath: currentVideoPath,
+              onVideoSelected: onVideoSelected,
+              onVideoRemoved: onVideoRemoved,
+              isDialog: true,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -139,27 +177,30 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
       textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
       child: Padding(
         padding: EdgeInsets.only(
-          left: 16.w,
-          right: 16.w,
-          top: 12.h,
-          bottom: bottomSafeArea + bottomInset,
+          left: widget.isDialog ? 22.w : 16.w,
+          right: widget.isDialog ? 22.w : 16.w,
+          top: widget.isDialog ? 22.h : 12.h,
+          bottom: widget.isDialog ? 22.h : (bottomSafeArea + bottomInset),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             // Drag Handle
-            Center(
-              child: Container(
-                width: 36.w,
-                height: 4.h,
-                margin: EdgeInsets.only(bottom: 12.h),
-                decoration: BoxDecoration(
-                  color: AppColors.accentGold.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(2.r),
+            if (!widget.isDialog)
+              Center(
+                child: Container(
+                  width: 36.w,
+                  height: 4.h,
+                  margin: EdgeInsets.only(bottom: 12.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentGold.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
                 ),
               ),
-            ),
 
             // Header Row
             Row(
@@ -190,8 +231,9 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
                 ),
               ],
             ),
+            SizedBox(height: 4.h),
             const Divider(height: 1),
-            SizedBox(height: 14.h),
+            SizedBox(height: 16.h),
 
             if (_errorMessage != null) ...[
               Container(
@@ -381,8 +423,9 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildOptionTile({
     required IconData icon,

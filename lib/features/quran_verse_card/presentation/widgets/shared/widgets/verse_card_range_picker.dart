@@ -37,30 +37,26 @@ class VerseCardRangePicker extends StatelessWidget {
   }) {
     final l10n = AppLocalizations.of(context)!;
     final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isDesktopOrTablet = MediaQuery.sizeOf(context).width > 600;
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.cardCream,
-      isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
-      builder: (ctx) {
-        return Directionality(
-          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
-          child: Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(ctx).height * 0.65,
-            ),
-            padding: EdgeInsets.only(
-              left: 16.w,
-              right: 16.w,
-              top: 12.h,
-              bottom: MediaQuery.paddingOf(ctx).bottom,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+    Widget buildContent(BuildContext ctx, {required bool isDialog}) {
+      return Directionality(
+        textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: isDialog ? 480.h : MediaQuery.sizeOf(ctx).height * 0.65,
+            maxWidth: isDialog ? 420.w : MediaQuery.sizeOf(ctx).width,
+          ),
+          padding: EdgeInsets.only(
+            left: isDialog ? 22.w : 16.w,
+            right: isDialog ? 22.w : 16.w,
+            top: isDialog ? 22.h : 12.h,
+            bottom: isDialog ? 22.h : MediaQuery.paddingOf(ctx).bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!isDialog)
                 Container(
                   width: 36.w,
                   height: 4.h,
@@ -70,95 +66,124 @@ class VerseCardRangePicker extends StatelessWidget {
                     borderRadius: BorderRadius.circular(2.r),
                   ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    icon: const Icon(Icons.close_rounded),
+                    splashRadius: 20,
+                  ),
+                ],
+              ),
+              const Divider(height: 1),
+              SizedBox(height: 8.h),
+              Expanded(
+                child: GridView.builder(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  physics: const BouncingScrollPhysics(),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 5,
+                        childAspectRatio: 1.4,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
                       ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      icon: const Icon(Icons.close_rounded),
-                      splashRadius: 20,
-                    ),
-                  ],
-                ),
-                const Divider(height: 1),
-                SizedBox(height: 8.h),
-                Expanded(
-                  child: GridView.builder(
-                    padding: EdgeInsets.symmetric(vertical: 8.h),
-                    physics: const BouncingScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 5,
-                          childAspectRatio: 1.4,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                        ),
-                    itemCount: options.length,
-                    itemBuilder: (ctx, index) {
-                      final item = options[index];
-                      final isSelected = item == currentValue;
-                      return GestureDetector(
-                        onTap: () {
-                          onSelected(item);
-                          Navigator.pop(ctx);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          decoration: BoxDecoration(
+                  itemCount: options.length,
+                  itemBuilder: (ctx, index) {
+                    final item = options[index];
+                    final isSelected = item == currentValue;
+                    return GestureDetector(
+                      onTap: () {
+                        onSelected(item);
+                        Navigator.pop(ctx);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.accentGold
+                              : AppColors.surfaceCream,
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(
                             color: isSelected
                                 ? AppColors.accentGold
-                                : AppColors.surfaceCream,
-                            borderRadius: BorderRadius.circular(10.r),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.accentGold
-                                  : AppColors.divider,
-                              width: isSelected ? 1.5 : 1,
-                            ),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: AppColors.accentGold.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                      blurRadius: 4,
-                                    ),
-                                  ]
-                                : null,
+                                : AppColors.divider,
+                            width: isSelected ? 1.5 : 1,
                           ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            l10n.verseCardAyah(
-                              isEn
-                                  ? '$item'
-                                  : VerseCardTextUtils.toArabicDigits(item),
-                            ),
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
-                              color: isSelected
-                                  ? Colors.white
-                                  : AppColors.textPrimary,
-                            ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: AppColors.accentGold.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          l10n.verseCardAyah(
+                            isEn
+                                ? '$item'
+                                : VerseCardTextUtils.toArabicDigits(item),
+                          ),
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.textPrimary,
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      );
+    }
+
+    if (isDesktopOrTablet) {
+      showDialog(
+        context: context,
+        builder: (ctx) => Dialog(
+          backgroundColor: AppColors.cardCream,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          insetPadding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20.r),
+            child: buildContent(ctx, isDialog: true),
+          ),
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cardCream,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (ctx) => buildContent(ctx, isDialog: false),
     );
   }
 

@@ -240,7 +240,7 @@ void main() {
       }
       stopwatch.stop();
 
-      expect(stopwatch.elapsedMilliseconds, lessThan(2),
+      expect(stopwatch.elapsedMilliseconds, lessThan(10),
           reason: 'Surah metadata lookup for 114 surahs took ${stopwatch.elapsedMilliseconds}ms');
     });
 

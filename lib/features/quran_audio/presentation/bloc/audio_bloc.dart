@@ -137,98 +137,104 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     _positionSubscription?.cancel();
 
     // 1. Position Stream: Real-time verse tracking and repeat loop management
-    _positionSubscription = _audioPlayer.positionStream.listen((pos) {
-      if (_activePlaylistGeneration == 0) return;
-      if (_currentSurahTimings != null && _currentSurahTimings!.verseTimings.isNotEmpty) {
-        final timings = _currentSurahTimings!;
-        final verse = timings.findVerseAt(pos);
-        if (verse == null) return;
+    _positionSubscription = _audioPlayer.positionStream.listen(
+      (pos) {
+        if (_activePlaylistGeneration == 0) return;
+        if (_currentSurahTimings != null && _currentSurahTimings!.verseTimings.isNotEmpty) {
+          final timings = _currentSurahTimings!;
+          final verse = timings.findVerseAt(pos);
+          if (verse == null) return;
 
-        // Active verse transition: notify UI for instant highlight and update media metadata
-        if (_currentPlayingAyah != verse.ayah) {
-          _currentPlayingAyah = verse.ayah;
-          _playedCount = 0;
-          add(AudioStateChanged(
-            currentVerseId: verse.verseId,
-            isPlaying: _audioPlayer.playing,
-          ));
-          unawaited(_updateMediaItem(VerseRef(verse.surah, verse.ayah)));
-        }
+          // Active verse transition: notify UI for instant highlight and update media metadata
+          if (_currentPlayingAyah != verse.ayah) {
+            _currentPlayingAyah = verse.ayah;
+            _playedCount = 0;
+            add(AudioStateChanged(
+              currentVerseId: verse.verseId,
+              isPlaying: _audioPlayer.playing,
+            ));
+            unawaited(_updateMediaItem(VerseRef(verse.surah, verse.ayah)));
+          }
 
-        // Repeat count & Play Once management at verse boundary
-        final msRemaining = (verse.end - pos).inMilliseconds;
-        if (msRemaining <= 120 && msRemaining >= -350 && !_isSeekingRepeat) {
-          if (_currentRepeatCount == -1) {
-            _isSeekingRepeat = true;
-            _audioPlayer.seek(verse.start).whenComplete(() {
-              Future.delayed(const Duration(milliseconds: 250), () {
-                _isSeekingRepeat = false;
-              });
-            });
-          } else if (_currentRepeatCount > 1) {
-            if (_playedCount + 1 < _currentRepeatCount) {
+          // Repeat count & Play Once management at verse boundary
+          final msRemaining = (verse.end - pos).inMilliseconds;
+          if (msRemaining <= 120 && msRemaining >= -350 && !_isSeekingRepeat) {
+            if (_currentRepeatCount == -1) {
               _isSeekingRepeat = true;
-              _playedCount++;
               _audioPlayer.seek(verse.start).whenComplete(() {
                 Future.delayed(const Duration(milliseconds: 250), () {
                   _isSeekingRepeat = false;
                 });
               });
+            } else if (_currentRepeatCount > 1) {
+              if (_playedCount + 1 < _currentRepeatCount) {
+                _isSeekingRepeat = true;
+                _playedCount++;
+                _audioPlayer.seek(verse.start).whenComplete(() {
+                  Future.delayed(const Duration(milliseconds: 250), () {
+                    _isSeekingRepeat = false;
+                  });
+                });
+              }
+            } else if (_isPlayingOnce) {
+              add(const StopAudio());
             }
-          } else if (_isPlayingOnce) {
-            add(const StopAudio());
           }
         }
-      }
-    });
+      },
+      onError: (_) {},
+    );
 
     // 2. Player State Stream: Handles completion and transport play/pause updates
-    _playerStateSubscription = _audioPlayer.playerStateStream.listen((state) {
-      if (_activePlaylistGeneration == 0) return;
-      if (state.processingState == ProcessingState.completed) {
-        if (_isPlayingOnce) {
-          add(const StopAudio());
-          return;
-        }
+    _playerStateSubscription = _audioPlayer.playerStateStream.listen(
+      (state) {
+        if (_activePlaylistGeneration == 0) return;
+        if (state.processingState == ProcessingState.completed) {
+          if (_isPlayingOnce) {
+            add(const StopAudio());
+            return;
+          }
 
-        if (_currentRepeatCount == -1) {
-          _audioPlayer.seek(Duration.zero).then((_) {
-            _audioPlayer.play();
-          });
-          return;
-        }
-
-        if (_isSingleVersePlayback) {
-          if (_currentRepeatCount > 1 && _playedCount + 1 < _currentRepeatCount) {
-            _playedCount++;
+          if (_currentRepeatCount == -1) {
             _audioPlayer.seek(Duration.zero).then((_) {
               _audioPlayer.play();
             });
             return;
           }
-          if (_currentPlayingSurah != null && _currentPlayingAyah != null) {
-            final surahLength = QuranMetadata.surahLengthOf(_currentPlayingSurah!);
-            if (_currentPlayingAyah! < surahLength) {
-              add(PlayVerse('', VerseRef(_currentPlayingSurah!, _currentPlayingAyah! + 1).verseId));
-            } else if (_currentPlayingSurah! < 114) {
-              add(PlayVerse('', VerseRef(_currentPlayingSurah! + 1, 1).verseId));
-            } else {
-              add(const StopAudio());
-            }
-          }
-          return;
-        }
 
-        if (_currentPlayingSurah != null && _currentPlayingSurah! < 114) {
-          final nextSurah = _currentPlayingSurah! + 1;
-          add(PlayVerse('', VerseRef(nextSurah, 1).verseId));
+          if (_isSingleVersePlayback) {
+            if (_currentRepeatCount > 1 && _playedCount + 1 < _currentRepeatCount) {
+              _playedCount++;
+              _audioPlayer.seek(Duration.zero).then((_) {
+                _audioPlayer.play();
+              });
+              return;
+            }
+            if (_currentPlayingSurah != null && _currentPlayingAyah != null) {
+              final surahLength = QuranMetadata.surahLengthOf(_currentPlayingSurah!);
+              if (_currentPlayingAyah! < surahLength) {
+                add(PlayVerse('', VerseRef(_currentPlayingSurah!, _currentPlayingAyah! + 1).verseId));
+              } else if (_currentPlayingSurah! < 114) {
+                add(PlayVerse('', VerseRef(_currentPlayingSurah! + 1, 1).verseId));
+              } else {
+                add(const StopAudio());
+              }
+            }
+            return;
+          }
+
+          if (_currentPlayingSurah != null && _currentPlayingSurah! < 114) {
+            final nextSurah = _currentPlayingSurah! + 1;
+            add(PlayVerse('', VerseRef(nextSurah, 1).verseId));
+          } else {
+            add(const StopAudio());
+          }
         } else {
-          add(const StopAudio());
+          add(AudioStateChanged(isPlaying: state.playing));
         }
-      } else {
-        add(AudioStateChanged(isPlaying: state.playing));
-      }
-    });
+      },
+      onError: (_) {},
+    );
 
     // 3. Playback event stream error handling
     _playbackEventSubscription = _audioPlayer.playbackEventStream.listen(
@@ -271,9 +277,12 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     );
 
     // 4. Native platform error stream (just_audio async errors)
-    _errorStreamSubscription = _audioPlayer.errorStream.listen((e) {
-      add(AudioPlatformError(e));
-    });
+    _errorStreamSubscription = _audioPlayer.errorStream.listen(
+      (e) {
+        add(AudioPlatformError(e));
+      },
+      onError: (_) {},
+    );
   }
 
   Future<void> _onPlayVerse(PlayVerse event, Emitter<AudioState> emit) async {
@@ -457,9 +466,13 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
               ? initialPosition
               : null;
 
-      if (_audioPlayer.playing) {
-        await _audioPlayer.pause();
-      }
+      // HARDENED DEFENSE: Stop previous playback before binding a new audio source.
+      // Calling pause() instead of stop() leaves WinRT MediaPlayer / IMFMediaSource
+      // pipeline active on Windows, causing access violation (0xC0000005) in Windows.Media.dll
+      // when setAudioSource abruptly replaces the active media source.
+      try {
+        await _audioPlayer.stop();
+      } catch (_) {}
 
       await _audioPlayer.setAudioSource(
         source,
@@ -523,7 +536,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   ) async {
     _audioPlayer.play();
     if (_currentPlayingSurah != null && _currentPlayingAyah != null) {
-      emit(AudioPlaying(VerseRef(_currentPlayingSurah!, _currentPlayingAyah!).verseId));
+      emit(AudioPlaying(
+        VerseRef(_currentPlayingSurah!, _currentPlayingAyah!).verseId,
+        isTimingUnavailable: !hasActiveVerseTimings,
+      ));
     }
   }
 
@@ -684,7 +700,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     }
 
     if (event.isPlaying) {
-      emit(AudioPlaying(verseId));
+      emit(AudioPlaying(
+        verseId,
+        isTimingUnavailable: !hasActiveVerseTimings,
+      ));
     } else {
       if (_audioPlayer.processingState == ProcessingState.completed) {
         _activePlaylistGeneration = 0;
@@ -739,7 +758,12 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     }
     if (_currentPlayingSurah != null && _currentPlayingAyah != null) {
       final verseId = VerseRef(_currentPlayingSurah!, _currentPlayingAyah!).verseId;
-      if (state is AudioPlaying) emit(AudioPlaying(verseId));
+      if (state is AudioPlaying) {
+        emit(AudioPlaying(
+          verseId,
+          isTimingUnavailable: !hasActiveVerseTimings,
+        ));
+      }
       if (state is AudioPaused) emit(AudioPaused(verseId));
     }
   }
@@ -805,17 +829,19 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
             ? QuranMetadata.getSurahNameWithTashkeel(verse.surah)
             : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} • آية ${verse.ayah.toArabicDigits}');
 
-    final artUri = await _getArtUri();
+    try {
+      final artUri = await _getArtUri();
 
-    await _audioHandler.updateItem(
-      MediaItem(
-        id: verse.verseId.toString(),
-        title: title,
-        artist: ReciterLocalization.localizeByLang(isEn, _currentReciter),
-        duration: _audioPlayer.duration,
-        artUri: artUri,
-      ),
-    );
+      await _audioHandler.updateItem(
+        MediaItem(
+          id: verse.verseId.toString(),
+          title: title,
+          artist: ReciterLocalization.localizeByLang(isEn, _currentReciter),
+          duration: _audioPlayer.duration,
+          artUri: artUri,
+        ),
+      );
+    } catch (_) {}
   }
 
   Future<Uri> _getArtUri() async {
@@ -999,7 +1025,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
             if (isPlaying) {
               unawaited(_audioPlayer.play());
             }
-            emit(AudioPlaying(VerseRef(event.surahNumber, targetAyah).verseId));
+            emit(AudioPlaying(
+              VerseRef(event.surahNumber, targetAyah).verseId,
+              isTimingUnavailable: !hasActiveVerseTimings,
+            ));
             return;
           }
         } catch (_) {}
@@ -1033,13 +1062,19 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           if (isPlaying) {
             unawaited(_audioPlayer.play());
           }
-          emit(AudioPlaying(VerseRef(event.surahNumber, targetAyah).verseId));
+          emit(AudioPlaying(
+            VerseRef(event.surahNumber, targetAyah).verseId,
+            isTimingUnavailable: !hasActiveVerseTimings,
+          ));
         }
       }
     }
   }
 
   AudioSource _createAudioSource(String path) {
+    if (path.isEmpty) {
+      throw ArgumentError("Audio path cannot be empty");
+    }
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return ProgressiveAudioSource(
         Uri.parse(path),
