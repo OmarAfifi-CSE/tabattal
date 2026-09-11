@@ -677,26 +677,6 @@ class SurahAudioTimingService {
       readId: 65,
       folderUrl: 'https://server16.mp3quran.net/soufi/Rewayat-Assosi-A-n-Abi-Amr/',
     ),
-    'warsh/warsh_husary_128kbps': Mp3QuranReadInfo(
-      readId: 120,
-      folderUrl: 'https://server13.mp3quran.net/husr/Rewayat-Warsh-A-n-Nafi/',
-    ),
-    'warsh/warsh_ibrahim_aldosary_128kbps': Mp3QuranReadInfo(
-      readId: 232,
-      folderUrl: 'https://server10.mp3quran.net/ibrahim_dosri/Rewayat-Hafs-A-n-Assem/',
-    ),
-    'warsh/warsh_koshi_128kbps': Mp3QuranReadInfo(
-      readId: 16,
-      folderUrl: 'https://server11.mp3quran.net/koshi/',
-    ),
-    'warsh/warsh_omar_qazabri_128kbps': Mp3QuranReadInfo(
-      readId: 80,
-      folderUrl: 'https://server9.mp3quran.net/omar_warsh/',
-    ),
-    'warsh/warsh_yassin_al_jazaery_64kbps': Mp3QuranReadInfo(
-      readId: 14,
-      folderUrl: 'https://server11.mp3quran.net/qari/',
-    ),
   };
 
   /// Resolves MP3Quran read info from reciter catalog path with defensive fallback
@@ -722,14 +702,6 @@ class SurahAudioTimingService {
     if (lower.contains('nabil') &&
         (lower.contains('rifai') || lower.contains('rifa3i'))) {
       return _mp3quranReadMap['Nabil_Rifa3i_48kbps'];
-    }
-    if (lower.contains('jazaery') ||
-        lower.contains('jazairy') ||
-        lower.contains('yassin_al_jazaery')) {
-      return _mp3quranReadMap['warsh/warsh_yassin_al_jazaery_64kbps'];
-    }
-    if (lower.contains('aldosary') || lower.contains('ibrahim_dosri')) {
-      return _mp3quranReadMap['warsh/warsh_ibrahim_aldosary_128kbps'];
     }
     if (lower.contains('alaqimy') || lower.contains('alaqmi')) {
       return _mp3quranReadMap['Akram_AlAlaqimy_128kbps'];
@@ -810,12 +782,6 @@ class SurahAudioTimingService {
     if (lower.contains('salamah')) {
       return 'https://server12.mp3quran.net/salamah/Rewayat-Hafs-A-n-Assem/$surah3.mp3';
     }
-    if (lower.contains('warsh') &&
-        (lower.contains('dosary') ||
-            lower.contains('dossari') ||
-            lower.contains('dosri'))) {
-      return 'https://server10.mp3quran.net/ibrahim_dosri/Rewayat-Hafs-A-n-Assem/$surah3.mp3';
-    }
     if (lower.contains('krm') ||
         lower.contains('abdulkareem') ||
         lower.contains('abdul_kareem')) {
@@ -823,11 +789,6 @@ class SurahAudioTimingService {
     }
     if (lower.contains('sowaid') || lower.contains('swaid')) {
       return 'https://archive.org/download/aymanswaid2020/$surah3.mp3';
-    }
-    if (lower.contains('jazaery') ||
-        lower.contains('jazairy') ||
-        lower.contains('jaza2iree')) {
-      return 'https://server11.mp3quran.net/qari/$surah3.mp3';
     }
     if (lower.contains('maher') || lower.contains('muaiqly')) {
       return 'https://server12.mp3quran.net/maher/$surah3.mp3';

@@ -258,7 +258,7 @@ All 604 page fonts pre-warmed in RAM — no zip extraction, no runtime layout ov
 <tr>
 <td width="50%">
 
-- 🎙️ **Extensive Reciters** — Murattal, Mujawwad, Warsh, Teacher mode, English translations
+- 🎙️ **Extensive Reciters** — Murattal, Mujawwad, Teacher mode, English translations
 - ▶️ **Play-Once Mode** — Auto-pause after one verse for focused memorization
 - ⏰ **Smart Sleep Timer** — Custom durations for bedtime listening
 
