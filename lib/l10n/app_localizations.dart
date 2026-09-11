@@ -806,6 +806,12 @@ abstract class AppLocalizations {
   /// **'حدث خطأ أثناء تشغيل القائمة.'**
   String get audioErrorPlaylist;
 
+  /// No description provided for @audioVerseTimingsUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'خاصية تتبع وتظليل الآيات غير متاحة لهذه السورة مع هذا القارئ'**
+  String get audioVerseTimingsUnavailable;
+
   /// No description provided for @sleepTimerStopped.
   ///
   /// In ar, this message translates to:

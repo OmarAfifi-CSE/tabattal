@@ -250,6 +250,60 @@ class AudioDownloadManager {
     return null;
   }
 
+  /// Returns all reciter paths that have this surah downloaded locally on disk
+  Future<Set<String>> getDownloadedSurahReciterPaths(int surahNumber) async {
+    if (kIsWeb) return const {};
+    final Directory baseDir;
+    final provider = _directoryProvider;
+    if (provider != null) {
+      baseDir = await provider();
+    } else if (!kIsWeb && Platform.isWindows) {
+      baseDir = await getApplicationSupportDirectory();
+    } else {
+      baseDir = await getApplicationDocumentsDirectory();
+    }
+
+    final audioDir = Directory('${baseDir.path}/audio');
+    final surahStr = surahNumber.toString().padLeft(3, '0');
+    final downloadedPaths = <String>{};
+
+    if (await audioDir.exists()) {
+      for (final catMap in ReciterCatalog.reciterCategories.values) {
+        for (final path in catMap.values) {
+          if (!ReciterCatalog.isMp3QuranReciter(path)) continue;
+          final file1 = File('${audioDir.path}/$path/$surahStr.mp3');
+          final file2 = File('${audioDir.path}/$path/$surahNumber.mp3');
+          if ((await file1.exists() && await file1.length() > 0) ||
+              (await file2.exists() && await file2.length() > 0)) {
+            downloadedPaths.add(path);
+          }
+        }
+      }
+    }
+
+    if (Platform.isWindows && _directoryProvider == null) {
+      try {
+        final docsDir = await getApplicationDocumentsDirectory();
+        final legacyAudioDir = Directory('${docsDir.path}/audio');
+        if (await legacyAudioDir.exists()) {
+          for (final catMap in ReciterCatalog.reciterCategories.values) {
+            for (final path in catMap.values) {
+              if (!ReciterCatalog.isMp3QuranReciter(path) || downloadedPaths.contains(path)) continue;
+              final file1 = File('${legacyAudioDir.path}/$path/$surahStr.mp3');
+              final file2 = File('${legacyAudioDir.path}/$path/$surahNumber.mp3');
+              if ((await file1.exists() && await file1.length() > 0) ||
+                  (await file2.exists() && await file2.length() > 0)) {
+                downloadedPaths.add(path);
+              }
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    return downloadedPaths;
+  }
+
   /// Retrieves or precaches a surah audio file into the local fast streaming cache.
   /// For short surahs (or already cached surahs), this eliminates audio stutter/discontinuity
   /// on ExoPlayer/Android by converting small remote HTTP streams into local FileDataSources.

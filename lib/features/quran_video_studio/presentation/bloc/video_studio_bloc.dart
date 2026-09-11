@@ -281,13 +281,19 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     VideoStudioReciterChanged event,
     Emitter<VideoStudioState> emit,
   ) async {
-    _stopPositionTicker();
+    repository.cancelAudioPreparation();
+    _stopPositionTicker(commitFinalPosition: false);
     _currentVersePosition = Duration.zero;
+    _playbackStartPosition = Duration.zero;
+    _playbackStartTimelinePosition = Duration.zero;
     _seekDepth = 0;
     _verseSwitchDepth = 0;
     _pendingSeekVerseIndex = null;
     if (!_positionController.isClosed) {
       _positionController.add(Duration.zero);
+    }
+    if (!_timelinePositionController.isClosed) {
+      _timelinePositionController.add(Duration.zero);
     }
     try {
       if (_previewPlayer.playing) {
@@ -300,6 +306,9 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       state.copyWith(
         currentVerseIndex: 0,
         isPlaying: false,
+        playbackResetTrigger: state.playbackResetTrigger + 1,
+        seekTrigger: state.seekTrigger + 1,
+        lastSeekPosition: Duration.zero,
         config: state.config.copyWith(
           reciterName: event.reciterName,
           reciterCategory: event.reciterCategory,
@@ -315,13 +324,19 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     VideoStudioVerseRangeChanged event,
     Emitter<VideoStudioState> emit,
   ) async {
-    _stopPositionTicker();
+    repository.cancelAudioPreparation();
+    _stopPositionTicker(commitFinalPosition: false);
     _currentVersePosition = Duration.zero;
+    _playbackStartPosition = Duration.zero;
+    _playbackStartTimelinePosition = Duration.zero;
     _seekDepth = 0;
     _verseSwitchDepth = 0;
     _pendingSeekVerseIndex = null;
     if (!_positionController.isClosed) {
       _positionController.add(Duration.zero);
+    }
+    if (!_timelinePositionController.isClosed) {
+      _timelinePositionController.add(Duration.zero);
     }
     try {
       if (_previewPlayer.playing) {
@@ -338,6 +353,9 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       state.copyWith(
         currentVerseIndex: 0,
         isPlaying: false,
+        playbackResetTrigger: state.playbackResetTrigger + 1,
+        seekTrigger: state.seekTrigger + 1,
+        lastSeekPosition: Duration.zero,
         config: state.config.copyWith(
           startAyah: safeStart,
           endAyah: safeEnd,
@@ -460,7 +478,11 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     Emitter<VideoStudioState> emit,
   ) async {
     var newConfig = state.config.copyWith(textDisplayMode: event.mode);
-    final isSupported = ReciterCatalog.isReciterSupportedForMode(newConfig.reciterPath, event.mode);
+    final isSupported = ReciterCatalog.isReciterSupportedForMode(
+      newConfig.reciterPath,
+      event.mode,
+      surahNumber: newConfig.surahNumber,
+    );
     final shouldReload = !isSupported || (event.mode == VideoTextDisplayMode.lineByLine);
     if (!isSupported) {
       newConfig = newConfig.copyWith(
@@ -942,118 +964,126 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
 
     try {
       final verses = await repository.loadVersesForSpan(
-        surahNumber: loadConfig.surahNumber,
-        startAyah: loadConfig.startAyah,
-        endAyah: loadConfig.endAyah,
-      );
-      if (myLoadGen != _loadGeneration || emit.isDone) return;
-
-      final effectiveVerses = verses.isNotEmpty ? verses : previousVerses;
-
-      // Immediately sync verses into state to prevent stale range if export starts
-      if (effectiveVerses.isNotEmpty) {
-        emit(state.copyWith(verses: effectiveVerses));
-      }
-
-      final paths = await repository.prepareVerseAudioFiles(
-        reciterPath: loadConfig.reciterPath,
-        surahNumber: loadConfig.surahNumber,
-        startAyah: loadConfig.startAyah,
-        endAyah: loadConfig.endAyah,
-      );
-      if (myLoadGen != _loadGeneration || emit.isDone) return;
-
-      final durations = await repository.measureVerseDurations(audioFilePaths: paths);
-      if (myLoadGen != _loadGeneration || emit.isDone) return;
-      final Map<int, List<WordTimingSegment>> timingsMap = {};
-
-      final isEn = loadConfig.isEnglish;
-      for (int i = 0; i < effectiveVerses.length; i++) {
+          surahNumber: loadConfig.surahNumber,
+          startAyah: loadConfig.startAyah,
+          endAyah: loadConfig.endAyah,
+        );
         if (myLoadGen != _loadGeneration || emit.isDone) return;
-        final v = effectiveVerses[i];
-        if (i >= durations.length || durations[i] == Duration.zero) {
-          throw Exception(isEn
-              ? 'Failed to measure exact audio duration for verse ${v.verseNumber}'
-              : 'تعذر قياس المدة الصوتية الدقيقة للآية ${v.verseNumber}');
+
+        final effectiveVerses = verses.isNotEmpty ? verses : previousVerses;
+
+        // Immediately sync verses into state to prevent stale range if export starts
+        if (effectiveVerses.isNotEmpty) {
+          emit(state.copyWith(verses: effectiveVerses));
         }
-        final dur = durations[i];
-        final List<WordTimingSegment> timings;
-        if (loadConfig.textDisplayMode == VideoTextDisplayMode.staticFull) {
-          timings = [
-            WordTimingSegment(
-              wordPosition: 1,
-              startMs: 0,
-              endMs: dur.inMilliseconds,
-            ),
-          ];
-        } else {
-          timings = await _wordTimingService.getWordTimings(
-            surahNumber: loadConfig.surahNumber,
-            verse: v,
-            reciterPath: loadConfig.reciterPath,
-            totalAyahDuration: dur,
-          );
+
+        final paths = await repository.prepareVerseAudioFiles(
+          reciterPath: loadConfig.reciterPath,
+          surahNumber: loadConfig.surahNumber,
+          startAyah: loadConfig.startAyah,
+          endAyah: loadConfig.endAyah,
+        );
+        if (myLoadGen != _loadGeneration || emit.isDone) return;
+
+        final durations = await repository.measureVerseDurations(audioFilePaths: paths);
+        if (myLoadGen != _loadGeneration || emit.isDone) return;
+        final Map<int, List<WordTimingSegment>> timingsMap = {};
+
+        final isEn = loadConfig.isEnglish;
+        for (int i = 0; i < effectiveVerses.length; i++) {
           if (myLoadGen != _loadGeneration || emit.isDone) return;
-        }
-        timingsMap[v.verseNumber] = timings;
-      }
-
-      if (myLoadGen != _loadGeneration || emit.isDone) return;
-      _stopPositionTicker();
-      _currentVersePosition = Duration.zero;
-      if (!_positionController.isClosed) {
-        _positionController.add(Duration.zero);
-      }
-      String? mergedAudioPath;
-      if (paths.isNotEmpty) {
-        mergedAudioPath = await repository.prepareMergedAudio(audioFilePaths: paths);
-        if (myLoadGen != _loadGeneration || emit.isDone) return;
-        try {
-          await _previewPlayer.stop();
-          if (mergedAudioPath != null) {
-            _verseSwitchDepth++;
-            try {
-              await _previewPlayer.setAudioSource(_createAudioSource(mergedAudioPath));
-              _loadedVerseIndex = 0;
-            } finally {
-              _verseSwitchDepth--;
-            }
-          } else if (!kIsWeb && Platform.isWindows) {
-            _verseSwitchDepth++;
-            try {
-              await _previewPlayer.setAudioSource(_createAudioSource(paths[0]));
-              _loadedVerseIndex = 0;
-            } finally {
-              _verseSwitchDepth--;
-            }
+          final v = effectiveVerses[i];
+          if (i >= durations.length || durations[i] == Duration.zero) {
+            throw Exception(isEn
+                ? 'Failed to measure exact audio duration for verse ${v.verseNumber}'
+                : 'تعذر قياس المدة الصوتية الدقيقة للآية ${v.verseNumber}');
+          }
+          final dur = durations[i];
+          final List<WordTimingSegment> timings;
+          if (loadConfig.textDisplayMode == VideoTextDisplayMode.staticFull) {
+            timings = [
+              WordTimingSegment(
+                wordPosition: 1,
+                startMs: 0,
+                endMs: dur.inMilliseconds,
+              ),
+            ];
           } else {
-            // ignore: deprecated_member_use
-            final playlist = ConcatenatingAudioSource(
-              children: paths.map(_createAudioSource).toList(),
+            timings = await _wordTimingService.getWordTimings(
+              surahNumber: loadConfig.surahNumber,
+              verse: v,
+              reciterPath: loadConfig.reciterPath,
+              totalAyahDuration: dur,
             );
-            await _previewPlayer.setAudioSource(
-              playlist,
-              initialIndex: 0,
-            );
+            if (myLoadGen != _loadGeneration || emit.isDone) return;
           }
-        } catch (e) {
-          if (kDebugMode) {
-            debugPrint('Failed to set audio source for preview player: $e');
+          timingsMap[v.verseNumber] = timings;
+        }
+
+        if (myLoadGen != _loadGeneration || emit.isDone) return;
+        _stopPositionTicker(commitFinalPosition: false);
+        _currentVersePosition = Duration.zero;
+        _playbackStartPosition = Duration.zero;
+        _playbackStartTimelinePosition = Duration.zero;
+        if (!_positionController.isClosed) {
+          _positionController.add(Duration.zero);
+        }
+        if (!_timelinePositionController.isClosed) {
+          _timelinePositionController.add(Duration.zero);
+        }
+        String? mergedAudioPath;
+        if (paths.isNotEmpty) {
+          mergedAudioPath = await repository.prepareMergedAudio(audioFilePaths: paths);
+          if (myLoadGen != _loadGeneration || emit.isDone) return;
+          try {
+            await _previewPlayer.stop();
+            if (mergedAudioPath != null) {
+              _verseSwitchDepth++;
+              try {
+                await _previewPlayer.setAudioSource(_createAudioSource(mergedAudioPath));
+                _loadedVerseIndex = 0;
+              } finally {
+                _verseSwitchDepth--;
+              }
+            } else if (!kIsWeb && Platform.isWindows) {
+              _verseSwitchDepth++;
+              try {
+                await _previewPlayer.setAudioSource(_createAudioSource(paths[0]));
+                _loadedVerseIndex = 0;
+              } finally {
+                _verseSwitchDepth--;
+              }
+            } else {
+              // ignore: deprecated_member_use
+              final playlist = ConcatenatingAudioSource(
+                children: paths.map(_createAudioSource).toList(),
+              );
+              await _previewPlayer.setAudioSource(
+                playlist,
+                initialIndex: 0,
+              );
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              debugPrint('Failed to set audio source for preview player: $e');
+            }
           }
         }
-      }
 
-      emit(
-        state.copyWith(
-          verses: effectiveVerses,
-          audioFilePaths: paths,
-          verseDurations: durations,
-          wordTimingsMap: timingsMap,
-          isPreparingAudio: false,
-          currentVerseIndex: 0,
-          mergedPreviewAudioPath: mergedAudioPath,
-        ),
-      );
+        emit(
+          state.copyWith(
+            verses: effectiveVerses,
+            audioFilePaths: paths,
+            verseDurations: durations,
+            wordTimingsMap: timingsMap,
+            isPreparingAudio: false,
+            currentVerseIndex: 0,
+            mergedPreviewAudioPath: mergedAudioPath,
+            lastSeekPosition: Duration.zero,
+            seekTrigger: state.seekTrigger + 1,
+            playbackResetTrigger: state.playbackResetTrigger + 1,
+          ),
+        );
     } catch (e) {
       if (myLoadGen != _loadGeneration || emit.isDone) return;
       final cleanMsg = e.toString().replaceAll('Exception:', '').trim();
@@ -1066,6 +1096,12 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           errorMessage: cleanMsg.isNotEmpty ? cleanMsg : defaultMsg,
         ),
       );
+    } finally {
+      if (myLoadGen == _loadGeneration && !emit.isDone) {
+        if (state.isPreparingAudio) {
+          emit(state.copyWith(isPreparingAudio: false));
+        }
+      }
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
+import 'package:tabattal/core/constants/quran_metadata.dart';
 import 'package:tabattal/core/network/audio_download_manager.dart';
 import 'package:tabattal/core/services/audio_preferences_service.dart';
 import 'package:tabattal/core/services/quran_audio_handler.dart';
@@ -130,7 +131,7 @@ class _MockPreferencesService extends Fake implements AudioPreferencesService {
   @override
   bool get playOnce => _once;
   @override
-  String get appLocale => 'ar';
+  String appLocale = 'ar';
   @override
   double get volume => 1.0;
 
@@ -204,6 +205,9 @@ class _MockDownloadManager extends Fake implements AudioDownloadManager {
 class _MockAudioHandler extends Fake implements QuranAudioHandler {
   final _actionSubject = StreamController<QuranAudioAction>.broadcast();
   late AudioPlayer _player;
+  MediaItem? lastUpdatedItem;
+  String? lastStoppedTitle;
+  String? lastStoppedSubtitle;
 
   _MockAudioHandler() {
     _player = AudioPlayer();
@@ -216,10 +220,15 @@ class _MockAudioHandler extends Fake implements QuranAudioHandler {
   AudioPlayer get player => _player;
 
   @override
-  Future<void> updateItem(MediaItem item) async {}
+  Future<void> updateItem(MediaItem item) async {
+    lastUpdatedItem = item;
+  }
 
   @override
-  Future<void> showStoppedNotification({required String title, required String subtitle}) async {}
+  Future<void> showStoppedNotification({required String title, required String subtitle}) async {
+    lastStoppedTitle = title;
+    lastStoppedSubtitle = subtitle;
+  }
 
   @override
   Future<void> stop() async {
@@ -471,6 +480,25 @@ void main() {
       await sub.cancel();
     });
 
+    test('Switching reciter or playing surah without verse timings resets to ayah 1, emits isTimingUnavailable: true, and clears active timings', () async {
+      mockTiming.returnDirectNoTimings = true;
+
+      final states = <AudioState>[];
+      final sub = bloc.stream.listen(states.add);
+
+      // Play ayah 50 of Surah 27 (27050) with a reciter that lacks verse timings
+      bloc.add(const PlayVerse('', 27050));
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      final playState = states.whereType<AudioPlaying>().firstOrNull;
+      expect(playState, isNotNull);
+      expect(playState!.currentVerseId, 27001);
+      expect(playState.isTimingUnavailable, isTrue);
+      expect(bloc.hasActiveVerseTimings, isFalse);
+
+      await sub.cancel();
+    });
+
     test('Direct full surah stream repeat count change updates preferences and active state', () async {
       mockTiming.returnDirectNoTimings = true;
 
@@ -655,6 +683,58 @@ void main() {
       expect(bloc.state, isA<AudioPlaying>().having((s) => s.currentVerseId, 'currentVerseId', 1002));
       // Ayah 2 starts at 5 seconds
       expect(mockPlatform.player.lastLoadRequest?.initialPosition, equals(const Duration(seconds: 5)));
+    });
+
+    test('Media notification title includes Ayah for reciters with verse tracking', () async {
+      mockPrefs.appLocale = 'ar';
+      bloc.add(const PlayVerse('', 1001));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      expect(mockHandler.lastUpdatedItem?.title, contains('آية'));
+      expect(mockHandler.lastUpdatedItem?.title, equals('${QuranMetadata.getSurahNameWithTashkeel(1)} • آية ١'));
+
+      // Test English locale
+      mockPrefs.appLocale = 'en';
+      bloc.add(const PlayVerse('', 1002));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      expect(mockHandler.lastUpdatedItem?.title, contains('Ayah'));
+      expect(mockHandler.lastUpdatedItem?.title, equals('Surah ${QuranMetadata.getSurahNameEnglish(1)} • Ayah 2'));
+    });
+
+    test('Media notification title omits Ayah for untimed reciters without verse tracking', () async {
+      mockTiming.returnDirectNoTimings = true;
+
+      // Arabic locale
+      mockPrefs.appLocale = 'ar';
+      bloc.add(const PlayVerse('', 1001));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      expect(mockHandler.lastUpdatedItem?.title, isNot(contains('آية')));
+      expect(mockHandler.lastUpdatedItem?.title, equals(QuranMetadata.getSurahNameWithTashkeel(1)));
+
+      // English locale
+      mockPrefs.appLocale = 'en';
+      bloc.add(const PlayVerse('', 1001));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      expect(mockHandler.lastUpdatedItem?.title, isNot(contains('Ayah')));
+      expect(mockHandler.lastUpdatedItem?.title, equals('Surah ${QuranMetadata.getSurahNameEnglish(1)}'));
+    });
+
+    test('Stopped notification omits Ayah and customizes subtitle for untimed reciters', () async {
+      mockTiming.returnDirectNoTimings = true;
+      mockPrefs.appLocale = 'ar';
+
+      bloc.add(const PlayVerse('', 1001));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      bloc.add(AudioPlatformError(PlayerException(0, 'Failed host lookup socketexception', 0)));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      expect(mockHandler.lastStoppedTitle, equals('${QuranMetadata.getSurahNameWithTashkeel(1)} (توقفت)'));
+      expect(mockHandler.lastStoppedTitle, isNot(contains('آية')));
+      expect(mockHandler.lastStoppedSubtitle, equals('يلزم الإنترنت لتشغيل السور غير المحملة'));
     });
   });
 }

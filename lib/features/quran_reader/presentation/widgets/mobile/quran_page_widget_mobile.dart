@@ -1045,7 +1045,10 @@ class _QuranPageWidgetMobileState extends State<QuranPageWidgetMobile>
                               : (audioState is AudioPaused
                                     ? audioState.currentVerseId
                                     : null);
-                          if (activeAudioVerseId != null &&
+                          final hasActiveTimings =
+                              context.read<AudioBloc>().hasActiveVerseTimings;
+                          if (hasActiveTimings &&
+                              activeAudioVerseId != null &&
                               _verseKeyToIntIdMap.containsValue(
                                 activeAudioVerseId,
                               )) {

@@ -178,6 +178,9 @@ class FakeAudioBloc extends Bloc<AudioEvent, AudioState> implements AudioBloc {
 
   @override
   int? get currentPlayingAyah => 1;
+
+  @override
+  bool get hasActiveVerseTimings => true;
 }
 
 void main() {

@@ -40,6 +40,7 @@ class WordTimingService {
     'Minshawy_Murattal_128kbps': 9,
     'Minshawy_Mujawwad_192kbps': 8,
     'Husary_128kbps': 6,
+    'Husary_128kbps_Mujawwad': 12,
     'Abdul_Basit_Murattal_192kbps': 2,
     'Abdul_Basit_Mujawwad_128kbps': 1,
     'Abu_Bakr_Ash-Shaatree_128kbps': 4,
@@ -60,8 +61,9 @@ class WordTimingService {
     if (lower.contains('abdul_basit') || lower.contains('abdulbasit')) {
       return lower.contains('mujawwad') ? 1 : 2;
     }
-    if (lower.contains('husar') && !lower.contains('mujawwad') && !lower.contains('muallim')) {
-      return 6;
+    if (lower.contains('husar')) {
+      if (lower.contains('mujawwad')) return 12;
+      if (!lower.contains('muallim')) return 6;
     }
     if (lower.contains('shaatree') || lower.contains('shatri')) {
       return 4;

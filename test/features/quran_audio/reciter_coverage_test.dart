@@ -12,10 +12,13 @@ void main() {
         final reciterName = reciterEntry.key;
         final reciterPath = reciterEntry.value;
 
+        final mp3Info =
+            SurahAudioTimingService.resolveMp3QuranReadInfo(reciterPath);
         final recId = SurahAudioTimingService.resolveRecitationId(reciterPath);
-        final directUrl = SurahAudioTimingService.resolveDirectFullSurahUrl(reciterPath, 1);
+        final directUrl =
+            SurahAudioTimingService.resolveDirectFullSurahUrl(reciterPath, 1);
 
-        if (recId == null && directUrl == null) {
+        if (mp3Info == null && recId == null && directUrl == null) {
           missing.add('$category -> $reciterName ($reciterPath)');
         }
       }

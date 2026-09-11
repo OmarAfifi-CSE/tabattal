@@ -19,6 +19,7 @@ class AudioSelectorButton<T> extends StatelessWidget {
   final double valueFontSize;
   final double itemFontSize;
   final double iconSize;
+  final VoidCallback? onTap;
 
   const AudioSelectorButton({
     super.key,
@@ -35,12 +36,73 @@ class AudioSelectorButton<T> extends StatelessWidget {
     this.valueFontSize = 14.0,
     this.itemFontSize = 14.5,
     this.iconSize = 18.0,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final itemH = itemHeight ?? 42.0;
     final maxH = maxHeight ?? math.min(210.0, items.length * itemH);
+
+    final buttonContent = Container(
+      constraints: BoxConstraints(minHeight: height),
+      width: MediaQuery.sizeOf(context).width,
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCream,
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(
+          color: AppColors.accentGold.withValues(alpha: 0.4),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.accentGold, size: iconSize),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: labelFontSize,
+                    color: AppColors.accentGold,
+                    fontWeight: FontWeight.w600,
+                    height: 1.15,
+                  ),
+                ),
+                Text(
+                  labelBuilder(value),
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: valueFontSize,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    height: 1.15,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: AppColors.accentGold,
+            size: 20.r,
+          ),
+        ],
+      ),
+    );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10.r),
+        child: buttonContent,
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, layoutConstraints) {
@@ -82,62 +144,13 @@ class AudioSelectorButton<T> extends StatelessWidget {
               ),
             ),
           ],
-          child: Container(
-            constraints: BoxConstraints(minHeight: height),
-            width: MediaQuery.sizeOf(context).width,
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceCream,
-              borderRadius: BorderRadius.circular(10.r),
-              border: Border.all(
-                color: AppColors.accentGold.withValues(alpha: 0.4),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, color: AppColors.accentGold, size: iconSize),
-                SizedBox(width: 8.w),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: labelFontSize,
-                          color: AppColors.accentGold,
-                          fontWeight: FontWeight.w600,
-                          height: 1.15,
-                        ),
-                      ),
-                      Text(
-                        labelBuilder(value),
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: valueFontSize,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                          height: 1.15,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.accentGold,
-                  size: 20.r,
-                ),
-              ],
-            ),
-          ),
+          child: buttonContent,
         );
       },
     );
   }
 }
+
 
 class _PopupMenuScrollableContent<T> extends StatefulWidget {
   final List<T> items;

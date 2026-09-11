@@ -26,6 +26,8 @@ class AuditRepository extends Fake implements IVideoStudioRepository {
     List.generate(endAyah - startAyah + 1, (i) => 'https://example.invalid/${startAyah + i}.mp3');
   @override
   Future<List<Duration>> measureVerseDurations({required List<String> audioFilePaths}) async => List.filled(audioFilePaths.length, const Duration(seconds: 30));
+  @override
+  void cancelAudioPreparation() {}
 }
 
 class AuditPlatform extends JustAudioPlatform {

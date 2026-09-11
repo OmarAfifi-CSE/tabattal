@@ -13,11 +13,15 @@ class AudioLoading extends AudioState {}
 
 class AudioPlaying extends AudioState {
   final int currentVerseId;
+  final bool isTimingUnavailable;
 
-  const AudioPlaying(this.currentVerseId);
+  const AudioPlaying(
+    this.currentVerseId, {
+    this.isTimingUnavailable = false,
+  });
 
   @override
-  List<Object> get props => [currentVerseId];
+  List<Object> get props => [currentVerseId, isTimingUnavailable];
 }
 
 class AudioPaused extends AudioState {

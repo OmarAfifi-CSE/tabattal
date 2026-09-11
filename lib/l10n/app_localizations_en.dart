@@ -395,6 +395,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audioErrorPlaylist => 'Error playing playlist.';
 
   @override
+  String get audioVerseTimingsUnavailable =>
+      'Verse highlighting and tracking is not available for this surah with this reciter.';
+
+  @override
   String sleepTimerStopped(int minutes) {
     return 'Recitation will stop in $minutes minutes';
   }

@@ -21,6 +21,8 @@ class _MockRepo extends Fake implements IVideoStudioRepository {
   Future<List<String>> prepareVerseAudioFiles({required String reciterPath, required int surahNumber, required int startAyah, required int endAyah, void Function(double)? onDownloadProgress}) async => [];
   @override
   Future<List<Duration>> measureVerseDurations({required List<String> audioFilePaths}) async => [];
+  @override
+  void cancelAudioPreparation() {}
 }
 
 class _MockPlatform extends JustAudioPlatform {
@@ -257,5 +259,34 @@ void main() {
     expect(find.text('0:25'), findsOneWidget);
     final slider = tester.widget<Slider>(find.byType(Slider));
     expect(slider.value, 25000.0);
+  });
+
+  testWidgets('VideoTimelineScrubber resets to 0:00 when reciter changes', (tester) async {
+    await tester.pumpWidget(buildTestableWidget());
+    await tester.pump();
+
+    // Seek to 0:25 first
+    await tester.runAsync(() async {
+      bloc.add(const VideoStudioSeekRequested(Duration(seconds: 25)));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    });
+    await tester.pump();
+    expect(find.text('0:25'), findsOneWidget);
+
+    // Change reciter
+    await tester.runAsync(() async {
+      bloc.add(const VideoStudioReciterChanged(
+        reciterName: 'محمود خليل الحصري',
+        reciterCategory: 'مرتل',
+        reciterPath: 'Husary_128kbps',
+      ));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    });
+    await tester.pump();
+
+    // Must reset to 0:00 immediately
+    expect(find.text('0:00'), findsOneWidget);
+    final slider = tester.widget<Slider>(find.byType(Slider));
+    expect(slider.value, 0.0);
   });
 }

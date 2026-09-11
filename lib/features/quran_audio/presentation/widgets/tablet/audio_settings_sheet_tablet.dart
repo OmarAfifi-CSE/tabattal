@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../../core/constants/reciter_catalog.dart';
 import '../../../../../core/network/audio_download_manager.dart';
 import '../../../../../core/services/audio_preferences_service.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -12,6 +13,8 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../bloc/audio_bloc.dart';
 import '../../bloc/audio_event.dart';
 import '../shared/audio_selector_button.dart';
+import '../shared/reciter_picker_modal.dart';
+import '../shared/listening_only_notice_banner.dart';
 import '../shared/surah_download_status_card.dart';
 
 // ─── Public API ─────────────────────────────────────────────────────────────
@@ -196,13 +199,9 @@ class _AudioSettingsSheetContentState
         ? VerseRef.fromId(widget.verseId!).surah
         : (audioBloc.currentPlayingSurah ?? 1);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: math.max(
-          MediaQuery.viewInsetsOf(context).bottom,
-          MediaQuery.paddingOf(context).bottom,
-        ),
-      ),
+    return SafeArea(
+      top: false,
+      maintainBottomViewPadding: true,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: isLandscape
@@ -216,10 +215,7 @@ class _AudioSettingsSheetContentState
               (isLandscape ? 16.0 : 20.0).w,
               (isLandscape ? 12.0 : 8.0).h,
               (isLandscape ? 16.0 : 20.0).w,
-              math.max(
-                (isLandscape ? 14.0 : 16.0).h,
-                MediaQuery.paddingOf(context).bottom,
-              ),
+              (isLandscape ? 14.0 : 16.0).h,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -306,10 +302,33 @@ class _AudioSettingsSheetContentState
                   valueFontSize: (isLandscape ? 14.5 : 18.0).sp,
                   itemFontSize: (isLandscape ? 15.0 : 18.5).sp,
                   iconSize: (isLandscape ? 20.0 : 26.0).sp,
+                  onTap: (_selectedCategory == 'مرتل')
+                      ? () async {
+                          final chosen = await ReciterPickerModal.show(
+                            context: context,
+                            selectedCategory: _selectedCategory,
+                            selectedReciter: _selectedReciter,
+                            reciters: reciters,
+                            audioPrefs: widget.audioPrefs,
+                          );
+                          if (chosen != null) {
+                            _onReciterChanged(chosen);
+                          }
+                        }
+                      : null,
                   onChanged: (val) => _onReciterChanged(val),
                   labelBuilder: (item) =>
                       ReciterLocalization.localizeByLang(isEn, item),
                 ),
+                if (ReciterCatalog.globallyUntimedReciterPaths.contains(
+                  ReciterCatalog.getReciterPath(_selectedCategory, _selectedReciter),
+                )) ...[
+                  SizedBox(height: 8.h),
+                  const ListeningOnlyNoticeBanner(
+                    margin: EdgeInsets.zero,
+                    compact: true,
+                  ),
+                ],
                 SizedBox(height: (isLandscape ? 10.0 : 14.0).h),
 
                 // ── Repeat Selector

@@ -37,21 +37,7 @@ abstract final class VideoStudioErrorHelper {
       return l10n.videoStudioAudioCancelled;
     }
 
-    // 4. Audio download failure
-    if (raw.contains('تنزيل الملف الصوتي') ||
-        raw.contains('download') ||
-        raw.contains('audio file')) {
-      return l10n.videoStudioAudioDownloadError;
-    }
-
-    // 5. Audio duration measurement failure
-    if (raw.contains('مدة') ||
-        raw.contains('duration') ||
-        raw.contains('قياس')) {
-      return l10n.videoStudioAudioMeasureFailed;
-    }
-
-    // 6. Video encoding / rendering / FFmpeg failure
+    // 4. Video encoding / rendering / FFmpeg failure
     if (raw.contains('ffmpeg') ||
         raw.contains('encoding') ||
         raw.contains('render') ||
@@ -60,15 +46,15 @@ abstract final class VideoStudioErrorHelper {
       return l10n.videoStudioRenderProcessingError;
     }
 
-    // 7. Web browser canvas / MediaRecorder export failure
-    if (raw.contains('browser') ||
-        raw.contains('web') ||
-        raw.contains('canvas') ||
-        raw.contains('متصفح')) {
+    // 5. Web browser canvas / MediaRecorder export failure
+    if (raw.contains('mediarecorder') ||
+        raw.contains('in this browser') ||
+        raw.contains('متصفح') ||
+        (raw.contains('canvas') && raw.contains('export'))) {
       return l10n.videoStudioWebExportError;
     }
 
-    // 8. General Network / Connection errors
+    // 6. Network / Connection errors (Connection refused, timeout, host lookup)
     if (raw.contains('socket') ||
         raw.contains('connection') ||
         raw.contains('timeout') ||
@@ -79,6 +65,25 @@ abstract final class VideoStudioErrorHelper {
         raw.contains('الإنترنت') ||
         raw.contains('الخادم')) {
       return l10n.videoStudioNetworkError;
+    }
+
+    // 7. Audio download failure (404, not found, Dio bad response, network file download)
+    if (raw.contains('تنزيل الملف الصوتي') ||
+        raw.contains('download') ||
+        raw.contains('audio file') ||
+        raw.contains('404') ||
+        raw.contains('not found') ||
+        raw.contains('bad response') ||
+        raw.contains('status code') ||
+        raw.contains('dioexception')) {
+      return l10n.videoStudioAudioDownloadError;
+    }
+
+    // 8. Audio duration measurement failure
+    if (raw.contains('مدة') ||
+        raw.contains('duration') ||
+        raw.contains('قياس')) {
+      return l10n.videoStudioAudioMeasureFailed;
     }
 
     // 9. If error is an Arabic/English human-readable string without technical stacktrace, return cleaned

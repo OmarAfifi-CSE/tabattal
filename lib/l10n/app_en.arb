@@ -208,6 +208,7 @@
   "audioErrorNoInternet": "These ayahs are not downloaded and require an internet connection to stream.",
   "audioErrorPlayback": "Error playing audio.",
   "audioErrorPlaylist": "Error playing playlist.",
+  "audioVerseTimingsUnavailable": "Verse highlighting and tracking is not available for this surah with this reciter.",
   "sleepTimerStopped": "Recitation will stop in {minutes} minutes",
   "@sleepTimerStopped": {
     "placeholders": {

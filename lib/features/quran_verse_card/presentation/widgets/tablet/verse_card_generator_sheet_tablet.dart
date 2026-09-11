@@ -1419,6 +1419,7 @@ class _VerseCardGeneratorSheetTabletContentState
               selectedReciter: config.reciterName,
               selectedCategory: config.reciterCategory,
               displayMode: config.textDisplayMode,
+              surahNumber: _surahNumber,
               onReciterSelected: (name, category, path) {
                 _clearStatusBanner();
                 context.read<VideoStudioBloc>().add(

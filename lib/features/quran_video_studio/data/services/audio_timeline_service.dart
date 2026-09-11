@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import 'package:ffmpeg_kit_flutter_new_min_gpl/ffmpeg_kit.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../../../core/constants/reciter_catalog.dart';
+import '../../../quran_audio/data/services/surah_audio_timing_service.dart';
 
 class AudioTimelineItem {
   final int ayahNumber;
@@ -21,12 +25,108 @@ class AudioTimelineItem {
 }
 
 class AudioTimelineService {
-  final Dio _dio = Dio();
+  final Dio _dio;
+  final SurahAudioTimingService _timingService;
   CancelToken? _cancelToken;
+
+  AudioTimelineService({
+    Dio? dio,
+    SurahAudioTimingService? timingService,
+  })  : _dio = dio ??
+            Dio(
+              BaseOptions(
+                connectTimeout: const Duration(seconds: 15),
+                receiveTimeout: const Duration(seconds: 20),
+              ),
+            ),
+        _timingService = timingService ?? SurahAudioTimingService(dio: dio);
 
   void cancel() {
     _cancelToken?.cancel('Cancelled by user');
     _cancelToken = null;
+  }
+
+  /// Extracts missing individual ayah files from an already downloaded local surah audio file using FFmpegKit.
+  Future<void> _extractAyahsFromLocalSurah({
+    required String reciterPath,
+    required int surahNumber,
+    required List<int> missingAyahs,
+    required Directory audioDir,
+    required Directory userDownloadedDir,
+  }) async {
+    if (missingAyahs.isEmpty) return;
+
+    final surahStr = surahNumber.toString().padLeft(3, '0');
+    File? fullSurahFile;
+
+    // Check user downloaded surah file on disk
+    final primaryFile = File('${userDownloadedDir.path}/$surahStr.mp3');
+    final altFile = File('${userDownloadedDir.path}/$surahNumber.mp3');
+    if (await primaryFile.exists() && await primaryFile.length() > 0) {
+      fullSurahFile = primaryFile;
+    } else if (await altFile.exists() && await altFile.length() > 0) {
+      fullSurahFile = altFile;
+    }
+
+    // Windows legacy fallback check
+    if (fullSurahFile == null && !kIsWeb && Platform.isWindows) {
+      try {
+        final docsDir = await getApplicationDocumentsDirectory();
+        final legacyFile = File('${docsDir.path}/audio/$reciterPath/$surahStr.mp3');
+        final legacyAlt = File('${docsDir.path}/audio/$reciterPath/$surahNumber.mp3');
+        if (await legacyFile.exists() && await legacyFile.length() > 0) {
+          fullSurahFile = legacyFile;
+        } else if (await legacyAlt.exists() && await legacyAlt.length() > 0) {
+          fullSurahFile = legacyAlt;
+        }
+      } catch (_) {}
+    }
+
+    if (fullSurahFile == null) {
+      throw Exception('السورة غير محملة محليًا على الجهاز للقارئ المحدد');
+    }
+
+    final timings = await _timingService.getSurahTimings(
+      reciterPath: reciterPath,
+      surahNumber: surahNumber,
+    );
+
+    if (timings == null || timings.verseTimings.isEmpty) {
+      throw Exception('تعذر الحصول على توقيتات الآيات للقارئ المحدد');
+    }
+
+    for (final ayah in missingAyahs) {
+      if (_cancelToken?.isCancelled ?? false) break;
+      final vt = timings.getVerse(ayah);
+      if (vt == null) continue;
+
+      final ayahStr = ayah.toString().padLeft(3, '0');
+      final targetPath = '${audioDir.path}/$surahStr$ayahStr.mp3';
+      final targetFile = File(targetPath);
+      if (await targetFile.exists() && await targetFile.length() > 0) continue;
+
+      final startSec = (vt.start.inMilliseconds / 1000.0).toStringAsFixed(3);
+      final toSec = (vt.end.inMilliseconds / 1000.0).toStringAsFixed(3);
+
+      final sessionCompleter = Completer<void>();
+      await FFmpegKit.executeWithArgumentsAsync([
+        '-y',
+        '-i',
+        fullSurahFile.path,
+        '-ss',
+        startSec,
+        '-to',
+        toSec,
+        '-c',
+        'copy',
+        targetPath,
+      ], (session) {
+        if (!sessionCompleter.isCompleted) {
+          sessionCompleter.complete();
+        }
+      });
+      await sessionCompleter.future;
+    }
   }
 
   /// Downloads and caches all verse MP3s for a given reciter and verse range.
@@ -59,10 +159,16 @@ class AudioTimelineService {
       await audioDir.create(recursive: true);
     }
 
-    final docsDir = await getApplicationDocumentsDirectory();
-    final userDownloadedDir = Directory('${docsDir.path}/audio/$reciterPath');
+    final Directory readerBaseDir;
+    if (!kIsWeb && Platform.isWindows) {
+      readerBaseDir = await getApplicationSupportDirectory();
+    } else {
+      readerBaseDir = await getApplicationDocumentsDirectory();
+    }
+    final userDownloadedDir = Directory('${readerBaseDir.path}/audio/$reciterPath');
 
     final List<String> localFilePaths = [];
+    final List<int> missingAyahs = [];
 
     for (int i = 0; i < totalAyahs; i++) {
       if (_cancelToken?.isCancelled ?? false) {
@@ -71,9 +177,9 @@ class AudioTimelineService {
 
       final ayah = startAyah + i;
       final verseId = surahNumber * 1000 + ayah;
-      final userDownloadedFile = File('${userDownloadedDir.path}/$verseId.mp3');
 
-      // Check if user already downloaded this verse in the Quran Reader
+      // 1. Check if user already downloaded this verse in the Quran Reader
+      final userDownloadedFile = File('${userDownloadedDir.path}/$verseId.mp3');
       if (await userDownloadedFile.exists() && await userDownloadedFile.length() > 0) {
         localFilePaths.add(userDownloadedFile.path);
         onProgress?.call((i + 1) / totalAyahs);
@@ -82,22 +188,61 @@ class AudioTimelineService {
 
       final surahStr = surahNumber.toString().padLeft(3, '0');
       final ayahStr = ayah.toString().padLeft(3, '0');
-      final url = 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
       final filePath = '${audioDir.path}/$surahStr$ayahStr.mp3';
       final file = File(filePath);
 
-      if (!await file.exists() || await file.length() == 0) {
-        await _dio.download(
-          url,
-          filePath,
-          cancelToken: _cancelToken,
-        );
+      // 2. Check if already extracted/cached locally
+      if (await file.exists() && await file.length() > 0) {
+        localFilePaths.add(filePath);
+        onProgress?.call((i + 1) / totalAyahs);
+        continue;
       }
 
-      localFilePaths.add(filePath);
-      onProgress?.call((i + 1) / totalAyahs);
+      missingAyahs.add(ayah);
     }
 
+    if (missingAyahs.isNotEmpty) {
+      if (!ReciterCatalog.isMp3QuranReciter(reciterPath)) {
+        // Standard EveryAyah reciters: download only the exact requested verses directly
+        for (final ayah in missingAyahs) {
+          if (_cancelToken?.isCancelled ?? false) {
+            throw Exception('Audio preparation cancelled');
+          }
+          final surahStr = surahNumber.toString().padLeft(3, '0');
+          final ayahStr = ayah.toString().padLeft(3, '0');
+          final filePath = '${audioDir.path}/$surahStr$ayahStr.mp3';
+          final url = 'https://everyayah.com/data/$reciterPath/$surahStr$ayahStr.mp3';
+          await _dio.download(
+            url,
+            filePath,
+            cancelToken: _cancelToken,
+          );
+          localFilePaths.add(filePath);
+          onProgress?.call(localFilePaths.length / totalAyahs);
+        }
+      } else {
+        // MP3Quran reciters: ONLY extract from the locally downloaded full surah file!
+        await _extractAyahsFromLocalSurah(
+          reciterPath: reciterPath,
+          surahNumber: surahNumber,
+          missingAyahs: missingAyahs,
+          audioDir: audioDir,
+          userDownloadedDir: userDownloadedDir,
+        );
+
+        for (final ayah in missingAyahs) {
+          final surahStr = surahNumber.toString().padLeft(3, '0');
+          final ayahStr = ayah.toString().padLeft(3, '0');
+          final filePath = '${audioDir.path}/$surahStr$ayahStr.mp3';
+          final file = File(filePath);
+          if (await file.exists() && await file.length() > 0) {
+            localFilePaths.add(filePath);
+          }
+        }
+      }
+    }
+
+    localFilePaths.sort();
     return localFilePaths;
   }
 
@@ -114,9 +259,15 @@ class AudioTimelineService {
     if (kIsWeb) return url;
 
     try {
-      final docsDir = await getApplicationDocumentsDirectory();
+      final Directory readerBaseDir;
+      if (!kIsWeb && Platform.isWindows) {
+        readerBaseDir = await getApplicationSupportDirectory();
+      } else {
+        readerBaseDir = await getApplicationDocumentsDirectory();
+      }
+      final userDownloadedDir = Directory('${readerBaseDir.path}/audio/$reciterPath');
       final verseId = surahNumber * 1000 + ayahNumber;
-      final userDownloadedFile = File('${docsDir.path}/audio/$reciterPath/$verseId.mp3');
+      final userDownloadedFile = File('${userDownloadedDir.path}/$verseId.mp3');
       if (await userDownloadedFile.exists() && await userDownloadedFile.length() > 0) {
         return userDownloadedFile.path;
       }
@@ -128,10 +279,33 @@ class AudioTimelineService {
       }
       final filePath = '${audioDir.path}/$surahStr$ayahStr.mp3';
       final file = File(filePath);
-      if (!await file.exists()) {
-        await _dio.download(url, filePath, cancelToken: _cancelToken);
+
+      // 1. Check if already extracted locally
+      if (await file.exists() && await file.length() > 0) {
+        return filePath;
       }
-      return filePath;
+
+      // 2. Direct download for EveryAyah reciters
+      if (!ReciterCatalog.isMp3QuranReciter(reciterPath)) {
+        await _dio.download(url, filePath, cancelToken: _cancelToken);
+        if (await file.exists() && await file.length() > 0) {
+          return filePath;
+        }
+      } else {
+        // 3. Extract only from local surah file if downloaded
+        await _extractAyahsFromLocalSurah(
+          reciterPath: reciterPath,
+          surahNumber: surahNumber,
+          missingAyahs: [ayahNumber],
+          audioDir: audioDir,
+          userDownloadedDir: userDownloadedDir,
+        );
+        if (await file.exists() && await file.length() > 0) {
+          return filePath;
+        }
+      }
+
+      return null;
     } catch (_) {
       return null;
     }

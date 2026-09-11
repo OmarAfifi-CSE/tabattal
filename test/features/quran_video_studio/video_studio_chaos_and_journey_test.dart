@@ -59,6 +59,9 @@ class _ChaosRepository extends Fake implements IVideoStudioRepository {
     if (shouldThrow) throw Exception('Simulated probe error');
     return List.filled(audioFilePaths.length, const Duration(seconds: 25));
   }
+
+  @override
+  void cancelAudioPreparation() {}
 }
 
 class _ChaosPlatform extends JustAudioPlatform {

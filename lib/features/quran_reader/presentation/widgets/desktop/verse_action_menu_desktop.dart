@@ -928,17 +928,22 @@ class _VerseActionMenuDesktopState extends State<VerseActionMenuDesktop>
                       ),
                       BlocBuilder<AudioBloc, AudioState>(
                         builder: (context, audioState) {
+                          final bloc = context.read<AudioBloc>();
                           final isAudioActive =
                               audioState is! AudioIdle &&
                               audioState is! AudioError;
+                          final canGoToVerse = isAudioActive &&
+                              bloc.hasActiveVerseTimings &&
+                              bloc.currentPlayingSurah == widget.verse.surah;
+
                           return _buildMenuItem(
                             Icons.play_circle_outline,
-                            isAudioActive
+                            canGoToVerse
                                 ? l10n.menuGoToVerse
                                 : l10n.menuListen,
                             () {
-                              if (isAudioActive) {
-                                context.read<AudioBloc>().add(
+                              if (canGoToVerse) {
+                                bloc.add(
                                   PlayVerse('', widget.verse.id),
                                 );
                               } else {

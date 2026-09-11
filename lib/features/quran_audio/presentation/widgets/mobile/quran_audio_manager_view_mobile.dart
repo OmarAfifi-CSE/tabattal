@@ -12,7 +12,9 @@ import '../../../../../core/utils/reciter_localization.dart';
 import 'package:flutter/services.dart';
 import '../../bloc/audio_bloc.dart';
 import '../../bloc/audio_event.dart';
+import '../../../../../core/services/audio_preferences_service.dart';
 import '../shared/audio_selector_button.dart';
+import '../shared/reciter_picker_modal.dart';
 
 class QuranAudioManagerViewMobile extends StatefulWidget {
   const QuranAudioManagerViewMobile({super.key});
@@ -356,6 +358,7 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
     final reciters = AudioDownloadManager.reciterCategories[_selectedCategory]!;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.surfaceCream,
       appBar: AppBar(
         backgroundColor: AppColors.surfaceCream,
@@ -446,6 +449,22 @@ class _QuranAudioManagerViewMobileState extends State<QuranAudioManagerViewMobil
                         items: reciters.keys.toList(),
                         labelBuilder: (r) =>
                             ReciterLocalization.localize(context, r),
+                        onTap: (_selectedCategory == 'مرتل')
+                            ? () async {
+                                final audioPrefs =
+                                    context.read<AudioPreferencesService>();
+                                final chosen = await ReciterPickerModal.show(
+                                  context: context,
+                                  selectedCategory: _selectedCategory,
+                                  selectedReciter: _selectedReciter,
+                                  reciters: reciters.keys.toList(),
+                                  audioPrefs: audioPrefs,
+                                );
+                                if (chosen != null) {
+                                  _onReciterChanged(chosen);
+                                }
+                              }
+                            : null,
                         onChanged: _onReciterChanged,
                       ),
                       SizedBox(height: 16.h),

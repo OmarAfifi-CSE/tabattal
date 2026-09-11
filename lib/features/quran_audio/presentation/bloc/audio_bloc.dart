@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:audio_service/audio_service.dart';
 
 import '../../../../core/constants/quran_metadata.dart';
+import '../../../../core/constants/reciter_catalog.dart';
 import '../../../../core/network/audio_download_manager.dart';
 import '../../../../core/services/audio_preferences_service.dart';
 import '../../../../core/services/quran_audio_handler.dart';
@@ -64,6 +65,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   bool get playOnce => _playOnce;
   int? get currentPlayingSurah => _currentPlayingSurah;
   int? get currentPlayingAyah => _currentPlayingAyah;
+  bool get hasActiveVerseTimings =>
+      _currentSurahTimings != null && _currentSurahTimings!.verseTimings.isNotEmpty;
 
   AudioBloc(
     this._audioHandler,
@@ -302,8 +305,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           if (!_audioPlayer.playing) {
             unawaited(_audioPlayer.play());
           }
-          emit(AudioPlaying(verse.verseId));
-          unawaited(_updateMediaItem(verse));
+          final effectiveAyah = _currentPlayingAyah ?? verse.ayah;
+          final effectiveVerseRef = VerseRef(verse.surah, effectiveAyah);
+          emit(AudioPlaying(effectiveVerseRef.verseId));
+          unawaited(_updateMediaItem(effectiveVerseRef));
           return;
         } catch (_) {
           // File might have been deleted mid-playback or seek failed; fall through to Case 2 reload!
@@ -391,18 +396,21 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       final String audioPath;
       final bool isStartOfSurah;
 
+      final bool isTimingUnavailable =
+          timings == null || timings.verseTimings.isEmpty;
+
       if (localPath != null && localPath.isNotEmpty) {
         audioPath = localPath;
         _isSingleVersePlayback = false;
-        if (timings != null && timings.verseTimings.isNotEmpty) {
+        if (!isTimingUnavailable) {
           final targetVerse = timings.getVerse(verse.ayah) ?? timings.verseTimings.first;
           initialPosition = targetVerse.start;
           targetAyah = targetVerse.ayah;
           isStartOfSurah = targetAyah == 1 || targetVerse == timings.verseTimings.first;
         } else {
           initialPosition = Duration.zero;
-          targetAyah = verse.ayah;
-          isStartOfSurah = targetAyah == 1;
+          targetAyah = 1;
+          isStartOfSurah = true;
           timings ??= SurahTimings(
             surah: verse.surah,
             audioUrl: localPath,
@@ -412,15 +420,15 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       } else if (timings != null && timings.audioUrl.isNotEmpty) {
         audioPath = timings.audioUrl;
         _isSingleVersePlayback = false;
-        if (timings.verseTimings.isNotEmpty) {
+        if (!isTimingUnavailable) {
           final targetVerse = timings.getVerse(verse.ayah) ?? timings.verseTimings.first;
           initialPosition = targetVerse.start;
           targetAyah = targetVerse.ayah;
           isStartOfSurah = targetAyah == 1 || targetVerse == timings.verseTimings.first;
         } else {
           initialPosition = Duration.zero;
-          targetAyah = verse.ayah;
-          isStartOfSurah = targetAyah == 1;
+          targetAyah = 1;
+          isStartOfSurah = true;
         }
       } else {
         audioPath = localVersePath!;
@@ -472,7 +480,10 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       _playedCount = 0;
       _activePlaylistGeneration = myGen;
 
-      emit(AudioPlaying(VerseRef(verse.surah, targetAyah).verseId));
+      emit(AudioPlaying(
+        VerseRef(verse.surah, targetAyah).verseId,
+        isTimingUnavailable: isTimingUnavailable,
+      ));
       unawaited(_updateMediaItem(VerseRef(verse.surah, targetAyah)));
       unawaited(_audioPlayer.play());
     } on PlayerException catch (e) {
@@ -778,9 +789,21 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
   Future<void> _updateMediaItem(VerseRef verse) async {
     final isEn = _prefs.appLocale == 'en';
+    final reciterPath = AudioDownloadManager.getReciterPath(
+      _currentCategory,
+      _currentReciter,
+    );
+    final isUntimed = !hasActiveVerseTimings ||
+        ReciterCatalog.globallyUntimedReciterPaths.contains(reciterPath) ||
+        !ReciterCatalog.hasTimingForSurah(reciterPath, verse.surah);
+
     final String title = isEn
-        ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} • Ayah ${verse.ayah}'
-        : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} • آية ${verse.ayah.toArabicDigits}';
+        ? (isUntimed
+            ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)}'
+            : 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} • Ayah ${verse.ayah}')
+        : (isUntimed
+            ? QuranMetadata.getSurahNameWithTashkeel(verse.surah)
+            : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} • آية ${verse.ayah.toArabicDigits}');
 
     final artUri = await _getArtUri();
 
@@ -876,6 +899,15 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       return;
     }
 
+    final reciterPath = AudioDownloadManager.getReciterPath(
+      _currentCategory,
+      _currentReciter,
+    );
+    final isUntimed = !hasActiveVerseTimings ||
+        ReciterCatalog.globallyUntimedReciterPaths.contains(reciterPath) ||
+        (stoppedVerse != null &&
+            !ReciterCatalog.hasTimingForSurah(reciterPath, stoppedVerse.surah));
+
     _playlistGeneration++;
     _activePlaylistGeneration = 0;
     _currentSurahTimings = null;
@@ -897,11 +929,19 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
             : stoppedVerse.ayah.toArabicDigits;
 
         final title = isEn
-            ? 'Surah $surahName • Ayah $ayahStr (Stopped)'
-            : '$surahName • آية $ayahStr (توقفت)';
+            ? (isUntimed
+                ? 'Surah $surahName (Stopped)'
+                : 'Surah $surahName • Ayah $ayahStr (Stopped)')
+            : (isUntimed
+                ? '$surahName (توقفت)'
+                : '$surahName • آية $ayahStr (توقفت)');
         final subtitle = isEn
-            ? 'Internet required for non-downloaded ayahs'
-            : 'يلزم الإنترنت لتشغيل الآيات غير المحملة';
+            ? (isUntimed
+                ? 'Internet required for non-downloaded surahs'
+                : 'Internet required for non-downloaded ayahs')
+            : (isUntimed
+                ? 'يلزم الإنترنت لتشغيل السور غير المحملة'
+                : 'يلزم الإنترنت لتشغيل الآيات غير المحملة');
 
         await _audioHandler.showStoppedNotification(
           title: title,

@@ -394,6 +394,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get audioErrorPlaylist => 'حدث خطأ أثناء تشغيل القائمة.';
 
   @override
+  String get audioVerseTimingsUnavailable =>
+      'خاصية تتبع وتظليل الآيات غير متاحة لهذه السورة مع هذا القارئ';
+
+  @override
   String sleepTimerStopped(int minutes) {
     return 'سيتم إيقاف التلاوة بعد $minutes دقائق';
   }

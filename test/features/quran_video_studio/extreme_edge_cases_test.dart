@@ -37,6 +37,9 @@ class _MockRepo extends Fake implements IVideoStudioRepository {
   Future<List<Duration>> measureVerseDurations({
     required List<String> audioFilePaths,
   }) async => [];
+
+  @override
+  void cancelAudioPreparation() {}
 }
 
 class _MockPlatform extends JustAudioPlatform {

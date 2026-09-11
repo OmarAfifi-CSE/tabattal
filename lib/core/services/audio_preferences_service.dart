@@ -10,9 +10,17 @@ class AudioPreferencesService {
   static const String _keyLocale = 'app_locale';
   static const String _keyPlayOnce = 'audio_play_once';
   static const String _keyVolume = 'audio_app_volume';
+  static const String _keyFavoriteReciters = 'audio_favorite_reciters';
 
   static const String defaultCategory = 'مرتل';
   static const String defaultReciter = 'محمد صديق المنشاوي';
+  static const List<String> defaultFavoriteReciters = [
+    'محمد صديق المنشاوي',
+    'محمود خليل الحصري',
+    'عبد الباسط عبد الصمد',
+    'ماهر المعيقلي',
+    'أحمد العجمي',
+  ];
   static const int defaultRepeatCount =
       0; // 0 = continue reading, -1 = infinite, >0 = count
   static const double defaultVolume = 1.0;
@@ -77,5 +85,23 @@ class AudioPreferencesService {
 
   Future<void> saveVolume(double volume) async {
     await _prefs.setDouble(_keyVolume, volume);
+  }
+
+  List<String> get favoriteReciters {
+    return _prefs.getStringList(_keyFavoriteReciters) ?? defaultFavoriteReciters;
+  }
+
+  Future<void> toggleFavoriteReciter(String reciter) async {
+    final list = List<String>.from(favoriteReciters);
+    if (list.contains(reciter)) {
+      list.remove(reciter);
+    } else {
+      list.add(reciter);
+    }
+    await _prefs.setStringList(_keyFavoriteReciters, list);
+  }
+
+  bool isFavoriteReciter(String reciter) {
+    return favoriteReciters.contains(reciter);
   }
 }

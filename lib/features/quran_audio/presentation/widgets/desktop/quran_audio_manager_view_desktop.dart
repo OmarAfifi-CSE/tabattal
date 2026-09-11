@@ -12,7 +12,9 @@ import '../../../../../../core/utils/app_snack_bar.dart';
 import '../../../../../core/utils/reciter_localization.dart';
 import '../../bloc/audio_bloc.dart';
 import '../../bloc/audio_event.dart';
+import '../../../../../core/services/audio_preferences_service.dart';
 import '../shared/audio_selector_button.dart';
+import '../shared/reciter_picker_modal.dart';
 
 class QuranAudioManagerViewDesktop extends StatefulWidget {
   const QuranAudioManagerViewDesktop({super.key});
@@ -341,6 +343,7 @@ class _QuranAudioManagerViewDesktopState
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.surfaceCream,
       appBar: AppBar(
         backgroundColor: AppColors.surfaceCream,
@@ -457,6 +460,24 @@ class _QuranAudioManagerViewDesktopState
                                     iconSize: 24.sp,
                                     labelBuilder: (r) =>
                                         ReciterLocalization.localize(context, r),
+                                    onTap: (_selectedCategory == 'مرتل')
+                                        ? () async {
+                                            final audioPrefs =
+                                                context.read<AudioPreferencesService>();
+                                            final chosen =
+                                                await ReciterPickerModal.show(
+                                              context: context,
+                                              selectedCategory:
+                                                  _selectedCategory,
+                                              selectedReciter: _selectedReciter,
+                                              reciters: reciters.keys.toList(),
+                                              audioPrefs: audioPrefs,
+                                            );
+                                            if (chosen != null) {
+                                              _onReciterChanged(chosen);
+                                            }
+                                          }
+                                        : null,
                                     onChanged: _onReciterChanged,
                                   ),
                                 ],

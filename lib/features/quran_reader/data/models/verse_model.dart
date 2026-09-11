@@ -46,6 +46,9 @@ class VerseModel {
   final String? translation;
   final String? tafsir;
 
+  int get surahNumber => int.tryParse(verseKey.split(':').first) ?? 1;
+  int get surah => surahNumber;
+
   VerseModel({
     required this.id,
     required this.verseNumber,

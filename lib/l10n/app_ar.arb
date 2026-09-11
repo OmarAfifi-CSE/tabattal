@@ -227,6 +227,7 @@
   "audioErrorNoInternet": "هذه الآيات غير محملة مسبقًا وتتطلب اتصالًا بالإنترنت لتشغيلها.",
   "audioErrorPlayback": "حدث خطأ أثناء تشغيل التلاوة.",
   "audioErrorPlaylist": "حدث خطأ أثناء تشغيل القائمة.",
+  "audioVerseTimingsUnavailable": "خاصية تتبع وتظليل الآيات غير متاحة لهذه السورة مع هذا القارئ",
   "sleepTimerStopped": "سيتم إيقاف التلاوة بعد {minutes} دقائق",
   "@sleepTimerStopped": {
     "placeholders": {

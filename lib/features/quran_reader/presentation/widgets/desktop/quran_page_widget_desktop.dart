@@ -996,7 +996,10 @@ class _QuranPageWidgetDesktopState extends State<QuranPageWidgetDesktop>
                     final activeAudioVerseId = audioState is AudioPlaying
                         ? audioState.currentVerseId
                         : (audioState is AudioPaused ? audioState.currentVerseId : null);
-                    if (activeAudioVerseId != null &&
+                    final hasActiveTimings =
+                        context.read<AudioBloc>().hasActiveVerseTimings;
+                    if (hasActiveTimings &&
+                        activeAudioVerseId != null &&
                         _verseKeyToIntIdMap.containsValue(activeAudioVerseId)) {
                       playingVerseId = activeAudioVerseId;
                     }

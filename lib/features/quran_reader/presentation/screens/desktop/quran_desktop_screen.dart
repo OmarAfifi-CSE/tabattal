@@ -159,6 +159,12 @@ class _QuranDesktopScreenState extends State<QuranDesktopScreen> {
       _showErrorSnackBar(state.message);
     } else if (state is AudioPlaying) {
       _navigateToPlayingVerse(context, state.currentVerseId);
+      if (state.isTimingUnavailable && mounted) {
+        final l10n = AppLocalizations.of(context);
+        if (l10n != null) {
+          AppSnackBar.showInfo(context, l10n.audioVerseTimingsUnavailable);
+        }
+      }
     }
   }
 
@@ -231,6 +237,7 @@ class _QuranDesktopScreenState extends State<QuranDesktopScreen> {
         systemStatusBarContrastEnforced: false,
       ),
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: AppColors.background,
         drawer: QuranDrawerDesktop(
           currentPage: _currentPage,
@@ -238,6 +245,7 @@ class _QuranDesktopScreenState extends State<QuranDesktopScreen> {
               _navigateToPage(page, verseKey: verseKey),
         ),
         body: SafeArea(
+          maintainBottomViewPadding: true,
           child: BlocListener<AudioBloc, AudioState>(
             listener: _handleAudioStateChange,
             child: LayoutBuilder(

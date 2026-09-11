@@ -216,6 +216,11 @@ class VideoStudioRepositoryImpl implements IVideoStudioRepository {
   }
 
   @override
+  void cancelAudioPreparation() {
+    _audioService.cancel();
+  }
+
+  @override
   Future<String?> prepareMergedAudio({
     required List<String> audioFilePaths,
   }) {

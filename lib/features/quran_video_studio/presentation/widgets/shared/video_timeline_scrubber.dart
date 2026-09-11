@@ -72,6 +72,22 @@ class _VideoTimelineScrubberState extends State<VideoTimelineScrubber> {
   }
 
   @override
+  void didUpdateWidget(VideoTimelineScrubber oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.state.playbackResetTrigger != widget.state.playbackResetTrigger ||
+        oldWidget.state.seekTrigger != widget.state.seekTrigger ||
+        oldWidget.state.config.reciterPath != widget.state.config.reciterPath ||
+        oldWidget.state.config.startAyah != widget.state.config.startAyah ||
+        oldWidget.state.config.endAyah != widget.state.config.endAyah ||
+        oldWidget.state.config.surahNumber != widget.state.config.surahNumber) {
+      _isDragging = false;
+      _settlingMs = null;
+      _settleStartTime = null;
+      _dragMs = 0.0;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = widget.state;
     final totalMs = state.totalVideoDuration.inMilliseconds.toDouble();

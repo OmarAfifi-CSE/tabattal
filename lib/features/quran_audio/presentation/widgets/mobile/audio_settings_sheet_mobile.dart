@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../../core/constants/reciter_catalog.dart';
 import '../../../../../core/network/audio_download_manager.dart';
 import '../../../../../core/services/audio_preferences_service.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -11,6 +12,8 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../bloc/audio_bloc.dart';
 import '../../bloc/audio_event.dart';
 import '../shared/audio_selector_button.dart';
+import '../shared/reciter_picker_modal.dart';
+import '../shared/listening_only_notice_banner.dart';
 import '../shared/surah_download_status_card.dart';
 
 // ─── Public API ─────────────────────────────────────────────────────────────
@@ -160,11 +163,9 @@ class _AudioSettingsSheetContentState
         ? VerseRef.fromId(widget.verseId!).surah
         : (audioBloc.currentPlayingSurah ?? 1);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.paddingOf(context).bottom +
-            MediaQuery.viewInsetsOf(context).bottom,
-      ),
+    return SafeArea(
+      top: false,
+      maintainBottomViewPadding: true,
       child: Container(
         padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 0),
         child: Column(
@@ -227,9 +228,32 @@ class _AudioSettingsSheetContentState
               valueFontSize: 14.sp,
               itemFontSize: 14.5.sp,
               iconSize: 18.sp,
+              onTap: (_selectedCategory == 'مرتل')
+                  ? () async {
+                      final chosen = await ReciterPickerModal.show(
+                        context: context,
+                        selectedCategory: _selectedCategory,
+                        selectedReciter: _selectedReciter,
+                        reciters: reciters,
+                        audioPrefs: widget.audioPrefs,
+                      );
+                      if (chosen != null) {
+                        _onReciterChanged(chosen);
+                      }
+                    }
+                  : null,
               onChanged: (val) => _onReciterChanged(val),
               labelBuilder: (item) => ReciterLocalization.localizeByLang(isEn, item),
             ),
+            if (ReciterCatalog.globallyUntimedReciterPaths.contains(
+              ReciterCatalog.getReciterPath(_selectedCategory, _selectedReciter),
+            )) ...[
+              SizedBox(height: 8.h),
+              const ListeningOnlyNoticeBanner(
+                margin: EdgeInsets.zero,
+                compact: true,
+              ),
+            ],
             SizedBox(height: 10.h),
 
             // ── Repeat Selector
