@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
+import 'package:window_manager/window_manager.dart';
 
 /// Helper utility to reliably display native file pickers on Desktop,
 /// with a robust fallback on Windows that avoids COM apartment state
@@ -44,6 +45,11 @@ if (\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         stdoutEncoding: utf8,
         stderrEncoding: utf8,
       );
+
+      // Restore Windows OS focus to the Flutter window immediately
+      try {
+        await windowManager.focus();
+      } catch (_) {}
 
       if (result.exitCode == 0) {
         final path = result.stdout.toString().trim();

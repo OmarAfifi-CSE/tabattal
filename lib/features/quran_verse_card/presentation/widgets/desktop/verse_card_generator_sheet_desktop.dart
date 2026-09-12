@@ -983,6 +983,9 @@ class _VerseCardGeneratorSheetDesktopContentState
                                     controller: _scrollController,
                                     thumbVisibility: true,
                                     child: SingleChildScrollView(
+                                      key: ValueKey(
+                                        'desktop_options_scroll_${_selectedFormat.name}_${videoState.config.backgroundType.name}_${videoState.config.customVideoPath ?? ""}',
+                                      ),
                                       controller: _scrollController,
                                       physics: const BouncingScrollPhysics(),
                                       padding: const EdgeInsetsDirectional.only(end: 12.0),
@@ -1064,6 +1067,9 @@ class _VerseCardGeneratorSheetDesktopContentState
                     ...[
                       Flexible(
                         child: SingleChildScrollView(
+                          key: ValueKey(
+                            'desktop_options_scroll_portrait_${_selectedFormat.name}_${videoState.config.backgroundType.name}_${videoState.config.customVideoPath ?? ""}',
+                          ),
                           controller: _scrollController,
                           physics: const BouncingScrollPhysics(),
                           child: Column(

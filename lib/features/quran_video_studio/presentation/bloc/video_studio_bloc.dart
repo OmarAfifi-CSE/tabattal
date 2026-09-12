@@ -317,6 +317,8 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       ),
     );
 
+    if (emit.isDone) return;
+
     await _loadAudioAndVersesForCurrentSpan(emit);
   }
 
@@ -363,6 +365,8 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       ),
     );
 
+    if (emit.isDone) return;
+
     await _loadAudioAndVersesForCurrentSpan(emit);
   }
 
@@ -408,6 +412,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         state.copyWith(
           config: state.config.copyWith(
             clearCustomImage: true,
+            clearCustomVideo: true,
             backgroundType: VideoBackgroundType.gradient,
           ),
         ),
@@ -441,6 +446,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         state.copyWith(
           config: state.config.copyWith(
             clearCustomVideo: true,
+            clearCustomImage: true,
             backgroundType: VideoBackgroundType.gradient,
           ),
         ),

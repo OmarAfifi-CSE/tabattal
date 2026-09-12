@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:window_manager/window_manager.dart';
 import '../../../../core/utils/desktop_file_picker_helper.dart';
 
 /// Helper service for picking and downloading custom background videos.
@@ -56,6 +57,11 @@ class CustomVideoService {
             extensions: ['mp4', 'mov', 'mkv', 'webm', 'avi', 'wmv'],
           );
           final file = await fs.openFile(acceptedTypeGroups: [typeGroup]);
+          if (Platform.isWindows) {
+            try {
+              await windowManager.focus();
+            } catch (_) {}
+          }
           return file != null ? p.normalize(file.path) : null;
         } catch (e) {
           debugPrint('file_selector openFile failed: $e');

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +35,9 @@ class VideoBackgroundPlayerView extends StatefulWidget {
 class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
   VideoPlayerController? _controller;
   String? _initializedPath;
-  bool _isInitializing = false;
+  // Generation counter: incremented on every new _initPlayer() call.
+  // Any async completion that sees a stale generation is silently dropped.
+  int _initGeneration = 0;
   bool _isSeeking = false;
   bool _hasError = false;
   Duration? _pendingSeekTarget;
@@ -108,19 +111,34 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
     });
   }
 
-  Future<void> _initPlayer() async {
+  void _initPlayer() {
     final path = widget.videoPath;
     if (_initializedPath == path && _controller != null && !_hasError) return;
     if (path.trim().isEmpty) {
-      if (mounted) {
-        setState(() => _hasError = true);
-      }
+      if (mounted) setState(() => _hasError = true);
       return;
     }
-    if (_isInitializing) return;
-    _isInitializing = true;
-    _hasError = false;
 
+    // Bump the generation so any in-flight init from a previous path is ignored.
+    final generation = ++_initGeneration;
+    _hasError = false;
+    _initializedPath = path;
+
+    // Detach and dispose the old controller WITHOUT awaiting — fire-and-forget
+    // so the main thread is never stalled by native teardown on Windows.
+    final oldController = _controller;
+    _controller = null;
+    if (oldController != null) {
+      unawaited(oldController.dispose());
+    }
+
+    // Show loading spinner immediately, without waiting for initialize().
+    if (mounted) setState(() {});
+
+    _initAsync(path, generation);
+  }
+
+  Future<void> _initAsync(String path, int generation) async {
     final isWebOrUrl = kIsWeb ||
         path.startsWith('http://') ||
         path.startsWith('https://') ||
@@ -131,19 +149,12 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
     if (!isWebOrUrl) {
       final file = File(normalizedPath);
       if (!file.existsSync()) {
-        if (mounted) {
-          setState(() {
-            _hasError = true;
-            _isInitializing = false;
-          });
+        if (mounted && generation == _initGeneration) {
+          setState(() => _hasError = true);
         }
         return;
       }
     }
-
-    final oldController = _controller;
-    _controller = null;
-    await oldController?.dispose();
 
     final newController = isWebOrUrl
         ? VideoPlayerController.networkUrl(
@@ -154,17 +165,13 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
             File(normalizedPath),
             videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
           );
-    _initializedPath = path;
 
     try {
       await newController.initialize();
       await newController.setLooping(true);
-      await newController.setVolume(0.0); // Mute completely to protect Quran audio
+      await newController.setVolume(0.0);
 
-      // Apply the timeline position right away (e.g. opening fullscreen
-      // mid-preview): didUpdateWidget only reacts to *changes* of seekSignal,
-      // so a freshly mounted player would otherwise always start at 0.
-      // Isolated try/catch: a seek failure must never break initialization.
+      // Apply timeline position right away (e.g. opening fullscreen mid-preview).
       try {
         final initialSeek = widget.seekPosition ?? widget.currentPosition;
         if (initialSeek != null && initialSeek > Duration.zero) {
@@ -177,8 +184,9 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
         }
       } catch (_) {}
 
-      if (!mounted) {
-        await newController.dispose();
+      // Stale generation or widget unmounted — discard safely.
+      if (!mounted || generation != _initGeneration) {
+        unawaited(newController.dispose());
         return;
       }
 
@@ -188,18 +196,15 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
       });
 
       if (widget.isPlaying) {
-        await newController.play();
+        unawaited(newController.play());
       }
     } catch (_) {
-      if (mounted) {
+      unawaited(newController.dispose());
+      if (mounted && generation == _initGeneration) {
         setState(() {
           _controller = null;
           _hasError = true;
         });
-      }
-    } finally {
-      if (mounted) {
-        _isInitializing = false;
       }
     }
   }
@@ -208,7 +213,12 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
   void dispose() {
     _isSeeking = false;
     _pendingSeekTarget = null;
-    _controller?.dispose();
+    // Increment generation to invalidate any in-flight _initAsync.
+    _initGeneration++;
+    // Fire-and-forget: no await on dispose to keep Flutter's widget teardown fast.
+    final c = _controller;
+    _controller = null;
+    if (c != null) unawaited(c.dispose());
     super.dispose();
   }
 

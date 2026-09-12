@@ -51,8 +51,14 @@ class VideoExportService implements IVideoExportService {
     final validAudioFiles = audioFilePaths.where((p) => p.isNotEmpty).toList();
     if (validAudioFiles.isEmpty) return null;
     if (validAudioFiles.length == 1) return validAudioFiles.first;
+    if (_isCancelled) return null;
 
     try {
+      try {
+        await FFmpegKit.cancel();
+      } catch (_) {}
+      if (_isCancelled) return null;
+
       final tempDir = await getTemporaryDirectory();
       final previewDir = Directory('${tempDir.path}/video_studio_preview');
       if (!await previewDir.exists()) {
@@ -96,7 +102,12 @@ class VideoExportService implements IVideoExportService {
 
       final success = await completer.future.timeout(
         const Duration(seconds: 4),
-        onTimeout: () => false,
+        onTimeout: () {
+          try {
+            FFmpegKit.cancel();
+          } catch (_) {}
+          return false;
+        },
       );
 
       try {
@@ -750,7 +761,9 @@ class VideoExportService implements IVideoExportService {
             });
           } catch (_) {
             // Windows fallback: highlight and select the generated file in Explorer
-            await Process.run('explorer.exe', ['/select,', normalizedPath]);
+            try {
+              await Process.run('explorer.exe', ['/select,', normalizedPath]);
+            } catch (_) {}
           }
         } else {
           await SharePlus.instance.share(

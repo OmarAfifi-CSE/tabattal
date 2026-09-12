@@ -1,5 +1,8 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:window_manager/window_manager.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../data/services/custom_image_service.dart';
@@ -106,7 +109,14 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
       if (!mounted) return;
       if (path != null) {
         Navigator.pop(context);
-        widget.onImageSelected(path);
+        if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+          try {
+            await windowManager.focus();
+          } catch (_) {}
+        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          widget.onImageSelected(path);
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -139,7 +149,14 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
       final path = await CustomImageService.downloadImageFromUrl(url);
       if (!mounted) return;
       Navigator.pop(context);
-      widget.onImageSelected(path);
+      if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+        try {
+          await windowManager.focus();
+        } catch (_) {}
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onImageSelected(path);
+      });
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -365,8 +382,15 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
                 SizedBox(height: 14.h),
                 OutlinedButton.icon(
                   onPressed: () {
-                    widget.onImageRemoved?.call();
                     Navigator.pop(context);
+                    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+                      try {
+                        windowManager.focus();
+                      } catch (_) {}
+                    }
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      widget.onImageRemoved?.call();
+                    });
                   },
                   icon: Icon(
                     Icons.delete_outline_rounded,
