@@ -96,17 +96,56 @@ const exportLimiter = rateLimit({
 });
 
 app.use('/api/export-video', exportLimiter);
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+app.use(express.json({ limit: '150mb' }));
+app.use(express.urlencoded({ extended: true, limit: '150mb' }));
 
-// Configure multer storage for uploaded frame images
+// Configure multer storage for uploaded frame images and custom background videos
 const upload = multer({
   dest: path.join(os.tmpdir(), 'tabattal_uploads'),
   limits: { 
-    fileSize: 50 * 1024 * 1024, // Max 50MB per frame
-    files: 50 // Max 50 overlay units
+    fileSize: 150 * 1024 * 1024, // Max 150MB per file (supports up to 150MB custom videos)
+    files: 65 // Max 65 files (supports 50 overlay units + base frame + custom video + headroom)
   }
 });
+
+// Granular Multer error handling middleware with bilingual messages
+const handleVideoUpload = (req, res, next) => {
+  upload.any()(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(413).json({
+            code: 'FILE_TOO_LARGE',
+            messageAr: 'حجم ملف الفيديو المخصص كبير جدًا (الحد الأقصى المسموح به 150 ميجابايت). يُرجى اختيار فيديو أصغر.',
+            messageEn: 'Custom video file is too large (maximum allowed size is 150MB). Please select a smaller video.',
+            details: err.message
+          });
+        }
+        if (err.code === 'LIMIT_FILE_COUNT') {
+          return res.status(400).json({
+            code: 'TOO_MANY_FILES',
+            messageAr: 'تجاوز عدد الملفات المرفوعة الحد الأقصى المسموح به.',
+            messageEn: 'Uploaded file count exceeds maximum limit.',
+            details: err.message
+          });
+        }
+        return res.status(400).json({
+          code: 'UPLOAD_ERROR',
+          messageAr: 'حدث خطأ أثناء رفع ملفات الفيديو إلى السيرفر.',
+          messageEn: 'An error occurred while uploading video files to the server.',
+          details: err.message
+        });
+      }
+      return res.status(500).json({
+        code: 'UPLOAD_INTERNAL_ERROR',
+        messageAr: 'فشل استقبال ملفات التصدير في السيرفر.',
+        messageEn: 'Failed to receive export files on the server.',
+        details: err.message
+      });
+    }
+    next();
+  });
+};
 
 const activeJobs = new Map();
 
@@ -238,51 +277,75 @@ function runFfmpegWithProgress(args, cwd, jobId, totalDurationSec) {
 }
 
 async function downloadFile(url, destPath, options = {}) {
-  const { verifyFinalUrl = false, maxRedirects = 10 } = options;
-  if (verifyFinalUrl) {
-    await assertPublicHttpUrl(url);
-  }
-  const response = await axios({
-    method: 'GET',
-    url: url,
-    responseType: 'stream',
-    timeout: 60000,
-    maxRedirects: maxRedirects,
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      'Accept': 'video/webm,video/ogg,video/*;q=0.9,audio/*;q=0.8,*/*;q=0.5',
-      'Accept-Language': 'en-US,en;q=0.9,ar;q=0.8',
-    }
-  });
+  const { verifyFinalUrl = false, maxRedirects = 5 } = options;
+  let currentUrl = url;
+  let redirectCount = 0;
 
-  if (verifyFinalUrl) {
-    // Re-validate after redirects: a benign host must not bounce us into
-    // loopback / link-local / private space (redirect-based SSRF).
-    const finalUrl = response?.request?.res?.responseUrl
-      || response?.request?.responseUrl
-      || response?.request?.path;
-    if (typeof finalUrl === 'string' && finalUrl.length > 0) {
-      await assertPublicHttpUrl(finalUrl);
+  while (true) {
+    if (verifyFinalUrl) {
+      await assertPublicHttpUrl(currentUrl);
     }
-  }
 
-  return new Promise((resolve, reject) => {
-    const writer = fs.createWriteStream(destPath);
-    response.data.pipe(writer);
-    writer.on('finish', () => {
-      // Validate that file actually contains data
-      try {
-        const stats = fs.statSync(destPath);
-        if (stats.size === 0) {
-          return reject(new Error('Downloaded file is empty (0 bytes).'));
-        }
-        resolve();
-      } catch (err) {
-        reject(err);
+    const response = await axios({
+      method: 'GET',
+      url: currentUrl,
+      responseType: 'stream',
+      timeout: 60000,
+      maxRedirects: 0,
+      validateStatus: (status) => status >= 200 && status < 400,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'video/webm,video/ogg,video/*;q=0.9,audio/*;q=0.8,*/*;q=0.5',
+        'Accept-Language': 'en-US,en;q=0.9,ar;q=0.8',
       }
     });
-    writer.on('error', reject);
-  });
+
+    if (response.status >= 300 && response.status < 400 && response.headers.location) {
+      redirectCount++;
+      if (redirectCount > maxRedirects) {
+        if (response.data && typeof response.data.destroy === 'function') {
+          response.data.destroy();
+        }
+        throw new Error(`Too many redirects (max ${maxRedirects})`);
+      }
+      if (response.data && typeof response.data.destroy === 'function') {
+        response.data.destroy();
+      }
+      currentUrl = new URL(response.headers.location, currentUrl).toString();
+      continue;
+    }
+
+    if (response.status < 200 || response.status >= 300) {
+      if (response.data && typeof response.data.destroy === 'function') {
+        response.data.destroy();
+      }
+      throw new Error(`HTTP download failed with status ${response.status}`);
+    }
+
+    return new Promise((resolve, reject) => {
+      const writer = fs.createWriteStream(destPath);
+      response.data.pipe(writer);
+      writer.on('finish', () => {
+        try {
+          const stats = fs.statSync(destPath);
+          if (stats.size === 0) {
+            return reject(new Error('Downloaded file is empty (0 bytes).'));
+          }
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      });
+      writer.on('error', (err) => {
+        try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (_) {}
+        reject(err);
+      });
+      response.data.on('error', (err) => {
+        try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (_) {}
+        reject(err);
+      });
+    });
+  }
 }
 
 // --- SSRF protection for user-supplied URLs (custom background video) ---
@@ -381,26 +444,25 @@ app.get('/health', (req, res) => {
 });
 
 // Secure video export endpoint (Identical to Mobile Native FFmpeg Engine)
-app.post('/api/export-video', upload.any(), async (req, res) => {
+app.post('/api/export-video', handleVideoUpload, async (req, res) => {
   const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
   const sessionDir = path.join(os.tmpdir(), sessionId);
 
+  // Centralized session cleanup: defined in outer handler scope so it is always
+  // available in try and catch blocks (even if metadata parsing or early validation fails).
+  const cleanupSession = () => {
+    try {
+      if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
+    } catch (_) {}
+    try {
+      for (const file of req.files || []) {
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+      }
+    } catch (_) {}
+  };
+
   try {
     fs.mkdirSync(sessionDir, { recursive: true });
-
-    // Centralized session cleanup: every early return below must run this
-    // first, otherwise temp dirs and uploaded files leak on validation
-    // failures (only the success path keeps files until the response ends).
-    const cleanupSession = () => {
-      try {
-        if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
-      } catch (_) {}
-      try {
-        for (const file of req.files || []) {
-          if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-        }
-      } catch (_) {}
-    };
 
     // Parse and validate metadata
     let metadata = {};
@@ -566,7 +628,13 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
     }
 
     const hasCustomVideo = Boolean(metadata.hasCustomVideo);
-    const backgroundDimming = parseFloat(metadata.backgroundDimming || 0.35);
+    let backgroundDimming = 0.35;
+    if (metadata.backgroundDimming !== undefined && metadata.backgroundDimming !== null && metadata.backgroundDimming !== '') {
+      const parsedDimming = parseFloat(metadata.backgroundDimming);
+      if (!Number.isNaN(parsedDimming) && Number.isFinite(parsedDimming)) {
+        backgroundDimming = Math.min(Math.max(parsedDimming, 0.0), 1.0);
+      }
+    }
     const targetWidth = parseInt(metadata.targetWidth || 1080, 10);
     const targetHeight = parseInt(metadata.targetHeight || 1920, 10);
 
@@ -663,7 +731,7 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
         ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', overlayDest);
       }
 
-      filterChains.push(`[0:v]setpts=PTS-STARTPTS,scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=increase,crop=${targetWidth}:${targetHeight},setsar=1,drawbox=color=black@${backgroundDimming.toFixed(2)}:t=fill[bg]`);
+      filterChains.push(`[0:v]setpts=PTS-STARTPTS,scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=increase,crop=${targetWidth}:${targetHeight},setsar=1,format=yuv420p,drawbox=color=black@${backgroundDimming.toFixed(2)}:t=fill[bg]`);
       filterChains.push(`[bg][1:v]overlay=0:0[canvas0]`);
       let currentCanvas = 'canvas0';
 
@@ -806,12 +874,14 @@ app.post('/api/export-video', upload.any(), async (req, res) => {
     // stream closes — see the fileStream 'close' handler above.)
     cleanupSession();
 
-    res.status(500).json({ 
-      code: 'SERVER_ERROR',
-      messageAr: 'حدث خطأ أثناء معالجة الفيديو في السيرفر.',
-      messageEn: 'An error occurred while processing the video on the server.',
-      details: error.message 
-    });
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        code: 'SERVER_ERROR',
+        messageAr: 'حدث خطأ أثناء معالجة الفيديو في السيرفر.',
+        messageEn: 'An error occurred while processing the video on the server.',
+        details: error.message 
+      });
+    }
   }
 });
 
@@ -828,8 +898,9 @@ server.on('error', (err) => {
   }
 });
 
-// Configure 10-minute server timeouts for long renders
-server.setTimeout(10 * 60 * 1000);
+// Configure 15-minute server timeouts for large uploads on slow connections and long renders
+server.setTimeout(15 * 60 * 1000);
+server.requestTimeout = 15 * 60 * 1000;
 server.keepAliveTimeout = 120000;
 server.headersTimeout = 125000;
 

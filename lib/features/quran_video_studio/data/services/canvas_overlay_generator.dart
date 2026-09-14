@@ -457,9 +457,11 @@ class CanvasOverlayGenerator {
       }
 
       // Draw Dimming Layer
-      final dimmingPaint = Paint()
-        ..color = Colors.black.withValues(alpha: config.backgroundDimming);
-      canvas.drawRect(rect, dimmingPaint);
+      if (config.backgroundDimming > 0.0) {
+        final dimmingPaint = Paint()
+          ..color = Colors.black.withValues(alpha: config.backgroundDimming);
+        canvas.drawRect(rect, dimmingPaint);
+      }
     } else if (config.backgroundType == VideoBackgroundType.solid) {
       final paint = Paint()..color = theme.gradientColors.first;
       canvas.drawRect(rect, paint);

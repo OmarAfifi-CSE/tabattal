@@ -22,6 +22,7 @@ class VideoStudioState extends Equatable {
   final int seekTrigger;
   final Duration? lastSeekPosition;
   final String? mergedPreviewAudioPath;
+  final String? loadedAudioKey;
 
   const VideoStudioState({
     required this.config,
@@ -39,6 +40,7 @@ class VideoStudioState extends Equatable {
     this.seekTrigger = 0,
     this.lastSeekPosition,
     this.mergedPreviewAudioPath,
+    this.loadedAudioKey,
   });
 
   VerseModel? get currentVerse {
@@ -105,6 +107,17 @@ class VideoStudioState extends Equatable {
     return wordTimingsMap[v.verseNumber] ?? const [];
   }
 
+  String get currentConfigAudioKey =>
+      '${config.surahNumber}:${config.startAyah}-${config.endAyah}:${config.reciterPath}';
+
+  bool get isAudioMatchingConfig {
+    final expectedCount = config.endAyah - config.startAyah + 1;
+    return loadedAudioKey == currentConfigAudioKey &&
+        audioFilePaths.length == expectedCount &&
+        verseDurations.length == expectedCount &&
+        !isPreparingAudio;
+  }
+
   VideoStudioState copyWith({
     VideoProjectConfig? config,
     List<VerseModel>? verses,
@@ -124,6 +137,8 @@ class VideoStudioState extends Equatable {
     bool clearSeekPosition = false,
     String? mergedPreviewAudioPath,
     bool clearMergedPreviewAudio = false,
+    String? loadedAudioKey,
+    bool clearLoadedAudioKey = false,
   }) {
     return VideoStudioState(
       config: config ?? this.config,
@@ -143,6 +158,7 @@ class VideoStudioState extends Equatable {
       mergedPreviewAudioPath: clearMergedPreviewAudio
           ? null
           : (mergedPreviewAudioPath ?? this.mergedPreviewAudioPath),
+      loadedAudioKey: clearLoadedAudioKey ? null : (loadedAudioKey ?? this.loadedAudioKey),
     );
   }
 
@@ -163,6 +179,7 @@ class VideoStudioState extends Equatable {
         seekTrigger,
         lastSeekPosition,
         mergedPreviewAudioPath,
+        loadedAudioKey,
       ];
 }
 

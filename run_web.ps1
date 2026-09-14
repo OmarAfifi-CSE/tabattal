@@ -55,12 +55,12 @@ try {
     Write-Host "[TABATTAL] Lean Web Environment configured (4 core fonts for fast boot)." -ForegroundColor Green
 
     $modeText = if ($Release) { "RELEASE (Ultra Fast)" } else { "DEBUG" }
-    Write-Host "`n[TABATTAL] Launching Flutter Web ($modeText) on 0.0.0.0:3000..." -ForegroundColor Cyan
+    Write-Host "`n[TABATTAL] Launching Flutter Web ($modeText) on 127.0.0.1:3000..." -ForegroundColor Cyan
 
     if ($Release) {
-        flutter run -d chrome --release --web-hostname 0.0.0.0 --web-port 3000
+        flutter run -d chrome --release --web-hostname 127.0.0.1 --web-port 3000
     } else {
-        flutter run -d chrome --web-hostname 0.0.0.0 --web-port 3000
+        flutter run -d chrome --web-hostname 127.0.0.1 --web-port 3000
     }
 } finally {
     if (Test-Path $pubspecBak) {

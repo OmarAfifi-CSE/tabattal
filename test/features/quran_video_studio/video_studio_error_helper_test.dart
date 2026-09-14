@@ -156,5 +156,81 @@ void main() {
       );
       expect(arWeb, contains('في هذا المتصفح'));
     });
+
+    testWidgets('Translates file too large, port 8080, and video validation errors accurately in Arabic and English', (tester) async {
+      late BuildContext arContext;
+      await tester.pumpWidget(buildTestWidget(
+        locale: const Locale('ar'),
+        onContext: (ctx) => arContext = ctx,
+      ));
+      await tester.pumpAndSettle();
+
+      final arLimit = VideoStudioErrorHelper.getLocalizedError(
+        arContext,
+        'MulterError: File too large (LIMIT_FILE_SIZE)',
+      );
+      expect(arLimit, contains('150 ميجابايت'));
+
+      final ar413 = VideoStudioErrorHelper.getLocalizedError(
+        arContext,
+        'HTTP 413: Payload Too Large',
+      );
+      expect(ar413, contains('150 ميجابايت'));
+
+      final arServiceOffline = VideoStudioErrorHelper.getLocalizedError(
+        arContext,
+        'تعذر الاتصال بخادم تصدير الفيديو على المنفذ 8080. يُرجى التحقق من تشغيل السيرفر والمحاولة مجددًا.',
+      );
+      expect(arServiceOffline, contains('8080'));
+
+      final arServerProcessing = VideoStudioErrorHelper.getLocalizedError(
+        arContext,
+        'حدث خطأ أثناء معالجة الفيديو في السيرفر (كود 500)',
+      );
+      expect(arServerProcessing, contains('معالجة'));
+
+      final arInvalidUrl = VideoStudioErrorHelper.getLocalizedError(
+        arContext,
+        'INVALID_URL',
+      );
+      expect(arInvalidUrl, contains('http'));
+
+      final arEmptyFile = VideoStudioErrorHelper.getLocalizedError(
+        arContext,
+        'EMPTY_FILE',
+      );
+      expect(arEmptyFile, contains('فارغ'));
+
+      late BuildContext enContext;
+      await tester.pumpWidget(buildTestWidget(
+        locale: const Locale('en'),
+        onContext: (ctx) => enContext = ctx,
+      ));
+      await tester.pumpAndSettle();
+
+      final enLimit = VideoStudioErrorHelper.getLocalizedError(
+        enContext,
+        'FILE_TOO_LARGE: 160.0 MB (limit: 150 MB)',
+      );
+      expect(enLimit, contains('150 MB'));
+
+      final enServiceOffline = VideoStudioErrorHelper.getLocalizedError(
+        enContext,
+        'Connection refused on 8080',
+      );
+      expect(enServiceOffline, contains('8080'));
+
+      final enInvalidUrl = VideoStudioErrorHelper.getLocalizedError(
+        enContext,
+        'INVALID_URL',
+      );
+      expect(enInvalidUrl, contains('http'));
+
+      final enEmptyFile = VideoStudioErrorHelper.getLocalizedError(
+        enContext,
+        'EMPTY_FILE',
+      );
+      expect(enEmptyFile, contains('empty'));
+    });
   });
 }

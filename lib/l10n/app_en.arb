@@ -69,7 +69,14 @@
       }
     }
   },
-  "downloadingTafsirBackground": "Downloading remaining Tafsir in background...",
+  "downloadingTafsirBackground": "Downloading remaining {tafsirName} Tafsir in background...",
+  "@downloadingTafsirBackground": {
+    "placeholders": {
+      "tafsirName": {
+        "type": "String"
+      }
+    }
+  },
   "tafsirNotAvailableLocally": "Tafsir for this verse is not available locally",
   "tafsirPartialDownloadHint": "{percent}% of Tafsir downloaded. Continue download?",
   "@tafsirPartialDownloadHint": {
@@ -384,6 +391,7 @@
   "videoStudioReplayFromStart": "Replay from start",
   "videoStudioShowSurahBadgeAndAyah": "Show Surah Name & Ayah Number",
   "videoStudioThemeAndColors": "Theme & Colors",
+  "videoStudioBackgroundDimming": "Background Dimming",
   "videoStudioCustomPhotoActive": "Custom Photo Active",
   "videoStudioCustomPhotoTitle": "Custom Background",
   "videoStudioChooseImageGallery": "Choose from Gallery",
@@ -582,6 +590,11 @@
   "videoStudioRenderProcessingError": "An error occurred while processing and encoding the video. Please try again.",
   "videoStudioWebExportError": "Failed to export video in this browser. Please try a modern browser like Google Chrome.",
   "videoStudioRetry": "Retry",
+  "videoStudioFileTooLarge": "The custom video file is too large (maximum limit is 150 MB). Please choose a smaller video.",
+  "videoStudioExportServiceOffline": "Could not connect to the video export service on port 8080. Please ensure the server is running and try again.",
+  "videoStudioInvalidUrl": "URL must begin with http:// or https://",
+  "videoStudioDownloadUrlFailed": "Failed to download video from the specified URL. Please verify the link and try again.",
+  "videoStudioEmptyFile": "The selected video file is empty or invalid. Please choose another video.",
   "searchFilterAll": "All",
   "appVolume": "App Volume",
   "mute": "Mute",

@@ -255,12 +255,6 @@ class _VerseCardGeneratorSheetDesktopContentState
       _loadVerseTextAndFont(null);
     }
 
-    if (widget.tafsirText != null && widget.tafsirText!.trim().isNotEmpty) {
-      _tafsirText = ArabicTextUtils.cleanTafsirOrHtml(
-        widget.tafsirText!.trim(),
-      );
-      _includeTafsir = true;
-    }
     if (widget.translationText != null &&
         widget.translationText!.trim().isNotEmpty) {
       _translationText = ArabicTextUtils.cleanTafsirOrHtml(
@@ -340,16 +334,17 @@ class _VerseCardGeneratorSheetDesktopContentState
   Future<void> _loadAllVerseData() async {
     setState(() {
       _isLoadingText = true;
-      if (_includeTafsir) _isLoadingTafsir = true;
-      if (_includeTranslation) _isLoadingTranslation = true;
+      _isLoadingTafsir = true;
+      _isLoadingTranslation = true;
     });
 
     try {
       final db = await DatabaseHelper().database;
-      final futures = <Future>[_loadVerseTextAndFont(db)];
-      if (_includeTafsir) futures.add(_loadTafsirForRange(db));
-      if (_includeTranslation) futures.add(_loadTranslationForRange(db));
-      await Future.wait(futures);
+      await Future.wait([
+        _loadVerseTextAndFont(db),
+        _loadTafsirForRange(db),
+        _loadTranslationForRange(db),
+      ]);
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -509,9 +504,7 @@ class _VerseCardGeneratorSheetDesktopContentState
       if (maps.isEmpty) {
         if (mounted) {
           setState(() {
-            _tafsirText = ArabicTextUtils.cleanTafsirOrHtml(
-              widget.tafsirText ?? '',
-            );
+            _tafsirText = '';
             _isLoadingTafsir = false;
           });
         }
@@ -555,9 +548,7 @@ class _VerseCardGeneratorSheetDesktopContentState
         }
       }
 
-      final combinedTafsir = resultSegments.isNotEmpty
-          ? resultSegments.join('\n\n')
-          : ArabicTextUtils.cleanTafsirOrHtml(widget.tafsirText ?? '');
+      final combinedTafsir = resultSegments.join('\n\n');
 
       if (mounted) {
         setState(() {
@@ -568,9 +559,7 @@ class _VerseCardGeneratorSheetDesktopContentState
     } catch (_) {
       if (mounted) {
         setState(() {
-          _tafsirText = ArabicTextUtils.cleanTafsirOrHtml(
-            widget.tafsirText ?? '',
-          );
+          _tafsirText = '';
           _isLoadingTafsir = false;
         });
       }
@@ -839,7 +828,7 @@ class _VerseCardGeneratorSheetDesktopContentState
           if (_isExportDialogOpen) {
             _dismissExportDialog();
           }
-          if (mounted) {
+          if (mounted && _selectedFormat == ShareFormat.video) {
             setState(() {
               _statusMessage = VideoStudioErrorHelper.getLocalizedError(
                 context,
@@ -1032,7 +1021,7 @@ class _VerseCardGeneratorSheetDesktopContentState
                                   selectedFormat: _selectedFormat,
                                   isSharing: _isSharing,
                                   isSaving: _isSaving,
-                                  isExportingVideo: videoState.exportProgress.isRendering,
+                                  isExportingVideo: videoState.exportProgress.isRendering || videoState.isPreparingAudio,
                                   onShare: _shareCard,
                                   onSave: _saveCardImage,
                                   onCopyText: () => _copyTextToClipboard(context),
@@ -1164,7 +1153,7 @@ class _VerseCardGeneratorSheetDesktopContentState
                         selectedFormat: _selectedFormat,
                         isSharing: _isSharing,
                         isSaving: _isSaving,
-                        isExportingVideo: videoState.exportProgress.isRendering,
+                        isExportingVideo: videoState.exportProgress.isRendering || videoState.isPreparingAudio,
                         onShare: _shareCard,
                         onSave: _saveCardImage,
                         onCopyText: () => _copyTextToClipboard(context),
@@ -1338,6 +1327,12 @@ class _VerseCardGeneratorSheetDesktopContentState
                     .read<VideoStudioBloc>()
                     .add(VideoStudioCustomVideoSelected(path));
               },
+              onDimmingChanged: (val) {
+                _clearStatusBanner();
+                context
+                    .read<VideoStudioBloc>()
+                    .add(VideoStudioDimmingChanged(val));
+              },
             ),
             SizedBox(height: isLandscape ? 12.0 : 14.0),
             Builder(
@@ -1392,9 +1387,6 @@ class _VerseCardGeneratorSheetDesktopContentState
                         endAyah: newEnd,
                       ),
                     );
-                if (_selectedFormat != ShareFormat.video) {
-                  _loadAllVerseData();
-                }
               },
               onEndAyahChanged: (end) {
                 if (end == _endAyah) return;
@@ -1413,9 +1405,6 @@ class _VerseCardGeneratorSheetDesktopContentState
                         endAyah: end,
                       ),
                     );
-                if (_selectedFormat != ShareFormat.video) {
-                  _loadAllVerseData();
-                }
               },
             ),
             SizedBox(height: isLandscape ? 12.0 : 14.0),
@@ -1502,6 +1491,8 @@ class _VerseCardGeneratorSheetDesktopContentState
                 setState(() {
                   _startAyah = start;
                   _endAyah = newEnd;
+                  _tafsirText = '';
+                  _translationText = '';
                 });
                 _loadAllVerseData();
               },
@@ -1514,6 +1505,8 @@ class _VerseCardGeneratorSheetDesktopContentState
                 setState(() {
                   _startAyah = newStart;
                   _endAyah = end;
+                  _tafsirText = '';
+                  _translationText = '';
                 });
                 _loadAllVerseData();
               },
@@ -1565,6 +1558,8 @@ class _VerseCardGeneratorSheetDesktopContentState
                 setState(() {
                   _startAyah = start;
                   _endAyah = newEnd;
+                  _tafsirText = '';
+                  _translationText = '';
                 });
                 _loadAllVerseData();
               },
@@ -1577,6 +1572,8 @@ class _VerseCardGeneratorSheetDesktopContentState
                 setState(() {
                   _startAyah = newStart;
                   _endAyah = end;
+                  _tafsirText = '';
+                  _translationText = '';
                 });
                 _loadAllVerseData();
               },

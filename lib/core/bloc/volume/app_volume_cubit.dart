@@ -41,7 +41,8 @@ class AppVolumeCubit extends Cubit<AppVolumeState> {
       lastNonZeroVolume: lastNonZero,
     ));
 
-    for (final player in _registeredPlayers) {
+    final playersSnapshot = List<AudioPlayer>.of(_registeredPlayers);
+    for (final player in playersSnapshot) {
       try {
         await player.setVolume(clamped);
       } catch (_) {

@@ -295,13 +295,14 @@ class _VideoBackgroundPlayerViewWebState
                   },
                 ),
                 // Dimming overlay directly over the video stream
-                IgnorePointer(
-                  child: Container(
-                    color: Colors.black.withValues(
-                      alpha: widget.dimming.clamp(0.0, 0.95),
+                if (widget.dimming > 0.0)
+                  IgnorePointer(
+                    child: Container(
+                      color: Colors.black.withValues(
+                        alpha: widget.dimming.clamp(0.0, 0.95),
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),

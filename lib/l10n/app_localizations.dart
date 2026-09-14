@@ -593,8 +593,8 @@ abstract class AppLocalizations {
   /// No description provided for @downloadingTafsirBackground.
   ///
   /// In ar, this message translates to:
-  /// **'جاري تحميل باقي التفسير في الخلفية...'**
-  String get downloadingTafsirBackground;
+  /// **'جاري تحميل باقي تفسير {tafsirName} في الخلفية...'**
+  String downloadingTafsirBackground(String tafsirName);
 
   /// No description provided for @tafsirNotAvailableLocally.
   ///
@@ -1520,6 +1520,12 @@ abstract class AppLocalizations {
   /// **'المظهر والألوان'**
   String get videoStudioThemeAndColors;
 
+  /// No description provided for @videoStudioBackgroundDimming.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعتيم الخلفية'**
+  String get videoStudioBackgroundDimming;
+
   /// No description provided for @videoStudioCustomPhotoActive.
   ///
   /// In ar, this message translates to:
@@ -2013,6 +2019,36 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إعادة المحاولة'**
   String get videoStudioRetry;
+
+  /// No description provided for @videoStudioFileTooLarge.
+  ///
+  /// In ar, this message translates to:
+  /// **'حجم ملف الفيديو المخصص كبير جدًا (الحد الأقصى المسموح به 150 ميجابايت). يُرجى اختيار مقطع فيديو أصغر.'**
+  String get videoStudioFileTooLarge;
+
+  /// No description provided for @videoStudioExportServiceOffline.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر الاتصال بخادم تصدير الفيديو على المنفذ 8080. يُرجى التحقق من تشغيل السيرفر والمحاولة مجددًا.'**
+  String get videoStudioExportServiceOffline;
+
+  /// No description provided for @videoStudioInvalidUrl.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرابط يجب أن يبدأ بـ http:// أو https://'**
+  String get videoStudioInvalidUrl;
+
+  /// No description provided for @videoStudioDownloadUrlFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تحميل الفيديو من الرابط المحدد. يُرجى التحقق من الرابط والمحاولة مجددًا.'**
+  String get videoStudioDownloadUrlFailed;
+
+  /// No description provided for @videoStudioEmptyFile.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملف الفيديو المختار فارغ أو غير صالح. يُرجى اختيار مقطع فيديو آخر.'**
+  String get videoStudioEmptyFile;
 
   /// No description provided for @searchFilterAll.
   ///

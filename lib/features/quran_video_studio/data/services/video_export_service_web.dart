@@ -340,6 +340,10 @@ class VideoExportService implements IVideoExportService {
                 config.customVideoPath!.startsWith('data:'))) {
           final videoBlob = await _fetchBlobFromUrl(config.customVideoPath!);
           if (videoBlob != null) {
+            if (videoBlob.size > 150 * 1024 * 1024) {
+              final sizeMb = (videoBlob.size / (1024 * 1024)).toStringAsFixed(1);
+              throw Exception('FILE_TOO_LARGE: $sizeMb MB (limit: 150 MB)');
+            }
             formData.appendBlob('custom_video', videoBlob, 'custom_video.mp4');
           }
         }
@@ -354,7 +358,7 @@ class VideoExportService implements IVideoExportService {
 
         request.open('POST', serverApiUrl);
         request.responseType = 'blob';
-        request.timeout = 300000; // 5 minutes timeout
+        request.timeout = 900000; // 15 minutes timeout to ensure slow uploads complete successfully
 
         Timer? serverProgressPollTimer;
         bool serverPollingStarted = false;
@@ -468,6 +472,12 @@ class VideoExportService implements IVideoExportService {
                 }
               }
             } catch (_) {}
+            if (request.status == 413) {
+              errorMsg = 'حجم ملف الفيديو المخصص كبير جدًا (الحد الأقصى المسموح به 150 ميجابايت). يُرجى اختيار فيديو أصغر.';
+            } else if (request.status == 500 && !errorMsg.contains('حجم')) {
+              errorMsg = 'حدث خطأ أثناء معالجة وترميز الفيديو في السيرفر (كود 500). يُرجى المحاولة مرة أخرى.';
+            }
+
             requestCompleter.completeError(errorMsg);
           }
         });
@@ -475,14 +485,14 @@ class VideoExportService implements IVideoExportService {
         request.onError.listen((event) {
           serverProgressPollTimer?.cancel();
           requestCompleter.completeError(
-            'تعذر الاتصال بخادم تصدير الفيديو. يرجى التأكد من تشغيل خادم التصدير أو التحقق من الاتصال.',
+            'تعذر الاتصال بخادم تصدير الفيديو المحلي (المنفذ 8080). يُرجى التحقق من تشغيل السيرفر والمحاولة مجددًا.',
           );
         });
 
         request.onTimeout.listen((event) {
           serverProgressPollTimer?.cancel();
           requestCompleter.completeError(
-            'استغرقت معالجة الفيديو وقتًا أطول من المتوقع على السيرفر. يرجى المحاولة مرة أخرى أو تقليل عدد الآيات.',
+            'استغرق رفع ومعالجة الفيديو وقتًا أطول من المتوقع (15 دقيقة) بسبب بطء سرعة اتصال الإنترنت. يُرجى اختيار مقطع فيديو أقصر أو أقل حجمًا.',
           );
         });
 

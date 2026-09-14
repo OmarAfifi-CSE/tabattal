@@ -89,7 +89,14 @@
       }
     }
   },
-  "downloadingTafsirBackground": "جاري تحميل باقي التفسير في الخلفية...",
+  "downloadingTafsirBackground": "جاري تحميل باقي تفسير {tafsirName} في الخلفية...",
+  "@downloadingTafsirBackground": {
+    "placeholders": {
+      "tafsirName": {
+        "type": "String"
+      }
+    }
+  },
   "tafsirNotAvailableLocally": "تفسير هذه الآية غير متوفر محليًا",
   "tafsirPartialDownloadHint": "تم تحميل {percent}% من التفسير. هل ترغب في استكمال التحميل؟",
   "@tafsirPartialDownloadHint": {
@@ -383,6 +390,7 @@
   "videoStudioReplayFromStart": "إعادة من البداية",
   "videoStudioShowSurahBadgeAndAyah": "إظهار اسم السورة ورقم الآية",
   "videoStudioThemeAndColors": "المظهر والألوان",
+  "videoStudioBackgroundDimming": "تعتيم الخلفية",
   "videoStudioCustomPhotoActive": "صورة مخصصة نشطة",
   "videoStudioCustomPhotoTitle": "خلفية مخصصة",
   "videoStudioChooseImageGallery": "اختيار من المعرض",
@@ -581,6 +589,11 @@
   "videoStudioRenderProcessingError": "حدث خطأ أثناء معالجة وترميز الفيديو. يُرجى المحاولة مرة أخرى.",
   "videoStudioWebExportError": "تعذر تصدير الفيديو في هذا المتصفح. يُرجى استخدام متصفح حديث مثل Google Chrome.",
   "videoStudioRetry": "إعادة المحاولة",
+  "videoStudioFileTooLarge": "حجم ملف الفيديو المخصص كبير جدًا (الحد الأقصى المسموح به 150 ميجابايت). يُرجى اختيار مقطع فيديو أصغر.",
+  "videoStudioExportServiceOffline": "تعذر الاتصال بخادم تصدير الفيديو على المنفذ 8080. يُرجى التحقق من تشغيل السيرفر والمحاولة مجددًا.",
+  "videoStudioInvalidUrl": "الرابط يجب أن يبدأ بـ http:// أو https://",
+  "videoStudioDownloadUrlFailed": "فشل تحميل الفيديو من الرابط المحدد. يُرجى التحقق من الرابط والمحاولة مجددًا.",
+  "videoStudioEmptyFile": "ملف الفيديو المختار فارغ أو غير صالح. يُرجى اختيار مقطع فيديو آخر.",
   "searchFilterAll": "الكل",
   "appVolume": "صوت التطبيق",
   "mute": "كتم الصوت",

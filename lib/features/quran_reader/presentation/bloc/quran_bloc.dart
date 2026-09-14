@@ -12,6 +12,8 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
   final QuranRepository repository;
 
   QuranLoaded? _lastLoadedState;
+  int? _activeDownloadingResourceId;
+  double? _activeDownloadProgress;
 
   QuranBloc({required this.repository}) : super(QuranInitial()) {
     on<LoadSurah>(_onLoadSurah, transformer: restartable());
@@ -117,14 +119,23 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
         }
       },
       (tafsir) {
+        final isDownloading =
+            _activeDownloadingResourceId != null || (progress < 1.0);
+        final downloadingId = _activeDownloadingResourceId ??
+            (progress < 1.0 ? currentId : null);
+        final downloadProgress = _activeDownloadingResourceId == currentId
+            ? (_activeDownloadProgress ?? progress)
+            : (progress < 1.0 ? progress : (_activeDownloadProgress ?? 0.0));
+
         emit(
           TafsirLoaded(
             tafsir,
-            isDownloading: progress < 1.0,
-            downloadProgress: progress,
+            isDownloading: isDownloading,
+            downloadProgress: downloadProgress,
+            downloadingResourceId: downloadingId,
           ),
         );
-        if (progress < 1.0) {
+        if (progress < 1.0 && _activeDownloadingResourceId != currentId) {
           add(DownloadTafsir(currentId));
         }
       },
@@ -152,11 +163,20 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
           currentId,
         );
         final progress = progressResult.getOrNull() ?? 0.0;
+        final isDownloading =
+            _activeDownloadingResourceId != null || (progress < 1.0);
+        final downloadingId = _activeDownloadingResourceId ??
+            (progress < 1.0 ? currentId : null);
+        final downloadProgress = _activeDownloadingResourceId == currentId
+            ? (_activeDownloadProgress ?? progress)
+            : (progress < 1.0 ? progress : (_activeDownloadProgress ?? 0.0));
+
         emit(
           TafsirLoaded(
             tafsir,
-            isDownloading: progress < 1.0,
-            downloadProgress: progress,
+            isDownloading: isDownloading,
+            downloadProgress: downloadProgress,
+            downloadingResourceId: downloadingId,
           ),
         );
       },
@@ -173,9 +193,14 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
     final initialProgress = progressResult.getOrNull() ?? 0.0;
 
     if (initialProgress == 1.0) {
+      _activeDownloadingResourceId = null;
+      _activeDownloadProgress = null;
       emit(TafsirDownloaded(event.resourceId));
       return;
     }
+
+    _activeDownloadingResourceId = event.resourceId;
+    _activeDownloadProgress = initialProgress;
 
     // Emit initial progress to provide immediate UI feedback
     if (state is TafsirLoaded) {
@@ -184,6 +209,7 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
           (state as TafsirLoaded).tafsir,
           isDownloading: true,
           downloadProgress: initialProgress,
+          downloadingResourceId: event.resourceId,
         ),
       );
     } else {
@@ -195,32 +221,43 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
       onData: (downloadState) {
         switch (downloadState) {
           case Progressing(:final progress):
+            _activeDownloadingResourceId = event.resourceId;
+            _activeDownloadProgress = progress;
             if (state is TafsirLoaded) {
               return TafsirLoaded(
                 (state as TafsirLoaded).tafsir,
                 isDownloading: true,
                 downloadProgress: progress,
+                downloadingResourceId: event.resourceId,
               );
             }
             return TafsirDownloading(event.resourceId, progress);
           case Completed():
+            _activeDownloadingResourceId = null;
+            _activeDownloadProgress = null;
             if (state is TafsirLoaded) {
               return TafsirLoaded(
                 (state as TafsirLoaded).tafsir,
                 isDownloading: false,
                 downloadProgress: 1.0,
+                downloadingResourceId: null,
               );
             }
             return TafsirDownloaded(event.resourceId);
           case Failed(:final failure):
+            _activeDownloadingResourceId = null;
+            _activeDownloadProgress = null;
             return TafsirDownloadError(
               _failureMessage(failure),
               event.resourceId,
             );
         }
       },
-      onError: (error, stackTrace) =>
-          TafsirDownloadError('Unexpected Error', event.resourceId),
+      onError: (error, stackTrace) {
+        _activeDownloadingResourceId = null;
+        _activeDownloadProgress = null;
+        return TafsirDownloadError('Unexpected Error', event.resourceId);
+      },
     );
   }
 

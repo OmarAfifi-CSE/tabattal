@@ -6,6 +6,7 @@ import 'package:window_manager/window_manager.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../data/services/custom_video_service.dart';
+import '../../utils/video_studio_error_helper.dart';
 
 /// Modal bottom sheet allowing the user to pick a custom background video
 /// from the device gallery or via a direct video URL.
@@ -99,7 +100,6 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
 
   Future<void> _handlePickGallery() async {
     if (_isLoading) return;
-    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _errorMessage = null;
       _isLoading = true;
@@ -123,7 +123,7 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = l10n.videoStudioPickVideoError(e.toString());
+          _errorMessage = VideoStudioErrorHelper.getLocalizedError(context, e);
         });
       }
     } finally {
@@ -172,7 +172,7 @@ class _CustomVideoModalState extends State<CustomVideoModal> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e is FormatException ? e.message : l10n.videoStudioFailedToLoadVideo;
+          _errorMessage = VideoStudioErrorHelper.getLocalizedError(context, e);
         });
       }
     } finally {

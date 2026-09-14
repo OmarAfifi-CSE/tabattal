@@ -259,8 +259,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get downloadingTafsirBackground =>
-      'جاري تحميل باقي التفسير في الخلفية...';
+  String downloadingTafsirBackground(String tafsirName) {
+    return 'جاري تحميل باقي تفسير $tafsirName في الخلفية...';
+  }
 
   @override
   String get tafsirNotAvailableLocally => 'تفسير هذه الآية غير متوفر محليًا';
@@ -767,6 +768,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get videoStudioThemeAndColors => 'المظهر والألوان';
 
   @override
+  String get videoStudioBackgroundDimming => 'تعتيم الخلفية';
+
+  @override
   String get videoStudioCustomPhotoActive => 'صورة مخصصة نشطة';
 
   @override
@@ -1079,6 +1083,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get videoStudioRetry => 'إعادة المحاولة';
+
+  @override
+  String get videoStudioFileTooLarge =>
+      'حجم ملف الفيديو المخصص كبير جدًا (الحد الأقصى المسموح به 150 ميجابايت). يُرجى اختيار مقطع فيديو أصغر.';
+
+  @override
+  String get videoStudioExportServiceOffline =>
+      'تعذر الاتصال بخادم تصدير الفيديو على المنفذ 8080. يُرجى التحقق من تشغيل السيرفر والمحاولة مجددًا.';
+
+  @override
+  String get videoStudioInvalidUrl =>
+      'الرابط يجب أن يبدأ بـ http:// أو https://';
+
+  @override
+  String get videoStudioDownloadUrlFailed =>
+      'فشل تحميل الفيديو من الرابط المحدد. يُرجى التحقق من الرابط والمحاولة مجددًا.';
+
+  @override
+  String get videoStudioEmptyFile =>
+      'ملف الفيديو المختار فارغ أو غير صالح. يُرجى اختيار مقطع فيديو آخر.';
 
   @override
   String get searchFilterAll => 'الكل';

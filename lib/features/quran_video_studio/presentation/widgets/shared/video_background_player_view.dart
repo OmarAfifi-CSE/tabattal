@@ -311,9 +311,10 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
           ),
 
         // Dimming overlay
-        Container(
-          color: Colors.black.withValues(alpha: widget.dimming.clamp(0.0, 0.95)),
-        ),
+        if (widget.dimming > 0.0)
+          Container(
+            color: Colors.black.withValues(alpha: widget.dimming.clamp(0.0, 0.95)),
+          ),
       ],
     );
   }

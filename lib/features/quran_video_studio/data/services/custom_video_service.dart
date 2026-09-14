@@ -8,6 +8,38 @@ import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 import '../../../../core/utils/desktop_file_picker_helper.dart';
 
+/// Exception thrown when selected custom video exceeds size limit.
+class CustomVideoSizeException implements Exception {
+  final double sizeMb;
+  final double limitMb;
+  const CustomVideoSizeException(this.sizeMb, [this.limitMb = 150.0]);
+
+  @override
+  String toString() => 'FILE_TOO_LARGE: ${sizeMb.toStringAsFixed(1)} MB (limit: ${limitMb.toStringAsFixed(0)} MB)';
+}
+
+/// Exception thrown when an invalid video URL format is provided.
+class InvalidVideoUrlException extends FormatException {
+  const InvalidVideoUrlException([super.message = 'INVALID_URL', super.source, super.offset]);
+  @override
+  String toString() => 'INVALID_URL';
+}
+
+/// Exception thrown when video download fails.
+class VideoDownloadFailedException implements Exception {
+  final int? statusCode;
+  const VideoDownloadFailedException([this.statusCode]);
+  @override
+  String toString() => 'DOWNLOAD_FAILED: $statusCode';
+}
+
+/// Exception thrown when downloaded video file is empty or missing.
+class EmptyVideoFileException extends FormatException {
+  const EmptyVideoFileException([super.message = 'EMPTY_FILE', super.source, super.offset]);
+  @override
+  String toString() => 'EMPTY_FILE';
+}
+
 /// Helper service for picking and downloading custom background videos.
 class CustomVideoService {
   const CustomVideoService._();
@@ -36,9 +68,15 @@ class CustomVideoService {
           );
           final file = await fs.openFile(acceptedTypeGroups: [typeGroup]);
           if (file != null && file.path.isNotEmpty) {
+            final length = await file.length();
+            if (length > 150 * 1024 * 1024) {
+              final sizeMb = length / (1024 * 1024);
+              throw CustomVideoSizeException(sizeMb, 150.0);
+            }
             return file.path;
           }
         } catch (e) {
+          if (e is CustomVideoSizeException || e is FormatException) rethrow;
           debugPrint('file_selector openFile on web failed: $e');
         }
 
@@ -47,7 +85,15 @@ class CustomVideoService {
           source: ImageSource.gallery,
           maxDuration: const Duration(minutes: 10),
         );
-        return pickedFile?.path;
+        if (pickedFile != null) {
+          final length = await pickedFile.length();
+          if (length > 150 * 1024 * 1024) {
+            final sizeMb = length / (1024 * 1024);
+            throw CustomVideoSizeException(sizeMb, 150.0);
+          }
+          return pickedFile.path;
+        }
+        return null;
       }
 
       if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
@@ -97,7 +143,7 @@ class CustomVideoService {
   }) async {
     final cleanUrl = url.trim();
     if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
-      throw const FormatException('الرابط يجب أن يبدأ بـ http:// أو https://');
+      throw const InvalidVideoUrlException();
     }
 
     if (kIsWeb) {
@@ -126,12 +172,12 @@ class CustomVideoService {
           await file.delete();
         } catch (_) {}
       }
-      throw HttpException('فشل تحميل الفيديو من الرابط (كود: ${response.statusCode})');
+      throw VideoDownloadFailedException(response.statusCode);
     }
 
     final file = File(filePath);
     if (!await file.exists() || await file.length() == 0) {
-      throw const FormatException('ملف الفيديو المحمل فارغ أو غير صالح');
+      throw const EmptyVideoFileException();
     }
 
     return filePath;

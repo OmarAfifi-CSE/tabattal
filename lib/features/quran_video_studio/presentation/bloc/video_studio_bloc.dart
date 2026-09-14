@@ -45,6 +45,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   // (restartable() is per event TYPE), so every load carries the generation
   // captured at its start and commits nothing once superseded.
   int _loadGeneration = 0;
+  int _exportGeneration = 0;
   // Index into audioFilePaths of the file ACTUALLY loaded in the native
   // player on Windows (single-source mode). The player object alone can't
   // tell us which verse file it holds, so resume/restart paths must compare
@@ -1078,6 +1079,9 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           }
         }
 
+        final String loadConfigKey =
+            '${loadConfig.surahNumber}:${loadConfig.startAyah}-${loadConfig.endAyah}:${loadConfig.reciterPath}';
+
         emit(
           state.copyWith(
             verses: effectiveVerses,
@@ -1090,6 +1094,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
             lastSeekPosition: Duration.zero,
             seekTrigger: state.seekTrigger + 1,
             playbackResetTrigger: state.playbackResetTrigger + 1,
+            loadedAudioKey: loadConfigKey,
           ),
         );
     } catch (e) {
@@ -1125,6 +1130,8 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     VideoStudioExportStarted event,
     Emitter<VideoStudioState> emit,
   ) async {
+    final int myExportGen = ++_exportGeneration;
+
     _stopPositionTicker();
     if (_previewPlayer.playing) {
       try {
@@ -1165,7 +1172,16 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         );
       }
 
-      final isAudiosStale = currentAudios.length != expectedCount;
+      if (myExportGen != _exportGeneration ||
+          state.exportProgress.step == VideoProgressStep.cancelled ||
+          state.exportProgress.phase == VideoRenderPhase.idle) {
+        return;
+      }
+
+      final isAudiosStale = !state.isAudioMatchingConfig ||
+          currentAudios.length != expectedCount ||
+          currentDurations.length != expectedCount;
+
       if (isAudiosStale || currentAudios.isEmpty) {
         currentAudios = await repository.prepareVerseAudioFiles(
           reciterPath: state.config.reciterPath,
@@ -1173,9 +1189,36 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           startAyah: state.config.startAyah,
           endAyah: state.config.endAyah,
         );
+
+        if (myExportGen != _exportGeneration ||
+            state.exportProgress.step == VideoProgressStep.cancelled ||
+            state.exportProgress.phase == VideoRenderPhase.idle) {
+          return;
+        }
+
         currentDurations = await repository.measureVerseDurations(audioFilePaths: currentAudios);
+
+        if (myExportGen != _exportGeneration ||
+            state.exportProgress.step == VideoProgressStep.cancelled ||
+            state.exportProgress.phase == VideoRenderPhase.idle) {
+          return;
+        }
+
+        final currentConfigKey =
+            '${state.config.surahNumber}:${state.config.startAyah}-${state.config.endAyah}:${state.config.reciterPath}';
+        emit(state.copyWith(
+          verses: currentVerses,
+          audioFilePaths: currentAudios,
+          verseDurations: currentDurations,
+          loadedAudioKey: currentConfigKey,
+        ));
       }
     } catch (e) {
+      if (myExportGen != _exportGeneration ||
+          state.exportProgress.step == VideoProgressStep.cancelled ||
+          state.exportProgress.phase == VideoRenderPhase.idle) {
+        return;
+      }
       final rawMsg = e.toString().replaceFirst('Exception: ', '').trim();
       emit(state.copyWith(
         exportProgress: VideoRenderProgress(
@@ -1187,6 +1230,12 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       return;
     }
 
+    if (myExportGen != _exportGeneration ||
+        state.exportProgress.step == VideoProgressStep.cancelled ||
+        state.exportProgress.phase == VideoRenderPhase.idle) {
+      return;
+    }
+
     await emit.forEach<VideoRenderProgress>(
       repository.exportVideo(
         config: state.config,
@@ -1195,14 +1244,16 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         verseDurations: currentDurations,
       ),
       onData: (progress) {
-        if (state.exportProgress.step == VideoProgressStep.cancelled ||
+        if (myExportGen != _exportGeneration ||
+            state.exportProgress.step == VideoProgressStep.cancelled ||
             state.exportProgress.phase == VideoRenderPhase.idle) {
           return state;
         }
         return state.copyWith(exportProgress: progress);
       },
       onError: (error, _) {
-        if (state.exportProgress.step == VideoProgressStep.cancelled ||
+        if (myExportGen != _exportGeneration ||
+            state.exportProgress.step == VideoProgressStep.cancelled ||
             state.exportProgress.phase == VideoRenderPhase.idle) {
           return state;
         }
@@ -1222,6 +1273,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     VideoStudioExportCancelled event,
     Emitter<VideoStudioState> emit,
   ) {
+    _exportGeneration++;
     repository.cancelExport();
     emit(state.copyWith(
       pendingExportAction: null,

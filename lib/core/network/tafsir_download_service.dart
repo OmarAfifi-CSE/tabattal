@@ -85,12 +85,16 @@ class TafsirDownloadService {
               .toList();
 
           await localDataSource.insertTafsirs(rows);
-          await emitProgress();
         }
 
         final pagination = response['pagination'];
         hasNext = pagination != null && pagination['next_page'] != null;
         page++;
+      }
+
+      if (!hasError) {
+        await localDataSource.markChapterCompleted(resourceId, chapter);
+        await emitProgress();
       }
     }
 
@@ -132,6 +136,7 @@ class TafsirDownloadService {
 
         if (!hasError && !controller.isClosed) {
           await localDataSource.markTafsirAsCompleted(resourceId);
+          controller.add(const Progressing(1.0));
           controller.add(const Completed());
           controller.close();
         }

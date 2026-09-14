@@ -89,15 +89,25 @@ class TafsirLoaded extends QuranState {
   final TafsirModel tafsir;
   final bool isDownloading;
   final double downloadProgress;
+  final int? downloadingResourceId;
 
   const TafsirLoaded(
     this.tafsir, {
     this.isDownloading = false,
     this.downloadProgress = 0.0,
+    this.downloadingResourceId,
   });
 
+  int get effectiveDownloadingResourceId =>
+      downloadingResourceId ?? tafsir.tafsirId;
+
   @override
-  List<Object> get props => [tafsir, isDownloading, downloadProgress];
+  List<Object?> get props => [
+        tafsir,
+        isDownloading,
+        downloadProgress,
+        downloadingResourceId,
+      ];
 }
 
 class TranslationLoaded extends QuranState {

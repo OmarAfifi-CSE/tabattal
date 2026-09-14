@@ -259,8 +259,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get downloadingTafsirBackground =>
-      'Downloading remaining Tafsir in background...';
+  String downloadingTafsirBackground(String tafsirName) {
+    return 'Downloading remaining $tafsirName Tafsir in background...';
+  }
 
   @override
   String get tafsirNotAvailableLocally =>
@@ -769,6 +770,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoStudioThemeAndColors => 'Theme & Colors';
 
   @override
+  String get videoStudioBackgroundDimming => 'Background Dimming';
+
+  @override
   String get videoStudioCustomPhotoActive => 'Custom Photo Active';
 
   @override
@@ -1083,6 +1087,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoStudioRetry => 'Retry';
+
+  @override
+  String get videoStudioFileTooLarge =>
+      'The custom video file is too large (maximum limit is 150 MB). Please choose a smaller video.';
+
+  @override
+  String get videoStudioExportServiceOffline =>
+      'Could not connect to the video export service on port 8080. Please ensure the server is running and try again.';
+
+  @override
+  String get videoStudioInvalidUrl => 'URL must begin with http:// or https://';
+
+  @override
+  String get videoStudioDownloadUrlFailed =>
+      'Failed to download video from the specified URL. Please verify the link and try again.';
+
+  @override
+  String get videoStudioEmptyFile =>
+      'The selected video file is empty or invalid. Please choose another video.';
 
   @override
   String get searchFilterAll => 'All';

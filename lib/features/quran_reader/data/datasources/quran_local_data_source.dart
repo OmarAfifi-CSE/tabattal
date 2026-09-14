@@ -36,6 +36,7 @@ abstract class QuranLocalDataSource {
   Future<int> getMaxDownloadedChapter(int resourceId);
   Future<Set<int>> getDownloadedChapters(int resourceId);
   Future<int> getDownloadedVerseCount(int resourceId);
+  Future<void> markChapterCompleted(int resourceId, int chapter);
   Future<void> markTafsirAsCompleted(int resourceId);
 }
 
@@ -509,21 +510,27 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   @override
   Future<double> getTafsirDownloadProgress(int resourceId) async {
     try {
+      if (QuranConstants.bundledTafsirIds.contains(resourceId)) return 1.0;
       final prefs = await SharedPreferences.getInstance();
+
+      // If marked completed in prefs, verify it has data
+      if (prefs.getBool('tafsir_completed_$resourceId') == true) {
+        final verseCount = await getDownloadedVerseCount(resourceId);
+        if (verseCount > 0) {
+          return 1.0;
+        } else {
+          // Genuinely wiped database: clear stale pref
+          await prefs.remove('tafsir_completed_$resourceId');
+        }
+      }
+
       final chapters = await getDownloadedChapters(resourceId);
       // Coverage is measured by DISTINCT chapters present — never by MAX.
-      // A single 114:* row used to report 114/114 = 100%.
       if (chapters.length >= QuranConstants.totalSurahs) {
         if (prefs.getBool('tafsir_completed_$resourceId') != true) {
           await prefs.setBool('tafsir_completed_$resourceId', true);
         }
         return 1.0;
-      }
-      if (prefs.getBool('tafsir_completed_$resourceId') == true) {
-        // Stale completion flag (e.g. the rows were wiped by a database
-        // upgrade while the flag survived in prefs): heal it so progress is
-        // truthful again and re-download becomes possible.
-        await prefs.remove('tafsir_completed_$resourceId');
       }
       final progress = chapters.length / QuranConstants.totalSurahs;
       return progress.clamp(0.0, 1.0);
@@ -552,17 +559,51 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
     }
   }
 
+  Future<void> _ensureTafsirChaptersTable(Database db) async {
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tafsir_completed_chapters (
+          resource_id INTEGER NOT NULL,
+          chapter_id INTEGER NOT NULL,
+          completed_at INTEGER,
+          PRIMARY KEY (resource_id, chapter_id)
+        );
+      ''');
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> markChapterCompleted(int resourceId, int chapter) async {
+    try {
+      final db = await databaseHelper.database;
+      await _ensureTafsirChaptersTable(db);
+      await db.insert(
+        'tafsir_completed_chapters',
+        {
+          'resource_id': resourceId,
+          'chapter_id': chapter,
+          'completed_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (_) {}
+  }
+
   @override
   Future<Set<int>> getDownloadedChapters(int resourceId) async {
     try {
       final db = await databaseHelper.database;
-      final rows = await db.rawQuery(
-        "SELECT DISTINCT CAST(substr(verse_key, 1, instr(verse_key, ':') - 1) AS INTEGER) as chap FROM tafsir WHERE resource_id = ? AND instr(verse_key, ':') > 0",
-        [resourceId],
+      await _ensureTafsirChaptersTable(db);
+      final rows = await db.query(
+        'tafsir_completed_chapters',
+        columns: ['chapter_id'],
+        where: 'resource_id = ?',
+        whereArgs: [resourceId],
       );
       return {
         for (final row in rows)
-          if (row['chap'] is int && (row['chap'] as int) > 0) row['chap'] as int,
+          if (row['chapter_id'] is int && (row['chapter_id'] as int) > 0)
+            row['chapter_id'] as int,
       };
     } catch (e) {
       return {};

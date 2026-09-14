@@ -106,6 +106,7 @@ class DatabaseHelper {
     );
 
     await _ensureAudioTimingsTable(db);
+    await _ensureTafsirChaptersTable(db);
     await _seedAudioTimingsIfNeeded(db, prefs);
 
     return db;
@@ -126,6 +127,19 @@ class DatabaseHelper {
       await db.execute('''
         CREATE INDEX IF NOT EXISTS idx_surah_audio_timings_reciter 
         ON surah_audio_timings (reciter_path, surah_number);
+      ''');
+    } catch (_) {}
+  }
+
+  static Future<void> _ensureTafsirChaptersTable(Database db) async {
+    try {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tafsir_completed_chapters (
+          resource_id INTEGER NOT NULL,
+          chapter_id INTEGER NOT NULL,
+          completed_at INTEGER,
+          PRIMARY KEY (resource_id, chapter_id)
+        );
       ''');
     } catch (_) {}
   }

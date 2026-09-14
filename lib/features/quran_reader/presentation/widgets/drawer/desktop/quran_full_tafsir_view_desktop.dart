@@ -73,9 +73,8 @@ class _QuranFullTafsirViewDesktopState extends State<QuranFullTafsirViewDesktop>
   final ItemPositionsListener _itemPositionsListener =
       ItemPositionsListener.create();
 
-  final Set<int> _downloadedTafsirs = {
-    16,
-  }; // Only bundled Muyassar; others checked dynamically
+  final Set<int> _downloadedTafsirs =
+      Set.from(TafsirOption.cachedDownloadedIds);
 
   late String _noTafsirText;
 
@@ -113,13 +112,14 @@ class _QuranFullTafsirViewDesktopState extends State<QuranFullTafsirViewDesktop>
         final progressResult = await _repository.getTafsirDownloadProgress(id);
         return progressResult.fold(
           (f) => null,
-          (progress) => progress == 1.0 ? id : null,
+          (progress) => progress >= 0.995 ? id : null,
         );
       }),
     );
     if (mounted) {
       final downloaded = results.whereType<int>();
       if (downloaded.isNotEmpty) {
+        TafsirOption.registerDownloadedIds(downloaded);
         setState(() {
           _downloadedTafsirs.addAll(downloaded);
         });

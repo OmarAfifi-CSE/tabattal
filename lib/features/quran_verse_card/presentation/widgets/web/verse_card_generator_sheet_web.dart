@@ -265,12 +265,6 @@ class _VerseCardGeneratorSheetWebContentState
       _loadVerseTextAndFont(null);
     }
 
-    if (widget.tafsirText != null && widget.tafsirText!.trim().isNotEmpty) {
-      _tafsirText = ArabicTextUtils.cleanTafsirOrHtml(
-        widget.tafsirText!.trim(),
-      );
-      _includeTafsir = true;
-    }
     if (widget.translationText != null &&
         widget.translationText!.trim().isNotEmpty) {
       _translationText = ArabicTextUtils.cleanTafsirOrHtml(
@@ -350,16 +344,17 @@ class _VerseCardGeneratorSheetWebContentState
   Future<void> _loadAllVerseData() async {
     setState(() {
       _isLoadingText = true;
-      if (_includeTafsir) _isLoadingTafsir = true;
-      if (_includeTranslation) _isLoadingTranslation = true;
+      _isLoadingTafsir = true;
+      _isLoadingTranslation = true;
     });
 
     try {
       final db = await DatabaseHelper().database;
-      final futures = <Future>[_loadVerseTextAndFont(db)];
-      if (_includeTafsir) futures.add(_loadTafsirForRange(db));
-      if (_includeTranslation) futures.add(_loadTranslationForRange(db));
-      await Future.wait(futures);
+      await Future.wait([
+        _loadVerseTextAndFont(db),
+        _loadTafsirForRange(db),
+        _loadTranslationForRange(db),
+      ]);
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -519,9 +514,7 @@ class _VerseCardGeneratorSheetWebContentState
       if (maps.isEmpty) {
         if (mounted) {
           setState(() {
-            _tafsirText = ArabicTextUtils.cleanTafsirOrHtml(
-              widget.tafsirText ?? '',
-            );
+            _tafsirText = '';
             _isLoadingTafsir = false;
           });
         }
@@ -565,9 +558,7 @@ class _VerseCardGeneratorSheetWebContentState
         }
       }
 
-      final combinedTafsir = resultSegments.isNotEmpty
-          ? resultSegments.join('\n\n')
-          : ArabicTextUtils.cleanTafsirOrHtml(widget.tafsirText ?? '');
+      final combinedTafsir = resultSegments.join('\n\n');
 
       if (mounted) {
         setState(() {
@@ -578,9 +569,7 @@ class _VerseCardGeneratorSheetWebContentState
     } catch (_) {
       if (mounted) {
         setState(() {
-          _tafsirText = ArabicTextUtils.cleanTafsirOrHtml(
-            widget.tafsirText ?? '',
-          );
+          _tafsirText = '';
           _isLoadingTafsir = false;
         });
       }
@@ -849,7 +838,7 @@ class _VerseCardGeneratorSheetWebContentState
           if (_isExportDialogOpen) {
             _dismissExportDialog();
           }
-          if (mounted) {
+          if (mounted && _selectedFormat == ShareFormat.video) {
             setState(() {
               _statusMessage = VideoStudioErrorHelper.getLocalizedError(
                 context,
@@ -1034,7 +1023,7 @@ class _VerseCardGeneratorSheetWebContentState
                                   selectedFormat: _selectedFormat,
                                   isSharing: _isSharing,
                                   isSaving: _isSaving,
-                                  isExportingVideo: videoState.exportProgress.isRendering,
+                                  isExportingVideo: videoState.exportProgress.isRendering || videoState.isPreparingAudio,
                                   onShare: _shareCard,
                                   onSave: _saveCardImage,
                                   onCopyText: () => _copyTextToClipboard(context),
@@ -1163,7 +1152,7 @@ class _VerseCardGeneratorSheetWebContentState
                         selectedFormat: _selectedFormat,
                         isSharing: _isSharing,
                         isSaving: _isSaving,
-                        isExportingVideo: videoState.exportProgress.isRendering,
+                        isExportingVideo: videoState.exportProgress.isRendering || videoState.isPreparingAudio,
                         onShare: _shareCard,
                         onSave: _saveCardImage,
                         onCopyText: () => _copyTextToClipboard(context),
@@ -1337,6 +1326,12 @@ class _VerseCardGeneratorSheetWebContentState
                     .read<VideoStudioBloc>()
                     .add(VideoStudioCustomVideoSelected(path));
               },
+              onDimmingChanged: (val) {
+                _clearStatusBanner();
+                context
+                    .read<VideoStudioBloc>()
+                    .add(VideoStudioDimmingChanged(val));
+              },
             ),
             SizedBox(height: isLandscape ? 12.0 : 14.0),
             Builder(
@@ -1501,6 +1496,8 @@ class _VerseCardGeneratorSheetWebContentState
                 setState(() {
                   _startAyah = start;
                   _endAyah = newEnd;
+                  _tafsirText = '';
+                  _translationText = '';
                 });
                 _loadAllVerseData();
               },
@@ -1513,6 +1510,8 @@ class _VerseCardGeneratorSheetWebContentState
                 setState(() {
                   _startAyah = newStart;
                   _endAyah = end;
+                  _tafsirText = '';
+                  _translationText = '';
                 });
                 _loadAllVerseData();
               },
@@ -1564,6 +1563,8 @@ class _VerseCardGeneratorSheetWebContentState
                 setState(() {
                   _startAyah = start;
                   _endAyah = newEnd;
+                  _tafsirText = '';
+                  _translationText = '';
                 });
                 _loadAllVerseData();
               },
@@ -1576,6 +1577,8 @@ class _VerseCardGeneratorSheetWebContentState
                 setState(() {
                   _startAyah = newStart;
                   _endAyah = end;
+                  _tafsirText = '';
+                  _translationText = '';
                 });
                 _loadAllVerseData();
               },

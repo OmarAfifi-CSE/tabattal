@@ -28,6 +28,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
   bool _isLoading = false;
   List<SearchVerseModel> _results = [];
   bool _isNumericSearch = false;
+  int _searchGeneration = 0;
 
   QuranTopic? _selectedTopic;
   QuranSubTopic? _selectedSubTopic;
@@ -99,6 +100,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
   }
 
   void _selectTopic(QuranTopic topic) async {
+    final generation = ++_searchGeneration;
     setState(() {
       _selectedTopic = topic;
       _selectedSubTopic = null;
@@ -115,29 +117,27 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
     }
 
     final res = await _repository.getVersesByRanges(ranges);
+    if (!mounted || generation != _searchGeneration) return;
     res.fold(
       (f) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _results = [];
-          });
-        }
+        setState(() {
+          _isLoading = false;
+          _results = [];
+        });
       },
       (results) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _isNumericSearch = false;
-            _results = results;
-          });
-        }
+        setState(() {
+          _isLoading = false;
+          _isNumericSearch = false;
+          _results = results;
+        });
       },
     );
   }
 
   void _selectSubTopic(QuranSubTopic? subTopic) async {
     if (_selectedTopic == null) return;
+    final generation = ++_searchGeneration;
     setState(() {
       _selectedSubTopic = subTopic;
       _isLoading = true;
@@ -155,28 +155,26 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
     }
 
     final res = await _repository.getVersesByRanges(ranges);
+    if (!mounted || generation != _searchGeneration) return;
     res.fold(
       (f) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _results = [];
-          });
-        }
+        setState(() {
+          _isLoading = false;
+          _results = [];
+        });
       },
       (results) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _isNumericSearch = false;
-            _results = results;
-          });
-        }
+        setState(() {
+          _isLoading = false;
+          _isNumericSearch = false;
+          _results = results;
+        });
       },
     );
   }
 
   void _clearSelectedTopic() {
+    _searchGeneration++;
     setState(() {
       _selectedTopic = null;
       _selectedSubTopic = null;
@@ -188,6 +186,7 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
   }
 
   Future<void> _performSearch(String query) async {
+    final generation = ++_searchGeneration;
     if (query.isEmpty) {
       setState(() {
         _results = [];
@@ -211,23 +210,20 @@ class _QuranSearchScreenMobileState extends State<QuranSearchScreenMobile> {
     }
 
     final searchResult = await _repository.searchQuran(normalizedQuery);
+    if (!mounted || generation != _searchGeneration) return;
     searchResult.fold(
       (f) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _results = [];
-          });
-        }
+        setState(() {
+          _isLoading = false;
+          _results = [];
+        });
       },
       (results) {
-        if (mounted) {
-          setState(() {
-            _isNumericSearch = false;
-            _results = results;
-            _isLoading = false;
-          });
-        }
+        setState(() {
+          _isNumericSearch = false;
+          _results = results;
+          _isLoading = false;
+        });
       },
     );
   }

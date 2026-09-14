@@ -283,6 +283,63 @@ class VideoBackgroundSelectorTablet extends StatelessWidget {
             ),
           ],
         ),
+        if (config.hasCustomMedia) ...[
+          SizedBox(height: 10.h),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCream,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(
+                color: AppColors.divider,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.videoStudioBackgroundDimming,
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      '${(config.backgroundDimming * 100).round()}%',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.accentGold,
+                      ),
+                    ),
+                  ],
+                ),
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: AppColors.accentGold,
+                    inactiveTrackColor:
+                        AppColors.accentGold.withValues(alpha: 0.2),
+                    thumbColor: AppColors.accentGold,
+                    overlayColor: AppColors.accentGold.withValues(alpha: 0.15),
+                    trackHeight: 3.h,
+                    thumbShape:
+                        RoundSliderThumbShape(enabledThumbRadius: 6.r),
+                  ),
+                  child: Slider(
+                    value: config.backgroundDimming.clamp(0.0, 0.85),
+                    min: 0.0,
+                    max: 0.85,
+                    onChanged: (val) => onDimmingChanged?.call(val),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }

@@ -285,6 +285,64 @@ class VideoBackgroundSelectorDesktop extends StatelessWidget {
             ),
           ],
         ),
+        if (config.hasCustomMedia) ...[
+          SizedBox(height: 12.0.h),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 14.0.w, vertical: 10.0.h),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCream,
+              borderRadius: BorderRadius.circular(14.0.r),
+              border: Border.all(
+                color: AppColors.divider,
+                width: 1.0.w,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.videoStudioBackgroundDimming,
+                      style: TextStyle(
+                        fontSize: 14.0.sp,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      '${(config.backgroundDimming * 100).round()}%',
+                      style: TextStyle(
+                        fontSize: 14.0.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.accentGold,
+                      ),
+                    ),
+                  ],
+                ),
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: AppColors.accentGold,
+                    inactiveTrackColor:
+                        AppColors.accentGold.withValues(alpha: 0.2),
+                    thumbColor: AppColors.accentGold,
+                    overlayColor: AppColors.accentGold.withValues(alpha: 0.15),
+                    trackHeight: 3.5.h,
+                    thumbShape:
+                        RoundSliderThumbShape(enabledThumbRadius: 7.0.r),
+                  ),
+                  child: Slider(
+                    value: config.backgroundDimming.clamp(0.0, 0.85),
+                    min: 0.0,
+                    max: 0.85,
+                    onChanged: (val) => onDimmingChanged?.call(val),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }

@@ -57,7 +57,9 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
   bool _isClosing = false;
-  final Map<int, double> _tafsirProgress = {16: 1.0};
+  final Set<int> _downloadedTafsirs = Set.from(TafsirOption.cachedDownloadedIds);
+  final Map<int, double> _tafsirProgress =
+      Map.from(TafsirOption.cachedProgressMap);
 
   @override
   void initState() {
@@ -84,7 +86,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
   Future<void> _checkDownloadedTafsirs() async {
     if (!mounted) return;
     final repo = context.read<QuranBloc>().repository;
-    final toCheck = [
+    const toCheck = [
       14,
       91,
       15,
@@ -94,19 +96,34 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
       169,
       168,
       817,
-    ]; // Add all non-bundled tafsirs
+    ];
+    final results = await Future.wait(
+      toCheck.map((id) async {
+        final progressResult = await repo.getTafsirDownloadProgress(id);
+        return (id, progressResult.fold((f) => 0.0, (progress) => progress));
+      }),
+    );
+    if (!mounted) return;
     final Map<int, double> newProgress = {};
-    for (int id in toCheck) {
-      final progressResult = await repo.getTafsirDownloadProgress(id);
-      progressResult.fold((f) => null, (progress) {
-        if (progress > 0.0) {
-          newProgress[id] = progress;
-        }
-      });
+    final Set<int> newDownloaded = {};
+    for (final pair in results) {
+      final id = pair.$1;
+      final progress = pair.$2;
+      if (progress > 0.0) {
+        newProgress[id] = progress;
+      }
+      if (progress >= 0.995) {
+        newDownloaded.add(id);
+      }
     }
-    if (newProgress.isNotEmpty && mounted) {
+    if (newProgress.isNotEmpty || newDownloaded.isNotEmpty) {
+      TafsirOption.registerDownloadedIds(newDownloaded);
+      for (final e in newProgress.entries) {
+        TafsirOption.updateProgress(e.key, e.value);
+      }
       setState(() {
         _tafsirProgress.addAll(newProgress);
+        _downloadedTafsirs.addAll(newDownloaded);
       });
     }
   }
@@ -230,6 +247,7 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                     if (state is TafsirDownloaded) {
                       setState(() {
                         _tafsirProgress[state.resourceId] = 1.0;
+                        _downloadedTafsirs.add(state.resourceId);
                       });
                       quranBloc.add(
                         FetchTafsir(
@@ -246,8 +264,13 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                       });
                     } else if (state is TafsirLoaded) {
                       setState(() {
-                        _tafsirProgress[state.tafsir.tafsirId] =
-                            state.downloadProgress;
+                        if (!state.isDownloading) {
+                          _downloadedTafsirs.add(state.tafsir.tafsirId);
+                          _tafsirProgress[state.tafsir.tafsirId] = 1.0;
+                        } else {
+                          _tafsirProgress[state.effectiveDownloadingResourceId] =
+                              state.downloadProgress;
+                        }
                       });
                     }
                   },
@@ -323,21 +346,32 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                       displayResourceId =
                                           currentState.resourceId;
                                     }
+                                    final activeId = currentState is TafsirDownloading
+                                        ? currentState.resourceId
+                                        : (currentState is TafsirLoaded &&
+                                                currentState.isDownloading
+                                            ? currentState.effectiveDownloadingResourceId
+                                            : null);
+                                    final activeProgress = currentState is TafsirDownloading
+                                        ? currentState.progress
+                                        : (currentState is TafsirLoaded &&
+                                                currentState.isDownloading
+                                            ? currentState.downloadProgress
+                                            : null);
+
                                     return TafsirSelectorMenu(
                                       selectedId: displayResourceId,
                                       options: TafsirOption.getLocalizedOptions(
                                         context,
-                                        downloadedIds: const {},
+                                        downloadedIds: _downloadedTafsirs,
                                         progressMap: _tafsirProgress,
-                                        activeDownloadingId:
-                                            currentState is TafsirDownloading
-                                                ? currentState.resourceId
-                                                : null,
-                                        activeDownloadProgress:
-                                            currentState is TafsirDownloading
-                                                ? currentState.progress
-                                                : null,
+                                        activeDownloadingId: activeId,
+                                        activeDownloadProgress: activeProgress,
                                       ),
+                                      downloadedIds: _downloadedTafsirs,
+                                      progressMap: _tafsirProgress,
+                                      activeDownloadingId: activeId,
+                                      activeDownloadProgress: activeProgress,
                                       onSelected: (int newValue) {
                                         quranBloc.add(
                                           FetchTafsir(
@@ -594,15 +628,24 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                                               color: AppColors.accentGold,
                                             ),
                                             SizedBox(width: 8.w),
-                                            Text(
-                                              l10n.downloadingTafsirBackground,
-                                              style: AppTextStyles.menuItemText
-                                                  .copyWith(
-                                                    fontSize: 12.sp,
-                                                    color: AppColors.accentGold,
+                                            Expanded(
+                                              child: Text(
+                                                l10n.downloadingTafsirBackground(
+                                                  _getTafsirName(
+                                                    context,
+                                                    currentState.effectiveDownloadingResourceId,
                                                   ),
+                                                ),
+                                                style: AppTextStyles.menuItemText
+                                                    .copyWith(
+                                                      fontSize: 12.sp,
+                                                      color: AppColors.accentGold,
+                                                    ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
-                                            const Spacer(),
+                                            SizedBox(width: 8.w),
                                             Text(
                                               '${(value * 100).toStringAsFixed(1)}%',
                                               style: AppTextStyles.menuItemText
@@ -990,17 +1033,13 @@ class _VerseActionMenuTabletState extends State<VerseActionMenuTablet>
                         l10n.menuShareCard,
                         () {
                           final qState = context.read<QuranBloc>().state;
-                          String? tafsirText;
                           String? translationText;
-                          if (qState is TafsirLoaded) {
-                            tafsirText = qState.tafsir.text;
-                          } else if (qState is TranslationLoaded) {
+                          if (qState is TranslationLoaded) {
                             translationText = qState.translation.text;
                           }
                           showVerseCardGeneratorModalTablet(
                             context,
                             verse: widget.verse,
-                            tafsirText: tafsirText,
                             translationText: translationText,
                             pageRepaintKey: widget.pageRepaintKey,
                             pageNumber: widget.pageNumber,

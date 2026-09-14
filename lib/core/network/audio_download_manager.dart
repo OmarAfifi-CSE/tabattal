@@ -142,10 +142,12 @@ class AudioDownloadManager {
       }
     } finally {
       final wasCancelled = batchToken.isCancelled;
-      _isBatchRunning = false;
-      _activeBatchCategory = null;
-      _activeBatchReciter = null;
-      _activeBatchCancelToken = null;
+      if (identical(_activeBatchCancelToken, batchToken)) {
+        _isBatchRunning = false;
+        _activeBatchCategory = null;
+        _activeBatchReciter = null;
+        _activeBatchCancelToken = null;
+      }
       onCompleted?.call(!wasCancelled, failedCount);
     }
   }

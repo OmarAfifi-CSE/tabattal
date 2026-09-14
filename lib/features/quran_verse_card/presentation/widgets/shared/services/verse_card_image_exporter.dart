@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../helpers/verse_card_text_utils.dart';
+import 'web_file_saver.dart';
 
 /// Service responsible for rendering, capturing Ultra-HD PNGs, saving to storage, and sharing.
 class VerseCardImageExporter {
@@ -20,6 +21,9 @@ class VerseCardImageExporter {
     required GlobalKey repaintKey,
     required Color backgroundColor,
   }) async {
+    ui.Image? rawImage;
+    ui.Picture? picture;
+    ui.Image? finalImage;
     try {
       final boundary = repaintKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
@@ -29,7 +33,7 @@ class VerseCardImageExporter {
       final double height = boundary.size.height;
 
       const double scale = 4.0;
-      final ui.Image rawImage = await boundary.toImage(pixelRatio: scale);
+      rawImage = await boundary.toImage(pixelRatio: scale);
 
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
@@ -58,8 +62,8 @@ class VerseCardImageExporter {
         imagePaint,
       );
 
-      final picture = recorder.endRecording();
-      final finalImage = await picture.toImage(
+      picture = recorder.endRecording();
+      finalImage = await picture.toImage(
         targetWidth.toInt(),
         targetHeight.toInt(),
       );
@@ -69,6 +73,10 @@ class VerseCardImageExporter {
       return byteData?.buffer.asUint8List();
     } catch (_) {
       return null;
+    } finally {
+      rawImage?.dispose();
+      picture?.dispose();
+      finalImage?.dispose();
     }
   }
 
@@ -167,12 +175,18 @@ class VerseCardImageExporter {
     required int startAyah,
     required int endAyah,
   }) async {
-    if (kIsWeb) return true;
-
     final surahName = QuranMetadata.getSurahName(surahNumber);
     final fileName = startAyah == endAyah
         ? 'Tabattal_${surahName}_$startAyah'
         : 'Tabattal_${surahName}_${startAyah}_to_$endAyah';
+
+    if (kIsWeb) {
+      return await saveBytesInBrowser(
+        bytes: imageBytes,
+        fileName: '$fileName.png',
+        mimeType: 'image/png',
+      );
+    }
 
     if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       try {
