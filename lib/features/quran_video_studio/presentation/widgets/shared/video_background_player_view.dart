@@ -67,12 +67,12 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
         }
 
         if (oldWidget.isPlaying != widget.isPlaying) {
-          if (!_isSeeking) {
-            if (widget.isPlaying) {
+          if (widget.isPlaying) {
+            if (!_isSeeking) {
               controller.play();
-            } else {
-              controller.pause();
             }
+          } else {
+            controller.pause();
           }
         }
       }

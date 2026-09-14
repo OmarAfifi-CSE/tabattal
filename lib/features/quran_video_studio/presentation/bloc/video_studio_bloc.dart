@@ -289,6 +289,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     _seekDepth = 0;
     _verseSwitchDepth = 0;
     _pendingSeekVerseIndex = null;
+    _loadedVerseIndex = null;
     if (!_positionController.isClosed) {
       _positionController.add(Duration.zero);
     }
@@ -299,7 +300,6 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       if (_previewPlayer.playing) {
         await _previewPlayer.pause();
       }
-      await _previewPlayer.stop();
     } catch (_) {}
 
     emit(
@@ -334,6 +334,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     _seekDepth = 0;
     _verseSwitchDepth = 0;
     _pendingSeekVerseIndex = null;
+    _loadedVerseIndex = null;
     if (!_positionController.isClosed) {
       _positionController.add(Duration.zero);
     }
@@ -344,7 +345,6 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       if (_previewPlayer.playing) {
         await _previewPlayer.pause();
       }
-      await _previewPlayer.stop();
     } catch (_) {}
 
     final totalAyahs = QuranMetadata.getVerseCountForSurah(state.config.surahNumber);
@@ -574,7 +574,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         }
 
         if (state.mergedPreviewAudioPath != null) {
-          if (_previewPlayer.audioSource == null) {
+          if (_previewPlayer.audioSource == null || _loadedVerseIndex != 0) {
             await _previewPlayer.setAudioSource(_createAudioSource(state.mergedPreviewAudioPath!));
             _loadedVerseIndex = 0;
           }
@@ -611,7 +611,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       try {
         final safeIndex = state.currentVerseIndex.clamp(0, totalVerses - 1);
         if (state.mergedPreviewAudioPath != null) {
-          if (_previewPlayer.audioSource == null) {
+          if (_previewPlayer.audioSource == null || _loadedVerseIndex != 0) {
             await _previewPlayer.setAudioSource(_createAudioSource(state.mergedPreviewAudioPath!));
             _loadedVerseIndex = 0;
           }
@@ -892,7 +892,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
 
     try {
       if (state.mergedPreviewAudioPath != null) {
-        if (_previewPlayer.audioSource == null) {
+        if (_previewPlayer.audioSource == null || _loadedVerseIndex != 0) {
           await _previewPlayer.setAudioSource(_createAudioSource(state.mergedPreviewAudioPath!));
           _loadedVerseIndex = 0;
         }
@@ -1042,7 +1042,9 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           mergedAudioPath = await repository.prepareMergedAudio(audioFilePaths: paths);
           if (myLoadGen != _loadGeneration || emit.isDone) return;
           try {
-            await _previewPlayer.stop();
+            if (_previewPlayer.playing) {
+              await _previewPlayer.pause();
+            }
             if (mergedAudioPath != null) {
               _verseSwitchDepth++;
               try {

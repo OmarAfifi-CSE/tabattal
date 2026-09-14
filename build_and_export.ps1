@@ -240,8 +240,8 @@ if ($buildWeb) {
 
 # --- Build Windows ---
 if ($buildWin) {
-    Write-Host "`n[BUILD] Building Windows Release (Obfuscated)..." -ForegroundColor Cyan
-    flutter build windows --release --obfuscate --split-debug-info=build\windows\symbols
+    Write-Host "`n[BUILD] Building Windows Release..." -ForegroundColor Cyan
+    flutter build windows --release
     Check-CommandSuccess "Flutter Build Windows"
 
     $winSource = "build\windows\x64\runner\Release"

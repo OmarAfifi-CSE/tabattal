@@ -54,9 +54,6 @@ class VideoExportService implements IVideoExportService {
     if (_isCancelled) return null;
 
     try {
-      try {
-        await FFmpegKit.cancel();
-      } catch (_) {}
       if (_isCancelled) return null;
 
       final tempDir = await getTemporaryDirectory();
@@ -102,12 +99,7 @@ class VideoExportService implements IVideoExportService {
 
       final success = await completer.future.timeout(
         const Duration(seconds: 4),
-        onTimeout: () {
-          try {
-            FFmpegKit.cancel();
-          } catch (_) {}
-          return false;
-        },
+        onTimeout: () => false,
       );
 
       try {

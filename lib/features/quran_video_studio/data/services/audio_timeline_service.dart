@@ -7,6 +7,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../../core/constants/reciter_catalog.dart';
 import '../../../quran_audio/data/services/surah_audio_timing_service.dart';
+import 'mp3_duration_parser.dart';
 
 class AudioTimelineItem {
   final int ayahNumber;
@@ -320,48 +321,82 @@ class AudioTimelineService {
 
   static final Map<String, Duration> _durationCache = {};
 
-  /// Measures exact duration of each audio file in parallel with in-memory caching
+  /// Measures exact duration of each audio file with in-memory caching
   /// for zero-jank instant response on both Web and Native platforms.
+  ///
+  /// Uses pure Dart MP3 parsing on local files to completely avoid native audio
+  /// player instantiation, eliminating WinRT use-after-free and thread collisions.
   Future<List<Duration>> measureDurations({
     required List<String> audioFilePaths,
   }) async {
     if (audioFilePaths.isEmpty) return [];
 
-    final futures = audioFilePaths.map((path) async {
+    final List<Duration> results = List.filled(audioFilePaths.length, Duration.zero);
+    final List<int> unmeasuredIndices = [];
+
+    for (int i = 0; i < audioFilePaths.length; i++) {
+      final path = audioFilePaths[i];
       if (_durationCache.containsKey(path) && _durationCache[path]! > Duration.zero) {
-        return _durationCache[path]!;
+        results[i] = _durationCache[path]!;
+        continue;
       }
 
-      Duration? d;
-      final player = AudioPlayer();
-      try {
-        if (path.startsWith('http') || kIsWeb) {
-          d = await player.setUrl(path).timeout(const Duration(seconds: 4));
-          d ??= player.duration;
-        } else {
-          d = await player.setFilePath(path).timeout(const Duration(seconds: 3));
-          d ??= player.duration;
+      // 1. On non-web platforms, try the high-speed pure Dart MP3 parser first.
+      // This bypasses native audio engine instantiation completely, eliminating
+      // WinRT thread-contention and use-after-free access violations during rapid probing.
+      if (!kIsWeb && !path.startsWith('http')) {
+        final parsed = Mp3DurationParser.parse(File(path));
+        if (parsed != null && parsed > Duration.zero) {
+          _durationCache[path] = parsed;
+          results[i] = parsed;
+          continue;
         }
-      } catch (_) {
-        d = null;
-      } finally {
+      }
+
+      unmeasuredIndices.add(i);
+    }
+
+    if (unmeasuredIndices.isEmpty) {
+      return results;
+    }
+
+    // 2. Safe sequential fallback for web URLs or non-standard formats.
+    // By using a single player sequentially, we avoid the WinRT / native
+    // thread contention crash caused by concurrent player instances.
+    final player = AudioPlayer();
+    try {
+      for (final idx in unmeasuredIndices) {
+        final path = audioFilePaths[idx];
+        Duration? d;
         try {
-          await player.dispose();
-        } catch (_) {}
-      }
+          if (path.startsWith('http') || kIsWeb) {
+            d = await player.setUrl(path).timeout(const Duration(seconds: 4));
+            d ??= player.duration;
+          } else {
+            d = await player.setFilePath(path).timeout(const Duration(seconds: 3));
+            d ??= player.duration;
+          }
+        } catch (_) {
+          d = null;
+        }
 
-      // A failed probe must NEVER be cached: caching the 4s fallback would
-      // poison every later lookup (including after the backend recovers and
-      // could report the real duration). Fallbacks are returned uncached so
-      // the next call re-measures.
-      if (d != null && d > Duration.zero) {
-        _durationCache[path] = d;
-        return d;
+        // A failed probe must NEVER be cached: caching the 4s fallback would
+        // poison every later lookup (including after the backend recovers and
+        // could report the real duration). Fallbacks are returned uncached so
+        // the next call re-measures.
+        if (d != null && d > Duration.zero) {
+          _durationCache[path] = d;
+          results[idx] = d;
+        } else {
+          results[idx] = const Duration(seconds: 4);
+        }
       }
-      return const Duration(seconds: 4);
-    });
+    } finally {
+      try {
+        await player.dispose();
+      } catch (_) {}
+    }
 
-    final results = await Future.wait(futures);
     return results;
   }
 
