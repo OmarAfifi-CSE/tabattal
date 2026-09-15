@@ -105,5 +105,24 @@ void main() {
 
     expect(bloc.state.config.aspectRatio, VideoAspectRatio.square1x1);
     expect(tester.takeException(), isNull);
+
+    // 4. Change reciter on web - must not revert to default
+    bloc.add(const VideoStudioReciterChanged(
+      reciterName: 'محمود خليل الحصري',
+      reciterCategory: 'مرتل',
+      reciterPath: 'Husary_128kbps',
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(bloc.state.config.reciterName, 'محمود خليل الحصري');
+    expect(bloc.state.config.reciterPath, 'Husary_128kbps');
+
+    // 5. Verse advancement on unmerged audio (Web) advances smoothly
+    bloc.add(const VideoStudioActiveVerseIndexChanged(1, isUserInitiated: false));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(tester.takeException(), isNull);
   });
 }

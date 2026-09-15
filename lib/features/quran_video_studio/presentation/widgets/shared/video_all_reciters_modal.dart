@@ -138,24 +138,9 @@ class _VideoAllRecitersModalState extends State<VideoAllRecitersModal>
     if (_tabController.index == _lastHandledIndex) return;
     _lastHandledIndex = _tabController.index;
     final newCat = _categories[_tabController.index];
-    final reciters = widget.recitersByCategory[newCat] ?? [];
-    if (reciters.isEmpty) {
-      setState(() {
-        _currentCategory = newCat;
-      });
-      return;
-    }
-
-    final matching =
-        reciters.where((r) => r['name'] == _currentReciter).firstOrNull;
-    final selected = matching ?? reciters.first;
-
     setState(() {
       _currentCategory = newCat;
-      _currentReciter = selected['name']!;
     });
-
-    widget.onReciterSelected(selected['name']!, newCat, selected['path']!);
   }
 
   @override

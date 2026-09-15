@@ -16,6 +16,7 @@ import '../../domain/repositories/i_video_export_service.dart';
 import '../../../../core/services/quran_font_service.dart';
 import 'audio_timeline_service.dart';
 import 'canvas_overlay_generator.dart';
+import 'mp3_duration_parser.dart';
 import 'word_timing_service.dart';
 
 class VideoExportService implements IVideoExportService {
@@ -25,6 +26,7 @@ class VideoExportService implements IVideoExportService {
   html.HttpRequest? _activeRequest;
   String? _activeJobId;
 
+  static String? _activeBlobUrl;
   static html.Blob? _lastBlob;
   static Uint8List? _lastExportedBytes;
   static String? _lastExportedFileName;
@@ -58,6 +60,12 @@ class VideoExportService implements IVideoExportService {
       } catch (_) {}
       _activeJobId = null;
     }
+    if (_activeBlobUrl != null) {
+      try {
+        html.Url.revokeObjectUrl(_activeBlobUrl!);
+      } catch (_) {}
+      _activeBlobUrl = null;
+    }
     if (_activeExportController != null && !_activeExportController!.isClosed) {
       _activeExportController!.close();
     }
@@ -67,7 +75,53 @@ class VideoExportService implements IVideoExportService {
   Future<String?> createMergedPreviewAudio({
     required List<String> audioFilePaths,
   }) async {
-    return null;
+    final validAudioFiles = audioFilePaths.where((p) => p.isNotEmpty).toList();
+    if (validAudioFiles.isEmpty) return null;
+    _isCancelled = false;
+
+    try {
+      final List<Uint8List> frameChunks = [];
+
+      for (final path in validAudioFiles) {
+        if (_isCancelled) return null;
+        Uint8List? bytes = AudioTimelineService.getCachedAudioBytes(path);
+        if (bytes == null || bytes.isEmpty) {
+          bytes = await _audioService.getAyahAudioBytes(path);
+        }
+
+        if (bytes != null && bytes.isNotEmpty) {
+          final frames = Mp3DurationParser.extractPureMpegFrames(bytes);
+          if (frames != null && frames.isNotEmpty) {
+            frameChunks.add(frames);
+          }
+        }
+      }
+
+      if (frameChunks.length != validAudioFiles.length) return null;
+
+      final builder = BytesBuilder(copy: false);
+      for (final chunk in frameChunks) {
+        builder.add(chunk);
+      }
+      final mergedBytes = builder.takeBytes();
+
+      if (_activeBlobUrl != null) {
+        try {
+          html.Url.revokeObjectUrl(_activeBlobUrl!);
+        } catch (_) {}
+        _activeBlobUrl = null;
+      }
+
+      final blob = html.Blob([mergedBytes], 'audio/mpeg');
+      final blobUrl = html.Url.createObjectUrl(blob);
+      _activeBlobUrl = blobUrl;
+      return blobUrl;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('createMergedPreviewAudio error on Web: $e');
+      }
+      return null;
+    }
   }
 
   /// Coordinates video generation, frame rendering, cloud FFmpeg encoding, and MP4 download.

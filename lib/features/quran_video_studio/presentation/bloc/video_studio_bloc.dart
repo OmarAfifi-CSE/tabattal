@@ -53,6 +53,8 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   int? _loadedVerseIndex;
   final AppVolumeCubit? appVolumeCubit;
 
+  bool get _isWindowsDesktop => !kIsWeb && (Platform.isWindows || defaultTargetPlatform == TargetPlatform.windows);
+
   VideoStudioBloc({
     required this.repository,
     required VideoProjectConfig initialConfig,
@@ -146,11 +148,26 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         }
 
         final total = state.audioFilePaths.length;
-        if (total > 0 && state.currentVerseIndex >= total - 1) {
-          final duration = _previewPlayer.duration ?? Duration.zero;
-          if (duration > Duration.zero && pos >= duration) {
-            if (state.isPlaying) {
-              add(const VideoStudioPlaybackReset());
+        if (total > 0) {
+          final currentVerseDuration = state.currentVerseIndex < state.verseDurations.length
+              ? state.verseDurations[state.currentVerseIndex]
+              : (_previewPlayer.duration ?? Duration.zero);
+          if (_isWindowsDesktop) {
+            if (currentVerseDuration > Duration.zero && pos >= currentVerseDuration) {
+              if (state.isPlaying && _verseSwitchDepth == 0 && _seekDepth == 0 && _pendingSeekVerseIndex == null) {
+                if (state.currentVerseIndex < total - 1) {
+                  add(VideoStudioActiveVerseIndexChanged(state.currentVerseIndex + 1, isUserInitiated: false));
+                } else {
+                  add(const VideoStudioPlaybackReset());
+                }
+              }
+            }
+          } else if (kIsWeb) {
+            if (currentVerseDuration > Duration.zero && pos >= currentVerseDuration + const Duration(milliseconds: 500)) {
+              final playerIdx = _previewPlayer.currentIndex;
+              if (playerIdx != null && playerIdx >= 0 && playerIdx < total && playerIdx != state.currentVerseIndex) {
+                add(VideoStudioActiveVerseIndexChanged(playerIdx, isUserInitiated: false));
+              }
             }
           }
         }
@@ -191,13 +208,18 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           add(const VideoStudioPlaybackReset());
           return;
         }
-        if (!kIsWeb && Platform.isWindows && state.currentVerseIndex < state.verses.length - 1) {
-          // Windows drives one audio source per verse. Advance through the
-          // SAME event the verse strip uses so there is exactly ONE swap of
-          // the source (the handler reloads it and resumes playback).
-          add(VideoStudioActiveVerseIndexChanged(state.currentVerseIndex + 1, isUserInitiated: false));
+        if (_isWindowsDesktop) {
+          if (state.currentVerseIndex < state.verses.length - 1) {
+            // Windows drives one audio source per verse. Advance through the
+            // SAME event the verse strip uses so there is exactly ONE swap of
+            // the source (the handler reloads it and resumes playback).
+            add(VideoStudioActiveVerseIndexChanged(state.currentVerseIndex + 1, isUserInitiated: false));
+            return;
+          }
+          add(const VideoStudioPlaybackReset());
           return;
         }
+        // Web: concatenating playlist completes only when all verses finish
         add(const VideoStudioPlaybackReset());
       } else {
         final isPlaying = playerState.playing && playerState.processingState != ProcessingState.completed;
@@ -217,15 +239,10 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     });
 
     _currentIndexSubscription = _previewPlayer.currentIndexStream.listen((index) {
-      // When playing merged audio, the entire track is in a single audio source.
-      // currentIndex is always 0 and must never override currentVerseIndex.
+      // Merged audio (Mobile) and Windows single-source handle verse advancement differently
       if (state.mergedPreviewAudioPath != null) return;
+      if (_isWindowsDesktop) return;
       if (_seekDepth > 0 || _pendingSeekVerseIndex != null || _verseSwitchDepth > 0) return;
-      // On Windows we drive a single audio source, so currentIndex is always 0
-      // and must never be mapped back onto currentVerseIndex (it would rewind
-      // to verse 0 mid-playback). Verse advancement is handled by the
-      // `completed` listener instead.
-      if (!kIsWeb && Platform.isWindows) return;
       if (index != null &&
           index >= 0 &&
           index < state.verses.length &&
@@ -580,7 +597,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
             _loadedVerseIndex = 0;
           }
           await _previewPlayer.seek(Duration.zero);
-        } else if (!kIsWeb && Platform.isWindows) {
+        } else if (_isWindowsDesktop) {
           if (state.audioFilePaths.isNotEmpty) {
             _verseSwitchDepth++;
             try {
@@ -592,6 +609,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
             await _previewPlayer.seek(Duration.zero);
           }
         } else {
+          // Web: ConcatenatingAudioSource playlist
           await _previewPlayer.seek(Duration.zero, index: 0);
         }
 
@@ -618,12 +636,9 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           }
           final timelinePos = state.calculateCumulativePosition(safeIndex, _currentVersePosition);
           await _previewPlayer.seek(timelinePos);
-        } else if (!kIsWeb && Platform.isWindows) {
+        } else if (_isWindowsDesktop) {
           if (state.audioFilePaths.isNotEmpty) {
-            // audioSource != null is NOT enough: after a natural completion
-            // the player still holds the LAST verse file while the UI reset
-            // to verse 0. Always re-assert that the loaded file matches the
-            // verse we are about to play.
+            // Always re-assert that the loaded file matches the verse we are about to play.
             if (_previewPlayer.audioSource == null || _loadedVerseIndex != safeIndex) {
               _verseSwitchDepth++;
               try {
@@ -637,12 +652,13 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
               await _previewPlayer.seek(_currentVersePosition);
             }
           }
-        } else if (_previewPlayer.currentIndex != safeIndex) {
-          _currentVersePosition = Duration.zero;
-          if (!_positionController.isClosed) {
-            _positionController.add(Duration.zero);
+        } else {
+          // Web: ConcatenatingAudioSource playlist
+          if (_previewPlayer.currentIndex != safeIndex) {
+            await _previewPlayer.seek(_currentVersePosition, index: safeIndex);
+          } else if (_currentVersePosition > Duration.zero) {
+            await _previewPlayer.seek(_currentVersePosition);
           }
-          await _previewPlayer.seek(Duration.zero, index: safeIndex);
         }
         _playbackStartTime = DateTime.now();
         _playbackStartPosition = _currentVersePosition;
@@ -686,7 +702,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       if (state.audioFilePaths.isNotEmpty) {
         if (state.mergedPreviewAudioPath != null) {
           await _previewPlayer.seek(Duration.zero);
-        } else if (!kIsWeb && Platform.isWindows) {
+        } else if (_isWindowsDesktop) {
           _verseSwitchDepth++;
           try {
             await _previewPlayer.setAudioSource(_createAudioSource(state.audioFilePaths[0]));
@@ -696,6 +712,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           }
           await _previewPlayer.seek(Duration.zero);
         } else {
+          // Web: ConcatenatingAudioSource playlist
           await _previewPlayer.seek(Duration.zero, index: 0);
         }
       }
@@ -782,7 +799,54 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       return;
     }
 
-    // Fallback: unmerged multi-file audio (Web or when merged audio unavailable)
+    if (_isWindowsDesktop) {
+      _stopPositionTicker(commitFinalPosition: false);
+      _verseSwitchDepth++;
+      _pendingSeekVerseIndex = safeIndex;
+      try {
+        _currentVersePosition = Duration.zero;
+        final wasPlaying = state.isPlaying || _previewPlayer.playing;
+        final targetSeekPos = state.calculateCumulativePosition(safeIndex, Duration.zero);
+        final newSeekTrigger = event.isUserInitiated ? state.seekTrigger + 1 : state.seekTrigger;
+
+        _playbackStartTimelinePosition = targetSeekPos;
+        _playbackStartPosition = Duration.zero;
+        _currentVersePosition = Duration.zero;
+
+        emit(state.copyWith(
+          currentVerseIndex: safeIndex,
+          seekTrigger: newSeekTrigger,
+          lastSeekPosition: targetSeekPos,
+          isPlaying: wasPlaying,
+        ));
+        if (!_positionController.isClosed) {
+          _positionController.add(Duration.zero);
+        }
+        if (!_timelinePositionController.isClosed) {
+          _timelinePositionController.add(targetSeekPos);
+        }
+
+        if (state.audioFilePaths.isNotEmpty) {
+          await _previewPlayer.setAudioSource(_createAudioSource(state.audioFilePaths[safeIndex]));
+          _loadedVerseIndex = safeIndex;
+          if (safeIndex != state.currentVerseIndex) return;
+          if (wasPlaying) {
+            _playbackStartTime = DateTime.now();
+            _playbackStartPosition = Duration.zero;
+            _playbackStartTimelinePosition = targetSeekPos;
+            _startPositionTicker();
+            unawaited(_previewPlayer.play());
+          }
+        }
+      } catch (_) {
+      } finally {
+        _verseSwitchDepth--;
+        _pendingSeekVerseIndex = null;
+      }
+      return;
+    }
+
+    // Web: ConcatenatingAudioSource playlist
     _stopPositionTicker(commitFinalPosition: false);
     _verseSwitchDepth++;
     _pendingSeekVerseIndex = safeIndex;
@@ -809,41 +873,29 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         _timelinePositionController.add(targetSeekPos);
       }
 
-      if (!kIsWeb && Platform.isWindows && state.audioFilePaths.isNotEmpty) {
-        await _previewPlayer.setAudioSource(_createAudioSource(state.audioFilePaths[safeIndex]));
-        _loadedVerseIndex = safeIndex;
+      if (event.isUserInitiated) {
+        if (_previewPlayer.currentIndex != safeIndex) {
+          await _previewPlayer.seek(Duration.zero, index: safeIndex);
+        } else {
+          await _previewPlayer.seek(Duration.zero);
+        }
         if (safeIndex != state.currentVerseIndex) return;
         if (wasPlaying) {
           _playbackStartTime = DateTime.now();
           _playbackStartPosition = Duration.zero;
           _playbackStartTimelinePosition = targetSeekPos;
           _startPositionTicker();
-          await _previewPlayer.play();
+          if (!_previewPlayer.playing) {
+            unawaited(_previewPlayer.play());
+          }
         }
-      } else if (state.audioFilePaths.isNotEmpty) {
-        if (event.isUserInitiated) {
-          if (_previewPlayer.currentIndex != safeIndex) {
-            await _previewPlayer.seek(Duration.zero, index: safeIndex);
-          } else {
-            await _previewPlayer.seek(Duration.zero);
-          }
-          if (safeIndex != state.currentVerseIndex) return;
-          if (wasPlaying) {
-            _playbackStartTime = DateTime.now();
-            _playbackStartPosition = Duration.zero;
-            _playbackStartTimelinePosition = targetSeekPos;
-            _startPositionTicker();
-            if (!_previewPlayer.playing) {
-              await _previewPlayer.play();
-            }
-          }
-        } else {
-          if (wasPlaying && _positionTicker == null) {
-            _playbackStartTime = DateTime.now();
-            _playbackStartPosition = Duration.zero;
-            _playbackStartTimelinePosition = targetSeekPos;
-            _startPositionTicker();
-          }
+      } else {
+        // Natural playlist progression: player is ALREADY playing next item!
+        if (wasPlaying) {
+          _playbackStartTime = DateTime.now();
+          _playbackStartPosition = Duration.zero;
+          _playbackStartTimelinePosition = targetSeekPos;
+          _startPositionTicker();
         }
       }
     } catch (_) {
@@ -907,7 +959,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
             await _previewPlayer.play();
           }
         }
-      } else if (!kIsWeb && Platform.isWindows) {
+      } else if (_isWindowsDesktop) {
         if (state.audioFilePaths.isNotEmpty) {
           if (_previewPlayer.audioSource == null || needsSourceSwap) {
             _verseSwitchDepth++;
@@ -930,6 +982,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           }
         }
       } else {
+        // Web: ConcatenatingAudioSource playlist seek
         if (_previewPlayer.currentIndex != safeIndex) {
           await _previewPlayer.seek(verseOffset, index: safeIndex);
         } else {
@@ -1006,7 +1059,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
                 : 'تعذر قياس المدة الصوتية الدقيقة للآية ${v.verseNumber}');
           }
           final dur = durations[i];
-          final List<WordTimingSegment> timings;
+          List<WordTimingSegment> timings;
           if (loadConfig.textDisplayMode == VideoTextDisplayMode.staticFull) {
             timings = [
               WordTimingSegment(
@@ -1016,12 +1069,24 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
               ),
             ];
           } else {
-            timings = await _wordTimingService.getWordTimings(
-              surahNumber: loadConfig.surahNumber,
-              verse: v,
-              reciterPath: loadConfig.reciterPath,
-              totalAyahDuration: dur,
-            );
+            try {
+              timings = await _wordTimingService.getWordTimings(
+                surahNumber: loadConfig.surahNumber,
+                verse: v,
+                reciterPath: loadConfig.reciterPath,
+                totalAyahDuration: dur,
+              );
+            } catch (e) {
+              // Graceful fallback if word timing is unavailable from API.
+              // Allows recitation playback to work instead of hard-crashing and freezing on Minshawy!
+              timings = [
+                WordTimingSegment(
+                  wordPosition: 1,
+                  startMs: 0,
+                  endMs: dur.inMilliseconds,
+                ),
+              ];
+            }
             if (myLoadGen != _loadGeneration || emit.isDone) return;
           }
           timingsMap[v.verseNumber] = timings;
@@ -1054,7 +1119,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
               } finally {
                 _verseSwitchDepth--;
               }
-            } else if (!kIsWeb && Platform.isWindows) {
+            } else if (_isWindowsDesktop) {
               _verseSwitchDepth++;
               try {
                 await _previewPlayer.setAudioSource(_createAudioSource(paths[0]));
@@ -1063,6 +1128,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
                 _verseSwitchDepth--;
               }
             } else {
+              // Web: ConcatenatingAudioSource playlist
               // ignore: deprecated_member_use
               final playlist = ConcatenatingAudioSource(
                 children: paths.map(_createAudioSource).toList(),
@@ -1071,6 +1137,7 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
                 playlist,
                 initialIndex: 0,
               );
+              _loadedVerseIndex = 0;
             }
           } catch (e) {
             if (kDebugMode) {

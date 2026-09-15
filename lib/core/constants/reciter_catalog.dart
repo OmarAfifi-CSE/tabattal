@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import '../../features/quran_video_studio/domain/entities/video_enums.dart';
 
@@ -426,6 +427,201 @@ static const Map<String, String> reciterEnglishNames = {
   };
 
 
+  /// Verified high-fidelity EveryAyah reciters for full ayah video mode
+  static const Map<String, List<Map<String, String>>> fullAyahVideoRecitersByCategory = {
+    'مرتل': [
+      {
+        'name': 'محمد صديق المنشاوي',
+        'category': 'مرتل',
+        'path': 'Minshawy_Murattal_128kbps',
+      },
+      {
+        'name': 'محمود خليل الحصري',
+        'category': 'مرتل',
+        'path': 'Husary_128kbps',
+      },
+      {
+        'name': 'عبد الباسط عبد الصمد',
+        'category': 'مرتل',
+        'path': 'Abdul_Basit_Murattal_192kbps',
+      },
+      {
+        'name': 'ماهر المعيقلي',
+        'category': 'مرتل',
+        'path': 'MaherAlMuaiqly128kbps',
+      },
+      {
+        'name': 'ياسر الدوسري',
+        'category': 'مرتل',
+        'path': 'Yasser_Ad-Dussary_128kbps',
+      },
+      {
+        'name': 'أحمد العجمي',
+        'category': 'مرتل',
+        'path': 'Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net',
+      },
+      {
+        'name': 'سعد الغامدي',
+        'category': 'مرتل',
+        'path': 'Ghamadi_40kbps',
+      },
+      {
+        'name': 'ناصر القطامي',
+        'category': 'مرتل',
+        'path': 'Nasser_Alqatami_128kbps',
+      },
+      {
+        'name': 'فارس عباد',
+        'category': 'مرتل',
+        'path': 'Fares_Abbad_64kbps',
+      },
+      {
+        'name': 'أبو بكر الشاطري',
+        'category': 'مرتل',
+        'path': 'Abu_Bakr_Ash-Shaatree_128kbps',
+      },
+      {
+        'name': 'سعود الشريم',
+        'category': 'مرتل',
+        'path': 'Saood_ash-Shuraym_128kbps',
+      },
+      {
+        'name': 'هاني الرفاعي',
+        'category': 'مرتل',
+        'path': 'Hani_Rifai_192kbps',
+      },
+      {
+        'name': 'علي الحذيفي',
+        'category': 'مرتل',
+        'path': 'Hudhaify_128kbps',
+      },
+      {
+        'name': 'محمد أيوب',
+        'category': 'مرتل',
+        'path': 'Muhammad_Ayyoub_128kbps',
+      },
+      {
+        'name': 'عبدالله عواد الجهني',
+        'category': 'مرتل',
+        'path': 'Abdullaah_3awwaad_Al-Juhaynee_128kbps',
+      },
+      {
+        'name': 'محمود علي البنا',
+        'category': 'مرتل',
+        'path': 'mahmoud_ali_al_banna_32kbps',
+      },
+      {
+        'name': 'محمد محمود الطبلاوي',
+        'category': 'مرتل',
+        'path': 'Mohammad_al_Tablaway_128kbps',
+      },
+      {
+        'name': 'خالد القحطاني',
+        'category': 'مرتل',
+        'path': 'Khaalid_Abdullaah_al-Qahtaanee_192kbps',
+      },
+      {
+        'name': 'علي جابر',
+        'category': 'مرتل',
+        'path': 'Ali_Jaber_64kbps',
+      },
+      {
+        'name': 'إبراهيم الأخضر',
+        'category': 'مرتل',
+        'path': 'Ibrahim_Akhdar_32kbps',
+      },
+      {
+        'name': 'عبدالله المطرود',
+        'category': 'مرتل',
+        'path': 'Abdullah_Matroud_128kbps',
+      },
+      {
+        'name': 'محمد جبريل',
+        'category': 'مرتل',
+        'path': 'Muhammad_Jibreel_128kbps',
+      },
+      {
+        'name': 'عبد الله بصفر',
+        'category': 'مرتل',
+        'path': 'Abdullah_Basfar_192kbps',
+      },
+      {
+        'name': 'صلاح بو خاطر',
+        'category': 'مرتل',
+        'path': 'Salaah_AbdulRahman_Bukhatir_128kbps',
+      },
+      {
+        'name': 'نبيل الرفاعي',
+        'category': 'مرتل',
+        'path': 'Nabil_Rifa3i_48kbps',
+      },
+      {
+        'name': 'سهل ياسين',
+        'category': 'مرتل',
+        'path': 'Sahl_Yassin_128kbps',
+      },
+      {
+        'name': 'ياسر سلامة',
+        'category': 'مرتل',
+        'path': 'Yaser_Salamah_128kbps',
+      },
+      {
+        'name': 'علي حجاج السويسي',
+        'category': 'مرتل',
+        'path': 'Ali_Hajjaj_AlSuesy_128kbps',
+      },
+      {
+        'name': 'أكرم العلاقمي',
+        'category': 'مرتل',
+        'path': 'Akram_AlAlaqimy_128kbps',
+      },
+      {
+        'name': 'محمد عبد الكريم',
+        'category': 'مرتل',
+        'path': 'Muhammad_AbdulKareem_128kbps',
+      },
+      {
+        'name': 'محسن القاسم',
+        'category': 'مرتل',
+        'path': 'Muhsin_Al_Qasim_192kbps',
+      },
+    ],
+    'مجود': [
+      {
+        'name': 'محمد صديق المنشاوي',
+        'category': 'مجود',
+        'path': 'Minshawy_Mujawwad_192kbps',
+      },
+      {
+        'name': 'عبد الباسط عبد الصمد',
+        'category': 'مجود',
+        'path': 'Abdul_Basit_Mujawwad_128kbps',
+      },
+      {
+        'name': 'محمود خليل الحصري',
+        'category': 'مجود',
+        'path': 'Husary_128kbps_Mujawwad',
+      },
+    ],
+    'المصحف المعلم': [
+      {
+        'name': 'محمود خليل الحصري',
+        'category': 'المصحف المعلم',
+        'path': 'Husary_Muallim_128kbps',
+      },
+      {
+        'name': 'محمد صديق المنشاوي',
+        'category': 'المصحف المعلم',
+        'path': 'Minshawy_Teacher_128kbps',
+      },
+      {
+        'name': 'أيمن سويد',
+        'category': 'المصحف المعلم',
+        'path': 'Ayman_Sowaid_64kbps',
+      },
+    ],
+  };
+
   /// Completely untimed reciters across all surahs (safety valve active everywhere)
   static const Set<String> globallyUntimedReciterPaths = {
     'MaherAlMuaiqly128kbps',
@@ -535,73 +731,44 @@ static const Map<String, String> reciterEnglishNames = {
     int? surahNumber,
     Set<String>? downloadedMp3QuranPaths,
   }) {
-    if (mode != VideoTextDisplayMode.staticFull) {
-      final result = <String, List<Map<String, String>>>{};
-      for (final entry in verifiedVideoRecitersByCategory.entries) {
-        final filtered = entry.value
-            .where((r) => surahNumber == null || hasTimingForSurah(r['path']!, surahNumber))
-            .toList();
-        if (filtered.isNotEmpty) {
-          result[entry.key] = List.of(filtered);
-        }
-      }
-      // If the user has downloaded any MP3Quran reciters locally on disk, include them if they have timings
-      if (downloadedMp3QuranPaths != null && downloadedMp3QuranPaths.isNotEmpty && surahNumber != null) {
-        for (final entry in reciterCategories.entries) {
-          final category = entry.key;
-          for (final reciterEntry in entry.value.entries) {
-            final path = reciterEntry.value;
-            if (isMp3QuranReciter(path) &&
-                downloadedMp3QuranPaths.contains(path) &&
-                hasTimingForSurah(path, surahNumber)) {
-              result.putIfAbsent(category, () => []).add({
-                'name': reciterEntry.key,
-                'category': category,
-                'path': path,
-              });
-            }
-          }
-        }
-      }
-      return result;
-    }
+    final baseCatalog = (mode == VideoTextDisplayMode.staticFull)
+        ? fullAyahVideoRecitersByCategory
+        : verifiedVideoRecitersByCategory;
 
-    // Dynamic full-catalog generation from reciterCategories with safety valve filtering
     final result = <String, List<Map<String, String>>>{};
-    for (final entry in reciterCategories.entries) {
-      final category = entry.key;
-      final recitersMap = entry.value;
+    for (final entry in baseCatalog.entries) {
       final list = <Map<String, String>>[];
-
-      for (final reciterEntry in recitersMap.entries) {
-        final name = reciterEntry.key;
-        final path = reciterEntry.value;
-
-        // Skip globally untimed reciters
+      for (final r in entry.value) {
+        final path = r['path']!;
         if (globallyUntimedReciterPaths.contains(path)) continue;
-        // Skip reciters that lack timing for this specific surah
-        if (surahNumber != null && !hasTimingForSurah(path, surahNumber)) {
-          continue;
-        }
-
-        // MP3Quran reciters are EXCLUDED unless already downloaded locally on disk!
-        if (isMp3QuranReciter(path)) {
-          if (downloadedMp3QuranPaths == null || !downloadedMp3QuranPaths.contains(path)) {
-            continue;
-          }
-        }
-
-        list.add({
-          'name': name,
-          'category': category,
-          'path': path,
-        });
+        if (surahNumber != null && !hasTimingForSurah(path, surahNumber)) continue;
+        list.add(r);
       }
-
       if (list.isNotEmpty) {
-        result[category] = list;
+        result[entry.key] = list;
       }
     }
+
+    // On native platforms (non-web), if user has downloaded MP3Quran reciters locally on disk, include them
+    if (!kIsWeb && downloadedMp3QuranPaths != null && downloadedMp3QuranPaths.isNotEmpty) {
+      for (final entry in reciterCategories.entries) {
+        final category = entry.key;
+        for (final reciterEntry in entry.value.entries) {
+          final path = reciterEntry.value;
+          if (isMp3QuranReciter(path) &&
+              downloadedMp3QuranPaths.contains(path) &&
+              !globallyUntimedReciterPaths.contains(path) &&
+              (surahNumber == null || hasTimingForSurah(path, surahNumber))) {
+            result.putIfAbsent(category, () => []).add({
+              'name': reciterEntry.key,
+              'category': category,
+              'path': path,
+            });
+          }
+        }
+      }
+    }
+
     return result;
   }
 

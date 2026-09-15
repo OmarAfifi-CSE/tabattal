@@ -43,6 +43,7 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
   void initState() {
     super.initState();
     _activeCategory = widget.selectedCategory ?? ReciterCatalog.defaultCategory;
+    _syncActiveCategory();
     _loadDownloadedReciters();
   }
 
@@ -52,8 +53,21 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
     if (widget.selectedCategory != null) {
       _activeCategory = widget.selectedCategory!;
     }
+    _syncActiveCategory();
     if (widget.surahNumber != oldWidget.surahNumber) {
       _loadDownloadedReciters();
+    }
+  }
+
+  void _syncActiveCategory() {
+    final currentList = _recitersByCategory[_activeCategory] ?? [];
+    if (!currentList.any((r) => r['name'] == widget.selectedReciter)) {
+      for (final entry in _recitersByCategory.entries) {
+        if (entry.value.any((r) => r['name'] == widget.selectedReciter)) {
+          _activeCategory = entry.key;
+          break;
+        }
+      }
     }
   }
 
@@ -90,18 +104,7 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
     final l10n = AppLocalizations.of(context)!;
     final currentReciters = _recitersByCategory[_activeCategory] ?? [];
 
-    // Fallback if current selected reciter is untimed / filtered out for this surah
-    final isSelectedAvailable = currentReciters.any((r) => r['name'] == widget.selectedReciter);
-    if (!isSelectedAvailable &&
-        currentReciters.isNotEmpty &&
-        _activeCategory == (widget.selectedCategory ?? _activeCategory)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          final fallback = currentReciters.first;
-          widget.onReciterSelected(fallback['name']!, _activeCategory, fallback['path']!);
-        }
-      });
-    }
+
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,12 +163,6 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
                   setState(() {
                     _activeCategory = cat;
                   });
-                  final reciters = _recitersByCategory[cat] ?? [];
-                  if (reciters.isEmpty) return;
-
-                  final matchingInCat = reciters.where((r) => r['name'] == widget.selectedReciter).firstOrNull;
-                  final selected = matchingInCat ?? reciters.first;
-                  widget.onReciterSelected(selected['name']!, cat, selected['path']!);
                 },
                 borderRadius: BorderRadius.circular(16.r),
                 child: AnimatedContainer(

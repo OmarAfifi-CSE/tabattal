@@ -320,12 +320,40 @@ class AudioTimelineService {
   }
 
   static final Map<String, Duration> _durationCache = {};
+  static final Map<String, Uint8List> _audioBytesCache = {};
+
+  static Uint8List? getCachedAudioBytes(String path) => _audioBytesCache[path];
+  static void setCachedAudioBytes(String path, Uint8List bytes) {
+    _audioBytesCache[path] = bytes;
+  }
+  static void clearAudioBytesCache() {
+    _audioBytesCache.clear();
+  }
+
+  /// Downloads and caches the raw audio bytes for a remote audio URL.
+  Future<Uint8List?> getAyahAudioBytes(String url) async {
+    final cached = _audioBytesCache[url];
+    if (cached != null && cached.isNotEmpty) return cached;
+    try {
+      final response = await _dio.get<List<int>>(
+        url,
+        options: Options(responseType: ResponseType.bytes),
+        cancelToken: _cancelToken,
+      );
+      if (response.statusCode == 200 && response.data != null) {
+        final bytes = Uint8List.fromList(response.data!);
+        _audioBytesCache[url] = bytes;
+        return bytes;
+      }
+    } catch (_) {}
+    return null;
+  }
 
   /// Measures exact duration of each audio file with in-memory caching
   /// for zero-jank instant response on both Web and Native platforms.
   ///
-  /// Uses pure Dart MP3 parsing on local files to completely avoid native audio
-  /// player instantiation, eliminating WinRT use-after-free and thread collisions.
+  /// Uses pure Dart MP3 parsing on local files and parallel byte streaming on Web,
+  /// completely avoiding native audio player instantiation and eliminating WinRT/Web timeouts.
   Future<List<Duration>> measureDurations({
     required List<String> audioFilePaths,
   }) async {
@@ -360,41 +388,74 @@ class AudioTimelineService {
       return results;
     }
 
-    // 2. Safe sequential fallback for web URLs or non-standard formats.
-    // By using a single player sequentially, we avoid the WinRT / native
-    // thread contention crash caused by concurrent player instances.
-    final player = AudioPlayer();
-    try {
-      for (final idx in unmeasuredIndices) {
+    // 2. High-speed parallel byte fetching and pure Dart MP3 parsing for Web / HTTP URLs.
+    // Completely eliminates the fragile AudioPlayer.setUrl sequential loop with fake 4s fallbacks!
+    if (kIsWeb || unmeasuredIndices.any((i) => audioFilePaths[i].startsWith('http'))) {
+      final httpIndices = unmeasuredIndices.where((i) => audioFilePaths[i].startsWith('http') || kIsWeb).toList();
+      final futures = httpIndices.map((idx) async {
         final path = audioFilePaths[idx];
-        Duration? d;
         try {
-          if (path.startsWith('http') || kIsWeb) {
-            d = await player.setUrl(path).timeout(const Duration(seconds: 4));
-            d ??= player.duration;
-          } else {
-            d = await player.setFilePath(path).timeout(const Duration(seconds: 3));
-            d ??= player.duration;
+          Uint8List? bytes = _audioBytesCache[path];
+          if (bytes == null || bytes.isEmpty) {
+            bytes = await getAyahAudioBytes(path);
           }
-        } catch (_) {
-          d = null;
-        }
 
-        // A failed probe must NEVER be cached: caching the 4s fallback would
-        // poison every later lookup (including after the backend recovers and
-        // could report the real duration). Fallbacks are returned uncached so
-        // the next call re-measures.
-        if (d != null && d > Duration.zero) {
-          _durationCache[path] = d;
-          results[idx] = d;
-        } else {
-          results[idx] = const Duration(seconds: 4);
+          if (bytes != null && bytes.isNotEmpty) {
+            final parsed = Mp3DurationParser.parseBytes(bytes);
+            if (parsed != null && parsed > Duration.zero) {
+              _durationCache[path] = parsed;
+              results[idx] = parsed;
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('AudioTimelineService: failed to fetch/parse $path: $e');
+          }
         }
+      });
+
+      await Future.wait(futures);
+    }
+
+    // 3. Fallback for remaining unmeasured items (e.g. non-MP3, streams, or mocked test environments)
+    final remainingIndices = <int>[];
+    for (final idx in unmeasuredIndices) {
+      if (results[idx] == Duration.zero) {
+        remainingIndices.add(idx);
       }
-    } finally {
+    }
+
+    if (remainingIndices.isNotEmpty && !kIsWeb) {
+      final player = AudioPlayer();
       try {
-        await player.dispose();
-      } catch (_) {}
+        for (final idx in remainingIndices) {
+          final path = audioFilePaths[idx];
+          Duration? d;
+          try {
+            if (path.startsWith('http')) {
+              d = await player.setUrl(path).timeout(const Duration(seconds: 4));
+              d ??= player.duration;
+            } else {
+              d = await player.setFilePath(path).timeout(const Duration(seconds: 3));
+              d ??= player.duration;
+            }
+          } catch (_) {
+            d = null;
+          }
+
+          if (d != null && d > Duration.zero) {
+            _durationCache[path] = d;
+            results[idx] = d;
+          } else {
+            // Return uncached fallback for failed probe so it can be retried
+            results[idx] = const Duration(seconds: 4);
+          }
+        }
+      } finally {
+        try {
+          await player.dispose();
+        } catch (_) {}
+      }
     }
 
     return results;
