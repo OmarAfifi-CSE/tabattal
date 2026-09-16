@@ -90,6 +90,9 @@ class Win32Window {
   // Update the window frame's theme to match the system theme.
   static void UpdateTheme(HWND const window);
 
+  // Updates window big and small icons dynamically for the given DPI.
+  void UpdateWindowIcons(UINT dpi);
+
   bool quit_on_close_ = false;
 
   // window handle for top level window.

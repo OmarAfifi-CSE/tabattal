@@ -145,8 +145,36 @@ bool Win32Window::Create(const std::wstring& title,
   }
 
   UpdateTheme(window);
+  UpdateWindowIcons(dpi);
 
   return OnCreate();
+}
+
+void Win32Window::UpdateWindowIcons(UINT dpi) {
+  if (!window_handle_) {
+    return;
+  }
+  using GetSystemMetricsForDpiFunc = int __stdcall(int nIndex, UINT dpi);
+  static auto get_metrics_for_dpi = reinterpret_cast<GetSystemMetricsForDpiFunc*>(
+      GetProcAddress(GetModuleHandleW(L"User32.dll"), "GetSystemMetricsForDpi"));
+
+  int cx_icon = get_metrics_for_dpi ? get_metrics_for_dpi(SM_CXICON, dpi) : GetSystemMetrics(SM_CXICON);
+  int cy_icon = get_metrics_for_dpi ? get_metrics_for_dpi(SM_CYICON, dpi) : GetSystemMetrics(SM_CYICON);
+  int cx_smicon = get_metrics_for_dpi ? get_metrics_for_dpi(SM_CXSMICON, dpi) : GetSystemMetrics(SM_CXSMICON);
+  int cy_smicon = get_metrics_for_dpi ? get_metrics_for_dpi(SM_CYSMICON, dpi) : GetSystemMetrics(SM_CYSMICON);
+
+  HICON icon_big = static_cast<HICON>(
+      LoadImage(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_APP_ICON),
+                IMAGE_ICON, cx_icon, cy_icon, LR_DEFAULTCOLOR | LR_SHARED));
+  if (icon_big) {
+    SendMessage(window_handle_, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(icon_big));
+  }
+  HICON icon_small = static_cast<HICON>(
+      LoadImage(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_APP_ICON),
+                IMAGE_ICON, cx_smicon, cy_smicon, LR_DEFAULTCOLOR | LR_SHARED));
+  if (icon_small) {
+    SendMessage(window_handle_, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icon_small));
+  }
 }
 
 bool Win32Window::Show() {
@@ -188,6 +216,9 @@ Win32Window::MessageHandler(HWND hwnd,
       return 0;
 
     case WM_DPICHANGED: {
+      UINT new_dpi = HIWORD(wparam);
+      UpdateWindowIcons(new_dpi);
+
       auto newRectSize = reinterpret_cast<RECT*>(lparam);
       LONG newWidth = newRectSize->right - newRectSize->left;
       LONG newHeight = newRectSize->bottom - newRectSize->top;
