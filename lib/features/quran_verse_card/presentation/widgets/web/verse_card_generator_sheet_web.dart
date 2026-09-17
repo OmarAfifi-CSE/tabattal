@@ -1045,8 +1045,16 @@ class _VerseCardGeneratorSheetWebContentState
                                       ),
                                     );
                                   },
-                                  statusMessage: _statusMessage,
-                                  isSuccessStatus: _isSuccessStatus,
+                                   statusMessage: _statusMessage ??
+                                       (_selectedFormat == ShareFormat.video &&
+                                               videoState.errorMessage != null &&
+                                               videoState.errorMessage!.isNotEmpty
+                                           ? VideoStudioErrorHelper.getLocalizedError(
+                                               context,
+                                               videoState.errorMessage,
+                                             )
+                                           : null),
+                                   isSuccessStatus: _statusMessage != null ? _isSuccessStatus : false,
                                 ),
                               ],
                             ),
@@ -1174,8 +1182,16 @@ class _VerseCardGeneratorSheetWebContentState
                             ),
                           );
                         },
-                        statusMessage: _statusMessage,
-                        isSuccessStatus: _isSuccessStatus,
+                        statusMessage: _statusMessage ??
+                            (_selectedFormat == ShareFormat.video &&
+                                    videoState.errorMessage != null &&
+                                    videoState.errorMessage!.isNotEmpty
+                                ? VideoStudioErrorHelper.getLocalizedError(
+                                    context,
+                                    videoState.errorMessage,
+                                  )
+                                : null),
+                        isSuccessStatus: _statusMessage != null ? _isSuccessStatus : false,
                       ),
                     ],
                 ],

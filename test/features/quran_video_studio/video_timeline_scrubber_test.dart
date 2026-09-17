@@ -20,7 +20,7 @@ class _MockRepo extends Fake implements IVideoStudioRepository {
   @override
   Future<List<String>> prepareVerseAudioFiles({required String reciterPath, required int surahNumber, required int startAyah, required int endAyah, void Function(double)? onDownloadProgress}) async => [];
   @override
-  Future<List<Duration>> measureVerseDurations({required List<String> audioFilePaths}) async => [];
+  Future<List<Duration>> measureVerseDurations({required List<String> audioFilePaths, int? firstAyahNumber}) async => [];
   @override
   void cancelAudioPreparation() {}
 }

@@ -232,5 +232,100 @@ void main() {
       );
       expect(enEmptyFile, contains('empty'));
     });
+
+    testWidgets('Translates duration measurement, missing files, frame creation, and surah errors in Arabic and English', (tester) async {
+      late BuildContext arContext;
+      await tester.pumpWidget(buildTestWidget(
+        locale: const Locale('ar'),
+        onContext: (ctx) => arContext = ctx,
+      ));
+      await tester.pumpAndSettle();
+
+      // Duration measurement for ayah 3 (contains "الإنترنت" but should map to duration measurement error)
+      final arMeasure = VideoStudioErrorHelper.getLocalizedError(
+        arContext,
+        'تعذر قياس مدة المقطع الصوتي بدقة للآية 3. يُرجى التحقق من الاتصال بالإنترنت أو توفر الملف الصوتي.',
+      );
+      expect(arMeasure, contains('3'));
+      expect(arMeasure, contains('قياس'));
+
+      // Audio file for ayah 5 not found
+      final arFileNotFound = VideoStudioErrorHelper.getLocalizedError(
+        arContext,
+        'تعذر العثور على الملف الصوتي للآية 5',
+      );
+      expect(arFileNotFound, contains('5'));
+      expect(arFileNotFound, contains('الملف الصوتي'));
+
+      // Surah not downloaded
+      final arSurah = VideoStudioErrorHelper.getLocalizedError(
+        arContext,
+        'السورة غير محملة محليًا على الجهاز للقارئ المحدد',
+      );
+      expect(arSurah, contains('محملة'));
+
+      // Base card frame failure
+      final arBaseFrame = VideoStudioErrorHelper.getLocalizedError(
+        arContext,
+        'Failed to create base card frame',
+      );
+      expect(arBaseFrame, contains('الإطار الأساسي'));
+
+      // Verse text render failure
+      final arRenderText = VideoStudioErrorHelper.getLocalizedError(
+        arContext,
+        'Failed to render text for verse 7',
+      );
+      expect(arRenderText, contains('7'));
+
+      // Timeline incomplete
+      final arTimeline = VideoStudioErrorHelper.getLocalizedError(
+        arContext,
+        'قائمة مدد الآيات غير مكتملة',
+      );
+      expect(arTimeline, contains('قائمة مدد'));
+
+      // Technical stacktrace in Arabic context does not leak raw text
+      final arRawException = VideoStudioErrorHelper.getLocalizedError(
+        arContext,
+        'Exception: Something went wrong at line 42 with stack trace: ...',
+      );
+      expect(arRawException, isNot(contains('stack trace')));
+      expect(arRawException, contains('تعذر'));
+
+      // English Context
+      late BuildContext enContext;
+      await tester.pumpWidget(buildTestWidget(
+        locale: const Locale('en'),
+        onContext: (ctx) => enContext = ctx,
+      ));
+      await tester.pumpAndSettle();
+
+      final enMeasure = VideoStudioErrorHelper.getLocalizedError(
+        enContext,
+        'تعذر قياس مدة المقطع الصوتي بدقة للآية 3',
+      );
+      expect(enMeasure, contains('3'));
+      expect(enMeasure, contains('measure'));
+
+      final enFileNotFound = VideoStudioErrorHelper.getLocalizedError(
+        enContext,
+        'Audio file for ayah 5 not found',
+      );
+      expect(enFileNotFound, contains('5'));
+      expect(enFileNotFound, contains('Audio file'));
+
+      final enSurah = VideoStudioErrorHelper.getLocalizedError(
+        enContext,
+        'السورة غير محملة محليًا على الجهاز للقارئ المحدد',
+      );
+      expect(enSurah, contains('surah is not downloaded'));
+
+      final enBaseFrame = VideoStudioErrorHelper.getLocalizedError(
+        enContext,
+        'فشل في إنشاء الإطار الأساسي للبطاقة',
+      );
+      expect(enBaseFrame, contains('base card frame'));
+    });
   });
 }

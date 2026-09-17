@@ -2050,6 +2050,30 @@ abstract class AppLocalizations {
   /// **'ملف الفيديو المختار فارغ أو غير صالح. يُرجى اختيار مقطع فيديو آخر.'**
   String get videoStudioEmptyFile;
 
+  /// No description provided for @videoStudioAudioFileNotFound.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر العثور على الملف الصوتي للآية {ayah}'**
+  String videoStudioAudioFileNotFound(int ayah);
+
+  /// No description provided for @videoStudioSurahNotDownloaded.
+  ///
+  /// In ar, this message translates to:
+  /// **'السورة غير محملة محليًّا على هذا الجهاز للقارئ المحدد. يُرجى الاتصال بالإنترنت لتشغيلها.'**
+  String get videoStudioSurahNotDownloaded;
+
+  /// No description provided for @videoStudioCustomVideoNotFound.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر العثور على ملف الفيديو الخلفي المخصص. يُرجى اختياره مجددًا.'**
+  String get videoStudioCustomVideoNotFound;
+
+  /// No description provided for @videoStudioCustomImageNotFound.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر العثور على ملف الصورة الخلفية المخصصة. يُرجى اختيارها مجددًا.'**
+  String get videoStudioCustomImageNotFound;
+
   /// No description provided for @searchFilterAll.
   ///
   /// In ar, this message translates to:

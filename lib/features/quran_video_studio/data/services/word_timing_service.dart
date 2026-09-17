@@ -35,6 +35,25 @@ class WordTimingService {
     _inFlightChapterRequests.clear();
   }
 
+  /// Clears only the chapter-level fetch cache — including negative results
+  /// from failed/unusable downloads — so a new load genuinely re-attempts
+  /// timing fetches (retry semantics), while keeping the verse-level positive
+  /// cache (and test fixtures primed into it) intact.
+  static void resetChapterFetches() {
+    _chapterCache.clear();
+    _inFlightChapterRequests.clear();
+  }
+
+  /// Populates the verse cache with pre-verified segments for testing or offline fixtures.
+  @visibleForTesting
+  static void primeVerseCacheForTesting(
+    String reciterPath,
+    String verseKey,
+    List<WordTimingSegment> segments,
+  ) {
+    _verseCache['$reciterPath:$verseKey'] = segments;
+  }
+
   /// Verified Quran.com API recitation IDs mapped directly to studio reciter paths
   static const Map<String, int> _verifiedReciterIdMap = {
     'Minshawy_Murattal_128kbps': 9,
@@ -81,8 +100,9 @@ class WordTimingService {
   }
 
   /// Retrieves verified, millisecond-accurate word timing segments for a verse and reciter.
-  /// Strictly requires authentic timing from the recitation API and throws an exception
-  /// if verified data is unavailable, ensuring zero estimation or guesswork.
+  /// Strictly requires authentic timing from the recitation API; when verified data is
+  /// unavailable (unknown reciter, network failure, or missing segments), throws an
+  /// explicit exception so the user is informed without any fake or guessed timings.
   Future<List<WordTimingSegment>> getWordTimings({
     required int surahNumber,
     required VerseModel verse,
@@ -96,8 +116,11 @@ class WordTimingService {
     }
 
     final recitationId = getQuranDotComRecitationId(reciterPath);
+
     if (recitationId == null) {
-      throw Exception('لا تتوفر تسجيلات توقيت حقيقية بالكلمة للقارئ المختار ($reciterPath).');
+      throw Exception(
+        'لا تتوفر بيانات توقيت حقيقية لكلمات الآيات بصوت هذا القارئ على خادم التوقيت. يُرجى اختيار قارئ آخر تتوفر له توقيتات دقيقة.',
+      );
     }
 
     final chapterKey = '$recitationId:$surahNumber';
@@ -108,6 +131,7 @@ class WordTimingService {
         await _inFlightChapterRequests[chapterKey];
       } else {
         final completerFuture = () async {
+          Map<String, List<WordTimingSegment>>? fetched;
           try {
             final url = 'https://api.quran.com/api/v4/chapter_recitations/$recitationId/$surahNumber?segments=true';
             final response = await _dio.get(url);
@@ -156,7 +180,9 @@ class WordTimingService {
                     }
                   }
                 }
-                _chapterCache[chapterKey] = chapterMap;
+                if (chapterMap.isNotEmpty) {
+                  fetched = chapterMap;
+                }
               }
             }
           } catch (e) {
@@ -166,6 +192,10 @@ class WordTimingService {
           } finally {
             _inFlightChapterRequests.remove(chapterKey);
           }
+          // ALWAYS resolve the chapter key — an empty map marks a failed or
+          // unusable fetch so the remaining verses of this load fail FAST
+          // instead of re-downloading the whole chapter once per verse.
+          _chapterCache[chapterKey] = fetched ?? const {};
         }();
         _inFlightChapterRequests[chapterKey] = completerFuture;
         await completerFuture;

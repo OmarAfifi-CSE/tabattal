@@ -8,6 +8,7 @@ import '../../../domain/entities/video_enums.dart';
 import '../../bloc/video_studio_bloc.dart';
 import '../../bloc/video_studio_event.dart';
 import '../../bloc/video_studio_state.dart';
+import '../../utils/video_studio_error_helper.dart';
 import 'video_background_player_view.dart';
 import 'video_frame_painter.dart';
 import 'video_timeline_scrubber.dart';
@@ -181,6 +182,50 @@ class VideoPreviewViewport extends StatelessWidget {
                       state: state,
                     ),
 
+                  // Error indicator / localized banner when audio load failed
+                  if (state.errorMessage != null && state.audioFilePaths.isEmpty)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 6.h),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(
+                            color: Colors.red.withValues(alpha: 0.25),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.error_outline_rounded,
+                              size: 14.r,
+                              color: Colors.red.shade700,
+                            ),
+                            SizedBox(width: 6.w),
+                            Flexible(
+                              child: Text(
+                                VideoStudioErrorHelper.getLocalizedError(
+                                  context,
+                                  state.errorMessage,
+                                ),
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  color: Colors.red.shade800,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
                   // Verse indicator / step text
                   if (totalVerses > 0)
                     Padding(
@@ -291,13 +336,15 @@ class VideoPreviewViewport extends StatelessWidget {
                                           ),
                                         ),
                                       )
-                                    : Icon(
-                                        state.isPlaying
-                                            ? Icons.pause_rounded
-                                            : Icons.play_arrow_rounded,
-                                        color: Colors.white,
-                                        size: 26.r,
-                                      ),
+                                     : Icon(
+                                         state.errorMessage != null && state.audioFilePaths.isEmpty
+                                             ? Icons.refresh_rounded
+                                             : (state.isPlaying
+                                                 ? Icons.pause_rounded
+                                                 : Icons.play_arrow_rounded),
+                                         color: Colors.white,
+                                         size: 26.r,
+                                       ),
                               ),
                             ),
                             SizedBox(width: 14.w),

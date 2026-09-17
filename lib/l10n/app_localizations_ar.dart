@@ -1105,6 +1105,23 @@ class AppLocalizationsAr extends AppLocalizations {
       'ملف الفيديو المختار فارغ أو غير صالح. يُرجى اختيار مقطع فيديو آخر.';
 
   @override
+  String videoStudioAudioFileNotFound(int ayah) {
+    return 'تعذر العثور على الملف الصوتي للآية $ayah';
+  }
+
+  @override
+  String get videoStudioSurahNotDownloaded =>
+      'السورة غير محملة محليًّا على هذا الجهاز للقارئ المحدد. يُرجى الاتصال بالإنترنت لتشغيلها.';
+
+  @override
+  String get videoStudioCustomVideoNotFound =>
+      'تعذر العثور على ملف الفيديو الخلفي المخصص. يُرجى اختياره مجددًا.';
+
+  @override
+  String get videoStudioCustomImageNotFound =>
+      'تعذر العثور على ملف الصورة الخلفية المخصصة. يُرجى اختيارها مجددًا.';
+
+  @override
   String get searchFilterAll => 'الكل';
 
   @override

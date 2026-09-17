@@ -25,19 +25,32 @@ class AuditRepository extends Fake implements IVideoStudioRepository {
   Future<List<String>> prepareVerseAudioFiles({required String reciterPath, required int surahNumber, required int startAyah, required int endAyah, void Function(double)? onDownloadProgress}) async =>
     List.generate(endAyah - startAyah + 1, (i) => 'https://example.invalid/${startAyah + i}.mp3');
   @override
-  Future<List<Duration>> measureVerseDurations({required List<String> audioFilePaths}) async => List.filled(audioFilePaths.length, const Duration(seconds: 30));
+  Future<List<Duration>> measureVerseDurations({required List<String> audioFilePaths, int? firstAyahNumber}) async => List.filled(audioFilePaths.length, const Duration(seconds: 30));
   @override
   void cancelAudioPreparation() {}
 }
 
 class AuditPlatform extends JustAudioPlatform {
-  late AuditPlayer player;
-  bool failLoads = false;
+  final players = <AuditPlayer>[];
+  bool _failLoads = false;
+  bool get failLoads => _failLoads;
+  set failLoads(bool val) {
+    _failLoads = val;
+    for (final p in players) {
+      p.failLoads = val;
+    }
+  }
+  AuditPlayer get player => players.last;
   @override
-  Future<AudioPlayerPlatform> init(InitRequest request) async => player = AuditPlayer(request.id)..failLoads = failLoads;
+  Future<AudioPlayerPlatform> init(InitRequest request) async {
+    final p = AuditPlayer(request.id)..failLoads = _failLoads;
+    players.add(p);
+    return p;
+  }
   @override
   Future<DisposePlayerResponse> disposePlayer(DisposePlayerRequest request) async {
-    await player.events.close();
+    final p = players.firstWhere((e) => e.id == request.id, orElse: () => player);
+    await p.events.close();
     return DisposePlayerResponse();
   }
   @override
@@ -104,6 +117,7 @@ void main() {
   setUp(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
       const MethodChannel('com.ryanheise.audio_session'), (_) async => null);
+    AudioTimelineService.clearDurationCache();
     platform = AuditPlatform();
     JustAudioPlatform.instance = platform;
     repository = AuditRepository();
@@ -147,15 +161,21 @@ void main() {
     expect(platform.player.loadedUri, endsWith('/3.mp3'), reason: 'Later click was published but its source swap was dropped.');
   });
 
-  test('A failed duration probe must not cache a made-up duration for later successful probes', () async {
+  test('A failed duration probe must throw an exception and never cache fake durations', () async {
     final service = AudioTimelineService();
     const paths = ['https://example.invalid/duration-fixture.mp3'];
     platform.failLoads = true;
-    final failed = await service.measureDurations(audioFilePaths: paths);
-    expect(failed.single, const Duration(seconds: 4));
+    await expectLater(
+      () => service.measureDurations(audioFilePaths: paths),
+      throwsA(isA<Exception>().having(
+        (e) => e.toString(),
+        'message',
+        contains('تعذر قياس مدة المقطع الصوتي بدقة'),
+      )),
+    );
     platform.failLoads = false;
     final retried = await service.measureDurations(audioFilePaths: paths);
-    expect(retried.single, const Duration(seconds: 30), reason: 'Successful backend duration is 30 seconds; the fallback must not poison its cache.');
+    expect(retried.single, const Duration(seconds: 30), reason: 'Successful backend duration is 30 seconds; no fake fallback was cached.');
   });
 
   test('Reciter and verse-range reloads must commit one coherent latest snapshot', () async {

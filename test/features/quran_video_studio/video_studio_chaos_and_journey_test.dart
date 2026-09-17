@@ -55,6 +55,7 @@ class _ChaosRepository extends Fake implements IVideoStudioRepository {
   @override
   Future<List<Duration>> measureVerseDurations({
     required List<String> audioFilePaths,
+    int? firstAyahNumber,
   }) async {
     if (shouldThrow) throw Exception('Simulated probe error');
     return List.filled(audioFilePaths.length, const Duration(seconds: 25));

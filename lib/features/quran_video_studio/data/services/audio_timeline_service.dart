@@ -321,6 +321,11 @@ class AudioTimelineService {
 
   static final Map<String, Duration> _durationCache = {};
 
+  /// Clears in-memory duration cache (useful for cache eviction and test isolation).
+  static void clearDurationCache() {
+    _durationCache.clear();
+  }
+
   /// Measures exact duration of each audio file with in-memory caching
   /// for zero-jank instant response on both Web and Native platforms.
   ///
@@ -328,8 +333,13 @@ class AudioTimelineService {
   /// player instantiation, eliminating WinRT use-after-free and thread collisions.
   Future<List<Duration>> measureDurations({
     required List<String> audioFilePaths,
+    int? firstAyahNumber,
   }) async {
     if (audioFilePaths.isEmpty) return [];
+
+    // The paths are always ordered as startAyah..endAyah; the first index maps
+    // to the real surah ayah number so failure messages never mislead the user.
+    int ayahNumberAt(int idx) => (firstAyahNumber ?? 1) + idx;
 
     final List<Duration> results = List.filled(audioFilePaths.length, Duration.zero);
     final List<int> unmeasuredIndices = [];
@@ -360,9 +370,42 @@ class AudioTimelineService {
       return results;
     }
 
-    // 2. Safe sequential fallback for web URLs or non-standard formats.
-    // By using a single player sequentially, we avoid the WinRT / native
-    // thread contention crash caused by concurrent player instances.
+    // 2. Web: probe all URLs in PARALLEL with one short-lived player per URL.
+    // Sequential probing through a shared player is only needed on Windows to
+    // avoid WinRT thread contention; on the web it multiplied every reciter /
+    // verse-range load latency by the verse count (up to 4s per ayah), during
+    // which any user interaction replayed or cancelled the pending load.
+    if (kIsWeb) {
+      await Future.wait(unmeasuredIndices.map((idx) async {
+        final path = audioFilePaths[idx];
+        final player = AudioPlayer();
+        Duration? d;
+        try {
+          d = await player.setUrl(path).timeout(const Duration(seconds: 4));
+          d ??= player.duration;
+        } catch (_) {
+          d = null;
+        } finally {
+          try {
+            await player.dispose();
+          } catch (_) {}
+        }
+
+        if (d != null && d > Duration.zero) {
+          _durationCache[path] = d;
+          results[idx] = d;
+        } else {
+          throw Exception(
+            'تعذر قياس مدة المقطع الصوتي بدقة للآية ${ayahNumberAt(idx)}. يُرجى التحقق من الاتصال بالإنترنت أو توفر الملف الصوتي.',
+          );
+        }
+      }));
+      return results;
+    }
+
+    // 3. Safe sequential fallback for Windows native URLs or non-standard
+    // formats. By using a single player sequentially, we avoid the WinRT /
+    // native thread contention crash caused by concurrent player instances.
     final player = AudioPlayer();
     try {
       for (final idx in unmeasuredIndices) {
@@ -380,15 +423,13 @@ class AudioTimelineService {
           d = null;
         }
 
-        // A failed probe must NEVER be cached: caching the 4s fallback would
-        // poison every later lookup (including after the backend recovers and
-        // could report the real duration). Fallbacks are returned uncached so
-        // the next call re-measures.
         if (d != null && d > Duration.zero) {
           _durationCache[path] = d;
           results[idx] = d;
         } else {
-          results[idx] = const Duration(seconds: 4);
+          throw Exception(
+            'تعذر قياس مدة المقطع الصوتي بدقة للآية ${ayahNumberAt(idx)}. يُرجى التحقق من الملف الصوتي أو الاتصال بالإنترنت.',
+          );
         }
       }
     } finally {

@@ -595,6 +595,15 @@
   "videoStudioInvalidUrl": "URL must begin with http:// or https://",
   "videoStudioDownloadUrlFailed": "Failed to download video from the specified URL. Please verify the link and try again.",
   "videoStudioEmptyFile": "The selected video file is empty or invalid. Please choose another video.",
+  "videoStudioAudioFileNotFound": "Audio file for verse {ayah} not found",
+  "@videoStudioAudioFileNotFound": {
+    "placeholders": {
+      "ayah": { "type": "int" }
+    }
+  },
+  "videoStudioSurahNotDownloaded": "The surah is not downloaded locally on this device for the selected reciter. Please connect to the internet to play it.",
+  "videoStudioCustomVideoNotFound": "Custom background video file not found. Please select it again.",
+  "videoStudioCustomImageNotFound": "Custom background image file not found. Please select it again.",
   "searchFilterAll": "All",
   "appVolume": "App Volume",
   "mute": "Mute",

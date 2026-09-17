@@ -37,7 +37,7 @@ dependencies:
 
   # --- Audio Playback Suite (Mobile, Web & Desktop) ---
   just_audio: ^0.10.5
-  just_audio_windows_plus: ^0.4.0
+  just_audio_windows_plus: ^0.5.1
   audio_service: ^0.18.18
 
   # --- Quran Video Studio & Media Processing ---

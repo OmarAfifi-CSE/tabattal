@@ -298,7 +298,12 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       _timelinePositionController.add(Duration.zero);
     }
     try {
-      if (_previewPlayer.playing) {
+      if (kIsWeb) {
+        // Web has no WinRT teardown hazard: stop() detaches the previous
+        // reciter's audio source so a failed or superseded reload can never
+        // leave the old (e.g. Minshawi) source loaded and playable.
+        await _previewPlayer.stop();
+      } else if (_previewPlayer.playing) {
         await _previewPlayer.pause();
       }
     } catch (_) {}
@@ -343,7 +348,11 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       _timelinePositionController.add(Duration.zero);
     }
     try {
-      if (_previewPlayer.playing) {
+      if (kIsWeb) {
+        // See _onReciterChanged: stop() guarantees the previous range/reciter
+        // audio never outlives a failed or superseded reload on the web.
+        await _previewPlayer.stop();
+      } else if (_previewPlayer.playing) {
         await _previewPlayer.pause();
       }
     } catch (_) {}
@@ -534,6 +543,11 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     VideoStudioPlaybackToggled event,
     Emitter<VideoStudioState> emit,
   ) async {
+    // An audio load is in flight (reciter/range/retry): starting playback now
+    // would either replay the previous reciter's stale source or race the
+    // pending commit. The play button shows a spinner while preparing.
+    if (state.isPreparingAudio) return;
+
     if (state.audioFilePaths.isEmpty) {
       await _loadAudioAndVersesForCurrentSpan(emit);
     }
@@ -967,6 +981,10 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     final int myLoadGen = ++_loadGeneration;
     final VideoProjectConfig loadConfig = state.config;
     final List<VerseModel> previousVerses = List<VerseModel>.of(state.verses);
+    // A fresh load must re-attempt any previously failed/unusable timing fetch
+    // (retry semantics); without this reset the negative chapter cache would
+    // fail every retry instantly until the app restarts.
+    WordTimingService.resetChapterFetches();
     emit(state.copyWith(isPreparingAudio: true, clearError: true));
 
     try {
@@ -992,7 +1010,10 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         );
         if (myLoadGen != _loadGeneration || emit.isDone) return;
 
-        final durations = await repository.measureVerseDurations(audioFilePaths: paths);
+        final durations = await repository.measureVerseDurations(
+          audioFilePaths: paths,
+          firstAyahNumber: loadConfig.startAyah,
+        );
         if (myLoadGen != _loadGeneration || emit.isDone) return;
         final Map<int, List<WordTimingSegment>> timingsMap = {};
 
@@ -1043,7 +1064,12 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
           mergedAudioPath = await repository.prepareMergedAudio(audioFilePaths: paths);
           if (myLoadGen != _loadGeneration || emit.isDone) return;
           try {
-            if (_previewPlayer.playing) {
+            if (kIsWeb) {
+              // Web: never leave a stale playable source attached while the
+              // new one is being prepared (a failure below must not leave the
+              // previous reciter's audio playable).
+              await _previewPlayer.stop();
+            } else if (_previewPlayer.playing) {
               await _previewPlayer.pause();
             }
             if (mergedAudioPath != null) {
@@ -1063,13 +1089,14 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
                 _verseSwitchDepth--;
               }
             } else {
-              // ignore: deprecated_member_use
-              final playlist = ConcatenatingAudioSource(
-                children: paths.map(_createAudioSource).toList(),
-              );
-              await _previewPlayer.setAudioSource(
-                playlist,
+              // Web: flat root playlist (proven structure) — nested
+              // ConcatenatingAudioSource lazy preparation is unsupported in
+              // the browser engine and can stall inter-verse advancement.
+              await _previewPlayer.setAudioSources(
+                paths.map(_createAudioSource).toList(),
                 initialIndex: 0,
+                initialPosition: Duration.zero,
+                preload: true,
               );
             }
           } catch (e) {
@@ -1090,7 +1117,14 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
             wordTimingsMap: timingsMap,
             isPreparingAudio: false,
             currentVerseIndex: 0,
+            // A reload always ends playback (the player is paused/reset above);
+            // without this, a play() issued on a stale source mid-load leaves
+            // the UI showing "playing" while nothing sounds.
+            isPlaying: false,
             mergedPreviewAudioPath: mergedAudioPath,
+            // copyWith treats null as "keep" — explicitly clear a stale merged
+            // path so an unmerged/failed merge never resurrects previous audio.
+            clearMergedPreviewAudio: mergedAudioPath == null,
             lastSeekPosition: Duration.zero,
             seekTrigger: state.seekTrigger + 1,
             playbackResetTrigger: state.playbackResetTrigger + 1,
@@ -1099,6 +1133,14 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         );
     } catch (e) {
       if (myLoadGen != _loadGeneration || emit.isDone) return;
+      try {
+        if (kIsWeb) {
+          await _previewPlayer.stop();
+        } else if (_previewPlayer.playing) {
+          await _previewPlayer.pause();
+        }
+      } catch (_) {}
+
       final cleanMsg = e.toString().replaceAll('Exception:', '').trim();
       final defaultMsg = loadConfig.isEnglish
           ? 'Failed to load recitation for selected reciter'
@@ -1106,6 +1148,9 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       emit(
         state.copyWith(
           isPreparingAudio: false,
+          isPlaying: false,
+          audioFilePaths: const [],
+          clearMergedPreviewAudio: true,
           errorMessage: cleanMsg.isNotEmpty ? cleanMsg : defaultMsg,
         ),
       );

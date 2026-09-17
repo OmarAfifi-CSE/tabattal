@@ -1108,6 +1108,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'The selected video file is empty or invalid. Please choose another video.';
 
   @override
+  String videoStudioAudioFileNotFound(int ayah) {
+    return 'Audio file for verse $ayah not found';
+  }
+
+  @override
+  String get videoStudioSurahNotDownloaded =>
+      'The surah is not downloaded locally on this device for the selected reciter. Please connect to the internet to play it.';
+
+  @override
+  String get videoStudioCustomVideoNotFound =>
+      'Custom background video file not found. Please select it again.';
+
+  @override
+  String get videoStudioCustomImageNotFound =>
+      'Custom background image file not found. Please select it again.';
+
+  @override
   String get searchFilterAll => 'All';
 
   @override

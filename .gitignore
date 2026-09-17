@@ -5,6 +5,7 @@ skills-lock.json
 *.log
 *.pyc
 *.swp
+*.bak
 .DS_Store
 .atom/
 .build/

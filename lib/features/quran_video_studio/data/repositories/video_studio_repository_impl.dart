@@ -190,8 +190,12 @@ class VideoStudioRepositoryImpl implements IVideoStudioRepository {
   @override
   Future<List<Duration>> measureVerseDurations({
     required List<String> audioFilePaths,
+    int? firstAyahNumber,
   }) {
-    return _audioService.measureDurations(audioFilePaths: audioFilePaths);
+    return _audioService.measureDurations(
+      audioFilePaths: audioFilePaths,
+      firstAyahNumber: firstAyahNumber,
+    );
   }
 
   @override

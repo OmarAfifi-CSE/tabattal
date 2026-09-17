@@ -13,8 +13,11 @@ abstract class IVideoStudioRepository {
   });
 
   /// Reads or measures the audio durations of each prepared verse file.
+  /// [firstAyahNumber] is the actual surah ayah number of the first file, used
+  /// to report accurate ayah numbers in measurement failure messages.
   Future<List<Duration>> measureVerseDurations({
     required List<String> audioFilePaths,
+    int? firstAyahNumber,
   });
 
   /// Exports the final composite video emitting progress ticks.
