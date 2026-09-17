@@ -42,6 +42,27 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   int _activePlaylistGeneration = 0;
   bool _isPlayingOnce = false;
   bool _isSeekingRepeat = false;
+  int? _repeatingAyah;
+
+  /// just_audio echoes the requested seek position as a local playback event
+  /// the moment seek() is called — before the native pipeline has landed.
+  /// Unlocking on that echo would release the guard while the seek is still in
+  /// flight and let a late landing event flip the verse back. Block unlocks
+  /// until at least this much time has passed since the seek was issued.
+  static const Duration _seekEchoHold = Duration(milliseconds: 500);
+  DateTime _seekIssuedAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// Media pipelines (notably Windows/Media Foundation) may land a seek on the
+  /// audio frame immediately before the requested timestamp. When a verse
+  /// starts exactly where the previous verse ends, that landing maps to the
+  /// previous verse, resets the repeat counter and can trigger a bogus repeat.
+  /// A 50ms offset (the silence between verses, inaudible) keeps the landing
+  /// inside the target verse.
+  static const Duration _seekSafetyOffset = Duration(milliseconds: 50);
+
+  Duration _safeSeekTarget(VerseTimestamp verse) =>
+      verse.ayah > 1 ? verse.start + _seekSafetyOffset : verse.start;
+
   bool _isSingleVersePlayback = false;
   String? _currentAudioPath;
 
@@ -147,6 +168,11 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
           // Active verse transition: notify UI for instant highlight and update media metadata
           if (_currentPlayingAyah != verse.ayah) {
+            // Guard: While actively seeking to repeat the current verse, ignore transient
+            // positions (e.g. overshooting past end before seek lands, or stale platform broadcasts).
+            if (_isSeekingRepeat && _repeatingAyah != null && _repeatingAyah == _currentPlayingAyah) {
+              return;
+            }
             _currentPlayingAyah = verse.ayah;
             _playedCount = 0;
             add(AudioStateChanged(
@@ -156,25 +182,51 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
             unawaited(_updateMediaItem(VerseRef(verse.surah, verse.ayah)));
           }
 
+          // If we were seeking for repeat, once pos arrives back inside the repeating verse, clear the lock.
+          // The echo hold prevents just_audio's local seek-position echo from
+          // releasing the lock while the native pipeline is still landing.
+          if (_isSeekingRepeat && _repeatingAyah != null && verse.ayah == _repeatingAyah) {
+            final offsetFromStart = (pos - verse.start).inMilliseconds;
+            final holdElapsed = DateTime.now().difference(_seekIssuedAt);
+            if (offsetFromStart >= -50 &&
+                offsetFromStart < (verse.duration.inMilliseconds ~/ 2) + 500 &&
+                holdElapsed >= _seekEchoHold) {
+              _isSeekingRepeat = false;
+              _repeatingAyah = null;
+            }
+          }
+
           // Repeat count & Play Once management at verse boundary
           final msRemaining = (verse.end - pos).inMilliseconds;
-          if (msRemaining <= 120 && msRemaining >= -350 && !_isSeekingRepeat) {
+          if (msRemaining <= 120 && msRemaining >= -250 && !_isSeekingRepeat) {
             if (_currentRepeatCount == -1) {
               _isSeekingRepeat = true;
-              _audioPlayer.seek(verse.start).whenComplete(() {
-                Future.delayed(const Duration(milliseconds: 250), () {
-                  _isSeekingRepeat = false;
+              _seekIssuedAt = DateTime.now();
+              _repeatingAyah = verse.ayah;
+              _audioPlayer.seek(_safeSeekTarget(verse)).whenComplete(() {
+                Future.delayed(const Duration(milliseconds: 600), () {
+                  if (_isSeekingRepeat && _repeatingAyah == verse.ayah) {
+                    _isSeekingRepeat = false;
+                    _repeatingAyah = null;
+                  }
                 });
               });
             } else if (_currentRepeatCount > 1) {
               if (_playedCount + 1 < _currentRepeatCount) {
                 _isSeekingRepeat = true;
+                _seekIssuedAt = DateTime.now();
+                _repeatingAyah = verse.ayah;
                 _playedCount++;
-                _audioPlayer.seek(verse.start).whenComplete(() {
-                  Future.delayed(const Duration(milliseconds: 250), () {
-                    _isSeekingRepeat = false;
+                _audioPlayer.seek(_safeSeekTarget(verse)).whenComplete(() {
+                  Future.delayed(const Duration(milliseconds: 600), () {
+                    if (_isSeekingRepeat && _repeatingAyah == verse.ayah) {
+                      _isSeekingRepeat = false;
+                      _repeatingAyah = null;
+                    }
                   });
                 });
+              } else if (_isPlayingOnce) {
+                add(const StopAudio());
               }
             } else if (_isPlayingOnce) {
               add(const StopAudio());
@@ -259,6 +311,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         _currentPlayingAyah = null;
         _currentAudioPath = null;
         _playedCount = 0;
+        _isSeekingRepeat = false;
+        _repeatingAyah = null;
         _isSingleVersePlayback = false;
 
         try {
@@ -304,8 +358,17 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
                 _currentSurahTimings!.getVerse(verse.ayah) ?? _currentSurahTimings!.verseTimings.first;
             _currentPlayingAyah = targetVerse.ayah;
             _playedCount = 0;
+            _isSeekingRepeat = true;
+            _seekIssuedAt = DateTime.now();
+            _repeatingAyah = targetVerse.ayah;
 
-            await _audioPlayer.seek(targetVerse.start);
+            await _audioPlayer.seek(_safeSeekTarget(targetVerse));
+            Future.delayed(const Duration(milliseconds: 600), () {
+              if (_isSeekingRepeat && _repeatingAyah == targetVerse.ayah) {
+                _isSeekingRepeat = false;
+                _repeatingAyah = null;
+              }
+            });
           } else {
             _currentPlayingAyah = verse.ayah;
             _playedCount = 0;
@@ -413,7 +476,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         _isSingleVersePlayback = false;
         if (!isTimingUnavailable) {
           final targetVerse = timings.getVerse(verse.ayah) ?? timings.verseTimings.first;
-          initialPosition = targetVerse.start;
+          initialPosition = _safeSeekTarget(targetVerse);
           targetAyah = targetVerse.ayah;
           isStartOfSurah = targetAyah == 1 || targetVerse == timings.verseTimings.first;
         } else {
@@ -431,7 +494,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         _isSingleVersePlayback = false;
         if (!isTimingUnavailable) {
           final targetVerse = timings.getVerse(verse.ayah) ?? timings.verseTimings.first;
-          initialPosition = targetVerse.start;
+          initialPosition = _safeSeekTarget(targetVerse);
           targetAyah = targetVerse.ayah;
           isStartOfSurah = targetAyah == 1 || targetVerse == timings.verseTimings.first;
         } else {
@@ -491,6 +554,9 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       _currentPlayingAyah = targetAyah;
       _currentAudioPath = audioPath;
       _playedCount = 0;
+      _isSeekingRepeat = true;
+      _seekIssuedAt = DateTime.now();
+      _repeatingAyah = targetAyah;
       _activePlaylistGeneration = myGen;
 
       emit(AudioPlaying(
@@ -499,6 +565,14 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       ));
       unawaited(_updateMediaItem(VerseRef(verse.surah, targetAyah)));
       unawaited(_audioPlayer.play());
+      Future.delayed(const Duration(milliseconds: 600), () {
+        if (_activePlaylistGeneration == myGen &&
+            _isSeekingRepeat &&
+            _repeatingAyah == targetAyah) {
+          _isSeekingRepeat = false;
+          _repeatingAyah = null;
+        }
+      });
     } on PlayerException catch (e) {
       if (_playlistGeneration != myGen) return;
       final defaultKey = _isNetworkError(e) ? "audioErrorNoInternet" : "audioErrorFileNotFound";
@@ -551,6 +625,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     _currentPlayingAyah = null;
     _currentAudioPath = null;
     _playedCount = 0;
+    _isSeekingRepeat = false;
+    _repeatingAyah = null;
     _isSingleVersePlayback = false;
     try {
       await _audioPlayer.stop();
@@ -570,13 +646,24 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         if (nextVerse != null) {
           _currentPlayingAyah = nextAyah;
           _playedCount = 0;
+          _isSeekingRepeat = true;
+          _seekIssuedAt = DateTime.now();
+          _repeatingAyah = nextAyah;
           emit(AudioPlaying(nextVerse.verseId));
           unawaited(_updateMediaItem(VerseRef(_currentPlayingSurah!, nextAyah)));
           try {
-            await _audioPlayer.seek(nextVerse.start);
+            await _audioPlayer.seek(_safeSeekTarget(nextVerse));
             if (!_audioPlayer.playing) unawaited(_audioPlayer.play());
+            Future.delayed(const Duration(milliseconds: 600), () {
+              if (_isSeekingRepeat && _repeatingAyah == nextAyah) {
+                _isSeekingRepeat = false;
+                _repeatingAyah = null;
+              }
+            });
             return;
           } catch (_) {
+            _isSeekingRepeat = false;
+            _repeatingAyah = null;
             add(PlayVerse('', nextVerse.verseId));
             return;
           }
@@ -616,13 +703,24 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         if (prevVerse != null) {
           _currentPlayingAyah = prevAyah;
           _playedCount = 0;
+          _isSeekingRepeat = true;
+          _seekIssuedAt = DateTime.now();
+          _repeatingAyah = prevAyah;
           emit(AudioPlaying(prevVerse.verseId));
           unawaited(_updateMediaItem(VerseRef(_currentPlayingSurah!, prevAyah)));
           try {
-            await _audioPlayer.seek(prevVerse.start);
+            await _audioPlayer.seek(_safeSeekTarget(prevVerse));
             if (!_audioPlayer.playing) unawaited(_audioPlayer.play());
+            Future.delayed(const Duration(milliseconds: 600), () {
+              if (_isSeekingRepeat && _repeatingAyah == prevAyah) {
+                _isSeekingRepeat = false;
+                _repeatingAyah = null;
+              }
+            });
             return;
           } catch (_) {
+            _isSeekingRepeat = false;
+            _repeatingAyah = null;
             add(PlayVerse('', prevVerse.verseId));
             return;
           }
@@ -633,7 +731,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         if (firstVerse != null) {
           emit(AudioPlaying(firstVerse.verseId));
           try {
-            await _audioPlayer.seek(firstVerse.start);
+            await _audioPlayer.seek(_safeSeekTarget(firstVerse));
             if (!_audioPlayer.playing) unawaited(_audioPlayer.play());
             return;
           } catch (_) {
@@ -733,6 +831,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       _currentPlayingSurah = null;
       _currentPlayingAyah = null;
       _playedCount = 0;
+      _isSeekingRepeat = false;
+      _repeatingAyah = null;
       _activePlaylistGeneration = 0;
 
       if (event.restartPlayback && (state is AudioPlaying || state is AudioPaused)) {
@@ -941,6 +1041,8 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     _currentPlayingAyah = null;
     _currentAudioPath = null;
     _playedCount = 0;
+    _isSeekingRepeat = false;
+    _repeatingAyah = null;
 
     final isNetwork = _isNetworkError(error);
 

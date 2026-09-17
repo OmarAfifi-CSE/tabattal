@@ -34,6 +34,12 @@ class _MockPlatform extends JustAudioPlatform {
 class _MockPlayer extends AudioPlayerPlatform {
   _MockPlayer(super.id);
   final events = StreamController<PlaybackEventMessage>.broadcast();
+  final seeks = <Duration>[];
+
+  /// Simulates a native pipeline landing a seek on an audio frame before the
+  /// requested timestamp (e.g. Windows Media Foundation frame snapping).
+  /// Positive/negative values shift the broadcast landing position.
+  Duration seekLandingSkew = Duration.zero;
 
   @override
   Stream<PlaybackEventMessage> get playbackEventMessageStream => events.stream;
@@ -86,7 +92,8 @@ class _MockPlayer extends AudioPlayerPlatform {
 
   @override
   Future<SeekResponse> seek(SeekRequest request) async {
-    _currentPos = request.position ?? Duration.zero;
+    _currentPos = (request.position ?? Duration.zero) + seekLandingSkew;
+    seeks.add(request.position ?? Duration.zero);
     if (request.index != null) {
       _currentIndex = request.index!;
     }
@@ -674,15 +681,15 @@ void main() {
       expect(mockPlatform.player.lastLoadRequest?.initialPosition, isNull);
     });
 
-    test('Streaming mode: playing ayah > 1 passes initialPosition matching targetVerse.start', () async {
+    test('Streaming mode: playing ayah > 1 passes initialPosition with 50ms safety offset', () async {
       mockDownload.mockLocalSurah = null; // Streaming mode
 
       bloc.add(const PlayVerse('', 1002));
       await Future.delayed(const Duration(milliseconds: 60));
 
       expect(bloc.state, isA<AudioPlaying>().having((s) => s.currentVerseId, 'currentVerseId', 1002));
-      // Ayah 2 starts at 5 seconds
-      expect(mockPlatform.player.lastLoadRequest?.initialPosition, equals(const Duration(seconds: 5)));
+      // Ayah 2 starts at 5 seconds; +50ms keeps the native landing inside ayah 2
+      expect(mockPlatform.player.lastLoadRequest?.initialPosition, equals(const Duration(milliseconds: 5050)));
     });
 
     test('Media notification title includes Ayah for reciters with verse tracking', () async {
@@ -768,6 +775,85 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 40));
       expect(bloc.state, isA<AudioPlaying>());
       expect((bloc.state as AudioPlaying).isTimingUnavailable, isTrue);
+    });
+
+    test('NextAyah seeks to verse start + 50ms safety offset', () async {
+      bloc.add(const PlayVerse('', 1001));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      bloc.add(const NextAyah());
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      // Ayah 2 starts at 5 seconds; the +50ms offset guarantees the native
+      // pipeline lands inside ayah 2 instead of on ayah 1's trailing frame.
+      expect(mockPlatform.player.seeks.last, equals(const Duration(milliseconds: 5050)));
+    });
+
+    test('Seek landing at previous verse tail after NextAyah is guarded and repeat logic stays intact', () async {
+      bloc.add(const ChangeRepeatCount(2));
+      bloc.add(const PlayVerse('', 1001));
+      await Future.delayed(const Duration(milliseconds: 60));
+
+      // Simulate a slow seek that lands on ayah 1's trailing frame
+      // (13ms before ayah 2's start at 5s), like Windows Media Foundation.
+      mockPlatform.player.seekLandingSkew = const Duration(milliseconds: -63);
+      bloc.add(const NextAyah());
+      await Future.delayed(const Duration(milliseconds: 350));
+
+      // The transient landing must not rewind verse tracking nor re-trigger
+      // a bogus repeat of ayah 1 (the old symptom-2 bug).
+      expect(bloc.currentPlayingAyah, 2);
+      expect(mockPlatform.player.seeks.where((p) => p == Duration.zero), isEmpty);
+      expect(bloc.state, isA<AudioPlaying>().having((s) => s.currentVerseId, 'currentVerseId', 1002));
+
+      // Once the corrected position arrives inside ayah 2, the lock releases
+      // and normal repeat tracking resumes: end of ayah 2 triggers its repeat.
+      mockPlatform.player.seekLandingSkew = Duration.zero;
+      mockPlatform.player.broadcast(ProcessingStateMessage.ready, const Duration(milliseconds: 5050));
+      await Future.delayed(const Duration(milliseconds: 350));
+      mockPlatform.player.broadcast(ProcessingStateMessage.ready, const Duration(milliseconds: 10950));
+      await Future.delayed(const Duration(milliseconds: 350));
+
+      expect(mockPlatform.player.seeks.length, 2);
+      expect(mockPlatform.player.seeks.last, equals(const Duration(milliseconds: 5050)));
+      expect(bloc.currentPlayingAyah, 2);
+    });
+
+    test('Repeat twice replays the verse exactly once more without counter reset', () async {
+      bloc.add(const ChangeRepeatCount(2));
+      bloc.add(const PlayVerse('', 1001));
+      // Let the seek echo hold expire so the initial-load lock releases.
+      await Future.delayed(const Duration(milliseconds: 700));
+      expect(mockPlatform.player.seeks, isEmpty);
+
+      // End of ayah 1 -> repeat seek #1 back to its start.
+      mockPlatform.player.broadcast(ProcessingStateMessage.ready, const Duration(milliseconds: 4950));
+      await Future.delayed(const Duration(milliseconds: 700));
+      expect(mockPlatform.player.seeks, [Duration.zero]);
+
+      // Second pass through the end: repeat count exhausted -> no more seeks.
+      mockPlatform.player.broadcast(ProcessingStateMessage.ready, const Duration(milliseconds: 4950));
+      await Future.delayed(const Duration(milliseconds: 700));
+
+      expect(mockPlatform.player.seeks, [Duration.zero]);
+    });
+
+    test('Play once stops after completing all repeats instead of advancing to next ayah', () async {
+      bloc.add(const ChangeRepeatCount(2));
+      bloc.add(const ChangePlayOnce(true));
+      bloc.add(const PlayVerse('', 1001));
+      await Future.delayed(const Duration(milliseconds: 700));
+
+      // First pass ends -> repeat seek #1.
+      mockPlatform.player.broadcast(ProcessingStateMessage.ready, const Duration(milliseconds: 4950));
+      await Future.delayed(const Duration(milliseconds: 700));
+      expect(mockPlatform.player.seeks, [Duration.zero]);
+
+      // Second pass ends -> repeats exhausted -> must stop, not advance.
+      mockPlatform.player.broadcast(ProcessingStateMessage.ready, const Duration(milliseconds: 4950));
+      await Future.delayed(const Duration(milliseconds: 700));
+
+      expect(bloc.state, isA<AudioIdle>());
     });
   });
 }
