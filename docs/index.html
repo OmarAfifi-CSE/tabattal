@@ -58,16 +58,17 @@
           "@id": "https://tabattal.omar-afifi.com/#software",
           "name": "تبتل - Tabattal",
           "alternateName": ["Tabattal", "تطبيق تبتل", "تبتل للقرآن الكريم"],
-          "operatingSystem": "Android, Web",
+          "operatingSystem": "Android, Windows, Web",
           "applicationCategory": "ReligiousApplication",
           "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
           "description": "مصحف المدينة مع التلاوة والتفسير والحفظ وصانع فيديوهات القرآن، مجاني بالكامل وبدون إعلانات أو تتبع.",
-          "softwareVersion": "1.3.0",
+          "softwareVersion": "1.4.5",
           "inLanguage": "ar",
           "author": {"@type": "Person", "name": "Omar Afifi", "url": "https://github.com/OmarAfifi-CSE"},
           "screenshot": "https://tabattal.omar-afifi.com/assets/images/hero-mockup.webp",
           "url": "https://tabattal.omar-afifi.com/",
-          "installUrl": "https://play.google.com/store/apps/details?id=com.omarafifi.tabattal"
+          "installUrl": "https://play.google.com/store/apps/details?id=com.omarafifi.tabattal",
+          "downloadUrl": "https://apps.microsoft.com/store/detail/XP8C9V1H2F1HLS"
         },
         {
           "@type": "FAQPage",
@@ -89,7 +90,7 @@
     </script>
 
     <link rel="stylesheet" href="./assets/css/tailwind.generated.css?v=20260829">
-    <link rel="stylesheet" href="./assets/css/styles.css?v=20260829-parallax">
+    <link rel="stylesheet" href="./assets/css/styles.css?v=20260917-spacing">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-brand-dark text-white font-sans antialiased overflow-x-hidden selection:bg-brand-gold selection:text-brand-dark">
@@ -118,7 +119,7 @@
             </div>
             <div class="flex items-center gap-2 sm:gap-4">
                 <a href="./en/" class="language-toggle" lang="en" aria-label="Switch to English"><span class="hidden sm:inline">English</span><span class="sm:hidden">EN</span></a>
-                <a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank" rel="noopener noreferrer" class="px-4 md:px-6 py-2.5 rounded-full bg-brand-gold text-brand-dark font-bold text-xs md:text-sm hover:bg-brand-goldHover transition-colors">حمّل التطبيق</a>
+                <a href="#download" class="px-4 md:px-6 py-2.5 rounded-full bg-brand-gold text-brand-dark font-bold text-xs md:text-sm hover:bg-brand-goldHover transition-colors">حمّل التطبيق</a>
             </div>
         </div>
     </nav>
@@ -137,8 +138,8 @@
                     </h1>
                     <p class="mt-7 text-base md:text-lg text-brand-muted max-w-2xl mx-auto lg:mx-0 leading-9"><span class="brand-lock" translate="no">تبتل</span> يجمع مصحف المدينة الدقيق مع التلاوة والتفسير والحفظ، وصانع فيديوهات قرآنية متزامنة—مجانًا وبدون إعلانات أو تتبع.</p>
                     <div class="mt-9 flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
-                        <a data-testid="primary-android-cta" href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank" rel="noopener noreferrer" class="magnetic-btn px-7 py-4 rounded-2xl bg-brand-gold text-brand-dark font-bold flex items-center justify-center gap-3 shadow-[0_18px_55px_rgba(210,180,95,0.2)] hover:bg-brand-goldHover"><i class="fab fa-google-play" aria-hidden="true"></i>حمّل <span class="brand-lock" translate="no">تبتل</span> للأندرويد</a>
-                        <a data-testid="hero-web-cta" href="./app/" class="magnetic-btn px-7 py-4 rounded-2xl bg-white/5 border border-white/15 font-semibold flex items-center justify-center gap-3 hover:bg-white/10 hover:border-brand-gold/40"><i class="fas fa-play text-brand-gold" aria-hidden="true"></i>جرّب <span class="brand-lock" translate="no">تبتل</span> على الويب</a>
+                        <a data-testid="primary-android-cta" href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank" rel="noopener noreferrer" class="magnetic-btn px-7 py-4 rounded-2xl bg-brand-gold text-brand-dark font-bold flex items-center justify-center shadow-[0_18px_55px_rgba(210,180,95,0.2)] hover:bg-brand-goldHover"><i class="fab fa-google-play ml-2" aria-hidden="true"></i><span>حمّل للأندرويد</span></a>
+                        <a data-testid="hero-download-cta" href="#download" class="magnetic-btn px-7 py-4 rounded-2xl bg-white/5 border border-white/15 font-semibold flex items-center justify-center hover:bg-white/10 hover:border-brand-gold/40"><i class="fas fa-download text-brand-gold ml-2" aria-hidden="true"></i><span>خيارات التحميل والتشغيل</span></a>
                     </div>
                     <div class="mt-8 flex flex-wrap justify-center lg:justify-start gap-x-6 gap-y-3 text-xs text-white/55">
                         <span><i class="fas fa-check text-brand-gold ml-2"></i>بدون حساب إجباري</span>
@@ -254,8 +255,12 @@
         <section id="download" class="px-5 pb-24">
             <div class="cta-box max-w-6xl mx-auto rounded-[2.5rem] border border-brand-gold/25 p-8 md:p-16 text-center relative overflow-hidden">
                 <div class="absolute inset-0 cta-glow" aria-hidden="true"></div>
-                <div class="relative"><p class="text-brand-gold text-sm font-bold">ابدأ الآن</p><h2 class="font-arabic text-4xl md:text-6xl font-bold mt-4">وردك ينتظرك.<br>وأول مقطع كذلك.</h2><p class="text-brand-muted mt-6">حمّل <span class="brand-lock" translate="no">تبتل</span> للأندرويد أو افتحه مباشرة من المتصفح.</p>
-                    <div class="mt-9 flex flex-col sm:flex-row justify-center gap-4"><a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank" rel="noopener noreferrer" class="px-7 py-4 rounded-2xl bg-brand-gold text-brand-dark font-bold hover:bg-brand-goldHover transition-colors">حمّل من Google Play</a><a href="./app/" class="px-7 py-4 rounded-2xl bg-white/5 border border-white/15 font-bold hover:bg-white/10 transition-colors">افتحه من المتصفح</a></div>
+                <div class="relative"><p class="text-brand-gold text-sm font-bold">ابدأ الآن</p><h2 class="font-arabic text-4xl md:text-6xl font-bold mt-4">وردك ينتظرك.<br>وأول مقطع كذلك.</h2><p class="text-brand-muted mt-6">حمّل <span class="brand-lock" translate="no">تبتل</span> للأندرويد وويندوز أو افتحه مباشرةً من المتصفح.</p>
+                    <div class="mt-9 flex flex-col sm:flex-row flex-wrap justify-center gap-4">
+                        <a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank" rel="noopener noreferrer" class="px-7 py-4 rounded-2xl bg-brand-gold text-brand-dark font-bold hover:bg-brand-goldHover transition-colors flex items-center justify-center"><i class="fab fa-google-play ml-2"></i><span>حمّل من Google Play</span></a>
+                        <a href="https://apps.microsoft.com/store/detail/XP8C9V1H2F1HLS" target="_blank" rel="noopener noreferrer" class="px-7 py-4 rounded-2xl bg-white/10 border border-white/20 font-bold hover:bg-white/15 transition-colors flex items-center justify-center"><i class="fab fa-windows text-[#0078D6] ml-2"></i><span>حمّل من Microsoft Store</span></a>
+                        <a href="./app/" class="px-7 py-4 rounded-2xl bg-white/5 border border-white/15 font-bold hover:bg-white/10 transition-colors flex items-center justify-center"><i class="fas fa-globe text-brand-gold ml-2"></i><span>افتحه من المتصفح</span></a>
+                    </div>
                 </div>
             </div>
         </section>

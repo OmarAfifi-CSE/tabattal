@@ -31,7 +31,7 @@ Tabattal includes creative media tools, such as the **Quran Video Studio**, **Ve
 The App requires network/internet access strictly for essential functional features requested by the user:
 - **Quranic Audio Recitations:** To stream or download audio files for offline listening.
 - **Tafsir & Translations:** To fetch Tafsir or translation databases when requested.
-- **In-App Updates:** To check for critical app updates via Google Play services or repository configuration.
+- **In-App Updates:** To check for critical app updates via Google Play services, Microsoft Store, or repository configuration.
 
 None of your recitation listening habits, search queries, bookmarks, or download histories are transmitted to me or any third party.
 

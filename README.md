@@ -11,6 +11,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter"/>
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android"/>
+  <img src="https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows"/>
+  <img src="https://img.shields.io/badge/Platform-Web-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Web"/>
   <img src="https://img.shields.io/badge/Architecture-Clean-orange?style=for-the-badge" alt="Clean Architecture"/>
   <img src="https://img.shields.io/badge/State-BLoC-005A9C?style=for-the-badge" alt="BLoC"/>
 </p>
@@ -27,9 +29,19 @@
 ### *﴿ وَاذْكُرِ اسْمَ رَبِّكَ وَتَبَتَّلْ إِلَيْهِ تَبْتِيلًا ﴾*
 
 
-<a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank">
-  <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="65" alt="Get it on Google Play">
-</a>
+<p align="center">
+  <a href="https://play.google.com/store/apps/details?id=com.omarafifi.tabattal" target="_blank">
+    <img src="docs/assets/images/google_play_badge.svg" height="44" alt="Get it on Google Play">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://apps.microsoft.com/store/detail/XP8C9V1H2F1HLS" target="_blank">
+    <img src="docs/assets/images/microsoft_store_badge.svg" height="44" alt="Download from Microsoft Store">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://tabattal.omar-afifi.com/app/" target="_blank">
+    <img src="docs/assets/images/web_app_badge.svg" height="44" alt="Launch Web App">
+  </a>
+</p>
 
 <br/>
 
@@ -318,7 +330,7 @@ All 604 page fonts pre-warmed in RAM — no zip extraction, no runtime layout ov
 
 | Layer | Technology |
 |-------|-----------|
-| **Framework** | Flutter (Android) |
+| **Framework** | Flutter (Android, Windows, Web) |
 | **State Management** | BLoC / Cubit |
 | **Architecture** | Clean Architecture (Domain / Data / Presentation) |
 | **Video & Motion Engine** | Custom Canvas Rasterizer + `ffmpeg_kit_flutter_new_min_gpl` |

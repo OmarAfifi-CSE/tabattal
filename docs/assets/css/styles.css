@@ -397,6 +397,19 @@ html[dir="ltr"] .skip-link {
     transform-style: preserve-3d;
 }
 
+/* Button Icon Spacing - Ensures clean separation in both RTL and LTR */
+.magnetic-btn i,
+.cta-box a i,
+#download a i,
+[data-testid="studio-cta"] i {
+    margin-inline-end: 0.65rem !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-size: 1.1em;
+}
+
 /* Radial Mask for Philosophy section */
 .mask-radial {
     mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
