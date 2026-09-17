@@ -104,7 +104,7 @@ const upload = multer({
   dest: path.join(os.tmpdir(), 'tabattal_uploads'),
   limits: { 
     fileSize: 150 * 1024 * 1024, // Max 150MB per file (supports up to 150MB custom videos)
-    files: 65 // Max 65 files (supports 50 overlay units + base frame + custom video + headroom)
+    files: 165 // Max 165 files (supports 150 overlay units + base frame + custom video + headroom)
   }
 });
 
@@ -500,7 +500,15 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
     }
     // reciterPath is interpolated into download URLs: restrict to safe path
     // characters so it cannot smuggle queries, fragments, or traversals.
-    if (typeof reciterPath !== 'string' || !/^[A-Za-z0-9_\-]+$/.test(reciterPath)) {
+    // Forward slashes ARE allowed: audio-translation reciters live in real
+    // EveryAyah subfolders (e.g. "English/Sahih_Intnl_Ibrahim_Walk_192kbps",
+    // "MultiLanguage/Basfar_Walk_192kbps"), and single dots are needed by
+    // real paths like "Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net".
+    // The guards still block: traversal (".."), leading/trailing dots at a
+    // segment boundary, double slashes, and every character outside
+    // [A-Za-z0-9_./-], so constructed URLs remain server-safe.
+    if (typeof reciterPath !== 'string' ||
+        !/^(?!\/)(?!\.)(?!.*\.\.)(?!.*\/\/)(?!.*\/\.)(?!.*\/$)[A-Za-z0-9_.\-\/]{1,120}$/.test(reciterPath)) {
       cleanupSession();
       return res.status(400).json({
         code: 'INVALID_RECITER',
@@ -508,12 +516,12 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
         messageEn: 'Invalid reciter path provided.'
       });
     }
-    if (unitConfigs.length > 50) {
+    if (unitConfigs.length > 150) {
       cleanupSession();
       return res.status(400).json({
         code: 'EXCEEDED_SEGMENT_LIMIT',
-        messageAr: 'عدد مقاطع الفيديو يتجاوز الحد الأقصى المسموح به (50 مقطعًا).',
-        messageEn: 'Video segment count exceeds maximum limit (50 segments).'
+        messageAr: 'عدد مقاطع الفيديو يتجاوز الحد الأقصى المسموح به (150 مقطعًا). يُرجى اختيار نطاق أصغر أو وضع عرض أبسط.',
+        messageEn: 'Video segment count exceeds maximum limit (150 segments). Please choose a smaller range.'
       });
     }
 

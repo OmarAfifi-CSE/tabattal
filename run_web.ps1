@@ -1,5 +1,6 @@
 param (
-    [switch]$Release
+    [switch]$Release,
+    [switch]$KeepExportServer
 )
 
 # ==============================================================================
@@ -8,20 +9,27 @@ param (
 
 Write-Host "`n[TABATTAL] Checking Video Export Service on port 8080..." -ForegroundColor Cyan
 
-$portInUse = Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue
+$spawnedProcess = $null
+$portInUse = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue
 
 if ($portInUse) {
     Write-Host "[TABATTAL] Video Export Service is already running on port 8080." -ForegroundColor Green
 } else {
     Write-Host "[TABATTAL] Spawning Video Export Microservice in background..." -ForegroundColor Yellow
-    Start-Process -FilePath "node" -ArgumentList "index.js" -WorkingDirectory "$PSScriptRoot\server\video_export_service" -WindowStyle Hidden
+    $spawnedProcess = Start-Process -FilePath "node" -ArgumentList "index.js" -WorkingDirectory "$PSScriptRoot\server\video_export_service" -WindowStyle Hidden -PassThru
     Start-Sleep -Seconds 1
-    Write-Host "[TABATTAL] Video Export Service started successfully on http://localhost:8080." -ForegroundColor Green
+    Write-Host "[TABATTAL] Video Export Service started successfully on http://localhost:8080 (PID: $($spawnedProcess.Id))." -ForegroundColor Green
 }
 
 $pubspecPath = "pubspec.yaml"
 $pubspecBak = "pubspec.yaml.bak"
-Copy-Item $pubspecPath -Destination $pubspecBak -Force
+
+# If a previous run was abruptly terminated and left pubspec lean, restore it first
+if (Test-Path $pubspecBak) {
+    Copy-Item $pubspecBak -Destination $pubspecPath -Force
+} else {
+    Copy-Item $pubspecPath -Destination $pubspecBak -Force
+}
 
 try {
     $lines = Get-Content $pubspecPath
@@ -51,7 +59,7 @@ try {
         $leanLines.Add($line)
     }
 
-    $leanLines | Out-File -FilePath $pubspecPath -Encoding utf8
+    [System.IO.File]::WriteAllLines((Resolve-Path $pubspecPath).Path, $leanLines, [System.Text.UTF8Encoding]::new($false))
     Write-Host "[TABATTAL] Lean Web Environment configured (4 core fonts for fast boot)." -ForegroundColor Green
 
     $modeText = if ($Release) { "RELEASE (Ultra Fast)" } else { "DEBUG" }
@@ -63,6 +71,26 @@ try {
         flutter run -d chrome --web-hostname 127.0.0.1 --web-port 3000
     }
 } finally {
+    if (-not $KeepExportServer) {
+        if ($spawnedProcess -and -not $spawnedProcess.HasExited) {
+            Write-Host "[TABATTAL] Stopping Video Export Service (PID: $($spawnedProcess.Id))..." -ForegroundColor Yellow
+            Stop-Process -Id $spawnedProcess.Id -Force -ErrorAction SilentlyContinue
+        } else {
+            $activeConns = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue
+            if ($activeConns) {
+                $pids = $activeConns | Select-Object -ExpandProperty OwningProcess -Unique
+                foreach ($procId in $pids) {
+                    $p = Get-Process -Id $procId -ErrorAction SilentlyContinue
+                    if ($p -and $p.ProcessName -eq 'node') {
+                        Write-Host "[TABATTAL] Closing Video Export Service on port 8080 (PID: $procId)..." -ForegroundColor Yellow
+                        Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+                    }
+                }
+            }
+        }
+        Write-Host "[TABATTAL] Port 8080 released." -ForegroundColor Green
+    }
+
     if (Test-Path $pubspecBak) {
         Copy-Item $pubspecBak -Destination $pubspecPath -Force
         Remove-Item $pubspecBak -Force
