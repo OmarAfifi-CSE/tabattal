@@ -271,8 +271,11 @@ class CanvasOverlayGenerator {
         topLimit = height * 0.20;
         bottomLimit = height * 0.80;
       } else {
-        topLimit = height * 0.18;
-        bottomLimit = height * 0.82;
+        // 9:16 worst-case platform safe zone (1080x1920):
+        // top UI bar ends ~220px (Shorts), bottom tray starts ~1470px (Shorts/Reels)
+        // 9:16: zone symmetric around 0.50H — verse sits at the exact screen center
+        topLimit = height * 0.29;
+        bottomLimit = height * 0.71;
       }
     } else if (config.showSurahBadge || config.showReciterName) {
       if (config.aspectRatio == VideoAspectRatio.landscape16x9) {
@@ -282,19 +285,28 @@ class CanvasOverlayGenerator {
         topLimit = height * 0.15;
         bottomLimit = height * 0.85;
       } else {
-        topLimit = height * 0.14;
-        bottomLimit = height * 0.86;
+        // 9:16: reciter badge sits lower than surah badge — clear whichever shows
+        // 9:16: both variants symmetric around 0.50H — exact screen center
+        if (config.showReciterName) {
+          topLimit = height * 0.29;
+          bottomLimit = height * 0.71;
+        } else {
+          topLimit = height * 0.25;
+          bottomLimit = height * 0.75;
+        }
       }
     } else {
       if (config.aspectRatio == VideoAspectRatio.landscape16x9) {
         topLimit = height * 0.11;
-        bottomLimit = height * 0.89;
+        bottomLimit = height * 0.87;
       } else if (config.aspectRatio == VideoAspectRatio.square1x1) {
         topLimit = height * 0.10;
-        bottomLimit = height * 0.90;
+        bottomLimit = height * 0.87;
       } else {
-        topLimit = height * 0.10;
-        bottomLimit = height * 0.90;
+        // 9:16: stay below the top ornament (bottom edge ~0.127H)
+        // 9:16: zone symmetric around 0.50H — verse sits at the exact screen center
+        topLimit = height * 0.20;
+        bottomLimit = height * 0.80;
       }
     }
 
@@ -309,6 +321,74 @@ class CanvasOverlayGenerator {
     final double startY = topLimit + ((availableHeight - totalContentHeight) / 2);
 
     return Rect.fromLTWH(0, startY, width, totalContentHeight);
+  }
+
+  /// Verse-level cache for the uniform line-by-line fit scale (one size for ALL lines).
+  static final Map<String, double> _lineFitScaleCache = {};
+
+  /// Computes ONE uniform fit scale shared by every line-by-line segment of a
+  /// verse: each segment is measured at the base size and the scale required
+  /// by the WIDEST segment is applied to all of them — so the font size never
+  /// jumps when transitioning between lines.
+  static double _uniformLineFitScale({
+    required VerseModel verse,
+    required int pageNumber,
+    required List<LineTimingSegment> lineSegments,
+    required double maxContentWidth,
+    required double baseSize,
+  }) {
+    if (lineSegments.isEmpty) return 1.0;
+
+    double worstScale = 1.0;
+    for (final segment in lineSegments) {
+      final children = <InlineSpan>[
+        const TextSpan(
+          text: '\uFD5F',
+          style: TextStyle(fontFamily: 'KFGQPC HAFS Uthmanic Script Regular'),
+        ),
+      ];
+      final endIdx = min(segment.endWordIndex, verse.words.length - 1);
+      for (int i = segment.startWordIndex; i <= endIdx; i++) {
+        final w = verse.words[i];
+        final pageNum = w.pageNumber > 0 ? w.pageNumber : pageNumber;
+        final font = 'QCF_P${pageNum.toString().padLeft(3, '0')}';
+        final text = w.codeV2.isNotEmpty ? w.codeV2 : (w.code.isNotEmpty ? w.code : w.textUthmani);
+        children.add(const TextSpan(text: ' '));
+        children.add(TextSpan(text: text, style: TextStyle(fontFamily: font)));
+      }
+      children.add(const TextSpan(text: ' '));
+      children.add(const TextSpan(
+        text: '\uFD5E',
+        style: TextStyle(fontFamily: 'KFGQPC HAFS Uthmanic Script Regular'),
+      ));
+
+      TextPainter layoutAt(double size) => TextPainter(
+            text: TextSpan(
+              style: TextStyle(fontSize: size, height: 1.95),
+              children: children,
+            ),
+            textDirection: TextDirection.rtl,
+            textAlign: TextAlign.center,
+          )..layout(maxWidth: maxContentWidth);
+
+      var painter = layoutAt(baseSize);
+      double segScale = 1.0;
+      if (painter.computeLineMetrics().length > 1) {
+        // Mirrors the legacy single-line fit loop (0.92 → 0.45, floor 0.45)
+        double tryScale = 0.92;
+        segScale = 0.45;
+        while (tryScale >= 0.45) {
+          painter = layoutAt(baseSize * tryScale);
+          if (painter.computeLineMetrics().length <= 1) {
+            segScale = tryScale;
+            break;
+          }
+          tryScale -= 0.06;
+        }
+      }
+      if (segScale < worstScale) worstScale = segScale;
+    }
+    return worstScale;
   }
 
   /// Single Source of Truth: Paints the exact video frame on any canvas at any resolution.
@@ -525,18 +605,24 @@ class CanvasOverlayGenerator {
 
     // Optional Card Container Box & Border
     if (config.showCardFrame) {
-      // Dynamic Card Margin based on AspectRatio
+      // Card geometry tuned to the POST-CROP visible area on 9:16: tall phone
+      // screens (19.5:9 / 20:9) cover-crop the outer ~10% of each side, and
+      // platform UI covers the top ~220px and bottom ~470px of a 1080x1920
+      // frame — so the card must live fully inside the always-visible zone
+      // to keep reading as a complete framed design after upload.
+      final bool isPortraitRatio = config.aspectRatio == VideoAspectRatio.portrait9x16;
       final double cardMarginH = config.aspectRatio == VideoAspectRatio.landscape16x9
           ? width * 0.08
-          : width * 0.05;
-      final double cardMarginV = height * 0.05;
+          : (isPortraitRatio ? width * 0.115 : width * 0.05);
+      final double cardMarginTop = isPortraitRatio ? height * 0.122 : height * 0.05;
+      final double cardMarginBottom = isPortraitRatio ? height * 0.13 : height * 0.05;
 
       final cardRect = RRect.fromRectAndRadius(
         Rect.fromLTWH(
           cardMarginH,
-          cardMarginV,
+          cardMarginTop,
           width - (cardMarginH * 2),
-          height - (cardMarginV * 2),
+          height - cardMarginTop - cardMarginBottom,
         ),
         Radius.circular(baseScale * 0.04),
       );
@@ -563,12 +649,14 @@ class CanvasOverlayGenerator {
     }
 
     // Decorative Top Ornament (100% Matching VerseCard Star & Lines Header)
-    final double cardMarginV = height * 0.05;
+    final double cardMarginV = config.aspectRatio == VideoAspectRatio.portrait9x16
+        ? height * 0.122
+        : height * 0.05;
     final double ornamentCenterY = config.aspectRatio == VideoAspectRatio.landscape16x9
         ? cardMarginV + (height * 0.038)
         : (config.aspectRatio == VideoAspectRatio.square1x1
             ? cardMarginV + (height * 0.038)
-            : cardMarginV + (height * 0.030));
+            : cardMarginV + (height * 0.042));
 
     final Color ornamentColor = _resolveAccentColor(config);
 
@@ -625,18 +713,20 @@ class CanvasOverlayGenerator {
     final surahName = QuranMetadata.getSurahNameByLang(isEn, config.surahNumber);
     final reciterName = ReciterCatalog.localizeByLang(isEn, config.reciterName);
 
-    final double cardMarginV = height * 0.05;
+    final double cardMarginV = config.aspectRatio == VideoAspectRatio.portrait9x16
+        ? height * 0.122
+        : height * 0.05;
     final double surahCenterY = config.aspectRatio == VideoAspectRatio.landscape16x9
         ? cardMarginV + (height * 0.105)
         : (config.aspectRatio == VideoAspectRatio.square1x1
             ? cardMarginV + (height * 0.100)
-            : cardMarginV + (height * 0.075));
+            : cardMarginV + (height * 0.088));
 
     final double reciterCenterY = config.aspectRatio == VideoAspectRatio.landscape16x9
         ? cardMarginV + (height * 0.165)
         : (config.aspectRatio == VideoAspectRatio.square1x1
             ? cardMarginV + (height * 0.160)
-            : cardMarginV + (height * 0.125));
+            : cardMarginV + (height * 0.138));
 
     final bool hasCustomMedia = _hasCustomMedia(config);
     final bool isFramelessCustom = hasCustomMedia && !config.showCardFrame;
@@ -768,8 +858,9 @@ class CanvasOverlayGenerator {
 
     final timings = wordTimings ?? const <WordTimingSegment>[];
 
-    // Vertical limits calibrated symmetrically around 50% screen height
-    // to guarantee the verse sits in the true visual & mathematical center of the video frame.
+    // Vertical limits tuned to the worst-case 9:16 platform safe zone
+    // (TikTok / Shorts / Reels top bar, right rail, and bottom caption tray),
+    // so exported content is never covered or clipped on any platform.
     final double topLimit;
     final double bottomLimit;
     if (config.showSurahBadge && config.showReciterName) {
@@ -780,8 +871,11 @@ class CanvasOverlayGenerator {
         topLimit = height * 0.20;
         bottomLimit = height * 0.80;
       } else {
-        topLimit = height * 0.18;
-        bottomLimit = height * 0.82;
+        // 9:16 worst-case platform safe zone (1080x1920):
+        // top UI bar ends ~220px (Shorts), bottom tray starts ~1470px (Shorts/Reels)
+        // 9:16: zone symmetric around 0.50H — verse sits at the exact screen center
+        topLimit = height * 0.29;
+        bottomLimit = height * 0.71;
       }
     } else if (config.showSurahBadge || config.showReciterName) {
       if (config.aspectRatio == VideoAspectRatio.landscape16x9) {
@@ -791,26 +885,41 @@ class CanvasOverlayGenerator {
         topLimit = height * 0.15;
         bottomLimit = height * 0.85;
       } else {
-        topLimit = height * 0.14;
-        bottomLimit = height * 0.86;
+        // 9:16: reciter badge sits lower than surah badge — clear whichever shows
+        // 9:16: both variants symmetric around 0.50H — exact screen center
+        if (config.showReciterName) {
+          topLimit = height * 0.29;
+          bottomLimit = height * 0.71;
+        } else {
+          topLimit = height * 0.25;
+          bottomLimit = height * 0.75;
+        }
       }
     } else {
       if (config.aspectRatio == VideoAspectRatio.landscape16x9) {
         topLimit = height * 0.11;
-        bottomLimit = height * 0.89;
+        bottomLimit = height * 0.87;
       } else if (config.aspectRatio == VideoAspectRatio.square1x1) {
         topLimit = height * 0.10;
-        bottomLimit = height * 0.90;
+        bottomLimit = height * 0.87;
       } else {
-        topLimit = height * 0.10;
-        bottomLimit = height * 0.90;
+        // 9:16: stay below the top ornament (bottom edge ~0.127H)
+        // 9:16: zone symmetric around 0.50H — verse sits at the exact screen center
+        topLimit = height * 0.20;
+        bottomLimit = height * 0.80;
       }
     }
 
     final double availableHeight = (bottomLimit - topLimit).clamp(100.0, height);
+    // TikTok/Shorts side UI (like/comment/share rail) starts ~0.85W on 9:16.
+    // Centered text with width w has its edges at (1+w)/2, so 0.66W keeps the
+    // tips at 0.83W — clear of the platform overlay. The fit loops and wrap
+    // below enforce this limit, shrinking/re-wrapping wide lines as needed.
     final double maxContentWidth = config.aspectRatio == VideoAspectRatio.landscape16x9
-        ? width * 0.78
-        : width * 0.84;
+        ? width * 0.68
+        : (config.aspectRatio == VideoAspectRatio.square1x1
+            ? width * 0.72
+            : width * 0.66);
 
     final isLineByLine = config.textDisplayMode == VideoTextDisplayMode.lineByLine;
 
@@ -925,6 +1034,24 @@ class CanvasOverlayGenerator {
       }
     }
 
+    // One uniform size for ALL line-by-line lines: derived once per verse from
+    // the widest segment so transitions never jump between font sizes.
+    double uniformLineScale = 1.0;
+    if (isLineByLine && lineSegments.isNotEmpty) {
+      final fitKey =
+          '${verse.verseKey}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.themePreset.id}_${pageNumber}_${hasTafsir ? 1 : 0}_${hasTranslation ? 1 : 0}_${width.round()}x${height.round()}';
+      uniformLineScale = _lineFitScaleCache.putIfAbsent(
+        fitKey,
+        () => _uniformLineFitScale(
+          verse: verse,
+          pageNumber: pageNumber,
+          lineSegments: lineSegments,
+          maxContentWidth: maxContentWidth,
+          baseSize: baseVerseSize * lengthScale * optionsScale,
+        ),
+      );
+    }
+
     double currentScaleMultiplier = 1.0;
 
     (
@@ -940,7 +1067,7 @@ class CanvasOverlayGenerator {
       double sectionGap,
       double totalHeight
     ) computeLayout(double scale) {
-      double effectiveVerseSize = baseVerseSize * lengthScale * optionsScale * scale;
+      double effectiveVerseSize = baseVerseSize * lengthScale * optionsScale * scale * uniformLineScale;
       final effectiveTafsirSize = (baseScale * 0.033) * optionsScale * scale;
       final effectiveTransSize = (baseScale * 0.022) * optionsScale * scale;
 
@@ -1040,7 +1167,7 @@ class CanvasOverlayGenerator {
       if (isLineByLine && vPainter.computeLineMetrics().length > 1) {
         double fitScale = 0.92;
         while (vPainter.computeLineMetrics().length > 1 && fitScale >= 0.45) {
-          effectiveVerseSize = baseVerseSize * lengthScale * optionsScale * scale * fitScale;
+          effectiveVerseSize = baseVerseSize * lengthScale * optionsScale * scale * uniformLineScale * fitScale;
           verseTextSpan = buildVerseSpan(effectiveVerseSize);
           vPainter = TextPainter(
             text: verseTextSpan,
@@ -1347,13 +1474,17 @@ class CanvasOverlayGenerator {
     // Total width of items + spacing
     final double totalFooterWidth = iconPainter.width + spacing + textPainter.width;
 
-    // Center Y position inside card
-    final double cardMarginV = height * 0.05;
+    // Center Y position inside card — anchored to the card's bottom edge so it
+    // stays inside the post-crop visible area (the platform bottom tray starts
+    // around 0.765H on 1080x1920 in the worst case).
+    final double cardBottomEdge = config.aspectRatio == VideoAspectRatio.portrait9x16
+        ? height * 0.87
+        : height - (height * 0.05);
     final double bottomCenterY = config.aspectRatio == VideoAspectRatio.landscape16x9
-        ? height - cardMarginV - (height * 0.038)
+        ? cardBottomEdge - (height * 0.055)
         : (config.aspectRatio == VideoAspectRatio.square1x1
-            ? height - cardMarginV - (height * 0.038)
-            : height - cardMarginV - (height * 0.028));
+            ? cardBottomEdge - (height * 0.058)
+            : cardBottomEdge - (height * 0.03));
 
     // Visual RTL order: [Icon] -> [تَـبَـتَّـلْ • Tabattal]
     // Painted from left to right on canvas: Text (left) -> Icon (right)
