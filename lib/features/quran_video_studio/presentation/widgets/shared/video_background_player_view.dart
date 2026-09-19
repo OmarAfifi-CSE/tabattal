@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:ffmpeg_kit_flutter_new_min_gpl/ffprobe_kit.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
@@ -38,8 +39,8 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
   // Generation counter: incremented on every new _initPlayer() call.
   // Any async completion that sees a stale generation is silently dropped.
   int _initGeneration = 0;
-  bool _isSeeking = false;
   bool _hasError = false;
+  bool _isSeeking = false;
   Duration? _pendingSeekTarget;
 
   @override
@@ -56,6 +57,11 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
     } else {
       final controller = _controller;
       if (controller != null && controller.value.isInitialized) {
+        // Export fidelity: the exporter renders the background video at
+        // (audio timeline % video duration), so the preview must re-align the
+        // video on scrubbing (seekSignal) and on audio resets (resetSignal).
+        // The play-after-pause restart was a different bug (video_player_win
+        // reporting duration=0), fixed by injecting the real duration below.
         if (oldWidget.resetSignal != widget.resetSignal) {
           _performCoalescedSeek(Duration.zero);
         } else if (oldWidget.seekSignal != widget.seekSignal && widget.seekPosition != null) {
@@ -68,47 +74,13 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
 
         if (oldWidget.isPlaying != widget.isPlaying) {
           if (widget.isPlaying) {
-            if (!_isSeeking) {
-              controller.play();
-            }
+            unawaited(controller.play());
           } else {
-            controller.pause();
+            unawaited(controller.pause());
           }
         }
       }
     }
-  }
-
-  void _performCoalescedSeek(Duration target) {
-    final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) return;
-
-    if (_isSeeking) {
-      _pendingSeekTarget = target;
-      return;
-    }
-
-    _isSeeking = true;
-    _pendingSeekTarget = null;
-
-    controller.seekTo(target).then((_) {
-      // Completed successfully
-    }).catchError((_) {
-      // Ignore seek exceptions during disposal or out-of-bounds
-    }).whenComplete(() {
-      if (!mounted) return;
-      _isSeeking = false;
-      final pending = _pendingSeekTarget;
-      if (pending != null) {
-        _performCoalescedSeek(pending);
-      } else {
-        if (widget.isPlaying) {
-          controller.play();
-        } else {
-          controller.pause();
-        }
-      }
-    });
   }
 
   void _initPlayer() {
@@ -124,7 +96,7 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
     _hasError = false;
     _initializedPath = path;
 
-    // Detach and dispose the old controller WITHOUT awaiting — fire-and-forget
+    // Detach and dispose the old controller WITHOUT awaiting - fire-and-forget
     // so the main thread is never stalled by native teardown on Windows.
     final oldController = _controller;
     _controller = null;
@@ -170,6 +142,18 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
       await newController.initialize();
       await newController.setLooping(true);
       await newController.setVolume(0.0);
+      await _injectMissingDuration(newController, normalizedPath, isWebOrUrl);
+
+      // Stale generation or widget unmounted - discard safely.
+      if (!mounted || generation != _initGeneration) {
+        unawaited(newController.dispose());
+        return;
+      }
+
+      setState(() {
+        _controller = newController;
+        _hasError = false;
+      });
 
       // Apply timeline position right away (e.g. opening fullscreen mid-preview).
       try {
@@ -183,17 +167,6 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
           }
         }
       } catch (_) {}
-
-      // Stale generation or widget unmounted — discard safely.
-      if (!mounted || generation != _initGeneration) {
-        unawaited(newController.dispose());
-        return;
-      }
-
-      setState(() {
-        _controller = newController;
-        _hasError = false;
-      });
 
       if (widget.isPlaying) {
         unawaited(newController.play());
@@ -209,10 +182,69 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
     }
   }
 
+  /// video_player_win decodes the file perfectly but reports no duration to
+  /// the `video_player` layer, leaving `value.duration == Duration.zero`.
+  /// `video_player`'s `play()` then treats `position(0) == duration(0)` as
+  /// "the video ended" and force-seeks to zero - restarting the ambient loop
+  /// from its first frame on every play-after-pause (Windows-only, upstream
+  /// issue jakky1/video_player_win#29 has no fix). Injecting the real
+  /// duration once makes `play()` resume in place like every other platform.
+  Future<void> _injectMissingDuration(
+    VideoPlayerController controller,
+    String normalizedPath,
+    bool isWebOrUrl,
+  ) async {
+    if (controller.value.duration != Duration.zero || isWebOrUrl) return;
+    try {
+      final session = await FFprobeKit.getMediaInformation(normalizedPath);
+      final durationStr = session.getMediaInformation()?.getDuration();
+      final seconds = double.tryParse(durationStr ?? '') ?? 0;
+      final realDuration = Duration(milliseconds: (seconds * 1000).round());
+      if (realDuration > Duration.zero &&
+          controller.value.duration == Duration.zero) {
+        // ValueNotifier setter: the only sanctioned way to correct the
+        // metadata the Windows bridge failed to report.
+        controller.value = controller.value.copyWith(duration: realDuration);
+      }
+    } catch (_) {
+      // Metadata probe failed: leave the controller as-is.
+    }
+  }
+
+  void _performCoalescedSeek(Duration target) {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+
+    if (_isSeeking) {
+      _pendingSeekTarget = target;
+      return;
+    }
+
+    _isSeeking = true;
+    _pendingSeekTarget = null;
+
+    controller.seekTo(target).then((_) {
+      // Completed successfully
+    }).catchError((_) {
+      // Ignore seek exceptions during disposal or out-of-bounds
+    }).whenComplete(() {
+      if (!mounted) return;
+      _isSeeking = false;
+      final pending = _pendingSeekTarget;
+      if (pending != null) {
+        _performCoalescedSeek(pending);
+      } else {
+        if (widget.isPlaying) {
+          unawaited(controller.play());
+        } else {
+          unawaited(controller.pause());
+        }
+      }
+    });
+  }
+
   @override
   void dispose() {
-    _isSeeking = false;
-    _pendingSeekTarget = null;
     // Increment generation to invalidate any in-flight _initAsync.
     _initGeneration++;
     // Fire-and-forget: no await on dispose to keep Flutter's widget teardown fast.

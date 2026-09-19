@@ -560,10 +560,10 @@ packages:
     dependency: "direct main"
     description:
       name: just_audio_windows_plus
-      sha256: "1126b22864d6fbb08e1b1de58ff38b976240c60c091c825521cd879586d052b4"
+      sha256: e688dd2367555d8220b8ca3af1c4a5adffd47e9e30a0360bdf60bc87b78ae55a
       url: "https://pub.dev"
     source: hosted
-    version: "0.5.2"
+    version: "0.5.3"
   leak_tracker:
     dependency: transitive
     description:
@@ -1165,10 +1165,10 @@ packages:
     dependency: "direct main"
     description:
       name: video_player_win
-      sha256: a4caca55ead1eb469d10060592e7ecdcbcd4493c6e2b63e4e666ff5446c790f1
+      sha256: df03760c1498ee0c0efe2688b302c331acf46489e9821761d1adb137148502f1
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.2"
+    version: "3.3.0"
   vm_service:
     dependency: transitive
     description:

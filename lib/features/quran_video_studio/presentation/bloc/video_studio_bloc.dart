@@ -51,6 +51,9 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
   // tell us which verse file it holds, so resume/restart paths must compare
   // against this instead of assuming audioSource != null means "correct".
   int? _loadedVerseIndex;
+  // Play intent captured while an audio load is preparing; honored the
+  // moment the load commits so a single tap is never silently swallowed.
+  bool _pendingPlayAfterPrepare = false;
   final AppVolumeCubit? appVolumeCubit;
 
   VideoStudioBloc({
@@ -474,12 +477,30 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     }
   }
 
+  Timer? _dimmingCoalesceTimer;
+  double? _pendingDimming;
+
   void _onDimmingChanged(
     VideoStudioDimmingChanged event,
     Emitter<VideoStudioState> emit,
   ) {
-    CanvasOverlayGenerator.clearLayoutCache();
+    // Rapid slider drags fire dozens of events per second; each emit wipes the
+    // overlay layout cache and rebuilds the whole studio sheet with its live
+    // canvases, saturating the UI thread. Emit immediately for instant
+    // feedback, then coalesce trailing changes to at most one emit per 60ms.
+    if (_dimmingCoalesceTimer != null) {
+      _pendingDimming = event.dimming;
+      return;
+    }
     emit(state.copyWith(config: state.config.copyWith(backgroundDimming: event.dimming)));
+    _dimmingCoalesceTimer = Timer(const Duration(milliseconds: 60), () {
+      _dimmingCoalesceTimer = null;
+      final pending = _pendingDimming;
+      _pendingDimming = null;
+      if (!isClosed && pending != null) {
+        add(VideoStudioDimmingChanged(pending));
+      }
+    });
   }
 
   void _onTextStyleChanged(
@@ -543,10 +564,14 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
     VideoStudioPlaybackToggled event,
     Emitter<VideoStudioState> emit,
   ) async {
-    // An audio load is in flight (reciter/range/retry): starting playback now
-    // would either replay the previous reciter's stale source or race the
-    // pending commit. The play button shows a spinner while preparing.
-    if (state.isPreparingAudio) return;
+    // An audio load is in flight (reciter/range/retry/init): starting playback
+    // now would either replay a stale source or race the pending commit — but
+    // silently swallowing the tap forced users to tap the play button twice.
+    // Queue the intent instead: once the load commits, playback auto-starts.
+    if (state.isPreparingAudio) {
+      _pendingPlayAfterPrepare = true;
+      return;
+    }
 
     if (state.audioFilePaths.isEmpty) {
       await _loadAudioAndVersesForCurrentSpan(emit);
@@ -589,9 +614,18 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         }
 
         if (state.mergedPreviewAudioPath != null) {
+          // Re-set only when the player object holds nothing or a stale file.
+          // Restart-from-completed correctness is owned natively by
+          // just_audio_windows_plus 0.5.3; keeping the app a thin client here
+          // avoids a redundant file re-open racing the video player init.
           if (_previewPlayer.audioSource == null || _loadedVerseIndex != 0) {
-            await _previewPlayer.setAudioSource(_createAudioSource(state.mergedPreviewAudioPath!));
-            _loadedVerseIndex = 0;
+            _verseSwitchDepth++;
+            try {
+              await _previewPlayer.setAudioSource(_createAudioSource(state.mergedPreviewAudioPath!));
+              _loadedVerseIndex = 0;
+            } finally {
+              _verseSwitchDepth--;
+            }
           }
           await _previewPlayer.seek(Duration.zero);
         } else if (!kIsWeb && Platform.isWindows) {
@@ -699,6 +733,10 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       }
       if (state.audioFilePaths.isNotEmpty) {
         if (state.mergedPreviewAudioPath != null) {
+          // A bare seek is sufficient: just_audio_windows_plus 0.5.3 owns the
+          // completed-state recovery natively (verified by its app-style
+          // restart integration scenario), so the app stays a thin client
+          // here and never races an in-flight audio load with a re-load.
           await _previewPlayer.seek(Duration.zero);
         } else if (!kIsWeb && Platform.isWindows) {
           _verseSwitchDepth++;
@@ -1131,6 +1169,13 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
             loadedAudioKey: loadConfigKey,
           ),
         );
+
+        // Honor a play intent captured while this load was preparing: the
+        // user tapped play once and must not have to tap again.
+        if (!isClosed && _pendingPlayAfterPrepare && paths.isNotEmpty) {
+          _pendingPlayAfterPrepare = false;
+          add(const VideoStudioPlaybackToggled());
+        }
     } catch (e) {
       if (myLoadGen != _loadGeneration || emit.isDone) return;
       try {
@@ -1145,6 +1190,9 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       final defaultMsg = loadConfig.isEnglish
           ? 'Failed to load recitation for selected reciter'
           : 'تعذر تحميل التلاوة الصوتية للقارئ المحدد';
+      // The queued play intent is void now: the load the user wanted to hear
+      // failed, and auto-starting after some FUTURE load would surprise them.
+      _pendingPlayAfterPrepare = false;
       emit(
         state.copyWith(
           isPreparingAudio: false,
@@ -1332,6 +1380,8 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
 
   @override
   Future<void> close() async {
+    _dimmingCoalesceTimer?.cancel();
+    _pendingPlayAfterPrepare = false;
     appVolumeCubit?.unregisterPlayer(_previewPlayer);
     _stopPositionTicker();
     await _playerStateSubscription?.cancel();
