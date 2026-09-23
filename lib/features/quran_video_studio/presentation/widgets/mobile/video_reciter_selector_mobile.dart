@@ -68,7 +68,7 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
   }
 
   void _showAllRecitersSheet(BuildContext context) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isEn = Localizations.localeOf(context).languageCode != 'ar';
 
     VideoAllRecitersModal.show(
       context: context,
@@ -152,8 +152,6 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
             itemBuilder: (context, index) {
               final cat = _recitersByCategory.keys.elementAt(index);
               final isCatSelected = cat == _activeCategory;
-              final isEn = Localizations.localeOf(context).languageCode == 'en';
-
               return InkWell(
                 onTap: () {
                   if (_activeCategory == cat) return;
@@ -185,7 +183,7 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
                   ),
                   child: Center(
                     child: Text(
-                      isEn ? ReciterCatalog.getCategoryNameEnglish(cat) : cat,
+                      ReciterCatalog.localizeCategory(context, cat),
                       style: TextStyle(
                         fontSize: 11.5.sp,
                         fontWeight: isCatSelected ? FontWeight.w600 : FontWeight.w500,
@@ -211,10 +209,8 @@ class _VideoReciterSelectorMobileState extends State<VideoReciterSelectorMobile>
             itemBuilder: (context, index) {
               final reciter = currentReciters[index];
               final isSelected = reciter['name'] == widget.selectedReciter;
-              final isEn = Localizations.localeOf(context).languageCode == 'en';
-              final reciterDisplayName = isEn
-                  ? ReciterCatalog.getReciterNameEnglish(reciter['name']!)
-                  : reciter['name']!;
+              final reciterDisplayName =
+                  ReciterCatalog.localizeReciter(context, reciter['name']!);
 
               return InkWell(
                 onTap: () {

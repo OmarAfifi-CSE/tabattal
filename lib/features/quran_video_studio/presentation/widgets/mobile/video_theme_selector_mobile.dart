@@ -18,7 +18,6 @@ class VideoThemeSelectorMobile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,7 +78,7 @@ class VideoThemeSelectorMobile extends StatelessWidget {
                       ),
                       SizedBox(width: 6.w),
                       Text(
-                        isEn ? preset.nameEnglish : preset.nameArabic,
+                        preset.getName(context),
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

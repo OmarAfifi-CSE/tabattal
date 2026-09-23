@@ -89,10 +89,10 @@ class VerseCardImageExporter {
     required int endAyah,
     required String fallbackText,
   }) async {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final surahName = isEn
-        ? QuranMetadata.getSurahNameEnglish(surahNumber)
-        : QuranMetadata.getSurahName(surahNumber);
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isAr = langCode == 'ar';
+    final surahName =
+        QuranMetadata.getSurahNameForLocale(langCode, surahNumber);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final fileName = startAyah == endAyah
         ? 'Verse_${surahNumber}_${startAyah}_$timestamp.png'
@@ -151,10 +151,10 @@ class VerseCardImageExporter {
           );
         }
       } on MissingPluginException {
-        final shareTitle = isEn ? 'Surah $surahName' : 'سورة $surahName';
-        final shareText = isEn
-            ? '( $fallbackText ) — Surah $surahName'
-            : '﴿ $fallbackText ﴾ — سورة $surahName';
+        final shareTitle = isAr ? 'سورة $surahName' : 'Surah $surahName';
+        final shareText = isAr
+            ? '﴿ $fallbackText ﴾ — سورة $surahName'
+            : '( $fallbackText ) — Surah $surahName';
         await SharePlus.instance.share(
           ShareParams(
             title: shareTitle,
@@ -252,21 +252,21 @@ class VerseCardImageExporter {
     required bool includeTranslation,
     required String translationText,
   }) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final surahName = isEn
-        ? QuranMetadata.getSurahNameEnglish(surahNumber)
-        : QuranMetadata.getSurahName(surahNumber);
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isAr = langCode == 'ar';
+    final surahName =
+        QuranMetadata.getSurahNameForLocale(langCode, surahNumber);
     final l10n = AppLocalizations.of(context)!;
 
     final rangeText = startAyah == endAyah
         ? l10n.verseCardSurahSingleAyah(
             surahName,
-            isEn ? '$startAyah' : VerseCardTextUtils.toArabicDigits(startAyah),
+            !isAr ? '$startAyah' : VerseCardTextUtils.toArabicDigits(startAyah),
           )
         : l10n.verseCardSurahMultipleAyahs(
             surahName,
-            isEn ? '$startAyah' : VerseCardTextUtils.toArabicDigits(startAyah),
-            isEn ? '$endAyah' : VerseCardTextUtils.toArabicDigits(endAyah),
+            !isAr ? '$startAyah' : VerseCardTextUtils.toArabicDigits(startAyah),
+            !isAr ? '$endAyah' : VerseCardTextUtils.toArabicDigits(endAyah),
           );
 
     final buffer = StringBuffer();

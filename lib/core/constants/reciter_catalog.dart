@@ -218,6 +218,14 @@ class ReciterCatalog {
     'الترجمات الصوتية': 'Audio Translations',
   };
 
+  /// Indonesian names for reciter categories
+  static const Map<String, String> categoryIndonesianNames = {
+    'مرتل': 'Murattal',
+    'مجود': 'Mujawwad',
+    'المصحف المعلم': 'Mushaf Pengajar (Muallim)',
+    'الترجمات الصوتية': 'Terjemahan Audio',
+  };
+
   /// English transliterated names for reciters
 static const Map<String, String> reciterEnglishNames = {
     'محمد صديق المنشاوي': 'Mohamed Siddiq Al-Minshawi',
@@ -643,31 +651,57 @@ static const Map<String, String> reciterEnglishNames = {
     return categoryEnglishNames[arabicCategory] ?? arabicCategory;
   }
 
-  /// Universal localization helper that localizes either a reciter name or category name by boolean
-  static String localizeByLang(bool isEnglish, String arabicNameOrCategory) {
-    if (!isEnglish) return arabicNameOrCategory;
-    if (categoryEnglishNames.containsKey(arabicNameOrCategory)) {
-      return categoryEnglishNames[arabicNameOrCategory]!;
+  /// Returns the Indonesian name for any category
+  static String getCategoryNameIndonesian(String arabicCategory) {
+    return categoryIndonesianNames[arabicCategory] ?? getCategoryNameEnglish(arabicCategory);
+  }
+
+  /// Localizes category by locale language code
+  static String localizeCategoryForLocale(String langCode, String category) {
+    if (langCode == 'ar') return category;
+    if (langCode == 'id') return getCategoryNameIndonesian(category);
+    return getCategoryNameEnglish(category);
+  }
+
+  /// Localizes reciter by locale language code
+  static String localizeReciterForLocale(String langCode, String reciter) {
+    if (langCode == 'ar') return reciter;
+    return getReciterNameEnglish(reciter);
+  }
+
+  /// Universal localization helper that localizes either a reciter name or category name by locale language code
+  static String localizeForLocale(String langCode, String arabicNameOrCategory) {
+    if (langCode == 'ar') return arabicNameOrCategory;
+    if (categoryEnglishNames.containsKey(arabicNameOrCategory) ||
+        categoryIndonesianNames.containsKey(arabicNameOrCategory)) {
+      return localizeCategoryForLocale(langCode, arabicNameOrCategory);
     }
     return getReciterNameEnglish(arabicNameOrCategory);
   }
 
+  /// Universal localization helper that localizes either a reciter name or category name by boolean
+  static String localizeByLang(bool isEnglish, String arabicNameOrCategory) {
+    return isEnglish
+        ? localizeForLocale('en', arabicNameOrCategory)
+        : arabicNameOrCategory;
+  }
+
   /// Universal localization helper using BuildContext
   static String localize(BuildContext context, String arabicNameOrCategory) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
-    return localizeByLang(isEn, arabicNameOrCategory);
+    final langCode = Localizations.localeOf(context).languageCode;
+    return localizeForLocale(langCode, arabicNameOrCategory);
   }
 
   /// Localize category by BuildContext
   static String localizeCategory(BuildContext context, String category) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
-    return isEn ? getCategoryNameEnglish(category) : category;
+    final langCode = Localizations.localeOf(context).languageCode;
+    return localizeCategoryForLocale(langCode, category);
   }
 
   /// Localize reciter by BuildContext
   static String localizeReciter(BuildContext context, String reciter) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
-    return isEn ? getReciterNameEnglish(reciter) : reciter;
+    final langCode = Localizations.localeOf(context).languageCode;
+    return localizeReciterForLocale(langCode, reciter);
   }
 
   /// Returns the flat EveryAyah reciter path from any category

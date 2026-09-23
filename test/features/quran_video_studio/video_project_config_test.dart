@@ -88,6 +88,45 @@ void main() {
       expect(updated.showEnglishTranslation, true);
     });
 
+    test('VideoProjectConfig languageCode and locale helpers', () {
+      const arConfig = VideoProjectConfig(
+        surahNumber: 1,
+        startAyah: 1,
+        endAyah: 7,
+      );
+      expect(arConfig.languageCode, 'ar');
+      expect(arConfig.isArabic, true);
+      expect(arConfig.isEnglish, false);
+      expect(arConfig.isIndonesian, false);
+
+      const idConfig = VideoProjectConfig(
+        surahNumber: 1,
+        startAyah: 1,
+        endAyah: 7,
+        languageCode: 'id',
+      );
+      expect(idConfig.languageCode, 'id');
+      expect(idConfig.isArabic, false);
+      expect(idConfig.isEnglish, false);
+      expect(idConfig.isIndonesian, true);
+
+      const enConfig = VideoProjectConfig(
+        surahNumber: 1,
+        startAyah: 1,
+        endAyah: 7,
+        languageCode: 'en',
+      );
+      expect(enConfig.languageCode, 'en');
+      expect(enConfig.isArabic, false);
+      expect(enConfig.isEnglish, true);
+      expect(enConfig.isIndonesian, false);
+
+      final copyToId = enConfig.copyWith(languageCode: 'id');
+      expect(copyToId.languageCode, 'id');
+      expect(copyToId.isIndonesian, true);
+      expect(copyToId.isEnglish, false);
+    });
+
     test('WordTimingSegment and LineTimingSegment helpers', () {
       const seg1 = WordTimingSegment(wordPosition: 1, startMs: 0, endMs: 1200);
       const seg2 = WordTimingSegment(wordPosition: 2, startMs: 1200, endMs: 2800);

@@ -13,6 +13,7 @@ import '../../bloc/quran_state.dart';
 class TafsirOption {
   final int id;
   final String name;
+  final String? langBadge;
   final bool isDownloaded;
   final bool isDownloading;
   final double downloadProgress;
@@ -20,6 +21,7 @@ class TafsirOption {
   const TafsirOption({
     required this.id,
     required this.name,
+    this.langBadge,
     this.isDownloaded = true,
     this.isDownloading = false,
     this.downloadProgress = 0.0,
@@ -58,28 +60,48 @@ class TafsirOption {
     int? activeDownloadingId,
     double? activeDownloadProgress,
   }) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final langCode = Localizations.localeOf(context).languageCode;
     final l10n = AppLocalizations.of(context)!;
 
-    final rawList = isEn
-        ? [
-            (169, l10n.tafsirEnIbnKathir),
-            (168, l10n.tafsirEnMaarif),
-            (817, l10n.tafsirEnTazkirul),
-          ]
-        : [
-            (16, l10n.tafsirAlMuyassar),
-            (14, l10n.tafsirIbnKathir),
-            (91, l10n.tafsirAlSaadi),
-            (15, l10n.tafsirAlTabari),
-            (90, l10n.tafsirAlQurtubi),
-            (93, l10n.tafsirAlWaseet),
-            (94, l10n.tafsirAlBaghawi),
-          ];
+    final List<(int, String, String?)> rawList;
+    if (langCode == 'en') {
+      rawList = [
+        (169, l10n.tafsirEnIbnKathir, null),
+        (168, l10n.tafsirEnMaarif, null),
+        (817, l10n.tafsirEnTazkirul, null),
+      ];
+    } else if (langCode == 'id') {
+      // Indonesian: Display all Arabic and English tafsirs with clear badges
+      rawList = [
+        // Arabic Tafsirs (with AR badge)
+        (16, l10n.tafsirAlMuyassar, 'AR'),
+        (14, l10n.tafsirIbnKathir, 'AR'),
+        (91, l10n.tafsirAlSaadi, 'AR'),
+        (15, l10n.tafsirAlTabari, 'AR'),
+        (90, l10n.tafsirAlQurtubi, 'AR'),
+        (93, l10n.tafsirAlWaseet, 'AR'),
+        (94, l10n.tafsirAlBaghawi, 'AR'),
+        // English Tafsirs (with EN badge)
+        (169, l10n.tafsirEnIbnKathir, 'EN'),
+        (168, l10n.tafsirEnMaarif, 'EN'),
+        (817, l10n.tafsirEnTazkirul, 'EN'),
+      ];
+    } else {
+      rawList = [
+        (16, l10n.tafsirAlMuyassar, null),
+        (14, l10n.tafsirIbnKathir, null),
+        (91, l10n.tafsirAlSaadi, null),
+        (15, l10n.tafsirAlTabari, null),
+        (90, l10n.tafsirAlQurtubi, null),
+        (93, l10n.tafsirAlWaseet, null),
+        (94, l10n.tafsirAlBaghawi, null),
+      ];
+    }
 
     return rawList.map((item) {
       final id = item.$1;
       final name = item.$2;
+      final langBadge = item.$3;
       final isDownloaded = id == 16 ||
           _cachedDownloadedIds.contains(id) ||
           downloadedIds.contains(id) ||
@@ -102,6 +124,7 @@ class TafsirOption {
       return TafsirOption(
         id: id,
         name: name,
+        langBadge: langBadge,
         isDownloaded: isDownloaded,
         isDownloading: isDownloading,
         downloadProgress: progress,
@@ -113,6 +136,8 @@ class TafsirOption {
   static String getTafsirName(BuildContext context, int id) {
     final l10n = AppLocalizations.of(context)!;
     switch (id) {
+      case 33:
+        return l10n.tafsirIndonesianKemenag;
       // Arabic tafsirs
       case 16:
         return l10n.tafsirAlMuyassar;
@@ -181,8 +206,9 @@ class TafsirSelectorMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final itemH = itemHeight;
     final maxH = maxHeight ?? math.min(220.0, options.length * itemH);
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final effectiveWidth = menuWidth ?? (isEn ? 190.0 : 120.0);
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isAr = langCode == 'ar';
+    final effectiveWidth = menuWidth ?? (isAr ? 120.0 : (langCode == 'id' ? 225.0 : 210.0));
 
     QuranBloc? quranBloc;
     try {
@@ -217,7 +243,7 @@ class TafsirSelectorMenu extends StatelessWidget {
           padding: EdgeInsets.zero,
           height: maxH,
           child: Directionality(
-            textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+            textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
             child: _TafsirMenuScrollableContent(
               options: options,
               selectedId: selectedId,
@@ -450,6 +476,31 @@ class _TafsirMenuScrollableContentState
                                   Icons.check_rounded,
                                   color: AppColors.accentGold,
                                   size: 16.r,
+                                ),
+                              ),
+                            if (option.langBadge != null)
+                              Container(
+                                margin: EdgeInsetsDirectional.only(end: 6.w),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 4.w,
+                                  vertical: 1.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentGold.withValues(alpha: 0.14),
+                                  borderRadius: BorderRadius.circular(4.r),
+                                  border: Border.all(
+                                    color: AppColors.accentGold.withValues(alpha: 0.35),
+                                    width: 0.8.w,
+                                  ),
+                                ),
+                                child: Text(
+                                  option.langBadge!,
+                                  style: TextStyle(
+                                    fontSize: 9.5.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.accentGold,
+                                    letterSpacing: 0.4,
+                                  ),
                                 ),
                               ),
                             Expanded(

@@ -25,7 +25,7 @@ import '../shared/surah_download_status_card.dart';
 void showAudioSettingsSheetMobile(BuildContext context, {int? verseId}) {
   final audioBloc = context.read<AudioBloc>();
   final audioPrefs = context.read<AudioPreferencesService>();
-  final isEn = Localizations.localeOf(context).languageCode == 'en';
+  final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
   showModalBottomSheet(
     context: context,
@@ -35,7 +35,7 @@ void showAudioSettingsSheetMobile(BuildContext context, {int? verseId}) {
     ),
     isScrollControlled: true,
     builder: (_) => Directionality(
-      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
       child: MultiBlocProvider(
         providers: [BlocProvider.value(value: audioBloc)],
         child: _AudioSettingsSheetContent(
@@ -155,7 +155,6 @@ class _AudioSettingsSheetContentState
 
   @override
   Widget build(BuildContext context) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
     final categories = AudioDownloadManager.reciterCategories.keys.toList();
     final reciters = _recitersForCategory;
     final audioBloc = context.read<AudioBloc>();
@@ -211,7 +210,7 @@ class _AudioSettingsSheetContentState
               itemFontSize: 14.5.sp,
               iconSize: 18.sp,
               onChanged: (val) => _onCategoryChanged(val),
-              labelBuilder: (item) => ReciterLocalization.localizeByLang(isEn, item),
+              labelBuilder: (item) => ReciterLocalization.localize(context, item),
             ),
             SizedBox(height: 10.h),
 
@@ -243,7 +242,7 @@ class _AudioSettingsSheetContentState
                     }
                   : null,
               onChanged: (val) => _onReciterChanged(val),
-              labelBuilder: (item) => ReciterLocalization.localizeByLang(isEn, item),
+              labelBuilder: (item) => ReciterLocalization.localize(context, item),
             ),
             Builder(
               builder: (context) {

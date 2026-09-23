@@ -36,12 +36,12 @@ class VerseCardRangePicker extends StatelessWidget {
     required ValueChanged<int> onSelected,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final isDesktopOrTablet = MediaQuery.sizeOf(context).width > 600;
 
     Widget buildContent(BuildContext ctx, {required bool isDialog}) {
       return Directionality(
-        textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+        textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
         child: Container(
           constraints: BoxConstraints(
             maxHeight: isDialog ? 480.h : MediaQuery.sizeOf(ctx).height * 0.65,
@@ -134,7 +134,7 @@ class VerseCardRangePicker extends StatelessWidget {
                         alignment: Alignment.center,
                         child: Text(
                           l10n.verseCardAyah(
-                            isEn
+                            !isAr
                                 ? '$item'
                                 : VerseCardTextUtils.toArabicDigits(item),
                           ),
@@ -190,7 +190,8 @@ class VerseCardRangePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isAr = langCode == 'ar';
 
     final startOptions = List.generate(totalAyahsInSurah, (i) => i + 1);
     final maxEndForCurrentStart = _getMaxEndAyah(startAyah);
@@ -228,9 +229,7 @@ class VerseCardRangePicker extends StatelessWidget {
                 ),
                 child: Text(
                   l10n.verseCardSurah(
-                    isEn
-                        ? QuranMetadata.getSurahNameEnglish(surahNumber!)
-                        : QuranMetadata.getSurahName(surahNumber!),
+                    QuranMetadata.getSurahNameForLocale(langCode, surahNumber!),
                   ),
                   style: TextStyle(
                     fontSize: 11.sp,
@@ -272,7 +271,7 @@ class VerseCardRangePicker extends StatelessWidget {
                     children: [
                       Text(
                         l10n.verseCardFromAyah(
-                          isEn
+                          !isAr
                               ? '$startAyah'
                               : VerseCardTextUtils.toArabicDigits(startAyah),
                         ),
@@ -318,7 +317,7 @@ class VerseCardRangePicker extends StatelessWidget {
                     children: [
                       Text(
                         l10n.verseCardToAyah(
-                          isEn
+                          !isAr
                               ? '$endAyah'
                               : VerseCardTextUtils.toArabicDigits(endAyah),
                         ),

@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/repositories/quran_repository.dart';
+import '../../../../core/constants/quran_constants.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/download_state.dart';
 import 'quran_event.dart';
@@ -76,20 +77,34 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
     String? languageCode,
   ) async {
     final prefs = await SharedPreferences.getInstance();
-    int savedId =
-        prefs.getInt('tafsir_id') ?? (languageCode == 'en' ? 169 : 16);
+    final lang = languageCode ?? 'ar';
+    final isEn = lang == 'en';
+    final defaultId = isEn ? 169 : 16;
 
-    if (languageCode == 'en' && ![169, 168, 817].contains(savedId)) {
-      savedId = 169;
-    } else if (languageCode == 'ar' &&
-        ![16, 14, 91, 15, 90, 93, 94].contains(savedId)) {
-      savedId = 16;
+    final int? localeSpecificId = prefs.getInt('tafsir_id_$lang');
+    int savedId = localeSpecificId ?? prefs.getInt('tafsir_id') ?? defaultId;
+
+    if (isEn) {
+      if (localeSpecificId == null || ![169, 168, 817].contains(savedId)) {
+        savedId = 169;
+      }
+    } else if (lang == 'id') {
+      const allowedIdTafsirs = [16, 14, 91, 15, 90, 93, 94, 169, 168, 817];
+      if (localeSpecificId == null || !allowedIdTafsirs.contains(savedId)) {
+        savedId = 16;
+      }
+    } else {
+      if (localeSpecificId == null ||
+          [169, 168, 817, 33].contains(savedId)) {
+        savedId = 16;
+      }
     }
 
-    int currentId = eventResourceId ?? savedId;
+    final int currentId = eventResourceId ?? savedId;
     if (currentId != prefs.getInt('tafsir_id')) {
       await prefs.setInt('tafsir_id', currentId);
     }
+    await prefs.setInt('tafsir_id_$lang', currentId);
     return currentId;
   }
 
@@ -266,7 +281,14 @@ class QuranBloc extends Bloc<QuranEvent, QuranState> {
     Emitter<QuranState> emit,
   ) async {
     emit(QuranOverlayLoading());
-    final result = await repository.getTranslation(event.verseKey);
+    final effectiveResourceId = event.resourceId ??
+        (event.languageCode != null
+            ? QuranConstants.defaultTranslationIdForLocale(event.languageCode!)
+            : QuranConstants.defaultTranslationId);
+    final result = await repository.getTranslation(
+      event.verseKey,
+      resourceId: effectiveResourceId,
+    );
     result.fold(
       (f) => emit(const QuranOverlayError('Content temporarily unavailable')),
       (translation) => emit(TranslationLoaded(translation)),

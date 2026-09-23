@@ -34,7 +34,7 @@ class VideoRangePickerWeb extends StatelessWidget {
     required List<int> options,
     required ValueChanged<int> onSelected,
   }) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     showDialog(
       context: context,
       builder: (ctx) {
@@ -46,7 +46,7 @@ class VideoRangePickerWeb extends StatelessWidget {
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: 420.w, maxHeight: 480.h),
             child: Directionality(
-              textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+              textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
               child: Padding(
                 padding: EdgeInsets.all(20.0.r),
                 child: Column(
@@ -110,8 +110,7 @@ class VideoRangePickerWeb extends StatelessWidget {
                               ),
                               alignment: Alignment.center,
                               child: Text(
-                                Localizations.localeOf(context).languageCode ==
-                                        'en'
+                                !isAr
                                     ? '$ayah'
                                     : VerseCardTextUtils.toArabicDigits(ayah),
                                 style: TextStyle(
@@ -142,7 +141,8 @@ class VideoRangePickerWeb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isAr = langCode == 'ar';
     final startOptions = List.generate(totalAyahsInSurah, (i) => i + 1);
     final maxEnd = _getMaxEndAyah(startAyah);
     final endOptions = List.generate(
@@ -178,9 +178,7 @@ class VideoRangePickerWeb extends StatelessWidget {
               ),
               child: Text(
                 l10n.verseCardSurah(
-                  isEn
-                      ? QuranMetadata.getSurahNameEnglish(surahNumber)
-                      : QuranMetadata.getSurahName(surahNumber),
+                  QuranMetadata.getSurahNameForLocale(langCode, surahNumber),
                 ),
                 style: TextStyle(
                   fontSize: 13.0.sp,
@@ -227,7 +225,7 @@ class VideoRangePickerWeb extends StatelessWidget {
                       Flexible(
                         child: Text(
                           l10n.verseCardFromAyah(
-                            isEn
+                            !isAr
                                 ? '$startAyah'
                                 : VerseCardTextUtils.toArabicDigits(startAyah),
                           ),
@@ -284,7 +282,7 @@ class VideoRangePickerWeb extends StatelessWidget {
                       Flexible(
                         child: Text(
                           l10n.verseCardToAyah(
-                            isEn
+                            !isAr
                                 ? '$endAyah'
                                 : VerseCardTextUtils.toArabicDigits(endAyah),
                           ),

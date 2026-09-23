@@ -181,7 +181,7 @@ class ThemeAndLanguageSheetWeb extends StatelessWidget {
                     textDirection: TextDirection.rtl,
                     child: BlocBuilder<LocaleCubit, Locale>(
                       builder: (context, locale) {
-                        final isCurrentArabic = locale.languageCode == 'ar';
+                        final currentLang = locale.languageCode;
                         return Container(
                           padding: EdgeInsets.all(4.r),
                           decoration: BoxDecoration(
@@ -197,11 +197,11 @@ class ThemeAndLanguageSheetWeb extends StatelessWidget {
                               Expanded(
                                 child: _LanguagePillWeb(
                                   label: 'العربية',
-                                  isSelected: isCurrentArabic,
+                                  isSelected: currentLang == 'ar',
                                   activeGold: activeTheme.goldColor,
                                   isLandscape: isLandscape,
                                   onTap: () {
-                                    if (!isCurrentArabic) {
+                                    if (currentLang != 'ar') {
                                       context.read<LocaleCubit>().setLocale('ar');
                                     }
                                   },
@@ -211,12 +211,26 @@ class ThemeAndLanguageSheetWeb extends StatelessWidget {
                               Expanded(
                                 child: _LanguagePillWeb(
                                   label: 'English',
-                                  isSelected: !isCurrentArabic,
+                                  isSelected: currentLang == 'en',
                                   activeGold: activeTheme.goldColor,
                                   isLandscape: isLandscape,
                                   onTap: () {
-                                    if (isCurrentArabic) {
+                                    if (currentLang != 'en') {
                                       context.read<LocaleCubit>().setLocale('en');
+                                    }
+                                  },
+                                ),
+                              ),
+                              SizedBox(width: 6.w),
+                              Expanded(
+                                child: _LanguagePillWeb(
+                                  label: 'Indonesia',
+                                  isSelected: currentLang == 'id',
+                                  activeGold: activeTheme.goldColor,
+                                  isLandscape: isLandscape,
+                                  onTap: () {
+                                    if (currentLang != 'id') {
+                                      context.read<LocaleCubit>().setLocale('id');
                                     }
                                   },
                                 ),
@@ -429,19 +443,23 @@ class _LanguagePillWeb extends StatelessWidget {
             if (isSelected) ...[
               Icon(
                 Icons.check_circle_rounded,
-                size: (isLandscape ? 16.0 : 20.0).sp,
+                size: (isLandscape ? 15.0 : 18.0).sp,
                 color: activeGold,
               ),
-              SizedBox(width: (isLandscape ? 6.0 : 8.0).w),
+              SizedBox(width: (isLandscape ? 5.0 : 6.0).w),
             ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: (isLandscape ? 15.0 : 17.5).sp,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected
-                    ? activeGold
-                    : AppColors.textPrimary.withValues(alpha: 0.7),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: (isLandscape ? 14.5 : 16.5).sp,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected
+                      ? activeGold
+                      : AppColors.textPrimary.withValues(alpha: 0.7),
+                ),
               ),
             ),
           ],

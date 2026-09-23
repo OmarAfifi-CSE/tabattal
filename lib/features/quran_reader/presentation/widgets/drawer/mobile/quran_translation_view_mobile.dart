@@ -11,6 +11,7 @@ import '../../../../data/datasources/quran_local_data_source.dart';
 import '../../../../../quran_audio/presentation/bloc/audio_bloc.dart';
 import '../../../../../quran_audio/presentation/bloc/audio_event.dart';
 import '../../../../../quran_audio/presentation/bloc/audio_state.dart';
+import '../../../../../../core/constants/quran_constants.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
 import '../../../../../quran_audio/presentation/widgets/shared/audio_settings_sheet.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -49,7 +50,9 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
   bool _isLoadingMore = false;
   final List<VerseTranslationDataMobile> _list = [];
   int _currentSurahId = 1;
-  final int _translationResourceId = 20; // Default: Saheeh International
+  int get _translationResourceId => QuranConstants.defaultTranslationIdForLocale(
+        Localizations.localeOf(context).languageCode,
+      );
   int _initialScrollIndex = 0;
 
   String? _initialVerseKey;

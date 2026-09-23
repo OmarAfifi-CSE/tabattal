@@ -25,7 +25,9 @@ class ListeningOnlyNoticeBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isAr = langCode == 'ar';
+    final isId = langCode == 'id';
 
     final String titleText;
     final String descriptionText;
@@ -36,30 +38,42 @@ class ListeningOnlyNoticeBanner extends StatelessWidget {
 
     if (reciterName != null && reciterName!.isNotEmpty) {
       final displayName =
-          ReciterLocalization.localizeByLang(isEn, reciterName!);
+          ReciterLocalization.localize(context, reciterName!);
 
       if (isSpecificSurah) {
-        titleText = isEn
-            ? 'Listening-Only Mode (This surah)'
-            : 'تلاوة استماع (لهذه السورة)';
-        descriptionText = isEn
-            ? 'Synchronized tracking is unavailable for this surah with ($displayName) due to missing timing data in this recording. You can choose another reciter for synchronized tracking.'
-            : 'التتبع اللحظي غير متاح لهذه السورة مع ($displayName) لعدم توفر توقيتات في هذا التسجيل، ويمكنك اختيار قارئ آخر لتفعيل التتبع المتزامن.';
+        titleText = isAr
+            ? 'تلاوة استماع (لهذه السورة)'
+            : (isId
+                ? 'Mode Hanya Mendengarkan (Surah ini)'
+                : 'Listening-Only Mode (This surah)');
+        descriptionText = isAr
+            ? 'التتبع اللحظي غير متاح لهذه السورة مع ($displayName) لعدم توفر توقيتات في هذا التسجيل، ويمكنك اختيار قارئ آخر لتفعيل التتبع المتزامن.'
+            : (isId
+                ? 'Pelacakan ayat tersinkronisasi tidak tersedia untuk surah ini dengan ($displayName) karena tidak ada data waktu dalam rekaman ini. Anda dapat memilih qari lain untuk pelacakan tersinkronisasi.'
+                : 'Synchronized tracking is unavailable for this surah with ($displayName) due to missing timing data in this recording. You can choose another reciter for synchronized tracking.');
       } else {
-        titleText = isEn
-            ? 'Listening-Only Mode (This reciter)'
-            : 'تلاوة استماع (خاصة بهذا القارئ)';
-        descriptionText = isEn
-            ? 'Recordings for ($displayName) feature full surah audio without synchronized verse tracking. You can choose another reciter at any time for synchronized tracking.'
-            : 'تسجيلات ($displayName) تعمل بالتلاوة الكاملة دون تتبع متزامن للآيات، ويمكنك اختيار قارئ آخر في أي وقت لتفعيل التتبع والتظليل المتزامن.';
+        titleText = isAr
+            ? 'تلاوة استماع (خاصة بهذا القارئ)'
+            : (isId
+                ? 'Mode Hanya Mendengarkan (Qari ini)'
+                : 'Listening-Only Mode (This reciter)');
+        descriptionText = isAr
+            ? 'تسجيلات ($displayName) تعمل بالتلاوة الكاملة دون تتبع متزامن للآيات، ويمكنك اختيار قارئ آخر في أي وقت لتفعيل التتبع والتظليل المتزامن.'
+            : (isId
+                ? 'Rekaman untuk ($displayName) memutar audio surah penuh tanpa pelacakan ayat tersinkronisasi. Anda dapat memilih qari lain kapan saja untuk pelacakan tersinkronisasi.'
+                : 'Recordings for ($displayName) feature full surah audio without synchronized verse tracking. You can choose another reciter at any time for synchronized tracking.');
       }
     } else {
-      titleText = isEn
-          ? 'Listening-Only Reciters'
-          : 'قراء بنمط الاستماع (بدون تتبع للآيات)';
-      descriptionText = isEn
-          ? 'Recordings for these reciters feature full surah audio without synchronized verse tracking. You can choose a reciter from other categories to enable synchronized tracking.'
-          : 'تسجيلات هؤلاء القراء تعمل بالتلاوة الكاملة دون تتبع متزامن للآيات، ويمكنك اختيار قارئ من الفئات الأخرى لتفعيل التتبع والتظليل المتزامن.';
+      titleText = isAr
+          ? 'قراء بنمط الاستماع (بدون تتبع للآيات)'
+          : (isId
+              ? 'Qari Mode Hanya Mendengarkan'
+              : 'Listening-Only Reciters');
+      descriptionText = isAr
+          ? 'تسجيلات هؤلاء القراء تعمل بالتلاوة الكاملة دون تتبع متزامن للآيات، ويمكنك اختيار قارئ من الفئات الأخرى لتفعيل التتبع والتظليل المتزامن.'
+          : (isId
+              ? 'Rekaman untuk qari ini memutar audio surah penuh tanpa pelacakan ayat tersinkronisasi. Anda dapat memilih qari dari kategori lain untuk mengaktifkan pelacakan tersinkronisasi.'
+              : 'Recordings for these reciters feature full surah audio without synchronized verse tracking. You can choose a reciter from other categories to enable synchronized tracking.');
     }
 
     return Container(

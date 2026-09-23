@@ -4,6 +4,7 @@ class VideoThemePreset {
   final String id;
   final String nameArabic;
   final String nameEnglish;
+  final String nameIndonesian;
   final List<Color> gradientColors;
   final Color primaryTextColor;
   final Color secondaryTextColor;
@@ -18,6 +19,7 @@ class VideoThemePreset {
     required this.id,
     required this.nameArabic,
     required this.nameEnglish,
+    this.nameIndonesian = '',
     required this.gradientColors,
     required this.primaryTextColor,
     required this.secondaryTextColor,
@@ -29,10 +31,18 @@ class VideoThemePreset {
     this.endAlignment = Alignment.bottomCenter,
   });
 
+  String getName(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+    if (lang == 'ar') return nameArabic;
+    if (lang == 'id' && nameIndonesian.isNotEmpty) return nameIndonesian;
+    return nameEnglish;
+  }
+
   static const VideoThemePreset cream = VideoThemePreset(
     id: 'cream',
     nameArabic: 'كريمي',
     nameEnglish: 'Cream',
+    nameIndonesian: 'Krem',
     gradientColors: [Color(0xFFFBF7F0), Color(0xFFF7F2E7)],
     primaryTextColor: Color(0xFF2C2520),
     secondaryTextColor: Color(0xFF5D4A3A),
@@ -46,6 +56,7 @@ class VideoThemePreset {
     id: 'white',
     nameArabic: 'أبيض',
     nameEnglish: 'White',
+    nameIndonesian: 'Putih',
     gradientColors: [Color(0xFFFFFFFF), Color(0xFFF8F9FA)],
     primaryTextColor: Color(0xFF111827),
     secondaryTextColor: Color(0xFF6B7280),
@@ -59,6 +70,7 @@ class VideoThemePreset {
     id: 'vintage',
     nameArabic: 'عتيق',
     nameEnglish: 'Vintage',
+    nameIndonesian: 'Klasik',
     gradientColors: [Color(0xFFF5EBE0), Color(0xFFEFE3D3)],
     primaryTextColor: Color(0xFF3A2D21),
     secondaryTextColor: Color(0xFF6E5642),
@@ -72,6 +84,7 @@ class VideoThemePreset {
     id: 'rose_gold',
     nameArabic: 'روز جولد',
     nameEnglish: 'Rose Gold',
+    nameIndonesian: 'Rose Gold',
     gradientColors: [Color(0xFFFDF8F5), Color(0xFFF7ECE7)],
     primaryTextColor: Color(0xFF38282A),
     secondaryTextColor: Color(0xFF6B5154),
@@ -85,6 +98,7 @@ class VideoThemePreset {
     id: 'mint',
     nameArabic: 'نعناعي',
     nameEnglish: 'Mint',
+    nameIndonesian: 'Mint',
     gradientColors: [Color(0xFFF0F7F4), Color(0xFFE1EFEA)],
     primaryTextColor: Color(0xFF1B3B2B),
     secondaryTextColor: Color(0xFF436B56),
@@ -98,6 +112,7 @@ class VideoThemePreset {
     id: 'olive',
     nameArabic: 'زيتوني',
     nameEnglish: 'Olive',
+    nameIndonesian: 'Zaitun',
     gradientColors: [Color(0xFFF7F8F2), Color(0xFFECEFE5)],
     primaryTextColor: Color(0xFF252B1E),
     secondaryTextColor: Color(0xFF535C48),
@@ -111,6 +126,7 @@ class VideoThemePreset {
     id: 'ice_blue',
     nameArabic: 'ثلجي',
     nameEnglish: 'Ice Blue',
+    nameIndonesian: 'Biru Es',
     gradientColors: [Color(0xFFF4F8FA), Color(0xFFE5F0F5)],
     primaryTextColor: Color(0xFF1D2830),
     secondaryTextColor: Color(0xFF425A70),
@@ -124,6 +140,7 @@ class VideoThemePreset {
     id: 'slate',
     nameArabic: 'رخامي',
     nameEnglish: 'Slate',
+    nameIndonesian: 'Marmer',
     gradientColors: [Color(0xFFF4F5F7), Color(0xFFE8ECF0)],
     primaryTextColor: Color(0xFF1E252B),
     secondaryTextColor: Color(0xFF4C5866),
@@ -137,6 +154,7 @@ class VideoThemePreset {
     id: 'emerald',
     nameArabic: 'زمردي',
     nameEnglish: 'Emerald',
+    nameIndonesian: 'Zamrud',
     gradientColors: [Color(0xFF0A1F18), Color(0xFF06150C)],
     primaryTextColor: Color(0xFFFAF6F0),
     secondaryTextColor: Color(0xFFD0C3B0),
@@ -150,6 +168,7 @@ class VideoThemePreset {
     id: 'burgundy',
     nameArabic: 'عنابي',
     nameEnglish: 'Burgundy',
+    nameIndonesian: 'Merah Marun',
     gradientColors: [Color(0xFF1A0C14), Color(0xFF10050B)],
     primaryTextColor: Color(0xFFF8EEF2),
     secondaryTextColor: Color(0xFFC7A5B5),
@@ -163,6 +182,7 @@ class VideoThemePreset {
     id: 'night',
     nameArabic: 'ليلي',
     nameEnglish: 'Dark',
+    nameIndonesian: 'Gelap',
     gradientColors: [Color(0xFF0D1117), Color(0xFF07090C)],
     primaryTextColor: Color(0xFFF0F6FC),
     secondaryTextColor: Color(0xFF8B949E),

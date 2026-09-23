@@ -150,7 +150,7 @@ class ThemeAndLanguageSheetMobile extends StatelessWidget {
                     textDirection: TextDirection.rtl,
                     child: BlocBuilder<LocaleCubit, Locale>(
                       builder: (context, locale) {
-                        final isCurrentArabic = locale.languageCode == 'ar';
+                        final currentLang = locale.languageCode;
                         return Container(
                           padding: EdgeInsets.all(5.r),
                           decoration: BoxDecoration(
@@ -166,24 +166,37 @@ class ThemeAndLanguageSheetMobile extends StatelessWidget {
                               Expanded(
                                 child: _LanguagePillMobile(
                                   label: 'العربية',
-                                  isSelected: isCurrentArabic,
+                                  isSelected: currentLang == 'ar',
                                   activeGold: activeTheme.goldColor,
                                   onTap: () {
-                                    if (!isCurrentArabic) {
+                                    if (currentLang != 'ar') {
                                       context.read<LocaleCubit>().setLocale('ar');
                                     }
                                   },
                                 ),
                               ),
-                              SizedBox(width: 8.w),
+                              SizedBox(width: 6.w),
                               Expanded(
                                 child: _LanguagePillMobile(
                                   label: 'English',
-                                  isSelected: !isCurrentArabic,
+                                  isSelected: currentLang == 'en',
                                   activeGold: activeTheme.goldColor,
                                   onTap: () {
-                                    if (isCurrentArabic) {
+                                    if (currentLang != 'en') {
                                       context.read<LocaleCubit>().setLocale('en');
+                                    }
+                                  },
+                                ),
+                              ),
+                              SizedBox(width: 6.w),
+                              Expanded(
+                                child: _LanguagePillMobile(
+                                  label: 'Indonesia',
+                                  isSelected: currentLang == 'id',
+                                  activeGold: activeTheme.goldColor,
+                                  onTap: () {
+                                    if (currentLang != 'id') {
+                                      context.read<LocaleCubit>().setLocale('id');
                                     }
                                   },
                                 ),
@@ -406,17 +419,21 @@ class _LanguagePillMobile extends StatelessWidget {
             if (isSelected) ...[
               Icon(
                 Icons.check_circle_rounded,
-                size: 18.sp,
+                size: 15.sp,
                 color: activeGold,
               ),
-              SizedBox(width: 6.w),
+              SizedBox(width: 4.w),
             ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 16.5.sp,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? activeGold : AppColors.textPrimary.withValues(alpha: 0.7),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 14.5.sp,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected ? activeGold : AppColors.textPrimary.withValues(alpha: 0.7),
+                ),
               ),
             ),
           ],

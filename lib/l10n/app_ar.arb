@@ -14,15 +14,16 @@
   "drawerAudioManager": "مدير الصوتيات",
   "drawerAudioManagerSubtitle": "تحميل وإدارة التلاوات",
   "drawerLanguage": "اللغة",
-  "drawerLanguageSubtitle": "العربية / English",
+  "drawerLanguageSubtitle": "العربية / English / Indonesia",
   "drawerThemeAndLanguage": "المظهر واللغة",
-  "drawerThemeAndLanguageSubtitle": "تخصيص المصحف والوضع الداكن • العربية / English",
+  "drawerThemeAndLanguageSubtitle": "تخصيص المصحف والوضع الداكن • العربية / English / Indonesia",
   "themeAndLanguageTitle": "المظهر واللغة",
   "menuTafsir": "التفسير",
   "menuTafsirTitle": "التفسير",
   "menuTranslation": "الترجمة",
   "menuWordMeanings": "معاني الكلمات",
   "wordMeaningsTitle": "معاني الكلمات",
+  "wordMeaningsEmptyState": "جميع مفردات الآية الكريمة واضحة وجلية المعنى",
   "wordMeaningsPronunciation": "النطق الصوتي",
   "wordMeaningsTranslation": "المعنى",
   "menuListen": "الاستماع للآيات",
@@ -120,6 +121,7 @@
     }
   },
   "downloadFailedInternet": "فشل تنزيل التفسير. يرجى التحقق من اتصالك بالإنترنت.",
+  "downloadFailedServer": "تعذر جلب المحتوى من الخادم. يرجى المحاولة مرة أخرى لاحقًا.",
   "fullTafsirTitle": "التفسير الكامل",
   "translationTitle": "الترجمة الإنجليزية",
   "bookmarksTitle": "العلامات المرجعية",
@@ -224,6 +226,7 @@
   },
   "languageArabic": "العربية",
   "languageEnglish": "English",
+  "languageIndonesian": "الإندونيسية",
   "languagePickerTitle": "اختر اللغة",
   "themeAppearanceTitle": "المظهر",
   "themeAppearanceSubtitle": "تخصيص ألوان المصحف والوضع الليلي",
@@ -665,5 +668,25 @@
       "percent": { "type": "int" }
     }
   },
-  "audioCancelDownloadTooltip": "إلغاء التحميل"
+  "audioCancelDownloadTooltip": "إلغاء التحميل",
+  "tafsirIndonesianKemenag": "ترجمة الشؤون الدينية (إندونيسي)",
+  "tafsirAlMuyassarWithLang": "التفسير الميسر (عربي)",
+  "tafsirIbnKathirWithLang": "تفسير ابن كثير (عربي)",
+  "tafsirAlSaadiWithLang": "تفسير السعدي (عربي)",
+  "audioRecitersAvailable": "{count} قارئًا متاحًا",
+  "@audioRecitersAvailable": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "audioReciterFavorites": "القراء المفضلون",
+  "audioReciterWithTracking": "تلاوات مع تتبع الآيات",
+  "audioReciterWithoutTracking": "تلاوات بدون تتبع الآيات",
+  "audioReciterAllAlphabetical": "جميع القراء أبجديًا",
+  "audioReciterSearchHint": "ابحث عن اسم القارئ...",
+  "audioReciterNoResults": "لم يتم العثور على قراء مطابقين",
+  "audioReciterSearchTryAgain": "جرّب البحث باسم آخر أو جزء من الاسم",
+  "audioReciterNoTrackingTag": "بدون تتبع",
+  "audioReciterAddToFavorites": "إضافة إلى المفضلة",
+  "audioReciterRemoveFromFavorites": "إزالة من المفضلة"
 }

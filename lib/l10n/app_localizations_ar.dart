@@ -51,14 +51,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get drawerLanguage => 'اللغة';
 
   @override
-  String get drawerLanguageSubtitle => 'العربية / English';
+  String get drawerLanguageSubtitle => 'العربية / English / Indonesia';
 
   @override
   String get drawerThemeAndLanguage => 'المظهر واللغة';
 
   @override
   String get drawerThemeAndLanguageSubtitle =>
-      'تخصيص المصحف والوضع الداكن • العربية / English';
+      'تخصيص المصحف والوضع الداكن • العربية / English / Indonesia';
 
   @override
   String get themeAndLanguageTitle => 'المظهر واللغة';
@@ -77,6 +77,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get wordMeaningsTitle => 'معاني الكلمات';
+
+  @override
+  String get wordMeaningsEmptyState =>
+      'جميع مفردات الآية الكريمة واضحة وجلية المعنى';
 
   @override
   String get wordMeaningsPronunciation => 'النطق الصوتي';
@@ -296,6 +300,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'فشل تنزيل التفسير. يرجى التحقق من اتصالك بالإنترنت.';
 
   @override
+  String get downloadFailedServer =>
+      'تعذر جلب المحتوى من الخادم. يرجى المحاولة مرة أخرى لاحقًا.';
+
+  @override
   String get fullTafsirTitle => 'التفسير الكامل';
 
   @override
@@ -362,6 +370,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get languageEnglish => 'English';
+
+  @override
+  String get languageIndonesian => 'الإندونيسية';
 
   @override
   String get languagePickerTitle => 'اختر اللغة';
@@ -1203,4 +1214,52 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get audioCancelDownloadTooltip => 'إلغاء التحميل';
+
+  @override
+  String get tafsirIndonesianKemenag => 'ترجمة الشؤون الدينية (إندونيسي)';
+
+  @override
+  String get tafsirAlMuyassarWithLang => 'التفسير الميسر (عربي)';
+
+  @override
+  String get tafsirIbnKathirWithLang => 'تفسير ابن كثير (عربي)';
+
+  @override
+  String get tafsirAlSaadiWithLang => 'تفسير السعدي (عربي)';
+
+  @override
+  String audioRecitersAvailable(int count) {
+    return '$count قارئًا متاحًا';
+  }
+
+  @override
+  String get audioReciterFavorites => 'القراء المفضلون';
+
+  @override
+  String get audioReciterWithTracking => 'تلاوات مع تتبع الآيات';
+
+  @override
+  String get audioReciterWithoutTracking => 'تلاوات بدون تتبع الآيات';
+
+  @override
+  String get audioReciterAllAlphabetical => 'جميع القراء أبجديًا';
+
+  @override
+  String get audioReciterSearchHint => 'ابحث عن اسم القارئ...';
+
+  @override
+  String get audioReciterNoResults => 'لم يتم العثور على قراء مطابقين';
+
+  @override
+  String get audioReciterSearchTryAgain =>
+      'جرّب البحث باسم آخر أو جزء من الاسم';
+
+  @override
+  String get audioReciterNoTrackingTag => 'بدون تتبع';
+
+  @override
+  String get audioReciterAddToFavorites => 'إضافة إلى المفضلة';
+
+  @override
+  String get audioReciterRemoveFromFavorites => 'إزالة من المفضلة';
 }

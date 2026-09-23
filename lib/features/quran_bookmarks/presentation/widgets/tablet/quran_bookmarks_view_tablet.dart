@@ -18,11 +18,12 @@ class QuranBookmarksViewTablet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return Scaffold(
       backgroundColor: AppColors.surfaceCream,
       appBar: AppBar(
         backgroundColor: AppColors.surfaceCream,
-        elevation: 0,
+        elevation: 0.r,
         centerTitle: true,
         title: Text(
           l10n.bookmarksTitle,
@@ -66,7 +67,9 @@ class QuranBookmarksViewTablet extends StatelessWidget {
 
                 return _BookmarkCard(
                   verseKey: verseKey,
-                  surahName: QuranMetadata.getSurahName(verseRef.surah),
+                  surahName: isAr
+                      ? QuranMetadata.getSurahName(verseRef.surah)
+                      : QuranMetadata.getSurahNameEnglish(verseRef.surah),
                   surahNum: verseRef.surah,
                   ayahNum: verseRef.ayah,
                   onNavigate: (page) => Navigator.pop(context, {
@@ -93,7 +96,9 @@ class QuranBookmarksViewTablet extends StatelessWidget {
 
               return _BookmarkCard(
                 verseKey: verseKey,
-                surahName: QuranMetadata.getSurahName(verseRef.surah),
+                surahName: isAr
+                    ? QuranMetadata.getSurahName(verseRef.surah)
+                    : QuranMetadata.getSurahNameEnglish(verseRef.surah),
                 surahNum: verseRef.surah,
                 ayahNum: verseRef.ayah,
                 onNavigate: (page) => Navigator.pop(context, {
@@ -225,6 +230,7 @@ class _BookmarkCardState extends State<_BookmarkCard>
   Widget build(BuildContext context) {
     super.build(context);
     final l10n = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16.r),
@@ -232,8 +238,8 @@ class _BookmarkCardState extends State<_BookmarkCard>
         boxShadow: [
           BoxShadow(
             color: AppColors.textPrimary.withValues(alpha: 0.04),
-            blurRadius: 8.r,
-            offset: Offset(0, 2.h),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -242,7 +248,7 @@ class _BookmarkCardState extends State<_BookmarkCard>
         borderRadius: BorderRadius.circular(16.r),
         clipBehavior: Clip.antiAlias,
         child: ListTile(
-          contentPadding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
           onTap: (_isLoadingPage || _hasError)
               ? null
               : () => widget.onNavigate(_surahStartPage),
@@ -271,8 +277,8 @@ class _BookmarkCardState extends State<_BookmarkCard>
             padding: EdgeInsets.only(top: 3.h),
             child: Text(
               l10n.verseBookmarkSubtitle(
-                widget.ayahNum.toArabicDigits,
-                _hasError ? '—' : _surahStartPage.toArabicDigits,
+                isAr ? widget.ayahNum.toArabicDigits : widget.ayahNum.toString(),
+                _hasError ? '—' : (isAr ? _surahStartPage.toArabicDigits : _surahStartPage.toString()),
               ),
               style: TextStyle(
                 fontSize: 16.sp,

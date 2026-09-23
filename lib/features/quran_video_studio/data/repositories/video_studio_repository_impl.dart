@@ -1,3 +1,5 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/constants/quran_constants.dart';
 import '../../../../core/constants/quran_metadata.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/utils/arabic_text_utils.dart';
@@ -76,11 +78,16 @@ class VideoStudioRepositoryImpl implements IVideoStudioRepository {
       }
       directTafsirAyahs.sort();
 
+      final prefs = await SharedPreferences.getInstance();
+      final appLocale = prefs.getString('app_locale') ?? 'ar';
+      final translationResourceId =
+          QuranConstants.defaultTranslationIdForLocale(appLocale);
+
       final translationMaps = await db.query(
         'translation',
         columns: ['verse_key', 'text'],
         where: 'verse_key LIKE ? AND resource_id = ?',
-        whereArgs: ['$surahNumber:%', 20],
+        whereArgs: ['$surahNumber:%', translationResourceId],
         orderBy: 'rowid ASC',
       );
 

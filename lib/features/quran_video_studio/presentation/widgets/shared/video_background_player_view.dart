@@ -312,9 +312,9 @@ class _VideoBackgroundPlayerViewState extends State<VideoBackgroundPlayerView> {
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        Localizations.maybeLocaleOf(context)?.languageCode == 'en'
-                            ? 'Unable to play the selected video file.'
-                            : 'تعذر تشغيل ملف الفيديو المحدد.',
+                        Localizations.maybeLocaleOf(context)?.languageCode == 'ar'
+                            ? 'تعذر تشغيل ملف الفيديو المحدد.'
+                            : 'Unable to play the selected video file.',
                         style: const TextStyle(
                           color: Color(0xE6FFFFFF),
                           fontSize: 12,

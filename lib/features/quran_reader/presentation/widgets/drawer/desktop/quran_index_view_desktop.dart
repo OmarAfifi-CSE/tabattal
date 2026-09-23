@@ -111,12 +111,12 @@ class _SurahListTabState extends State<_SurahListTab>
   Widget build(BuildContext context) {
     super.build(context);
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final isLandscape =
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     return Directionality(
-      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
       child: isLandscape
           ? GridView.builder(
               padding: EdgeInsets.fromLTRB(
@@ -135,9 +135,9 @@ class _SurahListTabState extends State<_SurahListTab>
               itemBuilder: (context, index) {
                 final surahNum = index + 1;
                 final startPage = QuranMetadata.getStartPageForSurah(surahNum);
-                final surahName = isEn
-                    ? QuranMetadata.getSurahNameEnglish(surahNum)
-                    : QuranMetadata.getSurahName(surahNum);
+                final surahName = isAr
+                    ? QuranMetadata.getSurahName(surahNum)
+                    : QuranMetadata.getSurahNameEnglish(surahNum);
 
                 return Material(
                   color: AppColors.surfaceCream,
@@ -152,7 +152,7 @@ class _SurahListTabState extends State<_SurahListTab>
                     surahNum: surahNum,
                     startPage: startPage,
                     surahName: surahName,
-                    isEn: isEn,
+                    isAr: isAr,
                     l10n: l10n,
                     onTap: () => widget.onSelectPage(startPage),
                   ),
@@ -172,15 +172,15 @@ class _SurahListTabState extends State<_SurahListTab>
               itemBuilder: (context, index) {
                 final surahNum = index + 1;
                 final startPage = QuranMetadata.getStartPageForSurah(surahNum);
-                final surahName = isEn
-                    ? QuranMetadata.getSurahNameEnglish(surahNum)
-                    : QuranMetadata.getSurahName(surahNum);
+                final surahName = isAr
+                    ? QuranMetadata.getSurahName(surahNum)
+                    : QuranMetadata.getSurahNameEnglish(surahNum);
 
                 return _IndexSurahTile(
                   surahNum: surahNum,
                   startPage: startPage,
                   surahName: surahName,
-                  isEn: isEn,
+                  isAr: isAr,
                   l10n: l10n,
                   onTap: () => widget.onSelectPage(startPage),
                 );
@@ -194,7 +194,7 @@ class _IndexSurahTile extends StatelessWidget {
   final int surahNum;
   final int startPage;
   final String surahName;
-  final bool isEn;
+  final bool isAr;
   final AppLocalizations l10n;
   final VoidCallback onTap;
 
@@ -202,7 +202,7 @@ class _IndexSurahTile extends StatelessWidget {
     required this.surahNum,
     required this.startPage,
     required this.surahName,
-    required this.isEn,
+    required this.isAr,
     required this.l10n,
     required this.onTap,
   });
@@ -229,7 +229,7 @@ class _IndexSurahTile extends StatelessWidget {
       ),
       trailing: Text(
         l10n.pageListItem(
-          isEn ? startPage.toString() : startPage.toArabicDigits,
+          isAr ? startPage.toArabicDigits : startPage.toString(),
         ),
         style: TextStyle(
           fontSize: (isLandscape ? 13.0 : 16.5).sp,
@@ -262,12 +262,12 @@ class _JuzListTabState extends State<_JuzListTab>
   Widget build(BuildContext context) {
     super.build(context);
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final isLandscape =
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
     return Directionality(
-      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
       child: isLandscape
           ? GridView.builder(
               padding: EdgeInsets.fromLTRB(
@@ -299,7 +299,7 @@ class _JuzListTabState extends State<_JuzListTab>
                   child: _IndexJuzTile(
                     juzNum: juzNum,
                     startPage: startPage,
-                    isEn: isEn,
+                    isAr: isAr,
                     l10n: l10n,
                     onTap: () => widget.onSelectPage(startPage),
                   ),
@@ -323,7 +323,7 @@ class _JuzListTabState extends State<_JuzListTab>
                 return _IndexJuzTile(
                   juzNum: juzNum,
                   startPage: startPage,
-                  isEn: isEn,
+                  isAr: isAr,
                   l10n: l10n,
                   onTap: () => widget.onSelectPage(startPage),
                 );
@@ -336,14 +336,14 @@ class _JuzListTabState extends State<_JuzListTab>
 class _IndexJuzTile extends StatelessWidget {
   final int juzNum;
   final int startPage;
-  final bool isEn;
+  final bool isAr;
   final AppLocalizations l10n;
   final VoidCallback onTap;
 
   const _IndexJuzTile({
     required this.juzNum,
     required this.startPage,
-    required this.isEn,
+    required this.isAr,
     required this.l10n,
     required this.onTap,
   });
@@ -362,7 +362,7 @@ class _IndexJuzTile extends StatelessWidget {
       leading: _IndexNumberBadge(label: '$juzNum', filled: false),
       title: Text(
         l10n.juzListItem(
-          isEn ? juzNum.toString() : QuranMetadata.getJuzName(juzNum),
+          isAr ? QuranMetadata.getJuzName(juzNum) : juzNum.toString(),
         ),
         style: TextStyle(
           fontSize: (isLandscape ? 15.5 : 21.0).sp,
@@ -372,7 +372,7 @@ class _IndexJuzTile extends StatelessWidget {
       ),
       trailing: Text(
         l10n.pageListItem(
-          isEn ? startPage.toString() : startPage.toArabicDigits,
+          isAr ? startPage.toArabicDigits : startPage.toString(),
         ),
         style: TextStyle(
           fontSize: (isLandscape ? 13.0 : 16.5).sp,

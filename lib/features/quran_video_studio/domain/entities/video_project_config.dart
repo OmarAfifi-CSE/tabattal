@@ -25,6 +25,7 @@ class VideoProjectConfig extends Equatable {
   final VideoTextStyle textStyle;
   final VideoQuality videoQuality;
   final VideoTextDisplayMode textDisplayMode;
+  final String languageCode;
   final bool isEnglish;
 
   const VideoProjectConfig({
@@ -49,8 +50,12 @@ class VideoProjectConfig extends Equatable {
     this.textStyle = VideoTextStyle.modernCentered,
     this.videoQuality = VideoQuality.fhd1080p,
     this.textDisplayMode = VideoTextDisplayMode.lineByLine,
-    this.isEnglish = false,
-  });
+    this.languageCode = 'ar',
+    bool? isEnglish,
+  }) : isEnglish = isEnglish ?? (languageCode == 'en');
+
+  bool get isIndonesian => languageCode == 'id';
+  bool get isArabic => languageCode == 'ar';
 
   int get totalAyahsCount => (endAyah - startAyah + 1).clamp(1, 20);
 
@@ -90,8 +95,10 @@ class VideoProjectConfig extends Equatable {
     VideoTextStyle? textStyle,
     VideoQuality? videoQuality,
     VideoTextDisplayMode? textDisplayMode,
+    String? languageCode,
     bool? isEnglish,
   }) {
+    final effectiveLangCode = languageCode ?? this.languageCode;
     return VideoProjectConfig(
       surahNumber: surahNumber ?? this.surahNumber,
       startAyah: startAyah ?? this.startAyah,
@@ -117,7 +124,9 @@ class VideoProjectConfig extends Equatable {
       textStyle: textStyle ?? this.textStyle,
       videoQuality: videoQuality ?? this.videoQuality,
       textDisplayMode: textDisplayMode ?? this.textDisplayMode,
-      isEnglish: isEnglish ?? this.isEnglish,
+      languageCode: effectiveLangCode,
+      isEnglish: isEnglish ??
+          (languageCode != null ? (effectiveLangCode == 'en') : this.isEnglish),
     );
   }
 
@@ -144,6 +153,7 @@ class VideoProjectConfig extends Equatable {
         textStyle,
         videoQuality,
         textDisplayMode,
+        languageCode,
         isEnglish,
       ];
 }

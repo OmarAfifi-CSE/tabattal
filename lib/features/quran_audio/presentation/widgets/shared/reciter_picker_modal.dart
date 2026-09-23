@@ -107,7 +107,7 @@ class ReciterPickerModal extends StatefulWidget {
   }) {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final screenHeight = MediaQuery.sizeOf(context).height;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return showModalBottomSheet<String>(
       context: context,
@@ -117,7 +117,7 @@ class ReciterPickerModal extends StatefulWidget {
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         return Directionality(
-          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+          textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
           child: Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -173,13 +173,13 @@ class ReciterPickerModal extends StatefulWidget {
     double maxHeight = 640,
   }) {
     final screenHeight = MediaQuery.sizeOf(context).height;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return showDialog<String>(
       context: context,
       builder: (ctx) {
         return Directionality(
-          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+          textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
           child: Dialog(
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -351,17 +351,17 @@ class _ReciterPickerModalState extends State<ReciterPickerModal> {
   void _appendGroupedReciters(
     List<_ModalListItem> items,
     List<_ReciterData> reciters, {
-    required bool isEn,
+    required bool isAr,
     required bool showLetterBadges,
   }) {
     final Map<String, List<_ReciterData>> letterGroups = {};
     for (final reciter in reciters) {
-      final letter = isEn ? reciter.groupLetterEnglish : reciter.groupLetterArabic;
+      final letter = isAr ? reciter.groupLetterArabic : reciter.groupLetterEnglish;
       letterGroups.putIfAbsent(letter, () => []).add(reciter);
     }
 
     final sortedKeys = letterGroups.keys.toList();
-    if (isEn) {
+    if (!isAr) {
       sortedKeys.sort();
     }
 
@@ -383,7 +383,10 @@ class _ReciterPickerModalState extends State<ReciterPickerModal> {
   }
 
   /// Builds a flattened list of items for lazy ListView.builder rendering.
-  List<_ModalListItem> _buildFlattenedItems({required bool isEn}) {
+  List<_ModalListItem> _buildFlattenedItems({
+    required bool isAr,
+    required AppLocalizations l10n,
+  }) {
     final queryNorm = _searchQuery.isNotEmpty ? _normalizeArabic(_searchQuery) : '';
     final queryLower = _searchQuery.isNotEmpty ? _searchQuery.toLowerCase() : '';
 
@@ -410,7 +413,7 @@ class _ReciterPickerModalState extends State<ReciterPickerModal> {
       if (favs.isNotEmpty) {
         items.add(_HeaderItem(
           icon: Icons.star_rounded,
-          title: isEn ? 'Favorite Reciters' : 'القراء المفضلون',
+          title: l10n.audioReciterFavorites,
           count: favs.length,
           isFavorite: true,
         ));
@@ -434,7 +437,7 @@ class _ReciterPickerModalState extends State<ReciterPickerModal> {
       _appendGroupedReciters(
         items,
         filtered,
-        isEn: isEn,
+        isAr: isAr,
         showLetterBadges: false,
       );
       return items;
@@ -449,14 +452,14 @@ class _ReciterPickerModalState extends State<ReciterPickerModal> {
       if (synced.isNotEmpty) {
         items.add(_HeaderItem(
           icon: Icons.auto_stories_rounded,
-          title: isEn ? 'Recitations with Verse Tracking' : 'تلاوات مع تتبع الآيات',
+          title: l10n.audioReciterWithTracking,
           count: synced.length,
         ));
         items.add(const _SpacingItem(6.0));
         _appendGroupedReciters(
           items,
           synced,
-          isEn: isEn,
+          isAr: isAr,
           showLetterBadges: true,
         );
       }
@@ -468,14 +471,14 @@ class _ReciterPickerModalState extends State<ReciterPickerModal> {
         items.add(const _SpacingItem(8.0));
         items.add(_HeaderItem(
           icon: Icons.headphones_rounded,
-          title: isEn ? 'Recitations without Verse Tracking' : 'تلاوات بدون تتبع الآيات',
+          title: l10n.audioReciterWithoutTracking,
           count: untimed.length,
         ));
         items.add(const _SpacingItem(6.0));
         _appendGroupedReciters(
           items,
           untimed,
-          isEn: isEn,
+          isAr: isAr,
           showLetterBadges: true,
         );
       }
@@ -483,14 +486,14 @@ class _ReciterPickerModalState extends State<ReciterPickerModal> {
       // Other categories: standard single alphabetical section
       items.add(_HeaderItem(
         icon: Icons.sort_by_alpha_rounded,
-        title: isEn ? 'All Reciters (A - Z)' : 'جميع القراء أبجديًا',
+        title: l10n.audioReciterAllAlphabetical,
         count: filtered.length,
       ));
       items.add(const _SpacingItem(6.0));
       _appendGroupedReciters(
         items,
         filtered,
-        isEn: isEn,
+        isAr: isAr,
         showLetterBadges: true,
       );
     }
@@ -500,235 +503,235 @@ class _ReciterPickerModalState extends State<ReciterPickerModal> {
 
   @override
   Widget build(BuildContext context) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final l10n = AppLocalizations.of(context);
-    final flattenedItems = _buildFlattenedItems(isEn: isEn);
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final l10n = AppLocalizations.of(context)!;
+    final flattenedItems = _buildFlattenedItems(isAr: isAr, l10n: l10n);
 
-    return Column(
-      children: [
-        // ── Drag Handle (Mobile only)
-        if (!widget.isDialog) ...[
-          SizedBox(height: 10.h),
-          Center(
-            child: Container(
-              width: 44.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: AppColors.accentGold.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
-          ),
-        ],
-
-        // ── Header (Title & Reciters Count)
-        Padding(
-          padding: EdgeInsets.fromLTRB(
-            22.w,
-            widget.isDialog ? 22.h : 12.h,
-            22.w,
-            10.h,
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(8.r),
+    return Directionality(
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+      child: Column(
+        children: [
+          // ── Drag Handle (Mobile only)
+          if (!widget.isDialog) ...[
+            SizedBox(height: 10.h),
+            Center(
+              child: Container(
+                width: 44.w,
+                height: 4.h,
                 decoration: BoxDecoration(
-                  color: AppColors.accentGold.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
+                  color: AppColors.accentGold.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(2.r),
                 ),
-                child: Icon(
-                  Icons.mic_rounded,
-                  color: AppColors.accentGold,
-                  size: 20.sp,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n?.audioReciterLabel ?? (isEn ? 'Reciter' : 'القارئ'),
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                        height: 1.15,
-                      ),
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      isEn
-                          ? '${widget.reciters.length} reciters available'
-                          : '${widget.reciters.length} قارئًا متاحًا',
-                      style: TextStyle(
-                        fontSize: 11.5.sp,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.close_rounded,
-                  color: AppColors.textSecondary,
-                  size: 22.sp,
-                ),
-                onPressed: () => Navigator.of(context).pop(),
-                splashRadius: 20.r,
-              ),
-            ],
-          ),
-        ),
-
-        // ── Search Input Field
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-          child: Container(
-            height: 44.h,
-            decoration: BoxDecoration(
-              color: AppColors.cardCream,
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(
-                color: _searchQuery.isNotEmpty
-                    ? AppColors.accentGold
-                    : AppColors.accentGold.withValues(alpha: 0.25),
-                width: 1.2,
               ),
             ),
-            padding: EdgeInsets.symmetric(horizontal: 12.w),
+          ],
+
+          // ── Header (Title & Reciters Count)
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              22.w,
+              widget.isDialog ? 22.h : 12.h,
+              22.w,
+              10.h,
+            ),
             child: Row(
               children: [
-                Icon(
-                  Icons.search_rounded,
-                  color: AppColors.accentGold,
-                  size: 20.sp,
+                Container(
+                  padding: EdgeInsets.all(8.r),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentGold.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.mic_rounded,
+                    color: AppColors.accentGold,
+                    size: 20.sp,
+                  ),
                 ),
-                SizedBox(width: 8.w),
+                SizedBox(width: 12.w),
                 Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (val) => setState(() => _searchQuery = val.trim()),
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: isEn
-                          ? 'Search by reciter name...'
-                          : 'ابحث عن اسم القارئ...',
-                      hintStyle: TextStyle(
-                        fontSize: 13.sp,
-                        color: AppColors.textSecondary.withValues(alpha: 0.65),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.audioReciterLabel,
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                          height: 1.15,
+                        ),
                       ),
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        l10n.audioRecitersAvailable(widget.reciters.length),
+                        style: TextStyle(
+                          fontSize: 11.5.sp,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                if (_searchQuery.isNotEmpty)
-                  GestureDetector(
-                    onTap: () {
-                      _searchController.clear();
-                      setState(() => _searchQuery = '');
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.all(4.r),
-                      child: Icon(
-                        Icons.cancel_rounded,
-                        color: AppColors.accentGold,
-                        size: 18.sp,
-                      ),
-                    ),
+                IconButton(
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: AppColors.textSecondary,
+                    size: 22.sp,
                   ),
+                  onPressed: () => Navigator.of(context).pop(),
+                  splashRadius: 20.r,
+                ),
               ],
             ),
           ),
-        ),
 
-        SizedBox(height: 6.h),
-        Divider(height: 1, color: AppColors.borderLight),
-
-        // ── 120 FPS Lazy Reciters List View (RepaintBoundary Isolated)
-        Expanded(
-          child: RepaintBoundary(
-            child: flattenedItems.isEmpty
-                ? _EmptySearchState(isEn: isEn)
-                : ListView.builder(
-                    controller: _scrollController,
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: EdgeInsets.fromLTRB(
-                      16.w,
-                      10.h,
-                      16.w,
-                      (widget.isDialog ? 20.h : 10.h) +
-                          MediaQuery.viewInsetsOf(context).bottom,
+          // ── Search Input Field
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+            child: Container(
+              height: 44.h,
+              decoration: BoxDecoration(
+                color: AppColors.cardCream,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(
+                  color: _searchQuery.isNotEmpty
+                      ? AppColors.accentGold
+                      : AppColors.accentGold.withValues(alpha: 0.25),
+                  width: 1.2,
+                ),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.search_rounded,
+                    color: AppColors.accentGold,
+                    size: 20.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: l10n.audioReciterSearchHint,
+                        hintStyle: TextStyle(
+                          fontSize: 13.sp,
+                          color: AppColors.textSecondary.withValues(alpha: 0.65),
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
                     ),
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: flattenedItems.length,
-                    itemBuilder: (context, index) {
-                      final item = flattenedItems[index];
+                  ),
+                  if (_searchQuery.isNotEmpty)
+                    GestureDetector(
+                      onTap: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.all(4.r),
+                        child: Icon(
+                          Icons.cancel_rounded,
+                          color: AppColors.accentGold,
+                          size: 18.sp,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
 
-                      if (item is _NoticeBannerItem) {
-                        return const ListeningOnlyNoticeBanner(
-                          compact: true,
-                          margin: EdgeInsets.symmetric(vertical: 6.0),
-                        );
-                      }
+          SizedBox(height: 6.h),
+          Divider(height: 1, color: AppColors.borderLight),
 
-                      if (item is _HeaderItem) {
-                        if (item.isFavorite) {
-                          return KeyedSubtree(
-                            key: _favoritesKey,
-                            child: _SectionHeader(
-                              icon: item.icon,
-                              title: item.title,
-                              count: item.count,
-                              isFavorite: true,
+          // ── 120 FPS Lazy Reciters List View (RepaintBoundary Isolated)
+          Expanded(
+            child: RepaintBoundary(
+              child: flattenedItems.isEmpty
+                  ? _EmptySearchState(l10n: l10n)
+                  : ListView.builder(
+                      controller: _scrollController,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.fromLTRB(
+                        16.w,
+                        10.h,
+                        16.w,
+                        (widget.isDialog ? 20.h : 10.h) +
+                            MediaQuery.viewInsetsOf(context).bottom,
+                      ),
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: flattenedItems.length,
+                      itemBuilder: (context, index) {
+                        final item = flattenedItems[index];
+
+                        if (item is _NoticeBannerItem) {
+                          return const ListeningOnlyNoticeBanner(
+                            compact: true,
+                            margin: EdgeInsets.symmetric(vertical: 6.0),
+                          );
+                        }
+
+                        if (item is _HeaderItem) {
+                          if (item.isFavorite) {
+                            return KeyedSubtree(
+                              key: _favoritesKey,
+                              child: _SectionHeader(
+                                icon: item.icon,
+                                title: item.title,
+                                count: item.count,
+                                isFavorite: true,
+                              ),
+                            );
+                          }
+                          return _SectionHeader(
+                            icon: item.icon,
+                            title: item.title,
+                            count: item.count,
+                            isFavorite: false,
+                          );
+                        }
+
+                        if (item is _LetterBadgeItem) {
+                          return _LetterBadge(letter: item.letter);
+                        }
+
+                        if (item is _ReciterTileItem) {
+                          return _ReciterTile(
+                            data: item.data,
+                            isAr: isAr,
+                            l10n: l10n,
+                            isSelected: item.isSelected,
+                            isFav: item.isFav,
+                            onTap: () => Navigator.of(context).pop(item.data.reciterArabic),
+                            onToggleFav: () => _toggleFavorite(
+                              item.data.reciterArabic,
+                              fromFavorites: item.fromFavorites,
                             ),
                           );
                         }
-                        return _SectionHeader(
-                          icon: item.icon,
-                          title: item.title,
-                          count: item.count,
-                          isFavorite: false,
-                        );
-                      }
 
-                      if (item is _LetterBadgeItem) {
-                        return _LetterBadge(letter: item.letter);
-                      }
+                        if (item is _SpacingItem) {
+                          return SizedBox(height: item.height.h);
+                        }
 
-                      if (item is _ReciterTileItem) {
-                        return _ReciterTile(
-                          data: item.data,
-                          isEn: isEn,
-                          isSelected: item.isSelected,
-                          isFav: item.isFav,
-                          onTap: () => Navigator.of(context).pop(item.data.reciterArabic),
-                          onToggleFav: () => _toggleFavorite(
-                            item.data.reciterArabic,
-                            fromFavorites: item.fromFavorites,
-                          ),
-                        );
-                      }
-
-                      if (item is _SpacingItem) {
-                        return SizedBox(height: item.height.h);
-                      }
-
-                      return const SizedBox.shrink();
-                    },
-                  ),
+                        return const SizedBox.shrink();
+                      },
+                    ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -840,7 +843,8 @@ class _LetterBadge extends StatelessWidget {
 
 class _ReciterTile extends StatelessWidget {
   final _ReciterData data;
-  final bool isEn;
+  final bool isAr;
+  final AppLocalizations l10n;
   final bool isSelected;
   final bool isFav;
   final VoidCallback onTap;
@@ -848,7 +852,8 @@ class _ReciterTile extends StatelessWidget {
 
   const _ReciterTile({
     required this.data,
-    required this.isEn,
+    required this.isAr,
+    required this.l10n,
     required this.isSelected,
     required this.isFav,
     required this.onTap,
@@ -857,8 +862,8 @@ class _ReciterTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryName = isEn ? data.reciterEnglish : data.reciterArabic;
-    final secondaryName = isEn ? data.reciterArabic : data.reciterEnglish;
+    final primaryName = isAr ? data.reciterArabic : data.reciterEnglish;
+    final secondaryName = isAr ? data.reciterEnglish : data.reciterArabic;
 
     return Container(
       margin: EdgeInsets.symmetric(vertical: 3.h),
@@ -941,7 +946,7 @@ class _ReciterTile extends StatelessWidget {
                               ),
                             ),
                             child: Text(
-                              isEn ? 'No Tracking' : 'بدون تتبع',
+                              l10n.audioReciterNoTrackingTag,
                               style: TextStyle(
                                 fontSize: 9.5.sp,
                                 fontWeight: FontWeight.w600,
@@ -982,8 +987,8 @@ class _ReciterTile extends StatelessWidget {
                 ),
                 onPressed: onToggleFav,
                 tooltip: isFav
-                    ? (isEn ? 'Remove from favorites' : 'إزالة من المفضلة')
-                    : (isEn ? 'Add to favorites' : 'إضافة إلى المفضلة'),
+                    ? l10n.audioReciterRemoveFromFavorites
+                    : l10n.audioReciterAddToFavorites,
               ),
             ],
           ),
@@ -994,9 +999,9 @@ class _ReciterTile extends StatelessWidget {
 }
 
 class _EmptySearchState extends StatelessWidget {
-  final bool isEn;
+  final AppLocalizations l10n;
 
-  const _EmptySearchState({required this.isEn});
+  const _EmptySearchState({required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -1011,7 +1016,7 @@ class _EmptySearchState extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           Text(
-            isEn ? 'No matching reciters found' : 'لم يتم العثور على قراء مطابقين',
+            l10n.audioReciterNoResults,
             style: TextStyle(
               fontSize: 15.sp,
               fontWeight: FontWeight.w600,
@@ -1020,9 +1025,7 @@ class _EmptySearchState extends StatelessWidget {
           ),
           SizedBox(height: 4.h),
           Text(
-            isEn
-                ? 'Try searching with different keywords'
-                : 'جرّب البحث باسم آخر أو جزء من الاسم',
+            l10n.audioReciterSearchTryAgain,
             style: TextStyle(
               fontSize: 12.sp,
               color: AppColors.textSecondary.withValues(alpha: 0.7),

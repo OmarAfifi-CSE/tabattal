@@ -14,6 +14,7 @@ class VerseCardTheme {
   final String id;
   final String name;
   final String nameEn;
+  final String nameId;
   final Color backgroundColor;
   final Color cardBackground;
   final Color primaryTextColor;
@@ -25,6 +26,7 @@ class VerseCardTheme {
     required this.id,
     required this.name,
     required this.nameEn,
+    this.nameId = '',
     required this.backgroundColor,
     required this.cardBackground,
     required this.primaryTextColor,
@@ -34,7 +36,10 @@ class VerseCardTheme {
   });
 
   String getLocalizedName(BuildContext context) {
-    return Localizations.localeOf(context).languageCode == 'en' ? nameEn : name;
+    final lang = Localizations.localeOf(context).languageCode;
+    if (lang == 'ar') return name;
+    if (lang == 'id' && nameId.isNotEmpty) return nameId;
+    return nameEn;
   }
 
   static const List<VerseCardTheme> themes = [
@@ -42,6 +47,7 @@ class VerseCardTheme {
       id: 'cream',
       name: 'كريمي',
       nameEn: 'Cream',
+      nameId: 'Krem',
       backgroundColor: Color(0xFFFBF7F0),
       cardBackground: Color(0xFFF7F2E7),
       primaryTextColor: Color(0xFF2C2520),
@@ -53,6 +59,7 @@ class VerseCardTheme {
       id: 'white',
       name: 'أبيض',
       nameEn: 'White',
+      nameId: 'Putih',
       backgroundColor: Color(0xFFFFFFFF),
       cardBackground: Color(0xFFF8F9FA),
       primaryTextColor: Color(0xFF111827),
@@ -64,6 +71,7 @@ class VerseCardTheme {
       id: 'parchment',
       name: 'عتيق',
       nameEn: 'Vintage',
+      nameId: 'Klasik',
       backgroundColor: Color(0xFFF5EBE0),
       cardBackground: Color(0xFFEFE3D3),
       primaryTextColor: Color(0xFF3A2D21),
@@ -75,6 +83,7 @@ class VerseCardTheme {
       id: 'roseGold',
       name: 'روز جولد',
       nameEn: 'Rose Gold',
+      nameId: 'Rose Gold',
       backgroundColor: Color(0xFFFDF8F5),
       cardBackground: Color(0xFFF7ECE7),
       primaryTextColor: Color(0xFF38282A),
@@ -86,6 +95,7 @@ class VerseCardTheme {
       id: 'mint',
       name: 'نعناعي',
       nameEn: 'Mint',
+      nameId: 'Mint',
       backgroundColor: Color(0xFFF0F7F4),
       cardBackground: Color(0xFFE1EFEA),
       primaryTextColor: Color(0xFF1B3B2B),
@@ -97,6 +107,7 @@ class VerseCardTheme {
       id: 'olive',
       name: 'زيتوني',
       nameEn: 'Olive',
+      nameId: 'Zaitun',
       backgroundColor: Color(0xFFF7F8F2),
       cardBackground: Color(0xFFECEFE5),
       primaryTextColor: Color(0xFF252B1E),
@@ -108,6 +119,7 @@ class VerseCardTheme {
       id: 'iceBlue',
       name: 'ثلجي',
       nameEn: 'Ice',
+      nameId: 'Biru Es',
       backgroundColor: Color(0xFFF4F8FA),
       cardBackground: Color(0xFFE5F0F5),
       primaryTextColor: Color(0xFF1D2830),
@@ -119,6 +131,7 @@ class VerseCardTheme {
       id: 'slate',
       name: 'رخامي',
       nameEn: 'Marble',
+      nameId: 'Marmer',
       backgroundColor: Color(0xFFF4F5F7),
       cardBackground: Color(0xFFE8ECF0),
       primaryTextColor: Color(0xFF1E252B),
@@ -130,6 +143,7 @@ class VerseCardTheme {
       id: 'emerald',
       name: 'زمردي',
       nameEn: 'Emerald',
+      nameId: 'Zamrud',
       backgroundColor: Color(0xFF0A1F18),
       cardBackground: Color(0xFF132D24),
       primaryTextColor: Color(0xFFFAF6F0),
@@ -141,6 +155,7 @@ class VerseCardTheme {
       id: 'burgundy',
       name: 'عنابي',
       nameEn: 'Burgundy',
+      nameId: 'Merah Marun',
       backgroundColor: Color(0xFF1A0C14),
       cardBackground: Color(0xFF27131F),
       primaryTextColor: Color(0xFFF8EEF2),
@@ -152,6 +167,7 @@ class VerseCardTheme {
       id: 'dark',
       name: 'ليلي',
       nameEn: 'Midnight',
+      nameId: 'Gelap',
       backgroundColor: Color(0xFF0D1117),
       cardBackground: Color(0xFF161B22),
       primaryTextColor: Color(0xFFF0F6FC),

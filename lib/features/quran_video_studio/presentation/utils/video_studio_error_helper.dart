@@ -202,6 +202,7 @@ abstract final class VideoStudioErrorHelper {
     // 20. Human-readable language-safe fallback:
     // If the error message is clean and matches the user's active language, return it.
     // Otherwise, never leak foreign or technical strings to the user.
+    final langCode = Localizations.localeOf(context).languageCode;
     final cleanMsg = error.toString().replaceAll('Exception:', '').trim();
     final hasArabicLetters = RegExp(r'[\u0600-\u06FF]').hasMatch(cleanMsg);
     final isTechnical = cleanMsg.contains('{') ||
@@ -215,7 +216,7 @@ abstract final class VideoStudioErrorHelper {
       if (isArabicLocale && hasArabicLetters) {
         return cleanMsg;
       }
-      if (!isArabicLocale && !hasArabicLetters) {
+      if (langCode == 'en' && !hasArabicLetters) {
         return cleanMsg;
       }
     }

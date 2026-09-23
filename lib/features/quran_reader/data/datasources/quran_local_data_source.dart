@@ -260,6 +260,27 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
       }
 
       if (tafsirText.trim().isEmpty) {
+        // Fallback: Check if resource exists in translation table (e.g. bundled translation ID 33 used as explanatory text/tafsir)
+        final List<Map<String, dynamic>> transMaps = await db.query(
+          'translation',
+          where: 'verse_key = ? AND resource_id = ?',
+          whereArgs: [verseKey, resourceId],
+          limit: 1,
+        );
+        if (transMaps.isNotEmpty && transMaps.first['text'] != null) {
+          final transText = (transMaps.first['text'] as String?)?.trim() ?? '';
+          if (transText.isNotEmpty) {
+            final model = TafsirModel(
+              id: transMaps.first['id'] as int? ?? 0,
+              tafsirId: resourceId,
+              verseKey: verseKey,
+              text: transText,
+            );
+            _tafsirCache[cacheKey] = model;
+            return model;
+          }
+        }
+
         final emptyModel = TafsirModel(id: 0, tafsirId: resourceId, text: '');
         _tafsirCache[cacheKey] = emptyModel;
         return emptyModel;
@@ -464,12 +485,15 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
   ) async {
     try {
       final db = await databaseHelper.database;
-      return await db.query(
+      final results = await db.query(
         'tafsir',
         where: 'verse_key LIKE ? AND resource_id = ?',
         whereArgs: ['$surahId:%', resourceId],
         orderBy: 'rowid ASC',
       );
+      if (results.isNotEmpty) return results;
+      // Fallback: If not in tafsir table (e.g. bundled translations like ID 33 used as explanatory text), query translation table
+      return await getTranslationsBySurah(surahId, resourceId);
     } catch (e) {
       return [];
     }
@@ -618,7 +642,13 @@ class QuranLocalDataSourceImpl implements QuranLocalDataSource {
         'SELECT COUNT(*) as count FROM tafsir WHERE resource_id = ?',
         [resourceId],
       );
-      return Sqflite.firstIntValue(result) ?? 0;
+      final count = Sqflite.firstIntValue(result) ?? 0;
+      if (count > 0) return count;
+      final transResult = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM translation WHERE resource_id = ?',
+        [resourceId],
+      );
+      return Sqflite.firstIntValue(transResult) ?? 0;
     } catch (e) {
       return 0;
     }

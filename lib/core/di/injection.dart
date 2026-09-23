@@ -41,7 +41,7 @@ class DependencyContainer {
 
 Future<DependencyContainer> configureDependencies() async {
   final databaseHelper = DatabaseHelper();
-  final isEnLocale = PlatformDispatcher.instance.locale.languageCode == 'en';
+  final langCode = PlatformDispatcher.instance.locale.languageCode;
 
   // 🚀 Overlapped Concurrent Bootstrapping (Cuts cold start latency significantly)
   final results = await Future.wait([
@@ -52,9 +52,9 @@ Future<DependencyContainer> configureDependencies() async {
       builder: () => QuranAudioHandler(),
       config: AudioServiceConfig(
         androidNotificationChannelId: 'com.tabattal.channel.audio',
-        androidNotificationChannelName: isEnLocale
-            ? 'Quran Recitations'
-            : 'تلاوات القرآن',
+        androidNotificationChannelName: langCode == 'ar'
+            ? 'تلاوات القرآن'
+            : (langCode == 'id' ? 'Tilawah Al-Qur\'an' : 'Quran Recitations'),
         androidNotificationIcon: 'mipmap/ic_launcher',
         androidNotificationOngoing: false,
         androidStopForegroundOnPause: false,

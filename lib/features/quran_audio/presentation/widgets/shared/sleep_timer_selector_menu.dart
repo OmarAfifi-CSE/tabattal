@@ -56,7 +56,7 @@ class SleepTimerSelectorMenu extends StatelessWidget {
     final options = SleepTimerOption.getLocalizedOptions(context);
     final itemH = itemHeight;
     final maxH = maxHeight ?? math.min(150.0, options.length * itemH);
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final activeMinutes = selectedMinutes ?? 0;
 
     return PopupMenuButton<int>(
@@ -84,7 +84,7 @@ class SleepTimerSelectorMenu extends StatelessWidget {
           padding: EdgeInsets.zero,
           height: maxH,
           child: Directionality(
-            textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+            textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
             child: _SleepTimerScrollableContent(
               options: options,
               selectedMinutes: activeMinutes,

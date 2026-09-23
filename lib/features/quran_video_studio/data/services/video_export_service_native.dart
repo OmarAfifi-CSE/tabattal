@@ -174,9 +174,11 @@ class VideoExportService implements IVideoExportService {
           final p = resolvedAudioResults[i];
           if (p == null || p.isEmpty) {
             final missingVerse = i < verses.length ? verses[i].verseNumber : i + 1;
-            throw Exception(isEnMsg
-                ? 'Missing audio for verse $missingVerse (Surah ${config.surahNumber}). Check the connection and retry the export.'
-                : 'تعذّر العثور على صوت الآية $missingVerse (سورة ${config.surahNumber}). تحقق من الاتصال وأعد محاولة التصدير.');
+            throw Exception(config.isIndonesian
+                ? 'Audio untuk ayat $missingVerse (Surah ${config.surahNumber}) tidak ditemukan. Periksa koneksi dan coba ekspor lagi.'
+                : (isEnMsg
+                    ? 'Missing audio for verse $missingVerse (Surah ${config.surahNumber}). Check the connection and retry the export.'
+                    : 'تعذّر العثور على صوت الآية $missingVerse (سورة ${config.surahNumber}). تحقق من الاتصال وأعد محاولة التصدير.'));
           }
           resolvedAudioPaths.add(p);
         }
@@ -201,7 +203,11 @@ class VideoExportService implements IVideoExportService {
           includeBackground: !isCustomVideo,
         );
         if (baseFrameBytes == null) {
-          throw Exception(config.isEnglish ? 'Failed to create base card frame' : 'فشل في إنشاء الإطار الأساسي للبطاقة');
+          throw Exception(config.isIndonesian
+              ? 'Gagal membuat bingkai kartu dasar'
+              : (config.isEnglish
+                  ? 'Failed to create base card frame'
+                  : 'فشل في إنشاء الإطار الأساسي للبطاقة'));
         }
         final baseFrameFile = File('${sessionDir.path}/base_frame.png');
         await baseFrameFile.writeAsBytes(baseFrameBytes);
@@ -241,9 +247,11 @@ class VideoExportService implements IVideoExportService {
           final pageNum = QuranMetadata.getPageNumberForAyah(config.surahNumber, verse.verseNumber);
           final audioPath = i < resolvedAudioPaths.length ? resolvedAudioPaths[i].replaceAll(r'\', '/') : '';
           if (i >= verseDurations.length || verseDurations[i] == Duration.zero) {
-            throw Exception(config.isEnglish
-                ? 'Failed to measure exact audio duration for verse ${verse.verseNumber}'
-                : 'تعذر تحديد المدة الصوتية الدقيقة للآية ${verse.verseNumber}');
+            throw Exception(config.isIndonesian
+                ? 'Gagal mengukur durasi audio yang tepat untuk ayat ${verse.verseNumber}'
+                : (config.isEnglish
+                    ? 'Failed to measure exact audio duration for verse ${verse.verseNumber}'
+                    : 'تعذر تحديد المدة الصوتية الدقيقة للآية ${verse.verseNumber}'));
           }
           final totalDur = verseDurations[i];
           final List<WordTimingSegment> timings;
@@ -650,7 +658,11 @@ class VideoExportService implements IVideoExportService {
         controller.add(VideoRenderProgress(
           phase: VideoRenderPhase.failed,
           progress: 0.0,
-          statusMessage: config.isEnglish ? 'An error occurred while exporting video' : 'حدث خطأ أثناء تصدير الفيديو',
+          statusMessage: config.isIndonesian
+              ? 'Terjadi kesalahan saat mengekspor video'
+              : (config.isEnglish
+                  ? 'An error occurred while exporting video'
+                  : 'حدث خطأ أثناء تصدير الفيديو'),
           errorMessage: e.toString().replaceAll('Exception:', '').trim(),
         ));
       } finally {

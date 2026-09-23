@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../../core/bloc/volume/app_volume_cubit.dart';
+import '../../../../../core/constants/quran_constants.dart';
 import '../../../../../core/constants/quran_metadata.dart';
 import '../../../../../core/database/database_helper.dart';
 import '../../../../../core/services/quran_font_service.dart';
@@ -113,7 +114,7 @@ class VerseCardGeneratorSheetMobile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final surahNum = int.tryParse(verse.verseKey.split(':')[0]) ?? 1;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final langCode = Localizations.localeOf(context).languageCode;
     return BlocProvider(
       create: (context) {
         AppVolumeCubit? volumeCubit;
@@ -126,7 +127,8 @@ class VerseCardGeneratorSheetMobile extends StatelessWidget {
             surahNumber: surahNum,
             startAyah: verse.verseNumber,
             endAyah: verse.verseNumber,
-            isEnglish: isEn,
+            languageCode: langCode,
+            isEnglish: langCode == 'en',
           ),
           appVolumeCubit: volumeCubit,
         )..add(
@@ -563,11 +565,15 @@ class _VerseCardGeneratorSheetContentMobileState
       final safeStart = _startAyah <= _endAyah ? _startAyah : _endAyah;
       final safeEnd = _endAyah >= _startAyah ? _endAyah : _startAyah;
 
+      final lang = Localizations.localeOf(context).languageCode;
+      final translationResourceId =
+          QuranConstants.defaultTranslationIdForLocale(lang);
+
       final List<Map<String, dynamic>> maps = await db.query(
         'translation',
         columns: ['verse_key', 'text'],
         where: 'verse_key LIKE ? AND resource_id = ?',
-        whereArgs: ['$_surahNumber:%', 20],
+        whereArgs: ['$_surahNumber:%', translationResourceId],
         orderBy: 'rowid ASC',
       );
 
@@ -810,7 +816,7 @@ class _VerseCardGeneratorSheetContentMobileState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
     final viewInsetsBottom = MediaQuery.viewInsetsOf(context).bottom;
     final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.88;
@@ -879,7 +885,7 @@ class _VerseCardGeneratorSheetContentMobileState
       },
       builder: (context, videoState) {
         return Directionality(
-          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+          textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
             child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxSheetHeight),
             child: Container(

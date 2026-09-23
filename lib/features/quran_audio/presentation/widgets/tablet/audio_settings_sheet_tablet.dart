@@ -26,7 +26,7 @@ import '../shared/surah_download_status_card.dart';
 void showAudioSettingsSheetTablet(BuildContext context, {int? verseId}) {
   final audioBloc = context.read<AudioBloc>();
   final audioPrefs = context.read<AudioPreferencesService>();
-  final isEn = Localizations.localeOf(context).languageCode == 'en';
+  final isAr = Localizations.localeOf(context).languageCode == 'ar';
   final isLandscape =
       MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
 
@@ -46,7 +46,7 @@ void showAudioSettingsSheetTablet(BuildContext context, {int? verseId}) {
                 math.min(760.h, MediaQuery.sizeOf(context).height * 0.92),
           ),
           child: Directionality(
-            textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+            textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
             child: MultiBlocProvider(
               providers: [BlocProvider.value(value: audioBloc)],
               child: _AudioSettingsSheetContent(
@@ -68,7 +68,7 @@ void showAudioSettingsSheetTablet(BuildContext context, {int? verseId}) {
       ),
       isScrollControlled: true,
       builder: (_) => Directionality(
-        textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+        textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
         child: MultiBlocProvider(
           providers: [BlocProvider.value(value: audioBloc)],
           child: _AudioSettingsSheetContent(
@@ -189,7 +189,6 @@ class _AudioSettingsSheetContentState
 
   @override
   Widget build(BuildContext context) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
     final categories = AudioDownloadManager.reciterCategories.keys.toList();
     final reciters = _recitersForCategory;
     final isLandscape =
@@ -285,7 +284,7 @@ class _AudioSettingsSheetContentState
                   iconSize: (isLandscape ? 20.0 : 26.0).sp,
                   onChanged: (val) => _onCategoryChanged(val),
                   labelBuilder: (item) =>
-                      ReciterLocalization.localizeByLang(isEn, item),
+                      ReciterLocalization.localize(context, item),
                 ),
                 SizedBox(height: (isLandscape ? 10.0 : 14.0).h),
 
@@ -318,7 +317,7 @@ class _AudioSettingsSheetContentState
                       : null,
                   onChanged: (val) => _onReciterChanged(val),
                   labelBuilder: (item) =>
-                      ReciterLocalization.localizeByLang(isEn, item),
+                      ReciterLocalization.localize(context, item),
                 ),
                 Builder(
                   builder: (context) {

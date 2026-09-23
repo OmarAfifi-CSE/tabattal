@@ -7,6 +7,7 @@ import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_ar.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_id.dart';
 
 // ignore_for_file: type=lint
 
@@ -96,6 +97,7 @@ abstract class AppLocalizations {
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
     Locale('en'),
+    Locale('id'),
   ];
 
   /// No description provided for @appName.
@@ -185,7 +187,7 @@ abstract class AppLocalizations {
   /// No description provided for @drawerLanguageSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'العربية / English'**
+  /// **'العربية / English / Indonesia'**
   String get drawerLanguageSubtitle;
 
   /// No description provided for @drawerThemeAndLanguage.
@@ -197,7 +199,7 @@ abstract class AppLocalizations {
   /// No description provided for @drawerThemeAndLanguageSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'تخصيص المصحف والوضع الداكن • العربية / English'**
+  /// **'تخصيص المصحف والوضع الداكن • العربية / English / Indonesia'**
   String get drawerThemeAndLanguageSubtitle;
 
   /// No description provided for @themeAndLanguageTitle.
@@ -235,6 +237,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'معاني الكلمات'**
   String get wordMeaningsTitle;
+
+  /// No description provided for @wordMeaningsEmptyState.
+  ///
+  /// In ar, this message translates to:
+  /// **'جميع مفردات الآية الكريمة واضحة وجلية المعنى'**
+  String get wordMeaningsEmptyState;
 
   /// No description provided for @wordMeaningsPronunciation.
   ///
@@ -650,6 +658,12 @@ abstract class AppLocalizations {
   /// **'فشل تنزيل التفسير. يرجى التحقق من اتصالك بالإنترنت.'**
   String get downloadFailedInternet;
 
+  /// No description provided for @downloadFailedServer.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر جلب المحتوى من الخادم. يرجى المحاولة مرة أخرى لاحقًا.'**
+  String get downloadFailedServer;
+
   /// No description provided for @fullTafsirTitle.
   ///
   /// In ar, this message translates to:
@@ -745,6 +759,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'English'**
   String get languageEnglish;
+
+  /// No description provided for @languageIndonesian.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإندونيسية'**
+  String get languageIndonesian;
 
   /// No description provided for @languagePickerTitle.
   ///
@@ -2205,6 +2225,96 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إلغاء التحميل'**
   String get audioCancelDownloadTooltip;
+
+  /// No description provided for @tafsirIndonesianKemenag.
+  ///
+  /// In ar, this message translates to:
+  /// **'ترجمة الشؤون الدينية (إندونيسي)'**
+  String get tafsirIndonesianKemenag;
+
+  /// No description provided for @tafsirAlMuyassarWithLang.
+  ///
+  /// In ar, this message translates to:
+  /// **'التفسير الميسر (عربي)'**
+  String get tafsirAlMuyassarWithLang;
+
+  /// No description provided for @tafsirIbnKathirWithLang.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفسير ابن كثير (عربي)'**
+  String get tafsirIbnKathirWithLang;
+
+  /// No description provided for @tafsirAlSaadiWithLang.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفسير السعدي (عربي)'**
+  String get tafsirAlSaadiWithLang;
+
+  /// No description provided for @audioRecitersAvailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} قارئًا متاحًا'**
+  String audioRecitersAvailable(int count);
+
+  /// No description provided for @audioReciterFavorites.
+  ///
+  /// In ar, this message translates to:
+  /// **'القراء المفضلون'**
+  String get audioReciterFavorites;
+
+  /// No description provided for @audioReciterWithTracking.
+  ///
+  /// In ar, this message translates to:
+  /// **'تلاوات مع تتبع الآيات'**
+  String get audioReciterWithTracking;
+
+  /// No description provided for @audioReciterWithoutTracking.
+  ///
+  /// In ar, this message translates to:
+  /// **'تلاوات بدون تتبع الآيات'**
+  String get audioReciterWithoutTracking;
+
+  /// No description provided for @audioReciterAllAlphabetical.
+  ///
+  /// In ar, this message translates to:
+  /// **'جميع القراء أبجديًا'**
+  String get audioReciterAllAlphabetical;
+
+  /// No description provided for @audioReciterSearchHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابحث عن اسم القارئ...'**
+  String get audioReciterSearchHint;
+
+  /// No description provided for @audioReciterNoResults.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يتم العثور على قراء مطابقين'**
+  String get audioReciterNoResults;
+
+  /// No description provided for @audioReciterSearchTryAgain.
+  ///
+  /// In ar, this message translates to:
+  /// **'جرّب البحث باسم آخر أو جزء من الاسم'**
+  String get audioReciterSearchTryAgain;
+
+  /// No description provided for @audioReciterNoTrackingTag.
+  ///
+  /// In ar, this message translates to:
+  /// **'بدون تتبع'**
+  String get audioReciterNoTrackingTag;
+
+  /// No description provided for @audioReciterAddToFavorites.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة إلى المفضلة'**
+  String get audioReciterAddToFavorites;
+
+  /// No description provided for @audioReciterRemoveFromFavorites.
+  ///
+  /// In ar, this message translates to:
+  /// **'إزالة من المفضلة'**
+  String get audioReciterRemoveFromFavorites;
 }
 
 class _AppLocalizationsDelegate
@@ -2218,7 +2328,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['ar', 'en'].contains(locale.languageCode);
+      <String>['ar', 'en', 'id'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -2231,6 +2341,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsAr();
     case 'en':
       return AppLocalizationsEn();
+    case 'id':
+      return AppLocalizationsId();
   }
 
   throw FlutterError(

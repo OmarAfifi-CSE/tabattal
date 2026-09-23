@@ -111,10 +111,10 @@ class _SurahListTabState extends State<_SurahListTab>
   Widget build(BuildContext context) {
     super.build(context);
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return Directionality(
-      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
       child: ListView.builder(
         padding: EdgeInsets.fromLTRB(
           16.w,
@@ -127,16 +127,16 @@ class _SurahListTabState extends State<_SurahListTab>
         itemBuilder: (context, index) {
           final surahNum = index + 1;
           final startPage = QuranMetadata.getStartPageForSurah(surahNum);
-          final surahName = isEn
-              ? QuranMetadata.getSurahNameEnglish(surahNum)
-              : QuranMetadata.getSurahName(surahNum);
+          final surahName = isAr
+              ? QuranMetadata.getSurahName(surahNum)
+              : QuranMetadata.getSurahNameEnglish(surahNum);
 
           return _IndexSurahTile(
             key: ValueKey('surah_$surahNum'),
             surahNum: surahNum,
             startPage: startPage,
             surahName: surahName,
-            isEn: isEn,
+            isAr: isAr,
             l10n: l10n,
             showDivider: surahNum < 114,
             onTap: () => widget.onSelectPage(startPage),
@@ -151,7 +151,7 @@ class _IndexSurahTile extends StatelessWidget {
   final int surahNum;
   final int startPage;
   final String surahName;
-  final bool isEn;
+  final bool isAr;
   final AppLocalizations l10n;
   final bool showDivider;
   final VoidCallback onTap;
@@ -161,7 +161,7 @@ class _IndexSurahTile extends StatelessWidget {
     required this.surahNum,
     required this.startPage,
     required this.surahName,
-    required this.isEn,
+    required this.isAr,
     required this.l10n,
     this.showDivider = true,
     required this.onTap,
@@ -199,7 +199,7 @@ class _IndexSurahTile extends StatelessWidget {
             ),
             Text(
               l10n.pageListItem(
-                isEn ? startPage.toString() : startPage.toArabicDigits,
+                isAr ? startPage.toArabicDigits : startPage.toString(),
               ),
               style: TextStyle(
                 fontSize: 14.sp,
@@ -235,10 +235,10 @@ class _JuzListTabState extends State<_JuzListTab>
   Widget build(BuildContext context) {
     super.build(context);
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return Directionality(
-      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
       child: ListView.builder(
         padding: EdgeInsets.fromLTRB(
           16.w,
@@ -256,7 +256,7 @@ class _JuzListTabState extends State<_JuzListTab>
             key: ValueKey('juz_$juzNum'),
             juzNum: juzNum,
             startPage: startPage,
-            isEn: isEn,
+            isAr: isAr,
             l10n: l10n,
             showDivider: juzNum < 30,
             onTap: () => widget.onSelectPage(startPage),
@@ -270,7 +270,7 @@ class _JuzListTabState extends State<_JuzListTab>
 class _IndexJuzTile extends StatelessWidget {
   final int juzNum;
   final int startPage;
-  final bool isEn;
+  final bool isAr;
   final AppLocalizations l10n;
   final bool showDivider;
   final VoidCallback onTap;
@@ -279,7 +279,7 @@ class _IndexJuzTile extends StatelessWidget {
     super.key,
     required this.juzNum,
     required this.startPage,
-    required this.isEn,
+    required this.isAr,
     required this.l10n,
     this.showDivider = true,
     required this.onTap,
@@ -308,7 +308,7 @@ class _IndexJuzTile extends StatelessWidget {
             Expanded(
               child: Text(
                 l10n.juzListItem(
-                  isEn ? juzNum.toString() : QuranMetadata.getJuzName(juzNum),
+                  isAr ? QuranMetadata.getJuzName(juzNum) : juzNum.toString(),
                 ),
                 style: TextStyle(
                   fontSize: 18.sp,
@@ -319,7 +319,7 @@ class _IndexJuzTile extends StatelessWidget {
             ),
             Text(
               l10n.pageListItem(
-                isEn ? startPage.toString() : startPage.toArabicDigits,
+                isAr ? startPage.toArabicDigits : startPage.toString(),
               ),
               style: TextStyle(
                 fontSize: 14.sp,

@@ -10,7 +10,7 @@ class QuranConstants {
   /// Must be > 20 to handle Ibn Kathir EN groups (e.g. 2:177→2:197 = 20 gap).
   static const int tafsirGroupLookbackWindow = 50;
 
-  static const Set<int> bundledTafsirIds = {16}; // Only Muyassar bundled
+  static const Set<int> bundledTafsirIds = {16}; // Muyassar bundled
   static const Set<int> downloadableTafsirIds = {
     14,
     91,
@@ -23,7 +23,22 @@ class QuranConstants {
     171,
   }; // 14 & 91 moved to downloadable
   static const int defaultTafsirId = 16;
-  static const int defaultTranslationId = 20;
+  static const int defaultTranslationId = 20; // Saheeh International (EN)
+  static const int indonesianKemenagTranslationId = 33; // Kemenag (ID)
+  static const int indonesianComplexTranslationId = 134; // King Fahad Complex (ID)
+  static const int defaultIndonesianTranslationId = 33;
+
+  /// Returns the appropriate default translation resource ID based on active language code.
+  static int defaultTranslationIdForLocale(String languageCode) {
+    if (languageCode == 'id') return defaultIndonesianTranslationId;
+    return defaultTranslationId;
+  }
+
+  /// Returns the appropriate default tafsir resource ID based on active language code.
+  static int defaultTafsirIdForLocale(String languageCode) {
+    if (languageCode == 'en') return 169;
+    return defaultTafsirId;
+  }
 
   static const int tafsirDownloadConcurrency = 2;
   static const int tafsirMaxRetries = 3;

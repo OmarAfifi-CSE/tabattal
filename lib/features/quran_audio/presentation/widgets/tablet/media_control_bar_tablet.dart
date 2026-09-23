@@ -172,7 +172,7 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return Container(
       height: 44.h,
@@ -229,7 +229,7 @@ class _TabletLandscapeHorizonBar extends StatelessWidget {
                           ),
                           overflow: TextOverflow.ellipsis,
                           textDirection:
-                              isEn ? TextDirection.ltr : TextDirection.rtl,
+                              isAr ? TextDirection.rtl : TextDirection.ltr,
                         ),
                       ),
                       SizedBox(width: 5.w),
@@ -423,7 +423,7 @@ class _TabletLandscapeWhisperingPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return GestureDetector(
       onTap: onToggleExpanded,
@@ -469,7 +469,7 @@ class _TabletLandscapeWhisperingPill extends StatelessWidget {
                     ),
                     overflow: TextOverflow.ellipsis,
                     textDirection:
-                        isEn ? TextDirection.ltr : TextDirection.rtl,
+                        isAr ? TextDirection.rtl : TextDirection.ltr,
                   ),
                 ),
                 SizedBox(width: 5.w),
@@ -599,7 +599,7 @@ class _TabletMiniPlayer extends StatelessWidget {
           builder: (context, state) {
             final isPlaying = state is AudioPlaying;
             final isLoading = state is AudioLoading;
-            final isEn = Localizations.localeOf(context).languageCode == 'en';
+            final isAr = Localizations.localeOf(context).languageCode == 'ar';
             final audioBloc = context.read<AudioBloc>();
             final reciterName = ReciterLocalization.localize(
               context,
@@ -621,12 +621,12 @@ class _TabletMiniPlayer extends StatelessWidget {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment:
-                              isEn ? Alignment.centerLeft : Alignment.centerRight,
+                              isAr ? Alignment.centerRight : Alignment.centerLeft,
                           child: Text(
                             reciterName,
                             maxLines: 1,
                             textDirection:
-                                isEn ? TextDirection.ltr : TextDirection.rtl,
+                                isAr ? TextDirection.rtl : TextDirection.ltr,
                             style: AppTextStyles.menuItemText.copyWith(
                               color: AppColors.inkBrown,
                               fontSize: 13.5.sp,
@@ -703,8 +703,8 @@ class _TabletReciterButton extends StatelessWidget {
             Expanded(
               child: BlocBuilder<AudioBloc, AudioState>(
                 builder: (context, state) {
-                  final isEn =
-                      Localizations.localeOf(context).languageCode == 'en';
+                  final isAr =
+                      Localizations.localeOf(context).languageCode == 'ar';
                   final audioBloc = context.read<AudioBloc>();
                   final reciterName = ReciterLocalization.localize(
                     context,
@@ -713,18 +713,18 @@ class _TabletReciterButton extends StatelessWidget {
                   return FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment:
-                        isEn ? Alignment.centerLeft : Alignment.centerRight,
+                        isAr ? Alignment.centerRight : Alignment.centerLeft,
                     child: Text(
                       reciterName,
                       maxLines: 1,
-                      textAlign: isEn ? TextAlign.left : TextAlign.right,
+                      textAlign: isAr ? TextAlign.right : TextAlign.left,
                       style: AppTextStyles.menuItemText.copyWith(
                         color: AppColors.inkBrown,
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w600,
                       ),
                       textDirection:
-                          isEn ? TextDirection.ltr : TextDirection.rtl,
+                          isAr ? TextDirection.rtl : TextDirection.ltr,
                     ),
                   );
                 },

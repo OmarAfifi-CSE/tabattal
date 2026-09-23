@@ -18,6 +18,7 @@ class QuranBookmarksViewMobile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return Scaffold(
       backgroundColor: AppColors.surfaceCream,
       appBar: AppBar(
@@ -62,7 +63,9 @@ class QuranBookmarksViewMobile extends StatelessWidget {
 
               return _BookmarkCard(
                 verseKey: verseKey,
-                surahName: QuranMetadata.getSurahName(verseRef.surah),
+                surahName: isAr
+                    ? QuranMetadata.getSurahName(verseRef.surah)
+                    : QuranMetadata.getSurahNameEnglish(verseRef.surah),
                 surahNum: verseRef.surah,
                 ayahNum: verseRef.ayah,
                 onNavigate: (page) => Navigator.pop(context, {
@@ -194,6 +197,7 @@ class _BookmarkCardState extends State<_BookmarkCard>
   Widget build(BuildContext context) {
     super.build(context);
     final l10n = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16.r),
@@ -240,8 +244,8 @@ class _BookmarkCardState extends State<_BookmarkCard>
             padding: EdgeInsets.only(top: 2.h),
             child: Text(
               l10n.verseBookmarkSubtitle(
-                widget.ayahNum.toArabicDigits,
-                _hasError ? '—' : _surahStartPage.toArabicDigits,
+                isAr ? widget.ayahNum.toArabicDigits : widget.ayahNum.toString(),
+                _hasError ? '—' : (isAr ? _surahStartPage.toArabicDigits : _surahStartPage.toString()),
               ),
               style: TextStyle(
                 fontSize: 13.sp,

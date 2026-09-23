@@ -58,15 +58,12 @@ class QuranDrawerDesktop extends StatelessWidget {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Directionality(
-                              textDirection: TextDirection.rtl,
-                              child: Text(
-                                l10n.themeScrollDirection,
-                                style: TextStyle(
-                                  fontSize: (isLandscape ? 13.5 : 14.5).sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.textPrimary,
-                                ),
+                            Text(
+                              l10n.themeScrollDirection,
+                              style: TextStyle(
+                                fontSize: (isLandscape ? 13.5 : 14.5).sp,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                             SizedBox(height: (isLandscape ? 8.0 : 10.0).h),

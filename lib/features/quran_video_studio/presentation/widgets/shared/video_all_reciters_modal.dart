@@ -168,10 +168,11 @@ class _VideoAllRecitersModalState extends State<VideoAllRecitersModal>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isEn = widget.isEn;
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isAr = langCode == 'ar';
 
     return Directionality(
-      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Container(
         constraints: widget.isDialog
             ? null
@@ -248,7 +249,7 @@ class _VideoAllRecitersModalState extends State<VideoAllRecitersModal>
                     _searchQuery = val.trim();
                   });
                 },
-                textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+                textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
                 style: TextStyle(
                   fontSize: 13.sp,
                   color: AppColors.textPrimary,
@@ -256,7 +257,9 @@ class _VideoAllRecitersModalState extends State<VideoAllRecitersModal>
                 ),
                 decoration: InputDecoration(
                   isDense: true,
-                  hintText: isEn ? 'Search reciters...' : 'ابحث عن قارئ...',
+                  hintText: isAr
+                      ? 'ابحث عن قارئ...'
+                      : (langCode == 'id' ? 'Cari nama qari...' : 'Search reciters...'),
                   hintStyle: TextStyle(
                     fontSize: 12.5.sp,
                     color: AppColors.textPrimary.withValues(alpha: 0.45),
@@ -300,9 +303,7 @@ class _VideoAllRecitersModalState extends State<VideoAllRecitersModal>
                   TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600),
               tabs: _categories
                   .map((cat) => Tab(
-                      text: isEn
-                          ? ReciterCatalog.getCategoryNameEnglish(cat)
-                          : cat))
+                      text: ReciterCatalog.localizeCategoryForLocale(langCode, cat)))
                   .toList(),
             ),
 
@@ -340,7 +341,11 @@ class _VideoAllRecitersModalState extends State<VideoAllRecitersModal>
                             ),
                             SizedBox(height: 8.h),
                             Text(
-                              isEn ? 'No reciters found' : 'لا توجد نتائج مطابقة',
+                              isAr
+                                  ? 'لا توجد نتائج مطابقة'
+                                  : (langCode == 'id'
+                                      ? 'Tidak ada hasil yang cocok'
+                                      : 'No reciters found'),
                               style: TextStyle(
                                 fontSize: 13.sp,
                                 color: AppColors.textPrimary
@@ -363,9 +368,8 @@ class _VideoAllRecitersModalState extends State<VideoAllRecitersModal>
                       final item = filteredReciters[idx];
                       final isSelected = item['name'] == _currentReciter &&
                           _currentCategory == cat;
-                      final reciterDisplayName = isEn
-                          ? ReciterCatalog.getReciterNameEnglish(item['name']!)
-                          : item['name']!;
+                      final reciterDisplayName =
+                          ReciterCatalog.localizeReciterForLocale(langCode, item['name']!);
 
                       return ListTile(
                         leading: Icon(

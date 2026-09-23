@@ -14,15 +14,16 @@
   "drawerAudioManager": "Audio Manager",
   "drawerAudioManagerSubtitle": "Download & manage recitations",
   "drawerLanguage": "Language",
-  "drawerLanguageSubtitle": "العربية / English",
+  "drawerLanguageSubtitle": "العربية / English / Indonesia",
   "drawerThemeAndLanguage": "Appearance & Language",
-  "drawerThemeAndLanguageSubtitle": "Customize Mushaf & Dark Mode • العربية / English",
+  "drawerThemeAndLanguageSubtitle": "Customize Mushaf & Dark Mode • العربية / English / Indonesia",
   "themeAndLanguageTitle": "Appearance & Language",
   "menuTafsir": "Tafsir",
   "menuTafsirTitle": "Tafsir",
   "menuTranslation": "Translation",
   "menuWordMeanings": "Word Meanings",
   "wordMeaningsTitle": "Word Meanings",
+  "wordMeaningsEmptyState": "All words in this verse are clear and straightforward.",
   "wordMeaningsPronunciation": "Pronunciation",
   "wordMeaningsTranslation": "Meaning",
   "menuListen": "Listen to Verses",
@@ -100,6 +101,7 @@
     }
   },
   "downloadFailedInternet": "Failed to download Tafsir. Please check your internet connection.",
+  "downloadFailedServer": "Failed to fetch content from the server. Please try again later.",
   "fullTafsirTitle": "Full Tafsir",
   "translationTitle": "Translation",
   "bookmarksTitle": "Bookmarks",
@@ -204,6 +206,7 @@
   },
   "languageArabic": "العربية",
   "languageEnglish": "English",
+  "languageIndonesian": "Bahasa Indonesia",
   "languagePickerTitle": "Choose Language",
   "themeDark": "Dark",
   "themeAppearanceTitle": "Appearance",
@@ -666,5 +669,25 @@
       "percent": { "type": "int" }
     }
   },
-  "audioCancelDownloadTooltip": "Cancel download"
+  "audioCancelDownloadTooltip": "Cancel download",
+  "tafsirIndonesianKemenag": "Kemenag Translation (Indonesian)",
+  "tafsirAlMuyassarWithLang": "Tafsir Al-Muyassar (Arabic)",
+  "tafsirIbnKathirWithLang": "Tafsir Ibn Kathir (Arabic)",
+  "tafsirAlSaadiWithLang": "Tafsir As-Sa'di (Arabic)",
+  "audioRecitersAvailable": "{count} reciters available",
+  "@audioRecitersAvailable": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "audioReciterFavorites": "Favorite Reciters",
+  "audioReciterWithTracking": "Recitations with Verse Tracking",
+  "audioReciterWithoutTracking": "Recitations without Verse Tracking",
+  "audioReciterAllAlphabetical": "All Reciters (A - Z)",
+  "audioReciterSearchHint": "Search by reciter name...",
+  "audioReciterNoResults": "No matching reciters found",
+  "audioReciterSearchTryAgain": "Try searching with different keywords",
+  "audioReciterNoTrackingTag": "No Tracking",
+  "audioReciterAddToFavorites": "Add to favorites",
+  "audioReciterRemoveFromFavorites": "Remove from favorites"
 }

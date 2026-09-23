@@ -164,7 +164,7 @@ class _WordMeaningsSheetMobileState extends State<WordMeaningsSheetMobile> {
                 ),
               )
             else if (_meanings == null || _meanings!.isEmpty)
-              _WordMeaningsEmptyStateMobile(isArabic: isArabic)
+              _WordMeaningsEmptyStateMobile(isArabic: isArabic, l10n: l10n)
             else
               Flexible(
                 child: ListView.separated(
@@ -238,9 +238,10 @@ class _WordMeaningsHeaderMobile extends StatelessWidget {
               ),
             ),
             child: Text(
-              isArabic
-                  ? 'سورة $surahName : ${ayahNumber.toString().toArabicDigits}'
-                  : 'Surah $surahName : $ayahNumber',
+              l10n.surahAndAyah(
+                surahName,
+                isArabic ? ayahNumber.toString().toArabicDigits : ayahNumber.toString(),
+              ),
               style: TextStyle(
                 fontFamily: isArabic ? 'Amiri' : null,
                 fontSize: 16.sp,
@@ -257,8 +258,12 @@ class _WordMeaningsHeaderMobile extends StatelessWidget {
 
 class _WordMeaningsEmptyStateMobile extends StatelessWidget {
   final bool isArabic;
+  final AppLocalizations l10n;
 
-  const _WordMeaningsEmptyStateMobile({required this.isArabic});
+  const _WordMeaningsEmptyStateMobile({
+    required this.isArabic,
+    required this.l10n,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -274,9 +279,7 @@ class _WordMeaningsEmptyStateMobile extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           Text(
-            isArabic
-                ? 'جميع مفردات الآية الكريمة واضحة وجلية المعنى'
-                : 'All words in this verse are clear and straightforward.',
+            l10n.wordMeaningsEmptyState,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: isArabic ? 'Amiri' : null,

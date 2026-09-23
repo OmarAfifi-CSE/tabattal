@@ -34,7 +34,7 @@ class VideoRangePickerTablet extends StatelessWidget {
     required List<int> options,
     required ValueChanged<int> onSelected,
   }) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     showDialog(
       context: context,
       builder: (ctx) {
@@ -46,7 +46,7 @@ class VideoRangePickerTablet extends StatelessWidget {
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: 420.w, maxHeight: 480.h),
             child: Directionality(
-              textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+              textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
               child: Padding(
                 padding: EdgeInsets.all(20.0.r),
                 child: Column(
@@ -58,32 +58,32 @@ class VideoRangePickerTablet extends StatelessWidget {
                         Text(
                           title,
                           style: TextStyle(
-                            fontSize: 17.0.sp,
+                            fontSize: 18.0.sp,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
                           ),
                         ),
                         IconButton(
                           onPressed: () => Navigator.pop(ctx),
-                          icon: Icon(Icons.close_rounded, size: 24.sp),
+                          icon: const Icon(Icons.close_rounded),
                         ),
                       ],
                     ),
-                    Divider(height: 1.h),
-                    SizedBox(height: 10.0.h),
+                    const Divider(height: 1),
+                    SizedBox(height: 12.0.h),
                     Expanded(
                       child: GridView.builder(
                         padding: EdgeInsets.symmetric(vertical: 8.0.h),
                         physics: const BouncingScrollPhysics(),
                         gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 5,
-                          childAspectRatio: 1.3,
-                          crossAxisSpacing: 10.w,
-                          mainAxisSpacing: 10.h,
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 6,
+                          childAspectRatio: 1.2,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
                         ),
                         itemCount: options.length,
-                        itemBuilder: (context, index) {
+                        itemBuilder: (ctx, index) {
                           final ayah = options[index];
                           final isSelected = ayah == currentValue;
 
@@ -92,14 +92,15 @@ class VideoRangePickerTablet extends StatelessWidget {
                               onSelected(ayah);
                               Navigator.pop(ctx);
                             },
-                            borderRadius: BorderRadius.circular(12.0.r),
-                            child: Container(
+                            borderRadius: BorderRadius.circular(10.0.r),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? AppColors.accentGold
                                     : AppColors.accentGold
                                         .withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(12.0.r),
+                                borderRadius: BorderRadius.circular(10.0.r),
                                 border: Border.all(
                                   color: isSelected
                                       ? AppColors.accentGold
@@ -110,7 +111,7 @@ class VideoRangePickerTablet extends StatelessWidget {
                               ),
                               alignment: Alignment.center,
                               child: Text(
-                                Localizations.localeOf(context).languageCode == 'en'
+                                !isAr
                                     ? '$ayah'
                                     : VerseCardTextUtils.toArabicDigits(ayah),
                                 style: TextStyle(
@@ -141,7 +142,8 @@ class VideoRangePickerTablet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isAr = langCode == 'ar';
     final startOptions = List.generate(totalAyahsInSurah, (i) => i + 1);
     final maxEnd = _getMaxEndAyah(startAyah);
     final endOptions = List.generate(
@@ -177,9 +179,7 @@ class VideoRangePickerTablet extends StatelessWidget {
               ),
               child: Text(
                 l10n.verseCardSurah(
-                  isEn
-                      ? QuranMetadata.getSurahNameEnglish(surahNumber)
-                      : QuranMetadata.getSurahName(surahNumber),
+                  QuranMetadata.getSurahNameForLocale(langCode, surahNumber),
                 ),
                 style: TextStyle(
                   fontSize: 13.0.sp,
@@ -226,7 +226,7 @@ class VideoRangePickerTablet extends StatelessWidget {
                       Flexible(
                         child: Text(
                           l10n.verseCardFromAyah(
-                            isEn
+                            !isAr
                                 ? '$startAyah'
                                 : VerseCardTextUtils.toArabicDigits(startAyah),
                           ),
@@ -283,7 +283,7 @@ class VideoRangePickerTablet extends StatelessWidget {
                       Flexible(
                         child: Text(
                           l10n.verseCardToAyah(
-                            isEn
+                            !isAr
                                 ? '$endAyah'
                                 : VerseCardTextUtils.toArabicDigits(endAyah),
                           ),

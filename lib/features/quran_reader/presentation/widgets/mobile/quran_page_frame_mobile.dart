@@ -77,7 +77,7 @@ class QuranPageFrameMobile extends StatelessWidget {
   Widget build(BuildContext context) {
     final hizbMarkers = HizbData.pageHizbs[pageNumber];
     final isLeftPage = pageNumber % 2 == 0;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     final mushafTheme = context
         .watch<SettingsBloc>()
@@ -292,7 +292,7 @@ class QuranPageFrameMobile extends StatelessWidget {
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.center,
                       child: Text(
-                        isEn
+                        !isAr
                             ? pageNumber.toString()
                             : pageNumber.toArabicDigits,
                         style: TextStyle(

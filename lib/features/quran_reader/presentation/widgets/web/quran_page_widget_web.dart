@@ -879,14 +879,15 @@ class _QuranPageWidgetWebState extends State<QuranPageWidgetWeb>
       }
     }
 
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isAr = langCode == 'ar';
     final surahNumber = _parsedVerseKeys[firstVerseKey]?.surah ?? 1;
-    final surahName = isEn
-        ? "Surah ${QuranMetadata.getSurahNameEnglish(surahNumber)}"
+    final surahName = !isAr
+        ? "Surah ${QuranMetadata.getSurahNameForLocale(langCode, surahNumber)}"
         : QuranMetadata.getSurahNameWithTashkeel(surahNumber);
 
     final juzNum = QuranMetadata.getJuzNumberByPage(widget.pageNumber);
-    final juzName = isEn
+    final juzName = !isAr
         ? AppLocalizations.of(context)!.juzListItem(juzNum.toString())
         : QuranMetadata.getJuzNameWithTashkeel(juzNum);
 

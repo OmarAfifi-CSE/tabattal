@@ -235,16 +235,16 @@ class VideoPreviewViewport extends StatelessWidget {
                             ? l10n.videoStudioAyahOfSurah(
                                 config.startAyah,
                                 config.startAyah,
-                                QuranMetadata.getSurahNameByLang(
-                                  Localizations.localeOf(context).languageCode == 'en',
+                                QuranMetadata.getSurahNameForLocale(
+                                  Localizations.localeOf(context).languageCode,
                                   config.surahNumber,
                                 ),
                               )
                             : l10n.videoStudioAyahOfSurah(
                                 verse?.verseNumber ?? (config.startAyah + currentIndex),
                                 config.endAyah,
-                                QuranMetadata.getSurahNameByLang(
-                                  Localizations.localeOf(context).languageCode == 'en',
+                                QuranMetadata.getSurahNameForLocale(
+                                  Localizations.localeOf(context).languageCode,
                                   config.surahNumber,
                                 ),
                               ),

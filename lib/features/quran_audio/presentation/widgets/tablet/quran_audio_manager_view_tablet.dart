@@ -152,10 +152,8 @@ class _QuranAudioManagerViewTabletState
     final numAyahs = QuranMetadata.surahLengths[surah - 1];
     bool isSuccess = false;
     final rootMessenger = ScaffoldMessenger.maybeOf(context);
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final surahName = isEn
-        ? QuranMetadata.getSurahNameEnglish(surah)
-        : QuranMetadata.getSurahName(surah);
+    final langCode = Localizations.localeOf(context).languageCode;
+    final surahName = QuranMetadata.getSurahNameForLocale(langCode, surah);
     final l10n = AppLocalizations.of(context)!;
 
     try {
@@ -336,7 +334,7 @@ class _QuranAudioManagerViewTabletState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final categories = AudioDownloadManager.reciterCategories.keys.toList();
     final reciters = AudioDownloadManager.reciterCategories[_selectedCategory]!;
     final isLandscape =
@@ -367,7 +365,7 @@ class _QuranAudioManagerViewTabletState
         ),
       ),
       body: Directionality(
-        textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+        textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
@@ -673,10 +671,8 @@ class _AudioManagerSurahItemTablet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final surahName = isEn
-        ? QuranMetadata.getSurahNameEnglish(surah)
-        : QuranMetadata.getSurahName(surah);
+    final langCode = Localizations.localeOf(context).languageCode;
+    final surahName = QuranMetadata.getSurahNameForLocale(langCode, surah);
 
     return Container(
       margin: EdgeInsets.only(bottom: 8.h),

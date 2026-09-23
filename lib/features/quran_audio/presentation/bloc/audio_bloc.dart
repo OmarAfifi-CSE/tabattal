@@ -912,7 +912,9 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
   }
 
   Future<void> _updateMediaItem(VerseRef verse) async {
-    final isEn = _prefs.appLocale == 'en';
+    final langCode = _prefs.appLocale;
+    final isAr = langCode == 'ar';
+    final isId = langCode == 'id';
     final reciterPath = AudioDownloadManager.getReciterPath(
       _currentCategory,
       _currentReciter,
@@ -921,13 +923,18 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         ReciterCatalog.globallyUntimedReciterPaths.contains(reciterPath) ||
         !ReciterCatalog.hasTimingForSurah(reciterPath, verse.surah);
 
-    final String title = isEn
+    final surahName = isAr
+        ? QuranMetadata.getSurahNameWithTashkeel(verse.surah)
+        : QuranMetadata.getSurahNameForLocale(langCode, verse.surah);
+    final ayahLabel = isId ? 'Ayat' : 'Ayah';
+
+    final String title = isAr
         ? (isUntimed
-            ? 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)}'
-            : 'Surah ${QuranMetadata.getSurahNameEnglish(verse.surah)} • Ayah ${verse.ayah}')
+            ? surahName
+            : '$surahName • آية ${verse.ayah.toArabicDigits}')
         : (isUntimed
-            ? QuranMetadata.getSurahNameWithTashkeel(verse.surah)
-            : '${QuranMetadata.getSurahNameWithTashkeel(verse.surah)} • آية ${verse.ayah.toArabicDigits}');
+            ? 'Surah $surahName'
+            : 'Surah $surahName • $ayahLabel ${verse.ayah}');
 
     try {
       final artUri = await _getArtUri();
@@ -936,7 +943,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         MediaItem(
           id: verse.verseId.toString(),
           title: title,
-          artist: ReciterLocalization.localizeByLang(isEn, _currentReciter),
+          artist: ReciterLocalization.localizeForLocale(langCode, _currentReciter),
           duration: _audioPlayer.duration,
           artUri: artUri,
         ),
@@ -1048,28 +1055,39 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
     if (isNetwork && stoppedVerse != null && stoppedVerse.ayah > 0) {
       try {
-        final isEn = _prefs.appLocale == 'en';
-        final surahName = isEn
-            ? QuranMetadata.getSurahNameEnglish(stoppedVerse.surah)
-            : QuranMetadata.getSurahNameWithTashkeel(stoppedVerse.surah);
-        final ayahStr = isEn
-            ? stoppedVerse.ayah.toString()
-            : stoppedVerse.ayah.toArabicDigits;
+        final langCode = _prefs.appLocale;
+        final isAr = langCode == 'ar';
+        final isId = langCode == 'id';
+        final surahName = isAr
+            ? QuranMetadata.getSurahNameWithTashkeel(stoppedVerse.surah)
+            : QuranMetadata.getSurahNameForLocale(langCode, stoppedVerse.surah);
+        final ayahStr = isAr
+            ? stoppedVerse.ayah.toArabicDigits
+            : stoppedVerse.ayah.toString();
+        final ayahLabel = isId ? 'Ayat' : 'Ayah';
 
-        final title = isEn
+        final title = isAr
             ? (isUntimed
-                ? 'Surah $surahName (Stopped)'
-                : 'Surah $surahName • Ayah $ayahStr (Stopped)')
-            : (isUntimed
                 ? '$surahName (توقفت)'
-                : '$surahName • آية $ayahStr (توقفت)');
-        final subtitle = isEn
+                : '$surahName • آية $ayahStr (توقفت)')
+            : (isId
+                ? (isUntimed
+                    ? 'Surah $surahName (Terhenti)'
+                    : 'Surah $surahName • $ayahLabel $ayahStr (Terhenti)')
+                : (isUntimed
+                    ? 'Surah $surahName (Stopped)'
+                    : 'Surah $surahName • $ayahLabel $ayahStr (Stopped)'));
+        final subtitle = isAr
             ? (isUntimed
-                ? 'Internet required for non-downloaded surahs'
-                : 'Internet required for non-downloaded ayahs')
-            : (isUntimed
                 ? 'يلزم الإنترنت لتشغيل السور غير المحملة'
-                : 'يلزم الإنترنت لتشغيل الآيات غير المحملة');
+                : 'يلزم الإنترنت لتشغيل الآيات غير المحملة')
+            : (isId
+                ? (isUntimed
+                    ? 'Memerlukan internet untuk memutar surah yang belum diunduh'
+                    : 'Memerlukan internet untuk memutar ayat yang belum diunduh')
+                : (isUntimed
+                    ? 'Internet required for non-downloaded surahs'
+                    : 'Internet required for non-downloaded ayahs'));
 
         await _audioHandler.showStoppedNotification(
           title: title,

@@ -96,6 +96,25 @@ void main() {
       expect(find.text('Downloading remaining Ibn Kathir (Abridged) Tafsir in background...'), findsOneWidget);
     });
 
+    testWidgets('TafsirOption renders Indonesian Kemenag (ID 33) correctly', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('id'),
+          home: Builder(
+            builder: (context) {
+              final name = TafsirOption.getTafsirName(context, 33);
+              return Text(name);
+            },
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      expect(find.text('Terjemahan Kemenag (RI)'), findsOneWidget);
+    });
+
     testWidgets('TafsirSelectorMenu updates percentage in real-time while open', (tester) async {
       final progressNotifier = ValueNotifier<double>(0.20);
       Map<int, double> progressMap = {14: 0.20};

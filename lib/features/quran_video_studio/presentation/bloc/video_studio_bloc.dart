@@ -1056,13 +1056,16 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
         final Map<int, List<WordTimingSegment>> timingsMap = {};
 
         final isEn = loadConfig.isEnglish;
+        final isId = loadConfig.isIndonesian;
         for (int i = 0; i < effectiveVerses.length; i++) {
           if (myLoadGen != _loadGeneration || emit.isDone) return;
           final v = effectiveVerses[i];
           if (i >= durations.length || durations[i] == Duration.zero) {
-            throw Exception(isEn
-                ? 'Failed to measure exact audio duration for verse ${v.verseNumber}'
-                : 'تعذر قياس المدة الصوتية الدقيقة للآية ${v.verseNumber}');
+            throw Exception(isId
+                ? 'Gagal mengukur durasi audio yang tepat untuk ayat ${v.verseNumber}'
+                : (isEn
+                    ? 'Failed to measure exact audio duration for verse ${v.verseNumber}'
+                    : 'تعذر قياس المدة الصوتية الدقيقة للآية ${v.verseNumber}'));
           }
           final dur = durations[i];
           final List<WordTimingSegment> timings;
@@ -1187,9 +1190,11 @@ class VideoStudioBloc extends Bloc<VideoStudioEvent, VideoStudioState> {
       } catch (_) {}
 
       final cleanMsg = e.toString().replaceAll('Exception:', '').trim();
-      final defaultMsg = loadConfig.isEnglish
-          ? 'Failed to load recitation for selected reciter'
-          : 'تعذر تحميل التلاوة الصوتية للقارئ المحدد';
+      final defaultMsg = loadConfig.isIndonesian
+          ? 'Gagal memuat murottal untuk qari yang dipilih'
+          : (loadConfig.isEnglish
+              ? 'Failed to load recitation for selected reciter'
+              : 'تعذر تحميل التلاوة الصوتية للقارئ المحدد');
       // The queued play intent is void now: the load the user wanted to hear
       // failed, and auto-starting after some FUTURE load would surprise them.
       _pendingPlayAfterPrepare = false;

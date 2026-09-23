@@ -18,7 +18,6 @@ class VideoThemeSelectorTablet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,7 +83,7 @@ class VideoThemeSelectorTablet extends StatelessWidget {
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          isEn ? preset.nameEnglish : preset.nameArabic,
+                          preset.getName(context),
                           style: TextStyle(
                             fontSize: 14.0.sp,
                             fontWeight: isSelected

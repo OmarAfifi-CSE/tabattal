@@ -14,6 +14,10 @@ class ReciterLocalization {
   static String localizeByLang(bool isEn, String arabicName) =>
       ReciterCatalog.localizeByLang(isEn, arabicName);
 
+  /// Localize reciter or category name using locale language code
+  static String localizeForLocale(String langCode, String arabicName) =>
+      ReciterCatalog.localizeForLocale(langCode, arabicName);
+
   /// Localize category name
   static String localizeCategory(BuildContext context, String category) =>
       ReciterCatalog.localizeCategory(context, category);

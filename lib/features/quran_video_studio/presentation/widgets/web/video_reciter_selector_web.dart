@@ -55,7 +55,7 @@ class _VideoReciterSelectorWebState
   }
 
   void _showAllRecitersSheet(BuildContext context) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isEn = Localizations.localeOf(context).languageCode != 'ar';
 
     VideoAllRecitersModal.showAsDialog(
       context: context,
@@ -143,8 +143,6 @@ class _VideoReciterSelectorWebState
               final cat = _recitersByCategory.keys
                   .elementAt(index);
               final isCatSelected = cat == _activeCategory;
-              final isEn = Localizations.localeOf(context).languageCode == 'en';
-
               return InkWell(
                 onTap: () {
                   if (_activeCategory == cat) return;
@@ -184,7 +182,7 @@ class _VideoReciterSelectorWebState
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        isEn ? ReciterCatalog.getCategoryNameEnglish(cat) : cat,
+                        ReciterCatalog.localizeCategory(context, cat),
                         style: TextStyle(
                           fontSize: 13.5.sp,
                           fontWeight: isCatSelected
@@ -216,10 +214,8 @@ class _VideoReciterSelectorWebState
             itemBuilder: (context, index) {
               final reciter = currentReciters[index];
               final isSelected = reciter['name'] == widget.selectedReciter;
-              final isEn = Localizations.localeOf(context).languageCode == 'en';
-              final reciterDisplayName = isEn
-                  ? ReciterCatalog.getReciterNameEnglish(reciter['name']!)
-                  : reciter['name']!;
+              final reciterDisplayName =
+                  ReciterCatalog.localizeReciter(context, reciter['name']!);
 
               return InkWell(
                 onTap: () {

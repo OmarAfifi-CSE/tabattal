@@ -152,9 +152,9 @@ class _SurahDownloadStatusCardState extends State<SurahDownloadStatusCard> {
 
     final audioBloc = context.read<AudioBloc>();
     final rootMessenger = ScaffoldMessenger.maybeOf(context);
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final langCode = Localizations.localeOf(context).languageCode;
     final surahName =
-        QuranMetadata.getSurahNameByLang(isEn, widget.surahNumber);
+        QuranMetadata.getSurahNameForLocale(langCode, widget.surahNumber);
     final l10n = AppLocalizations.of(context)!;
     final successMsg = l10n.audioDownloadSuccess(surahName);
 
@@ -311,9 +311,9 @@ class _SurahDownloadStatusCardState extends State<SurahDownloadStatusCard> {
   Widget build(BuildContext context) {
     if (kIsWeb) return const SizedBox.shrink();
 
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final langCode = Localizations.localeOf(context).languageCode;
     final surahName =
-        QuranMetadata.getSurahNameByLang(isEn, widget.surahNumber);
+        QuranMetadata.getSurahNameForLocale(langCode, widget.surahNumber);
     final reciterName = ReciterLocalization.localize(context, widget.reciterKey);
     final l10n = AppLocalizations.of(context)!;
 
@@ -347,15 +347,15 @@ class _SurahDownloadStatusCardState extends State<SurahDownloadStatusCard> {
                 ),
               )
             : _isDownloading
-                ? _buildDownloadingView(isEn, surahName, l10n)
+                ? _buildDownloadingView(surahName, l10n)
                 : _isDownloaded
-                    ? _buildDownloadedView(isEn, surahName, reciterName, l10n)
-                    : _buildStreamingView(isEn, surahName, reciterName, l10n),
+                    ? _buildDownloadedView(surahName, reciterName, l10n)
+                    : _buildStreamingView(surahName, reciterName, l10n),
       ),
     );
   }
 
-  Widget _buildDownloadedView(bool isEn, String surahName, String reciterName, AppLocalizations l10n) {
+  Widget _buildDownloadedView(String surahName, String reciterName, AppLocalizations l10n) {
     return Row(
       key: const ValueKey('downloaded'),
       children: [
@@ -415,7 +415,7 @@ class _SurahDownloadStatusCardState extends State<SurahDownloadStatusCard> {
     );
   }
 
-  Widget _buildStreamingView(bool isEn, String surahName, String reciterName, AppLocalizations l10n) {
+  Widget _buildStreamingView(String surahName, String reciterName, AppLocalizations l10n) {
     return Column(
       key: const ValueKey('streaming'),
       mainAxisSize: MainAxisSize.min,
@@ -509,7 +509,7 @@ class _SurahDownloadStatusCardState extends State<SurahDownloadStatusCard> {
     );
   }
 
-  Widget _buildDownloadingView(bool isEn, String surahName, AppLocalizations l10n) {
+  Widget _buildDownloadingView(String surahName, AppLocalizations l10n) {
     final pct = (_downloadProgress * 100).toInt();
 
     return Column(

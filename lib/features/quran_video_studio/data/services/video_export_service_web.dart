@@ -106,9 +106,11 @@ class VideoExportService implements IVideoExportService {
           await QuranFontService.ensurePageFontLoaded(pageNum);
           final isEn = config.isEnglish;
           if (i >= verseDurations.length || verseDurations[i].inMilliseconds <= 500) {
-            throw Exception(isEn
-                ? 'Failed to measure exact audio duration for verse ${verse.verseNumber}'
-                : 'تعذر تحديد المدة الصوتية الدقيقة للآية ${verse.verseNumber}');
+            throw Exception(config.isIndonesian
+                ? 'Gagal mengukur durasi audio yang tepat untuk ayat ${verse.verseNumber}'
+                : (isEn
+                    ? 'Failed to measure exact audio duration for verse ${verse.verseNumber}'
+                    : 'تعذر تحديد المدة الصوتية الدقيقة للآية ${verse.verseNumber}'));
           }
           final totalDur = verseDurations[i];
           final List<WordTimingSegment> timings;
@@ -211,7 +213,9 @@ class VideoExportService implements IVideoExportService {
         );
 
         if (rawBaseFrameBytes == null) {
-          throw Exception(isEn ? 'Failed to create base card frame' : 'فشل في إنشاء الإطار الأساسي للبطاقة');
+          throw Exception(config.isIndonesian
+              ? 'Gagal membuat bingkai kartu dasar'
+              : (isEn ? 'Failed to create base card frame' : 'فشل في إنشاء الإطار الأساسي للبطاقة'));
         }
 
         // When custom video is present, base_frame must remain PNG for transparent overlay.
@@ -526,7 +530,9 @@ class VideoExportService implements IVideoExportService {
         controller.add(VideoRenderProgress(
           phase: VideoRenderPhase.completed,
           progress: 1.0,
-          statusMessage: config.isEnglish ? 'Video created successfully!' : 'تم إنشاء مقطع الفيديو بنجاح!',
+          statusMessage: config.isIndonesian
+              ? 'Video berhasil dibuat!'
+              : (config.isEnglish ? 'Video created successfully!' : 'تم إنشاء مقطع الفيديو بنجاح!'),
           outputPath: outputFileName,
         ));
       } catch (e) {

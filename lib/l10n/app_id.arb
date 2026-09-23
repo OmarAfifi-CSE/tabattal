@@ -1,0 +1,792 @@
+{
+  "@@locale": "id",
+  "appName": "Tabattal",
+  "drawerSearch": "Pencarian Lanjutan",
+  "drawerSearchSubtitle": "Cari ayat & topik Al-Qur'an",
+  "drawerIndex": "Indeks",
+  "drawerIndexSubtitle": "Daftar Surah & Juz",
+  "drawerBookmarks": "Penanda Buku",
+  "drawerBookmarksSubtitle": "Ayat yang disimpan",
+  "drawerTafsir": "Tafsir Lengkap",
+  "drawerTafsirSubtitle": "Penjelasan seluruh ayat dan surah",
+  "drawerTranslation": "Terjemahan Bahasa Indonesia",
+  "drawerTranslationSubtitle": "Makna ayat-ayat Al-Qur'an",
+  "drawerAudioManager": "Pengelola Audio",
+  "drawerAudioManagerSubtitle": "Unduh & kelola murottal",
+  "drawerLanguage": "Bahasa",
+  "drawerLanguageSubtitle": "العربية / English / Indonesia",
+  "drawerThemeAndLanguage": "Tampilan & Bahasa",
+  "drawerThemeAndLanguageSubtitle": "Sesuaikan Mushaf & Mode Gelap • العربية / English / Indonesia",
+  "themeAndLanguageTitle": "Tampilan & Bahasa",
+  "menuTafsir": "Tafsir",
+  "menuTafsirTitle": "Tafsir Ayat",
+  "menuTranslation": "Terjemahan",
+  "menuWordMeanings": "Arti Per Kata",
+  "wordMeaningsTitle": "Arti Per Kata",
+  "wordMeaningsEmptyState": "Semua kosakata dalam ayat ini jelas dan mudah dipahami.",
+  "wordMeaningsPronunciation": "Pelafalan",
+  "wordMeaningsTranslation": "Arti",
+  "menuListen": "Dengarkan Ayat",
+  "menuListenOnce": "Dengarkan ayat ini saja",
+  "menuGoToVerse": "Menuju Ayat yang Diputar",
+  "menuBookmarkAdd": "Tambah Penanda",
+  "menuBookmarkRemove": "Hapus Penanda",
+  "retry": "Coba Lagi",
+  "noBookmarks": "Belum ada penanda",
+  "noBookmarksHint": "Ketuk ayat mana saja untuk menambah penanda",
+  "noResults": "Tidak ada hasil ditemukan",
+  "searchHint": "Cari ayat, surah, juz, atau halaman...",
+  "searchBy": "Cari berdasarkan",
+  "searchByHint": "Teks Al-Qur'an • Nama atau nomor surah\nNomor halaman • Nomor juz",
+  "pagePrefix": "Halaman",
+  "surahPrefix": "Surah",
+  "juzPrefix": "Juz",
+  "ayahPrefix": "Ayat",
+  "audioTypeLabel": "Jenis Bacaan",
+  "audioReciterLabel": "Qari",
+  "audioRepeatLabel": "Ulangi Ayat",
+  "audioRepeatContinuous": "Ulangi terus menerus",
+  "audioRepeatNone": "Tanpa pengulangan (lanjutkan)",
+  "audioRepeatTwice": "Ulangi dua kali",
+  "audioRepeatThrice": "Ulangi tiga kali",
+  "audioStartListening": "Mulai Mendengarkan",
+  "audioSaveSettings": "Simpan Pengaturan",
+  "audioSettingsTitle": "Pengaturan Audio",
+  "audioDownloadAll": "Unduh Seluruh Al-Qur'an",
+  "audioManagerTitle": "Pengelola Audio",
+  "timerStop": "Hentikan Pengatur Waktu",
+  "timerMinutes5": "5 menit",
+  "timerMinutes10": "10 menit",
+  "timerMinutes15": "15 menit",
+  "timerMinutes30": "30 menit",
+  "timerMinutes60": "60 menit",
+  "indexSurahsTab": "Surah",
+  "indexJuzsTab": "Juz",
+  "downloadingTafsir": "Mengunduh Tafsir... {percent}%",
+  "@downloadingTafsir": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadingTafsirBackground": "Mengunduh sisa Tafsir {tafsirName} di latar belakang...",
+  "@downloadingTafsirBackground": {
+    "placeholders": {
+      "tafsirName": {
+        "type": "String"
+      }
+    }
+  },
+  "tafsirNotAvailableLocally": "Tafsir untuk ayat ini belum tersedia secara lokal",
+  "tafsirPartialDownloadHint": "{percent}% Tafsir telah diunduh. Lanjutkan pengunduhan?",
+  "@tafsirPartialDownloadHint": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "continueDownload": "Lanjutkan Pengunduhan",
+  "noLocalData": "Tidak ada data di database lokal",
+  "noLocalTranslation": "Tidak ada terjemahan di database lokal",
+  "noTafsirAvailable": "Tafsir tidak tersedia",
+  "indexLoadError": "Gagal memuat indeks",
+  "downloadFailed": "Pengunduhan gagal: {name}",
+  "@downloadFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadFailedInternet": "Gagal mengunduh tafsir. Silakan periksa koneksi internet Anda.",
+  "downloadFailedServer": "Gagal mengambil konten dari server. Silakan coba lagi nanti.",
+  "fullTafsirTitle": "Tafsir Lengkap",
+  "translationTitle": "Terjemahan",
+  "bookmarksTitle": "Penanda",
+  "indexTitle": "Daftar Isi",
+  "surahBookmarkTitle": "Surah {name}",
+  "@surahBookmarkTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "verseBookmarkSubtitle": "Ayat {ayah} • Halaman {page}",
+  "@verseBookmarkSubtitle": {
+    "placeholders": {
+      "ayah": {
+        "type": "String"
+      },
+      "page": {
+        "type": "String"
+      }
+    }
+  },
+  "goToPageTitle": "Buka Halaman {num}",
+  "@goToPageTitle": {
+    "placeholders": {
+      "num": {
+        "type": "int"
+      }
+    }
+  },
+  "goToJuzTitle": "Juz {num} ({name}) • Halaman {page}",
+  "@goToJuzTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "num": {
+        "type": "int"
+      },
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "goToSurahTitle": "Surah {name} ({num}) • Halaman {page}",
+  "@goToSurahTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "num": {
+        "type": "int"
+      },
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "outOfRange": "Nomor di luar jangkauan ({num})",
+  "@outOfRange": {
+    "placeholders": {
+      "num": {
+        "type": "String"
+      }
+    }
+  },
+  "surahListItem": "Surah {name}",
+  "@surahListItem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "juzListItem": "Juz {name}",
+  "@juzListItem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pageListItem": "Halaman {page}",
+  "@pageListItem": {
+    "placeholders": {
+      "page": {
+        "type": "String"
+      }
+    }
+  },
+  "surahAndAyah": "Surah {surah} — Ayat {ayah}",
+  "@surahAndAyah": {
+    "placeholders": {
+      "surah": {
+        "type": "String"
+      },
+      "ayah": {
+        "type": "String"
+      }
+    }
+  },
+  "languageArabic": "العربية",
+  "languageEnglish": "English",
+  "languageIndonesian": "Bahasa Indonesia",
+  "languagePickerTitle": "Pilih Bahasa",
+  "themeDark": "Gelap",
+  "themeAppearanceTitle": "Tampilan",
+  "themeAppearanceSubtitle": "Sesuaikan warna Mushaf dan mode malam",
+  "themeDarkMode": "Gelap Mode",
+  "themeMushafColor": "Warna Mushaf",
+  "timerCancelled": "Pengatur waktu dibatalkan",
+  "audioErrorFileNotFound": "File audio tidak tersedia.",
+  "audioErrorNoInternet": "Ayat-ayat ini belum diunduh dan memerlukan koneksi internet untuk diputar.",
+  "audioErrorPlayback": "Kesalahan playing audio.",
+  "audioErrorPlaylist": "Kesalahan playing playlist.",
+  "audioVerseTimingsUnavailable": "Fitur pelacakan dan penyorotan ayat belum tersedia untuk surah ini dengan qari ini.",
+  "sleepTimerStopped": "Pengatur waktu tidur dihentikan ({minutes} menit)",
+  "@sleepTimerStopped": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "themeCream": "Krem",
+  "themeWhite": "Putih",
+  "themeMint": "Hijau Mint",
+  "themeIceBlue": "Biru Es",
+  "themeParchment": "Perkamen (Klasik)",
+  "themeRoseGold": "Rose Gold",
+  "themeSlate": "Batu Pualam",
+  "themeOlive": "Zaitun Hangat",
+  "themeEmerald": "Zamrud",
+  "themeSapphire": "Safir",
+  "themeBurgundy": "Merah Marun (Burgundy)",
+  "themeScrollDirection": "Arah Gulir",
+  "themeScrollHorizontal": "Mendatar",
+  "themeScrollVertical": "Tegak",
+  "hifzEnableMode": "Uji Hafalan",
+  "hifzDisableMode": "Hentikan Tes",
+  "hifzMaskFull": "Sembunyikan Ayat",
+  "hifzMaskWord": "Sembunyikan Kata",
+  "ok": "Oke",
+  "tafsirAlMuyassar": "Tafsir Al-Muyassar",
+  "tafsirIbnKathir": "Tafsir Ibnu Katsir",
+  "tafsirAlSaadi": "Tafsir As-Sa'di",
+  "tafsirAlTabari": "Tafsir Ath-Thabari",
+  "tafsirAlQurtubi": "Tafsir Al-Qurthubi",
+  "tafsirAlWaseet": "At-Tafsir Al-Wasith",
+  "tafsirAlBaghawi": "Tafsir Al-Baghawi",
+  "notificationChannelRecitations": "Tilawah Al-Qur'an",
+  "audioSpeed": "Kecepatan",
+  "tafsirEnIbnKathir": "Tafsir Ibnu Katsir (Ringkasan)",
+  "tafsirEnAsSaadi": "Tafsir As-Sa'di",
+  "tafsirEnMaarif": "Ma'arif Al-Qur'an",
+  "tafsirEnTazkirul": "Tazkirul Qur'an",
+  "menuShareCard": "Bagikan Ayat",
+  "verseCardTitle": "Kartu Ayat",
+  "verseCardTitleImage": "Desainer Kartu Ayat",
+  "verseCardTitleText": "Bagikan Teks",
+  "verseCardTitleFullPage": "Bagikan Halaman Mushaf",
+  "verseCardShareImage": "Bagikan Kartu",
+  "verseCardSaveImage": "Simpan Gambar",
+  "verseCardShareText": "Bagikan Teks",
+  "verseCardCopyText": "Salin Teks",
+  "verseCardCopiedSuccess": "Teks berhasil disalin",
+  "verseCardFormatLabel": "Format Berbagi",
+  "verseCardFormatVideo": "Video Al-Qur'an",
+  "verseCardFormatImage": "Kartu Ayat",
+  "verseCardFormatText": "Teks Biasa",
+  "verseCardFormatFullPage": "Halaman Penuh",
+  "verseCardShare": "Bagikan Kartu",
+  "verseCardSave": "Simpan Gambar",
+  "verseCardSavedSuccess": "Gambar berhasil disimpan ke galeri",
+  "verseCardIncludeTafsir": "Tampilkan Tafsir (Al-Muyassar)",
+  "verseCardIncludeTranslation": "Tampilkan Terjemahan (Bahasa Indonesia)",
+  "verseCardTafsirBadge": "Tafsir Al-Muyassar",
+  "verseCardTranslationBadge": "Terjemahan Bahasa Indonesia",
+  "verseCardIncludeBranding": "Logo Aplikasi",
+  "verseCardVerseRange": "Rentang Ayat",
+  "verseCardStartAyah": "Pilih Ayat Awal",
+  "verseCardEndAyah": "Pilih Ayat Akhir",
+  "topicSectionsTitle": "Topik & Kategori Al-Qur'an",
+  "topicSupplications": "Doa-doa Al-Qur'an",
+  "topicTaqwa": "Takwa & Kebaikan",
+  "topicPatience": "Kesabaran & Kelapangan",
+  "topicMercy": "Rahmat & Harapan",
+  "topicWarning": "Peringatan & Renungan",
+  "topicProphets": "Kisah Para Nabi",
+  "topicMorals": "Akhlak & Moralitas",
+  "topicCreation": "Penciptaan & Alam Semesta",
+  "videoStudioTitle": "Studio Video Al-Qur'an",
+  "videoStudioSubtitle": "Buat video Al-Qur'an sinematik berkualitas tinggi",
+  "videoStudioSurahVerses": "Surah {surahName} (Ayat {startAyah} - {endAyah})",
+  "@videoStudioSurahVerses": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      },
+      "startAyah": {
+        "type": "int"
+      },
+      "endAyah": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioThemeAndBg": "Tema & Latar Belakang",
+  "videoStudioDimensions": "Dimensi & Kualitas Video",
+  "videoStudioVerseRange": "Rentang Ayat",
+  "videoStudioFromAyah": "Dari Ayat {ayah}",
+  "@videoStudioFromAyah": {
+    "placeholders": {
+      "ayah": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioToAyah": "Sampai Ayat {ayah}",
+  "@videoStudioToAyah": {
+    "placeholders": {
+      "ayah": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioReciter": "Qari & Murottal",
+  "videoStudioQuality": "Kualitas Ekspor",
+  "videoStudioDisplayOptions": "Opsi Tampilan",
+  "videoStudioShowSurahBadge": "Tampilkan Nama Surah",
+  "videoStudioShowReciterName": "Tampilkan Nama Qari",
+  "videoStudioShowCardFrame": "Tampilkan Bingkai Kartu",
+  "videoStudioShowTafsir": "Tampilkan Tafsir (Al-Muyassar)",
+  "videoStudioShowTranslation": "Tampilkan Terjemahan (Bahasa Indonesia)",
+  "videoStudioShare": "Bagikan Video",
+  "videoStudioSave": "Simpan Video",
+  "videoStudioFullscreenPreview": "Pratinjau Layar Penuh",
+  "videoStudioProgressTitle": "Menyiapkan Video Al-Qur'an",
+  "videoStudioProgressCompleted": "Video berhasil dibuat",
+  "videoStudioProgressFailed": "Gagal membuat video",
+  "videoStudioCancelExport": "Batal",
+  "videoStudioClose": "Tutup",
+  "videoStudioAyahOf": "Ayat {current} dari {total}",
+  "@videoStudioAyahOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioAyahOfSurah": "Ayat {current} dari {total} ({surahName})",
+  "@videoStudioAyahOfSurah": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "surahName": {
+        "type": "String"
+      }
+    }
+  },
+  "videoStudioSavedSuccess": "Video berhasil disimpan ke galeri",
+  "videoStudioSavedError": "Gagal menyimpan video ke galeri",
+  "videoStudioAudioLoadError": "Tidak dapat memuat audio murottal untuk qari yang dipilih",
+  "videoStudioShareCaption": "Lantunan ayat suci dari aplikasi Tabattal",
+  "videoStudioChooseReciter": "Pilih Qari",
+  "videoStudioAllReciters": "Semua",
+  "videoStudioViewAll": "Lihat Semua",
+  "videoThemeCream": "Krem",
+  "videoThemeWhite": "Putih",
+  "videoThemeVintage": "Klasik",
+  "videoThemeRoseGold": "Rose Gold",
+  "videoThemeEmerald": "Zamrud",
+  "videoThemeMidnight": "Tengah Malam",
+  "videoThemeRoyalDark": "Gelap Elegan",
+  "videoRatioStory": "Cerita (9:16)",
+  "videoRatioSquare": "Persegi (1:1)",
+  "videoRatioLandscape": "Lanskap (16:9)",
+  "videoQuality1080p": "Full HD (1080p)",
+  "videoQuality720p": "Cepat (720p HD)",
+  "videoQualityFast": "Cepat",
+  "videoQualityHigh": "Definisi Tinggi (Full HD)",
+  "videoStudioDisplayMode": "Mode Tampilan Teks",
+  "videoDisplayModeLineByLine": "Baris per Baris",
+  "videoDisplayModeStaticFull": "Ayat Lengkap",
+  "videoBgCustomVideo": "Video Kustom",
+  "videoBgChooseVideoGallery": "Pilih dari Galeri",
+  "videoBgChooseVideoGallerySub": "Pilih video dari perangkat sebagai latar belakang",
+  "videoBgVideoUrl": "URL Video Langsung",
+  "videoBgVideoUrlSub": "Tempel tautan video langsung dari web (MP4)",
+  "videoBgRemoveVideo": "Hapus Video Kustom",
+  "videoBgCustomVideoActive": "Video Kustom Aktif",
+  "videoBgLoadingVideo": "Memproses video...",
+  "videoBgInvalidVideoUrl": "Harap masukkan tautan video yang valid (MP4)",
+  "videoBgCardDesign": "Desain Kartu",
+  "videoBgCustomPhoto": "Foto Kustom",
+  "videoBgChangeVideo": "Ganti Video",
+  "videoStudioDownloadVideo": "Unduh Video",
+  "videoStudioDownloadedSuccess": "Video berhasil diunduh",
+  "videoStudioDownloadedError": "Gagal mengunduh video",
+  "videoStudioAudioWaveform": "Tampilkan Gelombang Audio",
+  "videoStudioReplayFromStart": "Putar ulang dari awal",
+  "videoStudioShowSurahBadgeAndAyah": "Tampilkan Nama Surah & Nomor Ayat",
+  "videoStudioThemeAndColors": "Tema & Warna",
+  "videoStudioBackgroundDimming": "Peredupan Latar Belakang",
+  "videoStudioCustomPhotoActive": "Foto Kustom Aktif",
+  "videoStudioCustomPhotoTitle": "Latar Belakang Kustom",
+  "videoStudioChooseImageGallery": "Pilih dari Galeri",
+  "videoStudioChooseImageGallerySub": "Pilih gambar dari perangkat sebagai latar belakang",
+  "videoStudioImageUrl": "URL Gambar Langsung",
+  "videoStudioImageUrlSub": "Tempel tautan gambar langsung dari web",
+  "videoStudioApplyImage": "Terapkan Gambar",
+  "videoStudioApplyVideo": "Terapkan Video",
+  "videoStudioRemoveCustomImage": "Hapus Gambar Kustom",
+  "videoStudioLoadingImage": "Memproses gambar...",
+  "videoStudioEnterImageUrl": "Harap masukkan URL gambar",
+  "videoStudioEnterVideoUrl": "Harap masukkan URL video",
+  "videoStudioFailedToLoadImage": "Gagal memuat gambar dari tautan",
+  "videoStudioFailedToLoadVideo": "Gagal memuat video dari tautan",
+  "videoStudioPickImageError": "Gagal memilih gambar: {error}",
+  "@videoStudioPickImageError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "videoStudioPickVideoError": "Gagal memilih video: {error}",
+  "@videoStudioPickVideoError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "verseCardShareError": "Gagal membagikan kartu: {error}",
+  "@verseCardShareError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "verseCardSaveError": "Gagal menyimpan gambar: {error}",
+  "@verseCardSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "verseCardImageDownloadedSuccess": "Gambar berhasil diunduh",
+  "verseCardImageDownloadedError": "Kesalahan saat mengunduh gambar",
+  "verseCardImageSavedGallerySuccess": "Gambar berhasil disimpan ke galeri",
+  "verseCardImageSavedGalleryError": "Gagal menyimpan gambar ke galeri",
+  "verseCardCapturePageError": "Gagal mengambil gambar halaman mushaf",
+  "verseCardRetry": "Coba Lagi",
+  "videoStudioReciterCategoryMurattal": "Murottal",
+  "videoStudioReciterCategoryMujawwad": "Mujawwad",
+  "verseCardThemeWhite": "Putih",
+  "verseCardThemeParchment": "Perkamen",
+  "verseCardThemeRoseGold": "Rose Gold",
+  "verseCardThemeMint": "Hijau Mint",
+  "verseCardThemeOlive": "Zaitun",
+  "verseCardThemeIceBlue": "Biru Es",
+  "verseCardThemeSlate": "Abu-abu Tua",
+  "verseCardThemeEmerald": "Zamrud",
+  "verseCardThemeBurgundy": "Burgundi",
+  "verseCardThemeDark": "Malam",
+  "verseCardThemeCream": "Krem",
+  "videoExportErrorConnection": "Tidak dapat terhubung ke server ekspor video. Harap pastikan server berjalan atau periksa koneksi Anda.",
+  "verseCardSurahSingleAyah": "Surah {surahName} • Ayat {ayah}",
+  "@verseCardSurahSingleAyah": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      },
+      "ayah": {
+        "type": "String"
+      }
+    }
+  },
+  "verseCardSurahMultipleAyahs": "Surah {surahName} • Ayat ({startAyah} - {endAyah})",
+  "@verseCardSurahMultipleAyahs": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      },
+      "startAyah": {
+        "type": "String"
+      },
+      "endAyah": {
+        "type": "String"
+      }
+    }
+  },
+  "verseCardFromAyah": "Dari: {ayah}",
+  "@verseCardFromAyah": {
+    "placeholders": {
+      "ayah": {
+        "type": "String"
+      }
+    }
+  },
+  "verseCardToAyah": "Sampai: {ayah}",
+  "@verseCardToAyah": {
+    "placeholders": {
+      "ayah": {
+        "type": "String"
+      }
+    }
+  },
+  "verseCardAyah": "Ayat {ayah}",
+  "@verseCardAyah": {
+    "placeholders": {
+      "ayah": {
+        "type": "String"
+      }
+    }
+  },
+  "verseCardSurah": "Surah {surahName}",
+  "@verseCardSurah": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      }
+    }
+  },
+  "videoStudioProgressDownloadingAudio": "Mengunduh audio tilawah...",
+  "videoStudioExportPreparing": "Memulai pembuatan klip video...",
+  "videoStudioProgressReadingTimings": "Membaca penanda waktu untuk ayat {ayah}...",
+  "@videoStudioProgressReadingTimings": {
+    "placeholders": {
+      "ayah": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioProgressCreatingBaseFrame": "Membuat bingkai kartu dasar...",
+  "videoStudioProgressRenderingLine": "Merender baris {currentLine}/{totalLines} untuk ayat {ayah}...",
+  "@videoStudioProgressRenderingLine": {
+    "placeholders": {
+      "currentLine": {
+        "type": "int"
+      },
+      "totalLines": {
+        "type": "int"
+      },
+      "ayah": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioProgressRenderingVerse": "Merender ayat {ayah}...",
+  "@videoStudioProgressRenderingVerse": {
+    "placeholders": {
+      "ayah": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioProgressUploadingPayload": "Mengunggah data... {percent}%",
+  "@videoStudioProgressUploadingPayload": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioProgressServerMuxing": "Memproses dan merender klip video...",
+  "videoStudioProgressPreparingDownload": "Menyiapkan file video untuk diunduh...",
+  "videoStudioProgressConcatenating": "Menggabungkan dan menyimpan file video akhir...",
+  "audioDownloadPause": "Jeda Unduh",
+  "audioDownloadPaused": "Unduh paused",
+  "audioDownloadStartingAll": "Memulai pengunduhan semua surah...",
+  "audioDownloadAllSuccess": "Semua surah berhasil diunduh",
+  "audioDownloadFailedCount": "{count} surah gagal diunduh",
+  "@audioDownloadFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioProgressPreparingAyahScenes": "Menyiapkan adegan {current}/{total}...",
+  "@videoStudioProgressPreparingAyahScenes": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioEncodingProgress": "Merender: {rendered} / {total} bingkai",
+  "@videoStudioEncodingProgress": {
+    "placeholders": {
+      "rendered": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "videoStudioEtaFewSeconds": "Tersisa beberapa detik ({seconds} dtk)...",
+  "@videoStudioEtaFewSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioEtaManySeconds": "Perkiraan sisa waktu: {seconds} detik...",
+  "@videoStudioEtaManySeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioEtaOneSecond": "tersisa sekitar 1 detik untuk menyelesaikan pemrosesan",
+  "videoStudioEtaTwoSeconds": "tersisa sekitar 2 detik untuk menyelesaikan pemrosesan",
+  "videoStudioEtaMoments": "tersisa beberapa saat untuk menyelesaikan pemrosesan...",
+  "videoStudioStartingEncoding": "Memulai pengkodean dengan kualitas {quality}...",
+  "@videoStudioStartingEncoding": {
+    "placeholders": {
+      "quality": {
+        "type": "String"
+      }
+    }
+  },
+  "videoStudioMeasureDurationError": "Gagal mengukur durasi audio ayat {ayah}",
+  "@videoStudioMeasureDurationError": {
+    "placeholders": {
+      "ayah": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioCreateBaseFrameError": "Gagal membuat bingkai kartu dasar",
+  "videoStudioRenderVerseTextError": "Gagal merender teks ayat {ayah}",
+  "@videoStudioRenderVerseTextError": {
+    "placeholders": {
+      "ayah": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioVideoNotFound": "File video akhir tidak ditemukan",
+  "videoStudioAudioTimelineIncomplete": "Daftar durasi ayat tidak lengkap",
+  "videoStudioAudioMeasureFailed": "Gagal mengukur durasi file audio tilawah",
+  "videoStudioNetworkError": "Tidak dapat terhubung ke server untuk mengambil data tilawah. Periksa koneksi internet Anda dan coba lagi.",
+  "videoStudioReciterTimingUnavailable": "Penanda waktu kata demi kata yang akurat belum tersedia untuk qari ini saat ini.",
+  "videoStudioVerseTimingError": "Tidak dapat mengambil penanda waktu kata yang akurat untuk ayat ini dari server. Silakan periksa koneksi internet Anda.",
+  "videoStudioAudioDownloadError": "Gagal mengunduh file audio tilawah. Silakan periksa koneksi internet Anda dan coba lagi.",
+  "videoStudioAudioCancelled": "Penyiapan file audio dibatalkan.",
+  "videoStudioRenderProcessingError": "Terjadi kesalahan saat memproses dan menyandikan video. Silakan coba lagi.",
+  "videoStudioWebExportError": "Gagal mengekspor video di peramban ini. Silakan gunakan peramban modern seperti Google Chrome.",
+  "videoStudioRetry": "Coba Lagi",
+  "videoStudioFileTooLarge": "Ukuran file video khusus terlalu besar (maksimal 150 MB). Silakan pilih klip video yang lebih kecil.",
+  "videoStudioExportServiceOffline": "Tidak dapat terhubung ke server ekspor video pada port 8080. Pastikan server berjalan dan coba lagi.",
+  "videoStudioInvalidUrl": "Tautan harus dimulai dengan http:// atau https://",
+  "videoStudioDownloadUrlFailed": "Gagal mengunduh video dari tautan yang ditentukan. Silakan periksa tautan dan coba lagi.",
+  "videoStudioEmptyFile": "File video yang dipilih kosong atau tidak valid. Silakan pilih video lain.",
+  "videoStudioAudioFileNotFound": "File audio tidak ditemukan untuk ayat {ayah}",
+  "@videoStudioAudioFileNotFound": {
+    "placeholders": {
+      "ayah": {
+        "type": "int"
+      }
+    }
+  },
+  "videoStudioSurahNotDownloaded": "Surah belum diunduh di perangkat ini untuk qari yang dipilih. Silakan sambungkan ke internet untuk memutarnya.",
+  "videoStudioCustomVideoNotFound": "File video latar khusus tidak ditemukan. Silakan pilih kembali.",
+  "videoStudioCustomImageNotFound": "File gambar latar khusus tidak ditemukan. Silakan pilih kembali.",
+  "searchFilterAll": "Semua",
+  "appVolume": "Volume Aplikasi",
+  "mute": "Bisukan",
+  "unmute": "Bunyikan",
+  "volumePercent": "Volume: {percent}%",
+  "@volumePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "volumeTooltip": "Sesuaikan volume ({percent}%)",
+  "@volumeTooltip": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "volumeMutedTooltip": "Volume Aplikasi: Senyap • Ketuk untuk membunyikan",
+  "audioSourceLive": "Streaming",
+  "audioSourceOffline": "Offline",
+  "audioSourceLiveTooltip": "Streaming langsung via Internet",
+  "audioSourceOfflineTooltip": "Diunduh secara lokal (Offline)",
+  "audioDownloadSuccess": "Surah {surahName} berhasil diunduh",
+  "@audioDownloadSuccess": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      }
+    }
+  },
+  "audioDownloadError": "Gagal mengunduh tilawah surah. Silakan periksa koneksi internet Anda.",
+  "audioDeleteSuccess": "Surah {surahName} berhasil dihapus",
+  "@audioDeleteSuccess": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      }
+    }
+  },
+  "audioSurahDownloadedTitle": "Surah {surahName} (Telah Diunduh)",
+  "@audioSurahDownloadedTitle": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      }
+    }
+  },
+  "audioSurahDownloadedSubtitle": "Siap didengarkan langsung tanpa internet",
+  "audioDeleteFromDeviceTooltip": "Hapus dari perangkat",
+  "audioLiveStreamTitle": "Streaming Langsung (Memerlukan koneksi internet)",
+  "audioLiveStreamSubtitle": "Streaming langsung Surah {surahName}",
+  "@audioLiveStreamSubtitle": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      }
+    }
+  },
+  "audioDownloadSurahButton": "Unduh Surah {surahName}",
+  "@audioDownloadSurahButton": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      }
+    }
+  },
+  "audioDownloadingProgress": "Mengunduh Surah {surahName}: {percent}%",
+  "@audioDownloadingProgress": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "audioCancelDownloadTooltip": "Batalkan unduhan",
+  "tafsirIndonesianKemenag": "Terjemahan Kemenag (RI)",
+  "tafsirAlMuyassarWithLang": "Tafsir Al-Muyassar (Arab)",
+  "tafsirIbnKathirWithLang": "Tafsir Ibnu Katsir (Arab)",
+  "tafsirAlSaadiWithLang": "Tafsir As-Sa'di (Arab)",
+  "audioRecitersAvailable": "{count} qari tersedia",
+  "@audioRecitersAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "audioReciterFavorites": "Qari Favorit",
+  "audioReciterWithTracking": "Tilawah dengan Pelacakan Ayat",
+  "audioReciterWithoutTracking": "Tilawah tanpa Pelacakan Ayat",
+  "audioReciterAllAlphabetical": "Semua Qari (A - Z)",
+  "audioReciterSearchHint": "Cari nama qari...",
+  "audioReciterNoResults": "Tidak ada qari yang cocok",
+  "audioReciterSearchTryAgain": "Coba cari dengan kata kunci lain",
+  "audioReciterNoTrackingTag": "Tanpa Pelacakan",
+  "audioReciterAddToFavorites": "Tambahkan ke favorit",
+  "audioReciterRemoveFromFavorites": "Hapus dari favorit"
+}

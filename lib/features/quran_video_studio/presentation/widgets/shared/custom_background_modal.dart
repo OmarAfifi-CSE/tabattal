@@ -173,13 +173,13 @@ class _CustomBackgroundModalState extends State<CustomBackgroundModal> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
     const errorColor = Color(0xFFD32F2F);
 
     return Directionality(
-      textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Padding(
         padding: EdgeInsets.only(
           left: widget.isDialog ? 22.w : 16.w,

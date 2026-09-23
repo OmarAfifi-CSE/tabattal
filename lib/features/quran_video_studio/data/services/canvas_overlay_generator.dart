@@ -314,7 +314,7 @@ class CanvasOverlayGenerator {
     final hasTafsir = (config.showTafsir && (tafsirText ?? verse.tafsir) != null && (tafsirText ?? verse.tafsir)!.isNotEmpty);
     final hasTranslation = (config.showEnglishTranslation && (translationText ?? verse.translation) != null && (translationText ?? verse.translation)!.isNotEmpty);
 
-    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.backgroundType.name}_${config.textDisplayMode.name}_${config.isEnglish}_${hasTafsir}_${hasTranslation}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}_${overrideLineIndex ?? 0}_${width.round()}_${height.round()}';
+    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.backgroundType.name}_${config.textDisplayMode.name}_${config.languageCode}_${hasTafsir}_${hasTranslation}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}_${overrideLineIndex ?? 0}_${width.round()}_${height.round()}';
 
     final cached = _dynamicLayoutCache[cacheKey];
     final double totalContentHeight = cached?.totalContentHeight ?? (height * 0.35);
@@ -710,8 +710,10 @@ class CanvasOverlayGenerator {
 
     final theme = config.themePreset;
     final isEn = config.isEnglish;
-    final surahName = QuranMetadata.getSurahNameByLang(isEn, config.surahNumber);
-    final reciterName = ReciterCatalog.localizeByLang(isEn, config.reciterName);
+    final isId = config.isIndonesian;
+    final langCode = config.languageCode;
+    final surahName = QuranMetadata.getSurahNameForLocale(langCode, config.surahNumber);
+    final reciterName = ReciterCatalog.localizeForLocale(langCode, config.reciterName);
 
     final double cardMarginV = config.aspectRatio == VideoAspectRatio.portrait9x16
         ? height * 0.122
@@ -737,7 +739,9 @@ class CanvasOverlayGenerator {
       final String surahText;
       if (isLineByLine) {
         final ayahNum = verse?.verseNumber ?? config.startAyah;
-        if (isEn) {
+        if (isId) {
+          surahText = 'Surah $surahName • Ayat $ayahNum';
+        } else if (isEn) {
           surahText = 'Surah $surahName • Ayah $ayahNum';
         } else {
           final arabicAyahNum = VerseCardTextUtils.toArabicDigits(ayahNum);
@@ -745,14 +749,18 @@ class CanvasOverlayGenerator {
         }
       } else {
         if (config.startAyah == config.endAyah) {
-          if (isEn) {
+          if (isId) {
+            surahText = 'Surah $surahName • Ayat ${config.startAyah}';
+          } else if (isEn) {
             surahText = 'Surah $surahName • Ayah ${config.startAyah}';
           } else {
             final arabicAyahNum = VerseCardTextUtils.toArabicDigits(config.startAyah);
             surahText = 'سورة $surahName • الآية $arabicAyahNum';
           }
         } else {
-          if (isEn) {
+          if (isId) {
+            surahText = 'Surah $surahName • Ayat ${config.startAyah}-${config.endAyah}';
+          } else if (isEn) {
             surahText = 'Surah $surahName • Ayahs ${config.startAyah}-${config.endAyah}';
           } else {
             final startArabic = VerseCardTextUtils.toArabicDigits(config.startAyah);
@@ -769,10 +777,10 @@ class CanvasOverlayGenerator {
             color: isFramelessCustom ? badgeAccentColor : theme.accentColor,
             fontSize: baseScale * 0.026,
             fontWeight: FontWeight.w600,
-            fontFamily: isEn ? null : 'Amiri',
+            fontFamily: (isEn || isId) ? null : 'Amiri',
           ),
         ),
-        textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+        textDirection: (isEn || isId) ? TextDirection.ltr : TextDirection.rtl,
         textAlign: TextAlign.center,
       )..layout();
 
@@ -811,7 +819,9 @@ class CanvasOverlayGenerator {
     // Reciter Name
     if (config.showReciterName) {
       final textColors = _resolveTextColors(config);
-      final reciterText = isEn ? 'Recited by: $reciterName' : 'بصوت القارئ: $reciterName';
+      final reciterText = isId
+          ? 'Qari: $reciterName'
+          : (isEn ? 'Recited by: $reciterName' : 'بصوت القارئ: $reciterName');
       final textPainter = TextPainter(
         text: TextSpan(
           text: reciterText,
@@ -819,10 +829,10 @@ class CanvasOverlayGenerator {
             color: textColors.secondaryTextColor,
             fontSize: baseScale * 0.023,
             fontWeight: FontWeight.w600,
-            fontFamily: isEn ? null : 'Amiri',
+            fontFamily: (isEn || isId) ? null : 'Amiri',
           ),
         ),
-        textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+        textDirection: (isEn || isId) ? TextDirection.ltr : TextDirection.rtl,
         textAlign: TextAlign.center,
       )..layout(maxWidth: width * 0.85);
 
@@ -855,6 +865,7 @@ class CanvasOverlayGenerator {
     final bool isFramelessCustom = hasCustomMedia && !config.showCardFrame;
     final Color badgeAccentColor = _resolveAccentColor(config);
     final bool isEn = config.isEnglish;
+    final bool isId = config.isIndonesian;
 
     final timings = wordTimings ?? const <WordTimingSegment>[];
 
@@ -1186,17 +1197,20 @@ class CanvasOverlayGenerator {
 
       if (hasTafsir) {
         final Color badgeTextColor = isFramelessCustom ? badgeAccentColor : theme.accentColor;
+        final String tafsirBadgeText = isId
+            ? 'Tafsir Al-Muyassar'
+            : (isEn ? 'Al-Muyassar Tafsir' : 'التفسير الميسر');
         tBadgePainter = TextPainter(
           text: TextSpan(
-            text: isEn ? 'Al-Muyassar Tafsir' : 'التفسير الميسر',
+            text: tafsirBadgeText,
             style: TextStyle(
               color: badgeTextColor,
               fontSize: (baseScale * 0.024) * scale,
               fontWeight: FontWeight.w600,
-              fontFamily: isEn ? null : 'Amiri',
+              fontFamily: (isEn || isId) ? null : 'Amiri',
             ),
           ),
-          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+          textDirection: (isEn || isId) ? TextDirection.ltr : TextDirection.rtl,
           textAlign: TextAlign.center,
         )..layout(maxWidth: width * 0.6);
 
@@ -1228,17 +1242,20 @@ class CanvasOverlayGenerator {
       if (hasTranslation) {
         if (hasTafsir) {
           final Color badgeTextColor = isFramelessCustom ? badgeAccentColor : theme.accentColor;
+          final String trBadgeText = isId
+              ? 'Terjemahan Bahasa Indonesia'
+              : (isEn ? 'English Translation' : 'الترجمة الإنجليزية');
           trBadgePainter = TextPainter(
             text: TextSpan(
-              text: isEn ? 'English Translation' : 'الترجمة الإنجليزية',
+              text: trBadgeText,
               style: TextStyle(
                 color: badgeTextColor,
                 fontSize: (baseScale * 0.020) * scale,
                 fontWeight: FontWeight.w600,
-                fontFamily: isEn ? null : 'Amiri',
+                fontFamily: (isEn || isId) ? null : 'Amiri',
               ),
             ),
-            textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+            textDirection: (isEn || isId) ? TextDirection.ltr : TextDirection.rtl,
             textAlign: TextAlign.center,
           )..layout(maxWidth: width * 0.6);
 
@@ -1291,7 +1308,7 @@ class CanvasOverlayGenerator {
       );
     }
 
-    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.backgroundType.name}_${config.textDisplayMode.name}_${config.isEnglish}_${hasTafsir}_${hasTranslation}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}_${overrideLineIndex ?? activeLine?.lineNumber ?? 0}_${width.round()}_${height.round()}';
+    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.backgroundType.name}_${config.textDisplayMode.name}_${config.languageCode}_${hasTafsir}_${hasTranslation}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}_${overrideLineIndex ?? activeLine?.lineNumber ?? 0}_${width.round()}_${height.round()}';
 
     final cached = _dynamicLayoutCache.putIfAbsent(cacheKey, () {
       var layout = computeLayout(currentScaleMultiplier);

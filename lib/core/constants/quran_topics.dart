@@ -37,14 +37,22 @@ class QuranSubTopic {
   final String id;
   final String nameAr;
   final String nameEn;
+  final String? nameId;
   final List<VerseRange> verseRanges;
 
   const QuranSubTopic({
     required this.id,
     required this.nameAr,
     required this.nameEn,
+    this.nameId,
     required this.verseRanges,
   });
+
+  String getNameForLocale(String langCode) {
+    if (langCode == 'ar') return nameAr;
+    if (langCode == 'id') return nameId ?? nameEn;
+    return nameEn;
+  }
 
   String getName(bool isArabic) => isArabic ? nameAr : nameEn;
 }
@@ -137,6 +145,7 @@ class QuranTopics {
           id: 'muhammad',
           nameAr: 'سيدنا محمد صلى الله عليه وسلم',
           nameEn: 'Prophet Muhammad (PBUH)',
+          nameId: 'Nabi Muhammad SAW',
           verseRanges: [
             VerseRange(3, 144),
             VerseRange(9, 128, 129),
@@ -151,6 +160,7 @@ class QuranTopics {
           id: 'adam',
           nameAr: 'سيدنا آدم عليه السلام',
           nameEn: 'Prophet Adam (PBUH)',
+          nameId: 'Nabi Adam AS',
           verseRanges: [
             VerseRange(2, 30, 39),
             VerseRange(7, 11, 27),
@@ -163,6 +173,7 @@ class QuranTopics {
           id: 'nuh',
           nameAr: 'سيدنا نوح عليه السلام',
           nameEn: 'Prophet Noah (PBUH)',
+          nameId: 'Nabi Nuh AS',
           verseRanges: [
             VerseRange(7, 59, 64),
             VerseRange(10, 71, 73),
@@ -179,6 +190,7 @@ class QuranTopics {
           id: 'hud',
           nameAr: 'سيدنا هود عليه السلام',
           nameEn: 'Prophet Hud (PBUH)',
+          nameId: 'Nabi Hud AS',
           verseRanges: [
             VerseRange(7, 65, 72),
             VerseRange(11, 50, 60),
@@ -190,6 +202,7 @@ class QuranTopics {
           id: 'salih',
           nameAr: 'سيدنا صالح عليه السلام',
           nameEn: 'Prophet Salih (PBUH)',
+          nameId: 'Nabi Shalih AS',
           verseRanges: [
             VerseRange(7, 73, 79),
             VerseRange(11, 61, 68),
@@ -202,6 +215,7 @@ class QuranTopics {
           id: 'ibrahim',
           nameAr: 'سيدنا إبراهيم عليه السلام',
           nameEn: 'Prophet Abraham (PBUH)',
+          nameId: 'Nabi Ibrahim AS',
           verseRanges: [
             VerseRange(2, 124, 132),
             VerseRange(2, 260),
@@ -218,6 +232,7 @@ class QuranTopics {
           id: 'ismael_ishaq_yaqub',
           nameAr: 'سيدنا إسماعيل وإسحاق ويعقوب عليهم السلام',
           nameEn: 'Prophets Ishmael, Isaac & Jacob',
+          nameId: 'Nabi Ismail, Ishaq & Ya\'qub AS',
           verseRanges: [
             VerseRange(2, 133, 140),
             VerseRange(19, 49, 55),
@@ -229,6 +244,7 @@ class QuranTopics {
           id: 'lut',
           nameAr: 'سيدنا لوط عليه السلام',
           nameEn: 'Prophet Lot (PBUH)',
+          nameId: 'Nabi Luth AS',
           verseRanges: [
             VerseRange(7, 80, 84),
             VerseRange(11, 77, 83),
@@ -241,6 +257,7 @@ class QuranTopics {
           id: 'shuaib',
           nameAr: 'سيدنا شعيب عليه السلام',
           nameEn: 'Prophet Shuayb (PBUH)',
+          nameId: 'Nabi Syu\'aib AS',
           verseRanges: [
             VerseRange(7, 85, 93),
             VerseRange(11, 84, 95),
@@ -251,6 +268,7 @@ class QuranTopics {
           id: 'yusuf',
           nameAr: 'سيدنا يوسف عليه السلام',
           nameEn: 'Prophet Joseph (PBUH)',
+          nameId: 'Nabi Yusuf AS',
           verseRanges: [
             VerseRange(12, 4, 101),
           ],
@@ -259,6 +277,7 @@ class QuranTopics {
           id: 'musa',
           nameAr: 'سيدنا موسى عليه السلام',
           nameEn: 'Prophet Moses (PBUH)',
+          nameId: 'Nabi Musa AS',
           verseRanges: [
             VerseRange(2, 49, 61),
             VerseRange(7, 103, 160),
@@ -272,6 +291,7 @@ class QuranTopics {
           id: 'harun',
           nameAr: 'سيدنا هارون عليه السلام',
           nameEn: 'Prophet Aaron (PBUH)',
+          nameId: 'Nabi Harun AS',
           verseRanges: [
             VerseRange(20, 87, 94),
             VerseRange(28, 34, 35),
@@ -282,6 +302,7 @@ class QuranTopics {
           id: 'dawud',
           nameAr: 'سيدنا داوود عليه السلام',
           nameEn: 'Prophet David (PBUH)',
+          nameId: 'Nabi Daud AS',
           verseRanges: [
             VerseRange(2, 251),
             VerseRange(21, 78, 80),
@@ -293,6 +314,7 @@ class QuranTopics {
           id: 'sulaiman',
           nameAr: 'سيدنا سليمان عليه السلام',
           nameEn: 'Prophet Solomon (PBUH)',
+          nameId: 'Nabi Sulaiman AS',
           verseRanges: [
             VerseRange(21, 81, 82),
             VerseRange(27, 15, 44),
@@ -304,6 +326,7 @@ class QuranTopics {
           id: 'ayub',
           nameAr: 'سيدنا أيوب عليه السلام',
           nameEn: 'Prophet Job (PBUH)',
+          nameId: 'Nabi Ayyub AS',
           verseRanges: [
             VerseRange(21, 83, 84),
             VerseRange(38, 41, 44),
@@ -313,6 +336,7 @@ class QuranTopics {
           id: 'yunus',
           nameAr: 'سيدنا يونس عليه السلام',
           nameEn: 'Prophet Jonah (PBUH)',
+          nameId: 'Nabi Yunus AS',
           verseRanges: [
             VerseRange(10, 98),
             VerseRange(21, 87, 88),
@@ -324,6 +348,7 @@ class QuranTopics {
           id: 'zakariya_yahya',
           nameAr: 'سيدنا زكريا وسيدنا يحيى عليهما السلام',
           nameEn: 'Prophets Zechariah & John',
+          nameId: 'Nabi Zakaria & Yahya AS',
           verseRanges: [
             VerseRange(3, 37, 41),
             VerseRange(19, 1, 15),
@@ -334,6 +359,7 @@ class QuranTopics {
           id: 'isa',
           nameAr: 'سيدنا عيسى عليه السلام',
           nameEn: 'Prophet Jesus (PBUH)',
+          nameId: 'Nabi Isa AS',
           verseRanges: [
             VerseRange(3, 45, 59),
             VerseRange(4, 156, 159),
@@ -346,6 +372,7 @@ class QuranTopics {
           id: 'maryam',
           nameAr: 'السيدة مريم عليها السلام',
           nameEn: 'Mary (Peace be upon her)',
+          nameId: 'Siti Maryam (Alaihas Salam)',
           verseRanges: [
             VerseRange(3, 35, 44),
             VerseRange(19, 16, 29),

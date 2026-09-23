@@ -43,7 +43,7 @@ class AppSnackBar {
   }) {
     if (!context.mounted) return;
 
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final effectiveIcon = icon ??
         (isError
             ? Icons.error_outline_rounded
@@ -60,7 +60,7 @@ class AppSnackBar {
     messenger.showSnackBar(
       SnackBar(
         content: Directionality(
-          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+          textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

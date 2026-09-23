@@ -14,4 +14,6 @@ class LocaleCubit extends Cubit<Locale> {
   }
 
   bool get isArabic => state.languageCode == 'ar';
+  bool get isEnglish => state.languageCode == 'en';
+  bool get isIndonesian => state.languageCode == 'id';
 }

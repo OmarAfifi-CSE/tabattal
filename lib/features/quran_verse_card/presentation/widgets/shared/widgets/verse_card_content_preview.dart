@@ -42,10 +42,10 @@ class VerseCardContentPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final surahCleanName = isEn
-        ? QuranMetadata.getSurahNameEnglish(surahNumber)
-        : QuranMetadata.getSurahName(surahNumber);
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isAr = langCode == 'ar';
+    final surahCleanName =
+        QuranMetadata.getSurahNameForLocale(langCode, surahNumber);
     final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.sizeOf(context).width;
 
@@ -180,16 +180,16 @@ class VerseCardContentPreview extends StatelessWidget {
                 startAyah == endAyah
                     ? l10n.verseCardSurahSingleAyah(
                         surahCleanName,
-                        isEn
+                        !isAr
                             ? '$startAyah'
                             : VerseCardTextUtils.toArabicDigits(startAyah),
                       )
                     : l10n.verseCardSurahMultipleAyahs(
                         surahCleanName,
-                        isEn
+                        !isAr
                             ? '$startAyah'
                             : VerseCardTextUtils.toArabicDigits(startAyah),
-                        isEn
+                        !isAr
                             ? '$endAyah'
                             : VerseCardTextUtils.toArabicDigits(endAyah),
                       ),
@@ -243,7 +243,7 @@ class VerseCardContentPreview extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Align(
-                                  alignment: isEn
+                                  alignment: !isAr
                                       ? Alignment.centerLeft
                                       : Alignment.centerRight,
                                   child: Row(
@@ -258,7 +258,7 @@ class VerseCardContentPreview extends StatelessWidget {
                                       Text(
                                         l10n.verseCardTafsirBadge,
                                         style: TextStyle(
-                                          fontFamily: isEn ? null : 'Amiri',
+                                          fontFamily: isAr ? 'Amiri' : null,
                                           fontSize: 11.sp,
                                           fontWeight: FontWeight.w600,
                                           color: theme.accentColor,
@@ -327,7 +327,7 @@ class VerseCardContentPreview extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Align(
-                                  alignment: isEn
+                                  alignment: !isAr
                                       ? Alignment.centerLeft
                                       : Alignment.centerRight,
                                   child: Row(
@@ -342,7 +342,7 @@ class VerseCardContentPreview extends StatelessWidget {
                                       Text(
                                         l10n.verseCardTranslationBadge,
                                         style: TextStyle(
-                                          fontFamily: isEn ? null : 'Amiri',
+                                          fontFamily: isAr ? 'Amiri' : null,
                                           fontSize: 11.sp,
                                           fontWeight: FontWeight.w600,
                                           color: theme.accentColor,

@@ -275,9 +275,10 @@ class _WordMeaningsHeaderWeb extends StatelessWidget {
               ),
             ),
             child: Text(
-              isArabic
-                  ? 'سورة $surahName : الآية ${ArabicTextUtils.toArabicDigits(ayahNumber)}'
-                  : 'Surah $surahName : $ayahNumber',
+              l10n.surahAndAyah(
+                surahName,
+                isArabic ? ArabicTextUtils.toArabicDigits(ayahNumber) : ayahNumber.toString(),
+              ),
               style: TextStyle(
                 fontFamily: isArabic ? 'Amiri' : null,
                 fontSize: (isLandscape ? 13.0 : 16.0).sp,
@@ -321,9 +322,7 @@ class _WordMeaningsEmptyStateWeb extends StatelessWidget {
           ),
           SizedBox(height: (isLandscape ? 8.0 : 12.0).h),
           Text(
-            isArabic
-                ? 'جميع مفردات الآية الكريمة واضحة وجلية المعنى'
-                : 'All words in this verse are clear in meaning',
+            l10n.wordMeaningsEmptyState,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: isArabic ? 'Amiri' : null,

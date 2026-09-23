@@ -168,33 +168,7 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
   }
 
   String _getTafsirName(BuildContext context, int id) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (id) {
-      // Arabic tafsirs
-      case 16:
-        return l10n.tafsirAlMuyassar;
-      case 14:
-        return l10n.tafsirIbnKathir;
-      case 91:
-        return l10n.tafsirAlSaadi;
-      case 15:
-        return l10n.tafsirAlTabari;
-      case 90:
-        return l10n.tafsirAlQurtubi;
-      case 93:
-        return l10n.tafsirAlWaseet;
-      case 94:
-        return l10n.tafsirAlBaghawi;
-      // English tafsirs
-      case 169:
-        return l10n.tafsirEnIbnKathir;
-      case 168:
-        return l10n.tafsirEnMaarif;
-      case 817:
-        return l10n.tafsirEnTazkirul;
-      default:
-        return l10n.tafsirAlMuyassar;
-    }
+    return TafsirOption.getTafsirName(context, id);
   }
 
   void _showOverlayContent(
@@ -219,9 +193,9 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
           child: StatefulBuilder(
             builder: (context, setState) {
               final l10n = AppLocalizations.of(context)!;
-              final isEn = Localizations.localeOf(context).languageCode == 'en';
+              final isAr = Localizations.localeOf(context).languageCode == 'ar';
               return Directionality(
-                textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+                textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
                 child: Container(
                   constraints: BoxConstraints(
                     maxHeight:
@@ -307,12 +281,11 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                 alignment: Alignment.centerRight,
                                 child: Builder(
                                   builder: (context) {
-                                    final langCode = Localizations.localeOf(
-                                      context,
-                                    ).languageCode;
-                                    int displayResourceId = langCode == 'en'
-                                        ? 169
-                                        : 16;
+                                      final langCode = Localizations.localeOf(
+                                        context,
+                                      ).languageCode;
+                                      int displayResourceId =
+                                          langCode == 'en' ? 169 : 16;
                                     if (currentState is TafsirLoaded) {
                                       displayResourceId =
                                           currentState.tafsir.tafsirId;
@@ -376,9 +349,14 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                           Localizations.localeOf(
                                                 context,
                                               ).languageCode ==
-                                              'en'
-                                          ? 180.w
-                                          : 120.w,
+                                              'id'
+                                          ? 225.w
+                                          : (Localizations.localeOf(
+                                                    context,
+                                                  ).languageCode !=
+                                                  'ar'
+                                              ? 200.w
+                                              : 120.w),
                                       itemHeight: 38.h,
                                       itemFontSize: 14.sp,
                                       trigger: Container(
@@ -387,9 +365,14 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                             Localizations.localeOf(
                                                   context,
                                                 ).languageCode ==
-                                                'en'
-                                            ? 130.w
-                                            : 100.w,
+                                                'id'
+                                            ? 155.w
+                                            : (Localizations.localeOf(
+                                                      context,
+                                                    ).languageCode !=
+                                                    'ar'
+                                                ? 140.w
+                                                : 100.w),
                                         padding: EdgeInsets.symmetric(
                                           horizontal: 10.w,
                                         ),
@@ -510,8 +493,12 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                   ),
                                   SizedBox(height: 12.h),
                                   Text(
-                                    currentState.message,
+                                    currentState.message.contains('Network') ||
+                                            currentState.message.contains('connection')
+                                        ? l10n.downloadFailedInternet
+                                        : l10n.downloadFailedServer,
                                     style: const TextStyle(color: Colors.red),
+                                    textAlign: TextAlign.center,
                                   ),
                                   SizedBox(height: 12.h),
                                   ElevatedButton(
@@ -618,9 +605,9 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                       curve: Curves.easeOut,
                                       builder: (context, value, child) {
                                         return Row(
-                                          textDirection: isEn
-                                              ? TextDirection.ltr
-                                              : TextDirection.rtl,
+                                          textDirection: isAr
+                                              ? TextDirection.rtl
+                                              : TextDirection.ltr,
                                           children: [
                                             SizedBox(
                                               width: 20.sp,
@@ -726,13 +713,23 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                                                                 ).languageCode ==
                                                                 'ar'
                                                             ? 'تابع تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(currentState.tafsir.groupVerseRange!)})'
-                                                            : 'Continuation of Tafsir for Verses (${currentState.tafsir.groupVerseRange})')
+                                                            : (Localizations.localeOf(
+                                                                      context,
+                                                                    ).languageCode ==
+                                                                    'id'
+                                                                ? 'Lanjutan Tafsir Ayat (${currentState.tafsir.groupVerseRange})'
+                                                                : 'Continuation of Tafsir for Verses (${currentState.tafsir.groupVerseRange})'))
                                                         : (Localizations.localeOf(
                                                                   context,
                                                                 ).languageCode ==
                                                                 'ar'
                                                             ? 'تفسير الآيات (${ArabicTextUtils.convertEnglishToArabicDigits(currentState.tafsir.groupVerseRange!)})'
-                                                            : 'Tafsir of Verses (${currentState.tafsir.groupVerseRange})'),
+                                                            : (Localizations.localeOf(
+                                                                      context,
+                                                                    ).languageCode ==
+                                                                    'id'
+                                                                ? 'Tafsir Ayat (${currentState.tafsir.groupVerseRange})'
+                                                                : 'Tafsir of Verses (${currentState.tafsir.groupVerseRange})')),
                                                     style: TextStyle(
                                                       fontSize: 12.sp,
                                                       fontWeight:
@@ -949,17 +946,28 @@ class _VerseActionMenuMobileState extends State<VerseActionMenuMobile>
                           l10n.menuTranslation,
                           () {
                             final qBloc = context.read<QuranBloc>();
+                            final langCode = Localizations.localeOf(
+                              context,
+                            ).languageCode;
                             _showOverlayContent(
                               context,
                               l10n.menuTranslation,
                               qBloc.state,
                               () {
                                 qBloc.add(
-                                  FetchTranslation(widget.verse.verseKey),
+                                  FetchTranslation(
+                                    widget.verse.verseKey,
+                                    languageCode: langCode,
+                                  ),
                                 );
                               },
                             );
-                            qBloc.add(FetchTranslation(widget.verse.verseKey));
+                            qBloc.add(
+                              FetchTranslation(
+                                widget.verse.verseKey,
+                                languageCode: langCode,
+                              ),
+                            );
                             _close(keepHighlight: true);
                           },
                           closeMenu: false,

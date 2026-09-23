@@ -35,7 +35,7 @@ class VideoRangePickerMobile extends StatelessWidget {
     required List<int> options,
     required ValueChanged<int> onSelected,
   }) {
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.cardCream,
@@ -45,7 +45,7 @@ class VideoRangePickerMobile extends StatelessWidget {
       ),
       builder: (ctx) {
         return Directionality(
-          textDirection: isEn ? TextDirection.ltr : TextDirection.rtl,
+          textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
           child: Container(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.sizeOf(ctx).height * 0.65,
@@ -122,7 +122,7 @@ class VideoRangePickerMobile extends StatelessWidget {
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            isEn ? '$item' : VerseCardTextUtils.toArabicDigits(item),
+                            !isAr ? '$item' : VerseCardTextUtils.toArabicDigits(item),
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -145,7 +145,8 @@ class VideoRangePickerMobile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isAr = langCode == 'ar';
     final startOptions = List.generate(totalAyahsInSurah, (i) => i + 1);
     final maxEnd = _getMaxEndAyah(startAyah);
     final endOptions = List.generate(
@@ -180,9 +181,7 @@ class VideoRangePickerMobile extends StatelessWidget {
               ),
               child: Text(
                 l10n.verseCardSurah(
-                  isEn
-                      ? QuranMetadata.getSurahNameEnglish(surahNumber)
-                      : QuranMetadata.getSurahName(surahNumber),
+                  QuranMetadata.getSurahNameForLocale(langCode, surahNumber),
                 ),
                 style: TextStyle(
                   fontSize: 11.sp,
@@ -225,7 +224,7 @@ class VideoRangePickerMobile extends StatelessWidget {
                     children: [
                       Text(
                         l10n.verseCardFromAyah(
-                          isEn
+                          !isAr
                               ? '$startAyah'
                               : VerseCardTextUtils.toArabicDigits(startAyah),
                         ),
@@ -275,7 +274,7 @@ class VideoRangePickerMobile extends StatelessWidget {
                     children: [
                       Text(
                         l10n.verseCardToAyah(
-                          isEn
+                          !isAr
                               ? '$endAyah'
                               : VerseCardTextUtils.toArabicDigits(endAyah),
                         ),

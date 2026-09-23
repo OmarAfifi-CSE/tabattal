@@ -130,21 +130,40 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
 
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
-    final savedId = prefs.getInt('tafsir_id');
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isEn = langCode == 'en';
+    final int? localeSpecificId = prefs.getInt('tafsir_id_$langCode');
+    final savedId = localeSpecificId ?? prefs.getInt('tafsir_id');
     int effectiveId;
 
     if (isEn) {
-      if (savedId == null || ![169, 168, 817].contains(savedId)) {
+      if (localeSpecificId == null ||
+          savedId == null ||
+          ![169, 168, 817].contains(savedId)) {
         effectiveId = 169;
         await prefs.setInt('tafsir_id', 169);
+        await prefs.setInt('tafsir_id_en', 169);
+      } else {
+        effectiveId = savedId;
+      }
+    } else if (langCode == 'id') {
+      const allowedIdTafsirs = [16, 14, 91, 15, 90, 93, 94, 169, 168, 817];
+      if (localeSpecificId == null ||
+          savedId == null ||
+          !allowedIdTafsirs.contains(savedId)) {
+        effectiveId = 16;
+        await prefs.setInt('tafsir_id', 16);
+        await prefs.setInt('tafsir_id_id', 16);
       } else {
         effectiveId = savedId;
       }
     } else {
-      if (savedId == null || [169, 168, 817].contains(savedId)) {
+      if (localeSpecificId == null ||
+          savedId == null ||
+          [169, 168, 817, 33].contains(savedId)) {
         effectiveId = 16;
         await prefs.setInt('tafsir_id', 16);
+        await prefs.setInt('tafsir_id_$langCode', 16);
       } else {
         effectiveId = savedId;
       }
@@ -348,8 +367,11 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
       return;
     }
 
+    final langCode = Localizations.localeOf(context).languageCode;
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     await prefs.setInt('tafsir_id', resourceId);
+    await prefs.setInt('tafsir_id_$langCode', resourceId);
 
     // Remember which verse is currently at the top of the visible area
     String? currentVerseKey;
@@ -425,8 +447,7 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
               if (failure is NetworkFailure) {
                 _downloadError = l10n.downloadFailedInternet;
               } else {
-                _downloadError =
-                    'Failed to fetch content from the server. Please try again later.';
+                _downloadError = l10n.downloadFailedServer;
               }
             });
             return;
@@ -753,14 +774,11 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Text(
-                                                    Localizations.localeOf(
-                                                              context,
-                                                            ).languageCode ==
-                                                            'en'
-                                                        ? QuranMetadata.getSurahNameEnglish(
+                                                    isAr
+                                                        ? QuranMetadata.getSurahNameWithTashkeel(
                                                             item.surah,
                                                           )
-                                                        : QuranMetadata.getSurahNameWithTashkeel(
+                                                        : QuranMetadata.getSurahNameEnglish(
                                                             item.surah,
                                                           ),
                                                     style: TextStyle(
@@ -771,12 +789,9 @@ class _QuranFullTafsirViewMobileState extends State<QuranFullTafsirViewMobile> {
                                                   ),
                                                   SizedBox(width: 6.w),
                                                   Text(
-                                                    Localizations.localeOf(
-                                                              context,
-                                                            ).languageCode ==
-                                                            'en'
-                                                        ? '(${item.ayah})'
-                                                        : '﴿${item.ayah.toArabicDigits}﴾',
+                                                    isAr
+                                                        ? '﴿${item.ayah.toArabicDigits}﴾'
+                                                        : '(${item.ayah})',
                                                     style: TextStyle(
                                                       fontWeight: FontWeight.w600,
                                                       color: AppColors.accentGold,

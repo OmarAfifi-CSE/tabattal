@@ -577,7 +577,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
 
   Widget _buildTopicHeader(AppLocalizations l10n) {
     final topicTitle = _selectedTopic!.getTitle(l10n);
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final langCode = Localizations.localeOf(context).languageCode;
 
     return Container(
       color: AppColors.cardCream.withValues(alpha: 0.5),
@@ -677,7 +677,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                           ),
                         ),
                         child: Text(
-                          sub.getName(isAr),
+                          sub.getNameForLocale(langCode),
                           style: TextStyle(
                             fontSize: 15.sp,
                             fontWeight: isSelected
@@ -702,6 +702,8 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
 
   Widget _buildBody() {
     final l10n = AppLocalizations.of(context)!;
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isAr = langCode == 'ar';
 
     if (_selectedTopic != null) {
       return Column(
@@ -760,7 +762,11 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                l10n.pageListItem(verse.page.toArabicDigits),
+                                l10n.pageListItem(
+                                  !isAr
+                                      ? verse.page.toString()
+                                      : verse.page.toArabicDigits,
+                                ),
                                 style: TextStyle(
                                   fontSize: 15.sp,
                                   color: AppColors.textPrimary.withValues(alpha: 0.6),
@@ -768,8 +774,13 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                               ),
                               Text(
                                 l10n.surahAndAyah(
-                                  QuranMetadata.getSurahName(verse.surah),
-                                  verse.ayah.toArabicDigits,
+                                  !isAr
+                                      ? QuranMetadata.getSurahNameForLocale(
+                                          langCode, verse.surah)
+                                      : QuranMetadata.getSurahName(verse.surah),
+                                  !isAr
+                                      ? verse.ayah.toString()
+                                      : verse.ayah.toArabicDigits,
                                 ),
                                 style: TextStyle(
                                   fontSize: 17.sp,
@@ -852,7 +863,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
     }
 
     final surahCards = matchingSurahs.map((surahNum) {
-      final surahName = QuranMetadata.getSurahName(surahNum);
+      final surahName = QuranMetadata.getSurahNameForLocale(langCode, surahNum);
       final surahPage = _surahPageMap[surahNum] ?? 1;
       return _buildActionCard(
         title: l10n.goToSurahTitle(surahName, surahNum, surahPage),
@@ -884,7 +895,11 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      l10n.pageListItem(verse.page.toArabicDigits),
+                      l10n.pageListItem(
+                        !isAr
+                            ? verse.page.toString()
+                            : verse.page.toArabicDigits,
+                      ),
                       style: TextStyle(
                         fontSize: 15.sp,
                         color: AppColors.textPrimary.withValues(alpha: 0.6),
@@ -892,8 +907,13 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
                     ),
                     Text(
                       l10n.surahAndAyah(
-                        QuranMetadata.getSurahName(verse.surah),
-                        verse.ayah.toArabicDigits,
+                        !isAr
+                            ? QuranMetadata.getSurahNameForLocale(
+                                langCode, verse.surah)
+                            : QuranMetadata.getSurahName(verse.surah),
+                        !isAr
+                            ? verse.ayah.toString()
+                            : verse.ayah.toArabicDigits,
                       ),
                       style: TextStyle(
                         fontSize: 17.sp,
@@ -932,6 +952,8 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
 
   Widget _buildNumericResults() {
     final l10n = AppLocalizations.of(context)!;
+    final langCode = Localizations.localeOf(context).languageCode;
+    final isAr = langCode == 'ar';
     final number =
         int.tryParse(_normalizeArabicNumbers(_searchController.text.trim())) ??
         1;
@@ -949,7 +971,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
 
     if (number >= 1 && number <= 30) {
       final juzPage = _juzStartPages[number - 1];
-      final juzName = QuranMetadata.getJuzName(number);
+      final juzName = QuranMetadata.getJuzNameForLocale(langCode, number);
       cards.add(
         _buildActionCard(
           title: l10n.goToJuzTitle(juzName, number, juzPage),
@@ -960,7 +982,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
     }
 
     if (number >= 1 && number <= 114) {
-      final surahName = QuranMetadata.getSurahName(number);
+      final surahName = QuranMetadata.getSurahNameForLocale(langCode, number);
       final surahPage = _surahPageMap[number];
       if (surahPage != null) {
         cards.add(
@@ -988,7 +1010,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
     if (cards.isEmpty) {
       return Center(
         child: Text(
-          l10n.outOfRange(number.toArabicDigits),
+          l10n.outOfRange(!isAr ? number.toString() : number.toArabicDigits),
           style: TextStyle(
             fontSize: 18.sp,
             color: AppColors.textPrimary.withValues(alpha: 0.6),
@@ -1008,6 +1030,7 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
     required IconData icon,
     required VoidCallback onTap,
   }) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return Card(
       margin: EdgeInsets.only(bottom: 12.h),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -1027,8 +1050,8 @@ class _QuranSearchScreenDesktopState extends State<QuranSearchScreenDesktop> {
         ),
         title: Text(
           title,
-          textAlign: TextAlign.right,
-          textDirection: TextDirection.rtl,
+          textAlign: isAr ? TextAlign.right : TextAlign.left,
+          textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
           style: TextStyle(
             fontSize: 18.5.sp,
             fontWeight: FontWeight.w500,

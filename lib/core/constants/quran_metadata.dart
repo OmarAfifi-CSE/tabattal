@@ -564,6 +564,20 @@ class QuranMetadata {
         : getSurahName(surahNumber);
   }
 
+  /// Returns the localized Surah name based on locale language code
+  static String getSurahNameForLocale(String langCode, int surahNumber) {
+    return langCode == 'ar'
+        ? getSurahName(surahNumber)
+        : getSurahNameEnglish(surahNumber);
+  }
+
+  /// Returns the localized Juz name based on locale language code
+  static String getJuzNameForLocale(String langCode, int juzNumber) {
+    return langCode == 'ar'
+        ? getJuzName(juzNumber)
+        : juzNumber.toString();
+  }
+
   static int surahLengthOf(int surahNumber) {
     if (surahNumber >= 1 && surahNumber <= 114) {
       return surahLengths[surahNumber - 1];

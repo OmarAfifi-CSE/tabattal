@@ -51,14 +51,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawerLanguage => 'Language';
 
   @override
-  String get drawerLanguageSubtitle => 'العربية / English';
+  String get drawerLanguageSubtitle => 'العربية / English / Indonesia';
 
   @override
   String get drawerThemeAndLanguage => 'Appearance & Language';
 
   @override
   String get drawerThemeAndLanguageSubtitle =>
-      'Customize Mushaf & Dark Mode • العربية / English';
+      'Customize Mushaf & Dark Mode • العربية / English / Indonesia';
 
   @override
   String get themeAndLanguageTitle => 'Appearance & Language';
@@ -77,6 +77,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wordMeaningsTitle => 'Word Meanings';
+
+  @override
+  String get wordMeaningsEmptyState =>
+      'All words in this verse are clear and straightforward.';
 
   @override
   String get wordMeaningsPronunciation => 'Pronunciation';
@@ -297,6 +301,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to download Tafsir. Please check your internet connection.';
 
   @override
+  String get downloadFailedServer =>
+      'Failed to fetch content from the server. Please try again later.';
+
+  @override
   String get fullTafsirTitle => 'Full Tafsir';
 
   @override
@@ -363,6 +371,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageEnglish => 'English';
+
+  @override
+  String get languageIndonesian => 'Bahasa Indonesia';
 
   @override
   String get languagePickerTitle => 'Choose Language';
@@ -1208,4 +1219,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get audioCancelDownloadTooltip => 'Cancel download';
+
+  @override
+  String get tafsirIndonesianKemenag => 'Kemenag Translation (Indonesian)';
+
+  @override
+  String get tafsirAlMuyassarWithLang => 'Tafsir Al-Muyassar (Arabic)';
+
+  @override
+  String get tafsirIbnKathirWithLang => 'Tafsir Ibn Kathir (Arabic)';
+
+  @override
+  String get tafsirAlSaadiWithLang => 'Tafsir As-Sa\'di (Arabic)';
+
+  @override
+  String audioRecitersAvailable(int count) {
+    return '$count reciters available';
+  }
+
+  @override
+  String get audioReciterFavorites => 'Favorite Reciters';
+
+  @override
+  String get audioReciterWithTracking => 'Recitations with Verse Tracking';
+
+  @override
+  String get audioReciterWithoutTracking =>
+      'Recitations without Verse Tracking';
+
+  @override
+  String get audioReciterAllAlphabetical => 'All Reciters (A - Z)';
+
+  @override
+  String get audioReciterSearchHint => 'Search by reciter name...';
+
+  @override
+  String get audioReciterNoResults => 'No matching reciters found';
+
+  @override
+  String get audioReciterSearchTryAgain =>
+      'Try searching with different keywords';
+
+  @override
+  String get audioReciterNoTrackingTag => 'No Tracking';
+
+  @override
+  String get audioReciterAddToFavorites => 'Add to favorites';
+
+  @override
+  String get audioReciterRemoveFromFavorites => 'Remove from favorites';
 }

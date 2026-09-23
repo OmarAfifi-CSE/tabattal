@@ -65,15 +65,12 @@ class QuranDrawerMobile extends StatelessWidget {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Directionality(
-                                    textDirection: TextDirection.rtl,
-                                    child: Text(
-                                      l10n.themeScrollDirection,
-                                      style: TextStyle(
-                                        fontSize: 14.sp,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.textPrimary,
-                                      ),
+                                  Text(
+                                    l10n.themeScrollDirection,
+                                    style: TextStyle(
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textPrimary,
                                     ),
                                   ),
                                   SizedBox(height: 12.h),
