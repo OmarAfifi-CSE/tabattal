@@ -136,7 +136,7 @@ Sharing is limited to plain text or flat cards → no way to create modern, sync
     </td>
     <td width="25%" align="center" valign="top">
         <img src="docs/assets/images/showcase/arabic/08_themes_appearance_language.png" alt="المظهر واللغة وثيمات المصحف"/>
-        <p><b>🎨 المظهر واللغة وثيمات المصحف</b><br/>11 مظهرًا ووضع ليلي ودعم للغتين</p>
+        <p><b>🎨 المظهر واللغة وثيمات المصحف</b><br/>11 مظهرًا ووضع ليلي ودعم متعدد اللغات (العربية، الإنجليزية، والإندونيسية)</p>
     </td>
 </tr>
 </table>
@@ -180,7 +180,7 @@ Sharing is limited to plain text or flat cards → no way to create modern, sync
     </td>
     <td width="25%" align="center" valign="top">
         <img src="docs/assets/images/showcase/english/08_themes_appearance_language.png" alt="Themes, Night Mode & Language"/>
-        <p><b>🎨 Themes, Night Mode & Language</b><br/>11 themes, dark mode, and bilingual support</p>
+        <p><b>🎨 Themes, Night Mode & Language</b><br/>11 themes, dark mode, and multilingual support (Arabic, English, Indonesian)</p>
     </td>
 </tr>
 </table>
@@ -251,7 +251,7 @@ All 604 page fonts pre-warmed in RAM — no zip extraction, no runtime layout ov
 ### 🎨 Verse Card Generator & Page Export
 
 - **Custom Sharing Cards** — High-resolution cards for single verses or verse ranges
-- **Granular Controls** — Include/exclude Tafsir and English translation independently
+- **Granular Controls** — Include/exclude Tafsir and translations (English & Indonesian) independently
 - **Full-Page Snapshot** — Export the entire Mushaf page with Islamic border framing
 - **11 Curated Themes** — Instant gallery sync with Android media store indexing
 
@@ -291,7 +291,7 @@ All 604 page fonts pre-warmed in RAM — no zip extraction, no runtime layout ov
 - **Ghareeb Al-Quran** — Offline lookup for difficult Quranic words, per verse
 - **Grouped Tafsir Context** — Smart detection of multi-verse commentary spans
 - **Smart Selector** — Fast, offline commentaries with upward-opening picker
-- **English Translation** — Clear, dignified text displayed alongside Arabic
+- **Multilingual Translations** — Clear, authenticated English (Saheeh International) and Indonesian (Kemenag) translations displayed alongside authentic Arabic commentaries
 
 <br/>
 
@@ -310,6 +310,7 @@ All 604 page fonts pre-warmed in RAM — no zip extraction, no runtime layout ov
 
 </div>
 
+- **Multilingual Interface** — Full native experience in Arabic (RTL), English (LTR), and Indonesian (Bahasa Indonesia LTR)
 - **OLED Dark Mode** — True black for Qiyam and night reading, saves battery
 - **Adaptive Chrome** — Status/nav bar contrast adapts automatically to theme
 - **Flexible Reading** — Switch between horizontal book paging and vertical scroll
