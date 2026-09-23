@@ -27,6 +27,7 @@ class QuranConstants {
   static const int indonesianKemenagTranslationId = 33; // Kemenag (ID)
   static const int indonesianComplexTranslationId = 134; // King Fahad Complex (ID)
   static const int defaultIndonesianTranslationId = 33;
+  static const String preferredTranslationIdKey = 'preferred_translation_id';
 
   /// Returns the appropriate default translation resource ID based on active language code.
   static int defaultTranslationIdForLocale(String languageCode) {

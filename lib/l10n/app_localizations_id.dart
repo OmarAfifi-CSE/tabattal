@@ -36,7 +36,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get drawerTafsirSubtitle => 'Penjelasan seluruh ayat dan surah';
 
   @override
-  String get drawerTranslation => 'Terjemahan Bahasa Indonesia';
+  String get drawerTranslation => 'Terjemahan';
 
   @override
   String get drawerTranslationSubtitle => 'Makna ayat-ayat Al-Qur\'an';

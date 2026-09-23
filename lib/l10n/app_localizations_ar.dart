@@ -36,7 +36,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get drawerTafsirSubtitle => 'تفسير لجميع الآيات والسور';
 
   @override
-  String get drawerTranslation => 'الترجمة الإنجليزية';
+  String get drawerTranslation => 'الترجمة';
 
   @override
   String get drawerTranslationSubtitle => 'ترجمة لمعاني القرآن';
@@ -307,7 +307,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fullTafsirTitle => 'التفسير الكامل';
 
   @override
-  String get translationTitle => 'الترجمة الإنجليزية';
+  String get translationTitle => 'الترجمة';
 
   @override
   String get bookmarksTitle => 'العلامات المرجعية';

@@ -12,13 +12,17 @@ import '../../../../../quran_audio/presentation/bloc/audio_bloc.dart';
 import '../../../../../quran_audio/presentation/bloc/audio_event.dart';
 import '../../../../../quran_audio/presentation/bloc/audio_state.dart';
 import '../../../../../../core/constants/quran_constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../../core/constants/quran_metadata.dart';
 import '../../../../../quran_audio/presentation/widgets/shared/audio_settings_sheet.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class QuranTranslationViewMobile extends StatefulWidget {
   final int pageNumber;
-  const QuranTranslationViewMobile({super.key, required this.pageNumber});
+  const QuranTranslationViewMobile({
+    super.key,
+    required this.pageNumber,
+  });
 
   @override
   State<QuranTranslationViewMobile> createState() => _QuranTranslationViewMobileState();
@@ -50,9 +54,7 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
   bool _isLoadingMore = false;
   final List<VerseTranslationDataMobile> _list = [];
   int _currentSurahId = 1;
-  int get _translationResourceId => QuranConstants.defaultTranslationIdForLocale(
-        Localizations.localeOf(context).languageCode,
-      );
+  int? _translationResourceId;
   int _initialScrollIndex = 0;
 
   String? _initialVerseKey;
@@ -68,7 +70,6 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
     super.initState();
     _repository = context.read<QuranRepository>();
     _localDS = context.read<QuranLocalDataSource>();
-    _initData();
     _itemPositionsListener.itemPositions.addListener(_onScroll);
   }
 
@@ -76,6 +77,62 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _noTranslationText = AppLocalizations.of(context)!.noLocalTranslation;
+    if (_translationResourceId == null) {
+      final lang = Localizations.localeOf(context).languageCode;
+      _loadInitialTranslation(lang);
+    }
+  }
+
+  Future<void> _loadInitialTranslation(String lang) async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved =
+        prefs.getInt('${QuranConstants.preferredTranslationIdKey}_$lang');
+    _translationResourceId =
+        saved ?? QuranConstants.defaultTranslationIdForLocale(lang);
+    if (mounted) {
+      await _initData();
+    }
+  }
+
+  Future<void> _switchTranslation(int newId) async {
+    if (_translationResourceId == newId || _isLoadingInitial) return;
+
+    String? currentVerseKey;
+    final positions = _itemPositionsListener.itemPositions.value;
+    if (positions.isNotEmpty) {
+      final minIndex = positions
+          .map((p) => p.index)
+          .reduce((a, b) => a < b ? a : b);
+      if (minIndex >= 0 && minIndex < _list.length) {
+        currentVerseKey = _list[minIndex].verseKey;
+      }
+    }
+
+    setState(() {
+      _translationResourceId = newId;
+      _isLoadingInitial = true;
+      _list.clear();
+    });
+
+    final lang = Localizations.localeOf(context).languageCode;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(
+      '${QuranConstants.preferredTranslationIdKey}_$lang',
+      newId,
+    );
+
+    await _loadSurahData(_currentSurahId);
+
+    if (currentVerseKey != null) {
+      final index = _list.indexWhere((e) => e.verseKey == currentVerseKey);
+      if (index != -1) {
+        _initialScrollIndex = index;
+      }
+    }
+
+    if (mounted) {
+      setState(() => _isLoadingInitial = false);
+    }
   }
 
   @override
@@ -169,9 +226,11 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
   Future<void> _loadSurahData(int surahId) async {
     final versesResult = await _repository.getVersesBySurah(surahId);
     await versesResult.fold((f) async => null, (verses) async {
+      final effectiveId =
+          _translationResourceId ?? QuranConstants.defaultTranslationId;
       final translationRows = await _localDS.getTranslationsBySurah(
         surahId,
-        _translationResourceId,
+        effectiveId,
       );
 
       final Map<String, String> translationMap = {
@@ -211,6 +270,81 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
         alignment: 0.02,
       );
     }
+  }
+
+  Widget _buildLanguageSwitcher() {
+    final currentId =
+        _translationResourceId ?? QuranConstants.defaultTranslationId;
+    final isEn = currentId == QuranConstants.defaultTranslationId;
+    final isId =
+        currentId == QuranConstants.indonesianKemenagTranslationId;
+
+    return Padding(
+      padding: EdgeInsetsDirectional.only(end: 14.w),
+      child: Center(
+        child: Container(
+          height: 32.h,
+          padding: EdgeInsets.all(2.r),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceCream,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(
+              color: AppColors.accentGold.withValues(alpha: 0.35),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildLangPill(
+                label: 'EN',
+                isSelected: isEn,
+                onTap: () =>
+                    _switchTranslation(QuranConstants.defaultTranslationId),
+              ),
+              SizedBox(width: 2.w),
+              _buildLangPill(
+                label: 'ID',
+                isSelected: isId,
+                onTap: () => _switchTranslation(
+                  QuranConstants.indonesianKemenagTranslationId,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLangPill({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.accentGold : Colors.transparent,
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -261,6 +395,9 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                 fontSize: 22.sp,
               ),
             ),
+            actions: [
+              _buildLanguageSwitcher(),
+            ],
             leading: IconButton(
               icon: Icon(
                 Icons.arrow_back_rounded,
@@ -305,6 +442,7 @@ class _QuranTranslationViewMobileState extends State<QuranTranslationViewMobile>
                   ),
                 )
               : ScrollablePositionedList.separated(
+                  key: ValueKey('translation_list_${_translationResourceId}_$_currentSurahId'),
                   itemScrollController: _itemScrollController,
                   itemPositionsListener: _itemPositionsListener,
                   initialScrollIndex: _initialScrollIndex,

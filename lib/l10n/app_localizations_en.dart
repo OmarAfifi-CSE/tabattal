@@ -36,7 +36,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawerTafsirSubtitle => 'Commentary on all verses and surahs';
 
   @override
-  String get drawerTranslation => 'English Translation';
+  String get drawerTranslation => 'Translation';
 
   @override
   String get drawerTranslationSubtitle => 'Meanings of the Quran';

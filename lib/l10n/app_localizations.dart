@@ -157,7 +157,7 @@ abstract class AppLocalizations {
   /// No description provided for @drawerTranslation.
   ///
   /// In ar, this message translates to:
-  /// **'الترجمة الإنجليزية'**
+  /// **'الترجمة'**
   String get drawerTranslation;
 
   /// No description provided for @drawerTranslationSubtitle.
@@ -673,7 +673,7 @@ abstract class AppLocalizations {
   /// No description provided for @translationTitle.
   ///
   /// In ar, this message translates to:
-  /// **'الترجمة الإنجليزية'**
+  /// **'الترجمة'**
   String get translationTitle;
 
   /// No description provided for @bookmarksTitle.
