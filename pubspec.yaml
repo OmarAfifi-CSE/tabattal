@@ -2,7 +2,7 @@ name: tabattal
 description: "A premium, high-performance cross-platform Quran application featuring luxury Mushaf reading, synchronized audio recitation, Hifz study tools, and an advanced Quran Video Studio."
 publish_to: 'none'
 
-version: 1.4.7+20
+version: 1.5.0+21
 
 environment:
   sdk: ^3.12.1
@@ -16,7 +16,7 @@ dependencies:
   # --- Architecture, State Management & Utils ---
   flutter_bloc: ^9.1.1
   bloc_concurrency: ^0.3.0
-  equatable: ^2.0.8
+  equatable: ^3.0.0
   intl: ^0.20.2
   archive: ^4.2.0
 
