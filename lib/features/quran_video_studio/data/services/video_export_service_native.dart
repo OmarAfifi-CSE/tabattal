@@ -533,8 +533,7 @@ class VideoExportService implements IVideoExportService {
           ffmpegArgs.addAll(['-loop', '1', '-t', totalDurationStr, '-framerate', '30', '-i', baseFramePath]);
 
           for (int v = 0; v < effectiveBadgeCount; v++) {
-            final durSec = verseDurs[v].toStringAsFixed(3);
-            ffmpegArgs.addAll(['-loop', '1', '-t', durSec, '-framerate', '30', '-i', badgeOverlayPaths[v]]);
+            ffmpegArgs.addAll(['-loop', '1', '-t', totalDurationStr, '-framerate', '30', '-i', badgeOverlayPaths[v]]);
           }
 
           for (int t = 0; t < effectiveTafsirCount; t++) {
@@ -547,18 +546,22 @@ class VideoExportService implements IVideoExportService {
             ffmpegArgs.addAll(['-loop', '1', '-t', durSec, '-framerate', '30', '-i', overlayPaths[u]]);
           }
 
-          final dimmingAlpha = config.backgroundDimming.clamp(0.0, 0.95).toStringAsFixed(2);
-          filterChains.add('[0:v]setpts=PTS-STARTPTS,scale=$targetW:$targetH:force_original_aspect_ratio=increase,crop=$targetW:$targetH,setsar=1,format=yuv420p,drawbox=color=black@$dimmingAlpha:t=fill[bg]');
-          filterChains.add('[bg][1:v]overlay=0:0[canvas0]');
+          final dimming = config.backgroundDimming.clamp(0.0, 0.95);
+          final rgbMult = (1.0 - dimming).clamp(0.05, 1.0).toStringAsFixed(3);
+          final dimmingFilter = dimming > 0.001
+              ? ',colorchannelmixer=rr=$rgbMult:gg=$rgbMult:bb=$rgbMult'
+              : '';
+          filterChains.add('[0:v]setpts=PTS-STARTPTS,scale=$targetW:$targetH:force_original_aspect_ratio=increase:flags=lanczos,crop=$targetW:$targetH,setsar=1,format=rgba$dimmingFilter[bg]');
+          filterChains.add('[bg][1:v]overlay=0:0:format=auto[canvas0]');
           var currentCanvas = 'canvas0';
 
           for (int v = 0; v < effectiveBadgeCount; v++) {
             final vStart = verseStarts[v];
-            final vEnd = (v == effectiveBadgeCount - 1)
-                ? (vStart + verseDurs[v])
-                : (vStart + verseDurs[v] - 0.001);
             final nextBadgeCanvas = 'canvas_b${v + 1}';
-            filterChains.add('[$currentCanvas][${v + 2}:v]overlay=0:0:enable=\'between(t,${vStart.toStringAsFixed(3)},${vEnd.toStringAsFixed(3)})\'[$nextBadgeCanvas]');
+            final enableExpr = (v == effectiveBadgeCount - 1)
+                ? 'gte(t,${vStart.toStringAsFixed(3)})'
+                : 'gte(t,${vStart.toStringAsFixed(3)})*lt(t,${(vStart + verseDurs[v]).toStringAsFixed(3)})';
+            filterChains.add('[$currentCanvas][${v + 2}:v]overlay=0:0:format=auto:enable=\'$enableExpr\'[$nextBadgeCanvas]');
             currentCanvas = nextBadgeCanvas;
           }
 
@@ -574,7 +577,7 @@ class VideoExportService implements IVideoExportService {
             final inputIdx = 2 + effectiveBadgeCount + t;
 
             filterChains.add('[$inputIdx:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toStringAsFixed(3)}/TB[ov_tf$t]');
-            filterChains.add('[$currentCanvas][ov_tf$t]overlay=0:$cropY:enable=\'between(t,${segStart.toStringAsFixed(3)},${segEnd.toStringAsFixed(3)})\'[$nextTafsirCanvas]');
+            filterChains.add('[$currentCanvas][ov_tf$t]overlay=0:$cropY:format=auto:enable=\'between(t,${segStart.toStringAsFixed(3)},${segEnd.toStringAsFixed(3)})\'[$nextTafsirCanvas]');
             currentCanvas = nextTafsirCanvas;
           }
 
@@ -593,15 +596,14 @@ class VideoExportService implements IVideoExportService {
             final inputIdx = 2 + effectiveBadgeCount + effectiveTafsirCount + u;
 
             filterChains.add('[$inputIdx:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toStringAsFixed(3)}/TB[ov$u]');
-            filterChains.add('[$currentCanvas][ov$u]overlay=0:$cropY:enable=\'between(t,${segStart.toStringAsFixed(3)},${segEnd.toStringAsFixed(3)})\'[$nextCanvas]');
+            filterChains.add('[$currentCanvas][ov$u]overlay=0:$cropY:format=auto:enable=\'between(t,${segStart.toStringAsFixed(3)},${segEnd.toStringAsFixed(3)})\'[$nextCanvas]');
             currentCanvas = nextCanvas;
           }
         } else {
           ffmpegArgs.addAll(['-loop', '1', '-t', totalDurationStr, '-framerate', '30', '-i', baseFramePath]);
 
           for (int v = 0; v < effectiveBadgeCount; v++) {
-            final durSec = verseDurs[v].toStringAsFixed(3);
-            ffmpegArgs.addAll(['-loop', '1', '-t', durSec, '-framerate', '30', '-i', badgeOverlayPaths[v]]);
+            ffmpegArgs.addAll(['-loop', '1', '-t', totalDurationStr, '-framerate', '30', '-i', badgeOverlayPaths[v]]);
           }
 
           for (int t = 0; t < effectiveTafsirCount; t++) {
@@ -618,11 +620,11 @@ class VideoExportService implements IVideoExportService {
 
           for (int v = 0; v < effectiveBadgeCount; v++) {
             final vStart = verseStarts[v];
-            final vEnd = (v == effectiveBadgeCount - 1)
-                ? (vStart + verseDurs[v])
-                : (vStart + verseDurs[v] - 0.001);
             final nextBadgeCanvas = 'canvas_b${v + 1}';
-            filterChains.add('[$currentCanvas][${v + 1}:v]overlay=0:0:enable=\'between(t,${vStart.toStringAsFixed(3)},${vEnd.toStringAsFixed(3)})\'[$nextBadgeCanvas]');
+            final enableExpr = (v == effectiveBadgeCount - 1)
+                ? 'gte(t,${vStart.toStringAsFixed(3)})'
+                : 'gte(t,${vStart.toStringAsFixed(3)})*lt(t,${(vStart + verseDurs[v]).toStringAsFixed(3)})';
+            filterChains.add('[$currentCanvas][${v + 1}:v]overlay=0:0:format=auto:enable=\'$enableExpr\'[$nextBadgeCanvas]');
             currentCanvas = nextBadgeCanvas;
           }
 
@@ -710,7 +712,9 @@ class VideoExportService implements IVideoExportService {
         ffmpegArgs.addAll([
           '-t', totalDurationStr,
           '-c:v', 'libx264',
-          '-preset', 'ultrafast',
+          '-preset', 'veryfast',
+          '-profile:v', 'high',
+          '-level', '4.1',
         ]);
         if (!isCustomVideo) {
           ffmpegArgs.addAll(['-tune', 'stillimage']);
@@ -718,6 +722,11 @@ class VideoExportService implements IVideoExportService {
         ffmpegArgs.addAll([
           '-crf', config.videoQuality.crf.toString(),
           '-pix_fmt', 'yuv420p',
+          '-color_primaries', 'bt709',
+          '-color_trc', 'bt709',
+          '-colorspace', 'bt709',
+          '-color_range', 'tv',
+          '-x264-params', 'colorprim=bt709:transfer=bt709:colormatrix=bt709',
           '-r', '30',
           '-threads', '0',
           '-movflags', '+faststart',

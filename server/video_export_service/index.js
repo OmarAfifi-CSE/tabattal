@@ -765,8 +765,7 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
         }
         const badgeDest = path.join(sessionDir, `badge_unit_${b}.png`);
         fs.copyFileSync(badgeSrc, badgeDest);
-        const durSec = parseFloat(badgeConfigs[b].durSec);
-        ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', badgeDest);
+        ffmpegArgs.push('-loop', '1', '-t', cumulativeStartSec.toFixed(3), '-framerate', '30', '-i', badgeDest);
       }
 
       for (let t = 0; t < tafsirConfigs.length; t++) {
@@ -791,16 +790,24 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
         ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', overlayDest);
       }
 
-      filterChains.push(`[0:v]setpts=PTS-STARTPTS,scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=increase,crop=${targetWidth}:${targetHeight},setsar=1,format=yuv420p,drawbox=color=black@${backgroundDimming.toFixed(2)}:t=fill[bg]`);
-      filterChains.push(`[bg][1:v]overlay=0:0[canvas0]`);
+      const dimming = Math.max(0.0, Math.min(0.95, backgroundDimming));
+      const rgbMult = Math.max(0.05, Math.min(1.0, 1.0 - dimming)).toFixed(3);
+      const dimmingFilter = dimming > 0.001
+        ? `,colorchannelmixer=rr=${rgbMult}:gg=${rgbMult}:bb=${rgbMult}`
+        : '';
+
+      filterChains.push(`[0:v]setpts=PTS-STARTPTS,scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=increase:flags=lanczos,crop=${targetWidth}:${targetHeight},setsar=1,format=rgba${dimmingFilter}[bg]`);
+      filterChains.push(`[bg][1:v]overlay=0:0:format=auto[canvas0]`);
       let currentCanvas = 'canvas0';
 
       for (let b = 0; b < badgeConfigs.length; b++) {
         const bStart = parseFloat(badgeConfigs[b].startSec);
         const bDur = parseFloat(badgeConfigs[b].durSec);
-        const bEnd = (b === badgeConfigs.length - 1) ? (bStart + bDur) : (bStart + bDur - 0.001);
         const nextBadgeCanvas = `canvas_b${b + 1}`;
-        filterChains.push(`[${currentCanvas}][${b + 2}:v]overlay=0:0:enable='between(t,${bStart.toFixed(3)},${bEnd.toFixed(3)})'[${nextBadgeCanvas}]`);
+        const enableExpr = (b === badgeConfigs.length - 1)
+          ? `gte(t,${bStart.toFixed(3)})`
+          : `gte(t,${bStart.toFixed(3)})*lt(t,${(bStart + bDur).toFixed(3)})`;
+        filterChains.push(`[${currentCanvas}][${b + 2}:v]overlay=0:0:format=auto:enable='${enableExpr}'[${nextBadgeCanvas}]`);
         currentCanvas = nextBadgeCanvas;
       }
 
@@ -816,7 +823,7 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
         const inputIdx = 2 + badgeConfigs.length + t;
 
         filterChains.push(`[${inputIdx}:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${tStart.toFixed(3)}/TB[ov_tf${t}]`);
-        filterChains.push(`[${currentCanvas}][ov_tf${t}]overlay=0:${cropY}:enable='between(t,${tStart.toFixed(3)},${(tStart + tDur).toFixed(3)})'[${nextTafsirCanvas}]`);
+        filterChains.push(`[${currentCanvas}][ov_tf${t}]overlay=0:${cropY}:format=auto:enable='between(t,${tStart.toFixed(3)},${(tStart + tDur).toFixed(3)})'[${nextTafsirCanvas}]`);
         currentCanvas = nextTafsirCanvas;
       }
 
@@ -833,7 +840,7 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
         const inputIdx = 2 + badgeConfigs.length + tafsirConfigs.length + u;
 
         filterChains.push(`[${inputIdx}:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toFixed(3)}/TB[ov${u}]`);
-        filterChains.push(`[${currentCanvas}][ov${u}]overlay=0:${cropY}:enable='between(t,${segStart.toFixed(3)},${segEnd.toFixed(3)})'[${nextCanvas}]`);
+        filterChains.push(`[${currentCanvas}][ov${u}]overlay=0:${cropY}:format=auto:enable='between(t,${segStart.toFixed(3)},${segEnd.toFixed(3)})'[${nextCanvas}]`);
         currentCanvas = nextCanvas;
       }
     } else {
@@ -846,8 +853,7 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
         }
         const badgeDest = path.join(sessionDir, `badge_unit_${b}.png`);
         fs.copyFileSync(badgeSrc, badgeDest);
-        const durSec = parseFloat(badgeConfigs[b].durSec);
-        ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', badgeDest);
+        ffmpegArgs.push('-loop', '1', '-t', cumulativeStartSec.toFixed(3), '-framerate', '30', '-i', badgeDest);
       }
 
       for (let t = 0; t < tafsirConfigs.length; t++) {
@@ -876,9 +882,11 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
       for (let b = 0; b < badgeConfigs.length; b++) {
         const bStart = parseFloat(badgeConfigs[b].startSec);
         const bDur = parseFloat(badgeConfigs[b].durSec);
-        const bEnd = (b === badgeConfigs.length - 1) ? (bStart + bDur) : (bStart + bDur - 0.001);
         const nextBadgeCanvas = `canvas_b${b + 1}`;
-        filterChains.push(`[${currentCanvas}][${b + 1}:v]overlay=0:0:enable='between(t,${bStart.toFixed(3)},${bEnd.toFixed(3)})'[${nextBadgeCanvas}]`);
+        const enableExpr = (b === badgeConfigs.length - 1)
+          ? `gte(t,${bStart.toFixed(3)})`
+          : `gte(t,${bStart.toFixed(3)})*lt(t,${(bStart + bDur).toFixed(3)})`;
+        filterChains.push(`[${currentCanvas}][${b + 1}:v]overlay=0:0:format=auto:enable='${enableExpr}'[${nextBadgeCanvas}]`);
         currentCanvas = nextBadgeCanvas;
       }
 
@@ -959,7 +967,9 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
     ffmpegArgs.push(
       '-t', cumulativeStartSec.toFixed(3),
       '-c:v', 'libx264',
-      '-preset', 'ultrafast'
+      '-preset', 'veryfast',
+      '-profile:v', 'high',
+      '-level', '4.1'
     );
     if (!isCustom) {
       ffmpegArgs.push('-tune', 'stillimage');
@@ -967,6 +977,11 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
     ffmpegArgs.push(
       '-crf', crf.toString(),
       '-pix_fmt', 'yuv420p',
+      '-color_primaries', 'bt709',
+      '-color_trc', 'bt709',
+      '-colorspace', 'bt709',
+      '-color_range', 'tv',
+      '-x264-params', 'colorprim=bt709:transfer=bt709:colormatrix=bt709',
       '-r', '30',
       '-threads', cpuCount.toString(),
       '-movflags', '+faststart',
