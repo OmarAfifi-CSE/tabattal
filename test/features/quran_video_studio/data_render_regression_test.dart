@@ -286,6 +286,120 @@ void main() {
     expect(tafsirCrop!.bytes.length, greaterThan(0));
     expect(tafsirCrop.cropY, greaterThan(verseCrop.cropY));
   });
+
+  test('Project-wide typography scaling unifies line sizing and prevents short verses like 1:3 from inflating', () async {
+    const config = VideoProjectConfig(
+      surahNumber: 1,
+      startAyah: 1,
+      endAyah: 3,
+      textDisplayMode: VideoTextDisplayMode.lineByLine,
+      videoQuality: VideoQuality.hd720p,
+    );
+
+    final v1 = VerseModel(
+      id: 1,
+      verseNumber: 1,
+      verseKey: '1:1',
+      juzNumber: 1,
+      textUthmani: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+      words: const [
+        WordModel(id: 1, textUthmani: 'بِسْمِ', codeV2: 'بِسْمِ', lineNumber: 1, charTypeName: 'word', verseKey: '1:1', pageNumber: 1),
+        WordModel(id: 2, textUthmani: 'اللَّهِ', codeV2: 'اللَّهِ', lineNumber: 1, charTypeName: 'word', verseKey: '1:1', pageNumber: 1),
+        WordModel(id: 3, textUthmani: 'الرَّحْمَٰنِ', codeV2: 'الرَّحْمَٰنِ', lineNumber: 1, charTypeName: 'word', verseKey: '1:1', pageNumber: 1),
+        WordModel(id: 4, textUthmani: 'الرَّحِيمِ', codeV2: 'الرَّحِيمِ', lineNumber: 1, charTypeName: 'word', verseKey: '1:1', pageNumber: 1),
+      ],
+    );
+
+    final v2 = VerseModel(
+      id: 2,
+      verseNumber: 2,
+      verseKey: '1:2',
+      juzNumber: 1,
+      textUthmani: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
+      words: const [
+        WordModel(id: 5, textUthmani: 'الْحَمْدُ', codeV2: 'الْحَمْدُ', lineNumber: 1, charTypeName: 'word', verseKey: '1:2', pageNumber: 1),
+        WordModel(id: 6, textUthmani: 'لِلَّهِ', codeV2: 'لِلَّهِ', lineNumber: 1, charTypeName: 'word', verseKey: '1:2', pageNumber: 1),
+        WordModel(id: 7, textUthmani: 'رَبِّ', codeV2: 'رَبِّ', lineNumber: 1, charTypeName: 'word', verseKey: '1:2', pageNumber: 1),
+        WordModel(id: 8, textUthmani: 'الْعَالَمِينَ', codeV2: 'الْعَالَمِينَ', lineNumber: 1, charTypeName: 'word', verseKey: '1:2', pageNumber: 1),
+      ],
+    );
+
+    final v3 = VerseModel(
+      id: 3,
+      verseNumber: 3,
+      verseKey: '1:3',
+      juzNumber: 1,
+      textUthmani: 'الرَّحْمَٰنِ الرَّحِيمِ',
+      words: const [
+        WordModel(id: 9, textUthmani: 'الرَّحْمَٰنِ', codeV2: 'الرَّحْمَٰنِ', lineNumber: 1, charTypeName: 'word', verseKey: '1:3', pageNumber: 1),
+        WordModel(id: 10, textUthmani: 'الرَّحِيمِ', codeV2: 'الرَّحِيمِ', lineNumber: 1, charTypeName: 'word', verseKey: '1:3', pageNumber: 1),
+      ],
+    );
+
+    final projectVerses = [v1, v2, v3];
+    CanvasOverlayGenerator.clearLayoutCache();
+
+    // In line-by-line mode with projectVerses, dynamic verse bounds height for v3 must not exceed v1 or v2
+    const size = Size(1080, 1920);
+    final boundsV1 = CanvasOverlayGenerator.computeDynamicContentBounds(
+      size,
+      verse: v1,
+      config: config,
+      pageNumber: 1,
+      overrideLineIndex: 0,
+      renderVerseText: true,
+      renderTafsirAndTranslation: false,
+      projectVerses: projectVerses,
+    );
+
+    final boundsV3 = CanvasOverlayGenerator.computeDynamicContentBounds(
+      size,
+      verse: v3,
+      config: config,
+      pageNumber: 1,
+      overrideLineIndex: 0,
+      renderVerseText: true,
+      renderTafsirAndTranslation: false,
+      projectVerses: projectVerses,
+    );
+
+    // Short verse (v3) line height must be equal or virtually identical to v1 (same font size baseline)
+    // and neither line is bloated compared to the other.
+    expect((boundsV3.height - boundsV1.height).abs(), lessThanOrEqualTo(8.0));
+
+    // Also test Whole Verse mode:
+    const wholeVerseConfig = VideoProjectConfig(
+      surahNumber: 1,
+      startAyah: 1,
+      endAyah: 3,
+      textDisplayMode: VideoTextDisplayMode.staticFull,
+      videoQuality: VideoQuality.hd720p,
+    );
+
+    final wholeCropV1 = await const CanvasOverlayGenerator().generateVerseOverlayCrop(
+      verse: v1,
+      config: wholeVerseConfig,
+      pageNumber: 1,
+      renderVerseText: true,
+      renderTafsirAndTranslation: false,
+      projectVerses: projectVerses,
+    );
+
+    final wholeCropV3 = await const CanvasOverlayGenerator().generateVerseOverlayCrop(
+      verse: v3,
+      config: wholeVerseConfig,
+      pageNumber: 1,
+      renderVerseText: true,
+      renderTafsirAndTranslation: false,
+      projectVerses: projectVerses,
+    );
+
+    expect(wholeCropV1, isNotNull);
+    expect(wholeCropV3, isNotNull);
+    // Short verse does not produce a disproportionate vertical crop compared to v1
+    expect(wholeCropV3!.cropHeight, lessThanOrEqualTo(wholeCropV1!.cropHeight + 1.0));
+  });
 }
+
 
 

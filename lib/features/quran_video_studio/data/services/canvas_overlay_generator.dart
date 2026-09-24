@@ -56,10 +56,13 @@ class CanvasOverlayGenerator {
   const CanvasOverlayGenerator();
 
   static final Map<String, _CachedDynamicLayout> _dynamicLayoutCache = {};
+  static final Map<String, double> _lineFitScaleCache = {};
+  static final Map<String, double> _wholeVerseProjectScaleCache = {};
 
   static void clearLayoutCache() {
     _dynamicLayoutCache.clear();
     _lineFitScaleCache.clear();
+    _wholeVerseProjectScaleCache.clear();
   }
 
   /// Generates a full-resolution frame PNG for a single verse with customizable content opacity.
@@ -74,6 +77,7 @@ class CanvasOverlayGenerator {
     int playbackPositionMs = 0,
     List<WordTimingSegment>? wordTimings,
     int? overrideLineIndex,
+    List<VerseModel>? projectVerses,
   }) async {
     final int width = config.aspectRatio.getTargetWidth(config.videoQuality);
     final int height = config.aspectRatio.getTargetHeight(config.videoQuality);
@@ -99,6 +103,7 @@ class CanvasOverlayGenerator {
       playbackPositionMs: playbackPositionMs,
       wordTimings: wordTimings,
       overrideLineIndex: overrideLineIndex,
+      projectVerses: projectVerses,
     );
 
     final picture = recorder.endRecording();
@@ -175,6 +180,7 @@ class CanvasOverlayGenerator {
     int? overrideLineIndex,
     bool renderVerseText = true,
     bool renderTafsirAndTranslation = true,
+    List<VerseModel>? projectVerses,
   }) async {
     final int width = config.aspectRatio.getTargetWidth(config.videoQuality);
     final int height = config.aspectRatio.getTargetHeight(config.videoQuality);
@@ -195,6 +201,7 @@ class CanvasOverlayGenerator {
       overrideLineIndex: overrideLineIndex,
       renderVerseText: renderVerseText,
       renderTafsirAndTranslation: renderTafsirAndTranslation,
+      projectVerses: projectVerses,
     );
 
     final picture = recorder.endRecording();
@@ -214,7 +221,8 @@ class CanvasOverlayGenerator {
     required double width,
     required double height,
   }) {
-    return '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_'
+    return '${verse.verseKey}_${config.surahNumber}:${config.startAyah}-${config.endAyah}_'
+        '${config.themePreset.id}_${config.aspectRatio.name}_'
         '${config.backgroundType.name}_${config.textDisplayMode.name}_${config.languageCode}_'
         '${hasTafsir}_${hasTranslation}_${config.showCardFrame}_${config.showSurahBadge}_'
         '${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_'
@@ -234,6 +242,7 @@ class CanvasOverlayGenerator {
     int? overrideLineIndex,
     bool renderVerseText = true,
     bool renderTafsirAndTranslation = true,
+    List<VerseModel>? projectVerses,
   }) async {
     final int width = config.aspectRatio.getTargetWidth(config.videoQuality);
     final int height = config.aspectRatio.getTargetHeight(config.videoQuality);
@@ -248,6 +257,7 @@ class CanvasOverlayGenerator {
       overrideLineIndex: overrideLineIndex,
       renderVerseText: renderVerseText,
       renderTafsirAndTranslation: renderTafsirAndTranslation,
+      projectVerses: projectVerses,
     );
 
     final int cropY = max(0, (bounds.top - 16).floor());
@@ -272,6 +282,7 @@ class CanvasOverlayGenerator {
       overrideLineIndex: overrideLineIndex,
       renderVerseText: renderVerseText,
       renderTafsirAndTranslation: renderTafsirAndTranslation,
+      projectVerses: projectVerses,
     );
 
     final picture = cropRecorder.endRecording();
@@ -299,6 +310,7 @@ class CanvasOverlayGenerator {
     int? overrideLineIndex,
     bool renderVerseText = true,
     bool renderTafsirAndTranslation = true,
+    List<VerseModel>? projectVerses,
   }) {
     final width = size.width;
     final height = size.height;
@@ -371,6 +383,7 @@ class CanvasOverlayGenerator {
         translationText: translationText,
         tafsirText: tafsirText,
         overrideLineIndex: overrideLineIndex,
+        projectVerses: projectVerses,
       );
       dryRecorder.endRecording();
       cached = _dynamicLayoutCache[cacheKey];
@@ -391,72 +404,227 @@ class CanvasOverlayGenerator {
     }
   }
 
-  /// Verse-level cache for the uniform line-by-line fit scale (one size for ALL lines).
-  static final Map<String, double> _lineFitScaleCache = {};
-
-  /// Computes ONE uniform fit scale shared by every line-by-line segment of a
-  /// verse: each segment is measured at the base size and the scale required
-  /// by the WIDEST segment is applied to all of them — so the font size never
-  /// jumps when transitioning between lines.
+  /// Computes ONE uniform fit scale shared across lines: each segment is measured at the base
+  /// size and the scale required by the WIDEST segment across all verses is applied to all of
+  /// them — guaranteeing font size never jumps across lines or ayahs in the video clip.
   static double _uniformLineFitScale({
     required VerseModel verse,
+    List<VerseModel>? projectVerses,
     required int pageNumber,
     required List<LineTimingSegment> lineSegments,
     required double maxContentWidth,
     required double baseSize,
   }) {
-    if (lineSegments.isEmpty) return 1.0;
+    final versesToMeasure = (projectVerses != null && projectVerses.isNotEmpty)
+        ? projectVerses
+        : [verse];
 
     double worstScale = 1.0;
-    for (final segment in lineSegments) {
-      final children = <InlineSpan>[
-        const TextSpan(
-          text: '\uFD5F',
-          style: TextStyle(fontFamily: 'KFGQPC HAFS Uthmanic Script Regular'),
-        ),
-      ];
-      final endIdx = min(segment.endWordIndex, verse.words.length - 1);
-      for (int i = segment.startWordIndex; i <= endIdx; i++) {
-        final w = verse.words[i];
-        final pageNum = w.pageNumber > 0 ? w.pageNumber : pageNumber;
-        final font = 'QCF_P${pageNum.toString().padLeft(3, '0')}';
-        final text = w.codeV2.isNotEmpty ? w.codeV2 : (w.code.isNotEmpty ? w.code : w.textUthmani);
-        children.add(const TextSpan(text: ' '));
-        children.add(TextSpan(text: text, style: TextStyle(fontFamily: font)));
-      }
-      children.add(const TextSpan(text: ' '));
-      children.add(const TextSpan(
-        text: '\uFD5E',
-        style: TextStyle(fontFamily: 'KFGQPC HAFS Uthmanic Script Regular'),
-      ));
 
-      TextPainter layoutAt(double size) => TextPainter(
+    for (final v in versesToMeasure) {
+      List<LineTimingSegment> segments;
+      if (v.verseKey == verse.verseKey && lineSegments.isNotEmpty) {
+        segments = lineSegments;
+      } else if (v.words.isNotEmpty) {
+        segments = WordTimingService.groupIntoLineSegments(
+          verse: v,
+          wordTimings: const [],
+        );
+      } else {
+        segments = const [];
+      }
+
+      if (segments.isEmpty) {
+        final text = v.textUthmani;
+        if (text.isEmpty) continue;
+        final span = TextSpan(
+          text: '\uFD5F $text \uFD5E',
+          style: const TextStyle(
+            fontFamily: 'KFGQPC HAFS Uthmanic Script Regular',
+            height: 1.95,
+          ),
+        );
+        TextPainter layoutAt(double size) => TextPainter(
+              text: TextSpan(
+                style: TextStyle(fontSize: size, height: 1.95),
+                children: [span],
+              ),
+              textDirection: TextDirection.rtl,
+              textAlign: TextAlign.center,
+            )..layout(maxWidth: maxContentWidth);
+
+        var painter = layoutAt(baseSize);
+        if (painter.computeLineMetrics().length > 1) {
+          double tryScale = 0.94;
+          double segScale = 0.45;
+          while (tryScale >= 0.45) {
+            painter = layoutAt(baseSize * tryScale);
+            if (painter.computeLineMetrics().length <= 1) {
+              segScale = tryScale;
+              break;
+            }
+            tryScale -= 0.04;
+          }
+          if (segScale < worstScale) worstScale = segScale;
+        }
+        continue;
+      }
+
+      for (final segment in segments) {
+        final children = <InlineSpan>[
+          const TextSpan(
+            text: '\uFD5F',
+            style: TextStyle(fontFamily: 'KFGQPC HAFS Uthmanic Script Regular'),
+          ),
+        ];
+        final endIdx = min(segment.endWordIndex, v.words.length - 1);
+        for (int i = segment.startWordIndex; i <= endIdx; i++) {
+          final w = v.words[i];
+          final pageNum = w.pageNumber > 0 ? w.pageNumber : pageNumber;
+          final font = 'QCF_P${pageNum.toString().padLeft(3, '0')}';
+          final text = w.codeV2.isNotEmpty ? w.codeV2 : (w.code.isNotEmpty ? w.code : w.textUthmani);
+          children.add(const TextSpan(text: ' '));
+          children.add(TextSpan(text: text, style: TextStyle(fontFamily: font)));
+        }
+        children.add(const TextSpan(text: ' '));
+        children.add(const TextSpan(
+          text: '\uFD5E',
+          style: TextStyle(fontFamily: 'KFGQPC HAFS Uthmanic Script Regular'),
+        ));
+
+        TextPainter layoutAt(double size) => TextPainter(
+              text: TextSpan(
+                style: TextStyle(fontSize: size, height: 1.95),
+                children: children,
+              ),
+              textDirection: TextDirection.rtl,
+              textAlign: TextAlign.center,
+            )..layout(maxWidth: maxContentWidth);
+
+        var painter = layoutAt(baseSize);
+        double segScale = 1.0;
+        if (painter.computeLineMetrics().length > 1) {
+          double tryScale = 0.94;
+          segScale = 0.45;
+          while (tryScale >= 0.45) {
+            painter = layoutAt(baseSize * tryScale);
+            if (painter.computeLineMetrics().length <= 1) {
+              segScale = tryScale;
+              break;
+            }
+            tryScale -= 0.04;
+          }
+        }
+        if (segScale < worstScale) worstScale = segScale;
+      }
+    }
+    return worstScale;
+  }
+
+  /// Computes a project-level uniform vertical scale multiplier for staticFull (Whole Verse) mode
+  /// so that all verses in the project share the exact same font size.
+  static double _getProjectWholeVerseScale({
+    required List<VerseModel> projectVerses,
+    required VideoProjectConfig config,
+    required double width,
+    required double height,
+    required double baseScale,
+    required double maxContentWidth,
+    required double availableHeight,
+    required double baseVerseSize,
+    required double lengthScale,
+    required double optionsScale,
+    required double lineHeight,
+    required ({Color primaryTextColor, Color secondaryTextColor}) textColors,
+  }) {
+    if (_wholeVerseProjectScaleCache.length > 200) {
+      _wholeVerseProjectScaleCache.clear();
+    }
+    final bool hasTafsir = config.showTafsir;
+    final bool hasTranslation = config.showEnglishTranslation;
+    final projectFitKey =
+        '${config.surahNumber}:${config.startAyah}-${config.endAyah}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.themePreset.id}_${hasTafsir ? 1 : 0}_${hasTranslation ? 1 : 0}_${width.round()}x${height.round()}';
+
+    return _wholeVerseProjectScaleCache.putIfAbsent(projectFitKey, () {
+      double minScale = 1.0;
+      for (final v in projectVerses) {
+        final vHasTafsir = hasTafsir && (v.tafsir != null && v.tafsir!.isNotEmpty);
+        final vHasTranslation = hasTranslation && (v.translation != null && v.translation!.isNotEmpty);
+
+        double testScale = 1.0;
+        double computeTotalH(double s) {
+          final effectiveVSize = baseVerseSize * lengthScale * optionsScale * s;
+          final effectiveTSize = (baseScale * 0.033) * optionsScale * s;
+          final effectiveTrSize = (baseScale * 0.022) * optionsScale * s;
+
+          final displayText = '﴿ ${v.textUthmani} ﴾';
+          final vp = TextPainter(
             text: TextSpan(
-              style: TextStyle(fontSize: size, height: 1.95),
-              children: children,
+              text: displayText,
+              style: TextStyle(
+                fontSize: effectiveVSize,
+                height: lineHeight,
+                fontFamily: 'Amiri',
+                color: textColors.primaryTextColor,
+              ),
             ),
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.center,
           )..layout(maxWidth: maxContentWidth);
 
-      var painter = layoutAt(baseSize);
-      double segScale = 1.0;
-      if (painter.computeLineMetrics().length > 1) {
-        // Mirrors the legacy single-line fit loop (0.92 → 0.45, floor 0.45)
-        double tryScale = 0.92;
-        segScale = 0.45;
-        while (tryScale >= 0.45) {
-          painter = layoutAt(baseSize * tryScale);
-          if (painter.computeLineMetrics().length <= 1) {
-            segScale = tryScale;
-            break;
+          double tot = vp.height;
+          final gap = config.aspectRatio == VideoAspectRatio.landscape16x9
+              ? height * 0.018
+              : (config.aspectRatio == VideoAspectRatio.square1x1
+                  ? height * 0.022
+                  : height * 0.026);
+
+          if (vHasTafsir) {
+            final tp = TextPainter(
+              text: TextSpan(
+                text: v.tafsir!.trim(),
+                style: TextStyle(
+                  fontSize: effectiveTSize,
+                  height: 1.55,
+                  fontFamily: 'Amiri',
+                  color: textColors.secondaryTextColor,
+                ),
+              ),
+              textDirection: TextDirection.rtl,
+              textAlign: TextAlign.center,
+            )..layout(maxWidth: maxContentWidth);
+            tot += gap + tp.height + (height * 0.020);
           }
-          tryScale -= 0.06;
+
+          if (vHasTranslation) {
+            final trp = TextPainter(
+              text: TextSpan(
+                text: v.translation!.trim(),
+                style: TextStyle(
+                  fontSize: effectiveTrSize,
+                  height: 1.40,
+                  fontStyle: FontStyle.italic,
+                  color: textColors.secondaryTextColor,
+                ),
+              ),
+              textDirection: TextDirection.ltr,
+              textAlign: TextAlign.center,
+            )..layout(maxWidth: maxContentWidth);
+            tot += gap + trp.height;
+          }
+
+          return tot;
+        }
+
+        while (computeTotalH(testScale) > availableHeight && testScale > 0.40) {
+          testScale -= 0.04;
+        }
+        if (testScale < minScale) {
+          minScale = testScale;
         }
       }
-      if (segScale < worstScale) worstScale = segScale;
-    }
-    return worstScale;
+      return minScale;
+    });
   }
 
   /// Single Source of Truth: Paints the exact video frame on any canvas at any resolution.
@@ -473,6 +641,7 @@ class CanvasOverlayGenerator {
     int playbackPositionMs = 0,
     List<WordTimingSegment>? wordTimings,
     int? overrideLineIndex,
+    List<VerseModel>? projectVerses,
   }) {
     paintStaticDecoration(
       canvas,
@@ -494,6 +663,7 @@ class CanvasOverlayGenerator {
       playbackPositionMs: playbackPositionMs,
       wordTimings: wordTimings,
       overrideLineIndex: overrideLineIndex,
+      projectVerses: projectVerses,
     );
   }
 
@@ -540,6 +710,7 @@ class CanvasOverlayGenerator {
     int? overrideLineIndex,
     bool renderVerseText = true,
     bool renderTafsirAndTranslation = true,
+    List<VerseModel>? projectVerses,
   }) {
     if (contentOpacity <= 0.0) return;
 
@@ -579,6 +750,7 @@ class CanvasOverlayGenerator {
       overrideLineIndex: overrideLineIndex,
       renderVerseText: renderVerseText,
       renderTafsirAndTranslation: renderTafsirAndTranslation,
+      projectVerses: projectVerses,
     );
 
     if (contentOpacity < 1.0) {
@@ -924,6 +1096,7 @@ class CanvasOverlayGenerator {
     int? overrideLineIndex,
     bool renderVerseText = true,
     bool renderTafsirAndTranslation = true,
+    List<VerseModel>? projectVerses,
   }) {
     final theme = config.themePreset;
     final textColors = _resolveTextColors(config);
@@ -999,22 +1172,29 @@ class CanvasOverlayGenerator {
             : width * 0.66);
 
     final isLineByLine = config.textDisplayMode == VideoTextDisplayMode.lineByLine;
+    final bool hasProjectScope = projectVerses != null && projectVerses.isNotEmpty;
 
-    // 1. Dynamic length scaling matching Tabattal VerseCard generator
-    final int len = verse.textUthmani.length;
+    // 1. Dynamic length scaling matching Tabattal typography
+    // In Whole Verse mode, if projectVerses has multiple verses, unify base length scaling
+    // across all verses in the project using the representative maximum length.
+    final int maxProjectLen = hasProjectScope
+        ? projectVerses.map((v) => v.textUthmani.length).reduce(max)
+        : verse.textUthmani.length;
+    final int len = isLineByLine ? verse.textUthmani.length : maxProjectLen;
+
     double lengthScale;
     double lineHeight;
     if (isLineByLine) {
-      lengthScale = 1.28;
+      lengthScale = 1.0;
       lineHeight = 1.95;
     } else if (len <= 60) {
-      lengthScale = 1.16;
+      lengthScale = 1.02;
       lineHeight = 1.95;
     } else if (len <= 120) {
-      lengthScale = 1.08;
+      lengthScale = 0.98;
       lineHeight = 1.90;
     } else if (len <= 200) {
-      lengthScale = 0.96;
+      lengthScale = 0.92;
       lineHeight = 1.85;
     } else if (len <= 320) {
       lengthScale = 0.84;
@@ -1131,19 +1311,21 @@ class CanvasOverlayGenerator {
       ayahCrossfadeOpacity = 1.0;
     }
 
-    // One uniform size for ALL line-by-line lines: derived once per verse from
-    // the widest segment so transitions never jump between font sizes.
+    // One uniform size for ALL line-by-line lines: derived once across all project verses (or
+    // current verse) from the widest segment so transitions never jump between font sizes.
     double uniformLineScale = 1.0;
-    if (isLineByLine && lineSegments.isNotEmpty) {
+    if (isLineByLine && (lineSegments.isNotEmpty || hasProjectScope)) {
       if (_lineFitScaleCache.length > 200) {
         _lineFitScaleCache.clear();
       }
-      final fitKey =
-          '${verse.verseKey}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.themePreset.id}_${pageNumber}_${hasTafsir ? 1 : 0}_${hasTranslation ? 1 : 0}_${width.round()}x${height.round()}';
+      final fitKey = hasProjectScope
+          ? '${config.surahNumber}:${config.startAyah}-${config.endAyah}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.themePreset.id}_${hasTafsir ? 1 : 0}_${hasTranslation ? 1 : 0}_${width.round()}x${height.round()}'
+          : '${verse.verseKey}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.themePreset.id}_${pageNumber}_${hasTafsir ? 1 : 0}_${hasTranslation ? 1 : 0}_${width.round()}x${height.round()}';
       uniformLineScale = _lineFitScaleCache.putIfAbsent(
         fitKey,
         () => _uniformLineFitScale(
           verse: verse,
+          projectVerses: projectVerses,
           pageNumber: pageNumber,
           lineSegments: lineSegments,
           maxContentWidth: maxContentWidth,
@@ -1153,6 +1335,22 @@ class CanvasOverlayGenerator {
     }
 
     double currentScaleMultiplier = 1.0;
+    if (!isLineByLine && hasProjectScope) {
+      currentScaleMultiplier = _getProjectWholeVerseScale(
+        projectVerses: projectVerses,
+        config: config,
+        width: width,
+        height: height,
+        baseScale: baseScale,
+        maxContentWidth: maxContentWidth,
+        availableHeight: availableHeight,
+        baseVerseSize: baseVerseSize,
+        lengthScale: lengthScale,
+        optionsScale: optionsScale,
+        lineHeight: lineHeight,
+        textColors: textColors,
+      );
+    }
 
     (
       TextPainter versePainter,

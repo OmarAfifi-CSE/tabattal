@@ -15,6 +15,7 @@ class VideoFramePainter extends CustomPainter {
   final int playbackPositionMs;
   final List<WordTimingSegment>? wordTimings;
   final int? overrideLineIndex;
+  final List<VerseModel>? projectVerses;
 
   const VideoFramePainter({
     required this.verse,
@@ -26,6 +27,7 @@ class VideoFramePainter extends CustomPainter {
     this.playbackPositionMs = 0,
     this.wordTimings,
     this.overrideLineIndex,
+    this.projectVerses,
   });
 
   @override
@@ -43,6 +45,7 @@ class VideoFramePainter extends CustomPainter {
       playbackPositionMs: playbackPositionMs,
       wordTimings: wordTimings,
       overrideLineIndex: overrideLineIndex,
+      projectVerses: projectVerses,
     );
   }
 
@@ -56,7 +59,8 @@ class VideoFramePainter extends CustomPainter {
         oldDelegate.includeBackground != includeBackground ||
         oldDelegate.playbackPositionMs != playbackPositionMs ||
         oldDelegate.wordTimings != wordTimings ||
-        oldDelegate.overrideLineIndex != overrideLineIndex;
+        oldDelegate.overrideLineIndex != overrideLineIndex ||
+        oldDelegate.projectVerses != projectVerses;
   }
 }
 
@@ -106,6 +110,7 @@ class VideoDynamicContentPainter extends CustomPainter {
   final bool isPlaying;
   final List<WordTimingSegment>? wordTimings;
   final int? overrideLineIndex;
+  final List<VerseModel>? projectVerses;
 
   const VideoDynamicContentPainter({
     required this.verse,
@@ -118,6 +123,7 @@ class VideoDynamicContentPainter extends CustomPainter {
     this.isPlaying = false,
     this.wordTimings,
     this.overrideLineIndex,
+    this.projectVerses,
   });
 
   @override
@@ -136,6 +142,7 @@ class VideoDynamicContentPainter extends CustomPainter {
       isPlaying: isPlaying,
       wordTimings: wordTimings,
       overrideLineIndex: overrideLineIndex,
+      projectVerses: projectVerses,
     );
   }
 
@@ -150,7 +157,8 @@ class VideoDynamicContentPainter extends CustomPainter {
         oldDelegate.totalDurationMs != totalDurationMs ||
         oldDelegate.isPlaying != isPlaying ||
         oldDelegate.wordTimings != wordTimings ||
-        oldDelegate.overrideLineIndex != overrideLineIndex;
+        oldDelegate.overrideLineIndex != overrideLineIndex ||
+        oldDelegate.projectVerses != projectVerses;
   }
 }
 

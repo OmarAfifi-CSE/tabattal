@@ -2201,6 +2201,7 @@ class _VideoPreviewViewportTablet extends StatelessWidget {
                               return CustomPaint(
                                 painter: VideoDynamicContentPainter(
                                   verse: activeVerse,
+                                  projectVerses: liveState.verses,
                                   config: liveState.config,
                                   pageNumber: pageNumber,
                                   tafsirText: activeVerse?.tafsir,

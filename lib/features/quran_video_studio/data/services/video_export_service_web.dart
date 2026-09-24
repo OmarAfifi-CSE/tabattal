@@ -255,6 +255,7 @@ class VideoExportService implements IVideoExportService {
             final bool separateTafsir = isLineByLine && (config.showTafsir || config.showEnglishTranslation);
             final overlayCrop = await _overlayGenerator.generateVerseOverlayCrop(
               verse: verse,
+              projectVerses: verses,
               config: config,
               pageNumber: pageNum,
               translationText: verse.translation,
@@ -327,6 +328,7 @@ class VideoExportService implements IVideoExportService {
 
               final tafsirCrop = await _overlayGenerator.generateVerseOverlayCrop(
                 verse: vModel,
+                projectVerses: verses,
                 config: config,
                 pageNumber: pageNum,
                 translationText: vModel.translation,
