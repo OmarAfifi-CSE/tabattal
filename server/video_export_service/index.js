@@ -476,6 +476,7 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
     const reciterPath = metadata.reciterPath || 'Minshawy_Murattal_128kbps';
     const unitConfigs = metadata.unitConfigs || [];
     const badgeConfigs = Array.isArray(metadata.badgeConfigs) ? metadata.badgeConfigs : [];
+    const tafsirConfigs = Array.isArray(metadata.tafsirConfigs) ? metadata.tafsirConfigs : [];
     const crf = Math.min(Math.max(parseInt(metadata.crf || 22, 10), 16), 32);
 
     // Security constraints
@@ -716,6 +717,34 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
       cumulativeStartSec += d;
     }
 
+    // Re-synchronize badgeConfigs and tafsirConfigs with audio-adjusted verse boundaries
+    const verseStartMap = {};
+    const verseDurMap = {};
+    for (const [vNumStr, group] of Object.entries(unitsByVerse)) {
+      if (group.length > 0) {
+        const firstUnit = group[0].unit;
+        const totalVDur = group.reduce((sum, g) => sum + parseFloat(g.unit.durSec), 0);
+        verseStartMap[vNumStr] = firstUnit.globalStartSec;
+        verseDurMap[vNumStr] = totalVDur;
+      }
+    }
+
+    for (const badge of badgeConfigs) {
+      const vNum = badge.verseNumber || (startAyah + (badge.verseIndex || 0));
+      if (verseStartMap[vNum] !== undefined) {
+        badge.startSec = verseStartMap[vNum];
+        badge.durSec = verseDurMap[vNum];
+      }
+    }
+
+    for (const tafsir of tafsirConfigs) {
+      const vNum = tafsir.verseNumber || (startAyah + (tafsir.verseIndex || 0));
+      if (verseStartMap[vNum] !== undefined) {
+        tafsir.startSec = verseStartMap[vNum];
+        tafsir.durSec = verseDurMap[vNum];
+      }
+    }
+
     // 3. Ultra-fast Single-Pass Video Rendering & Direct Muxing
     const cpuCount = process.env.FFMPEG_THREADS
       ? parseInt(process.env.FFMPEG_THREADS, 10)
@@ -731,12 +760,24 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
 
       for (let b = 0; b < badgeConfigs.length; b++) {
         const badgeSrc = fileMap[`badge_unit_${b}`];
-        if (badgeSrc && fs.existsSync(badgeSrc)) {
-          const badgeDest = path.join(sessionDir, `badge_unit_${b}.png`);
-          fs.copyFileSync(badgeSrc, badgeDest);
-          const durSec = parseFloat(badgeConfigs[b].durSec);
-          ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', badgeDest);
+        if (!badgeSrc || !fs.existsSync(badgeSrc)) {
+          throw new Error(`MISSING_BADGE_FRAME: Badge frame for unit ${b + 1} is missing.`);
         }
+        const badgeDest = path.join(sessionDir, `badge_unit_${b}.png`);
+        fs.copyFileSync(badgeSrc, badgeDest);
+        const durSec = parseFloat(badgeConfigs[b].durSec);
+        ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', badgeDest);
+      }
+
+      for (let t = 0; t < tafsirConfigs.length; t++) {
+        const tafsirSrc = fileMap[`tafsir_unit_${t}`];
+        if (!tafsirSrc || !fs.existsSync(tafsirSrc)) {
+          throw new Error(`MISSING_TAFSIR_FRAME: Tafsir frame for unit ${t + 1} is missing.`);
+        }
+        const tafsirDest = path.join(sessionDir, `tafsir_unit_${t}.png`);
+        fs.copyFileSync(tafsirSrc, tafsirDest);
+        const durSec = parseFloat(tafsirConfigs[t].durSec);
+        ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', tafsirDest);
       }
 
       for (let u = 0; u < unitConfigs.length; u++) {
@@ -763,16 +804,33 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
         currentCanvas = nextBadgeCanvas;
       }
 
+      for (let t = 0; t < tafsirConfigs.length; t++) {
+        const tStart = parseFloat(tafsirConfigs[t].startSec);
+        const tDur = parseFloat(tafsirConfigs[t].durSec);
+        const fadeDur = 0.30;
+        const safeFade = Math.max(0.01, Math.min(fadeDur, tDur * 0.20));
+        const fadeOutStart = Math.max(0.0, tDur - safeFade);
+        const nextTafsirCanvas = `canvas_tf${t + 1}`;
+        const rawCropY = parseInt(tafsirConfigs[t].cropY, 10);
+        const cropY = isNaN(rawCropY) || rawCropY < 0 ? 0 : rawCropY;
+        const inputIdx = 2 + badgeConfigs.length + t;
+
+        filterChains.push(`[${inputIdx}:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${tStart.toFixed(3)}/TB[ov_tf${t}]`);
+        filterChains.push(`[${currentCanvas}][ov_tf${t}]overlay=0:${cropY}:enable='between(t,${tStart.toFixed(3)},${(tStart + tDur).toFixed(3)})'[${nextTafsirCanvas}]`);
+        currentCanvas = nextTafsirCanvas;
+      }
+
       for (let u = 0; u < unitConfigs.length; u++) {
         const segStart = unitConfigs[u].globalStartSec;
         const durSec = parseFloat(unitConfigs[u].durSec);
         const segEnd = segStart + durSec;
         const fadeDur = 0.30;
-        const safeFade = Math.min(Math.max(fadeDur, 0.05), durSec * 0.20);
-        const fadeOutStart = Math.min(Math.max(durSec - safeFade, 0.08), durSec);
+        const safeFade = Math.max(0.01, Math.min(fadeDur, durSec * 0.20));
+        const fadeOutStart = Math.max(0.0, durSec - safeFade);
         const nextCanvas = (u === unitConfigs.length - 1) ? 'v' : `canvas_t${u + 1}`;
-        const cropY = Math.max(0, parseInt(unitConfigs[u].cropY || 0, 10));
-        const inputIdx = 2 + badgeConfigs.length + u;
+        const rawCropY = parseInt(unitConfigs[u].cropY, 10);
+        const cropY = isNaN(rawCropY) || rawCropY < 0 ? 0 : rawCropY;
+        const inputIdx = 2 + badgeConfigs.length + tafsirConfigs.length + u;
 
         filterChains.push(`[${inputIdx}:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toFixed(3)}/TB[ov${u}]`);
         filterChains.push(`[${currentCanvas}][ov${u}]overlay=0:${cropY}:enable='between(t,${segStart.toFixed(3)},${segEnd.toFixed(3)})'[${nextCanvas}]`);
@@ -783,12 +841,24 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
 
       for (let b = 0; b < badgeConfigs.length; b++) {
         const badgeSrc = fileMap[`badge_unit_${b}`];
-        if (badgeSrc && fs.existsSync(badgeSrc)) {
-          const badgeDest = path.join(sessionDir, `badge_unit_${b}.png`);
-          fs.copyFileSync(badgeSrc, badgeDest);
-          const durSec = parseFloat(badgeConfigs[b].durSec);
-          ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', badgeDest);
+        if (!badgeSrc || !fs.existsSync(badgeSrc)) {
+          throw new Error(`MISSING_BADGE_FRAME: Badge frame for unit ${b + 1} is missing.`);
         }
+        const badgeDest = path.join(sessionDir, `badge_unit_${b}.png`);
+        fs.copyFileSync(badgeSrc, badgeDest);
+        const durSec = parseFloat(badgeConfigs[b].durSec);
+        ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', badgeDest);
+      }
+
+      for (let t = 0; t < tafsirConfigs.length; t++) {
+        const tafsirSrc = fileMap[`tafsir_unit_${t}`];
+        if (!tafsirSrc || !fs.existsSync(tafsirSrc)) {
+          throw new Error(`MISSING_TAFSIR_FRAME: Tafsir frame for unit ${t + 1} is missing.`);
+        }
+        const tafsirDest = path.join(sessionDir, `tafsir_unit_${t}.png`);
+        fs.copyFileSync(tafsirSrc, tafsirDest);
+        const durSec = parseFloat(tafsirConfigs[t].durSec);
+        ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', tafsirDest);
       }
 
       for (let u = 0; u < unitConfigs.length; u++) {
@@ -812,16 +882,33 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
         currentCanvas = nextBadgeCanvas;
       }
 
+      for (let t = 0; t < tafsirConfigs.length; t++) {
+        const tStart = parseFloat(tafsirConfigs[t].startSec);
+        const tDur = parseFloat(tafsirConfigs[t].durSec);
+        const fadeDur = 0.30;
+        const safeFade = Math.max(0.01, Math.min(fadeDur, tDur * 0.20));
+        const fadeOutStart = Math.max(0.0, tDur - safeFade);
+        const nextTafsirCanvas = `canvas_tf${t + 1}`;
+        const rawCropY = parseInt(tafsirConfigs[t].cropY, 10);
+        const cropY = isNaN(rawCropY) || rawCropY < 0 ? 0 : rawCropY;
+        const inputIdx = 1 + badgeConfigs.length + t;
+
+        filterChains.push(`[${inputIdx}:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${tStart.toFixed(3)}/TB[ov_tf${t}]`);
+        filterChains.push(`[${currentCanvas}][ov_tf${t}]overlay=0:${cropY}:enable='between(t,${tStart.toFixed(3)},${(tStart + tDur).toFixed(3)})'[${nextTafsirCanvas}]`);
+        currentCanvas = nextTafsirCanvas;
+      }
+
       for (let u = 0; u < unitConfigs.length; u++) {
         const segStart = unitConfigs[u].globalStartSec;
         const durSec = parseFloat(unitConfigs[u].durSec);
         const segEnd = segStart + durSec;
         const fadeDur = 0.30;
-        const safeFade = Math.min(Math.max(fadeDur, 0.05), durSec * 0.20);
-        const fadeOutStart = Math.min(Math.max(durSec - safeFade, 0.08), durSec);
+        const safeFade = Math.max(0.01, Math.min(fadeDur, durSec * 0.20));
+        const fadeOutStart = Math.max(0.0, durSec - safeFade);
         const nextCanvas = (u === unitConfigs.length - 1) ? 'v' : `canvas_t${u + 1}`;
-        const cropY = Math.max(0, parseInt(unitConfigs[u].cropY || 0, 10));
-        const inputIdx = 1 + badgeConfigs.length + u;
+        const rawCropY = parseInt(unitConfigs[u].cropY, 10);
+        const cropY = isNaN(rawCropY) || rawCropY < 0 ? 0 : rawCropY;
+        const inputIdx = 1 + badgeConfigs.length + tafsirConfigs.length + u;
 
         filterChains.push(`[${inputIdx}:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toFixed(3)}/TB[ov${u}]`);
         filterChains.push(`[${currentCanvas}][ov${u}]overlay=0:${cropY}:enable='between(t,${segStart.toFixed(3)},${segEnd.toFixed(3)})'[${nextCanvas}]`);
@@ -831,7 +918,9 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
 
     // Audio Input Integration
     const hasAudio = validAudioFiles.length > 0;
-    const audioInputIndex = isCustom ? unitConfigs.length + badgeConfigs.length + 2 : unitConfigs.length + badgeConfigs.length + 1;
+    const audioInputIndex = isCustom
+      ? unitConfigs.length + badgeConfigs.length + tafsirConfigs.length + 2
+      : unitConfigs.length + badgeConfigs.length + tafsirConfigs.length + 1;
     if (hasAudio) {
       if (validAudioFiles.length === 1) {
         ffmpegArgs.push('-i', validAudioFiles[0]);

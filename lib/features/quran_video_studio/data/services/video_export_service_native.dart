@@ -401,6 +401,7 @@ class VideoExportService implements IVideoExportService {
             final timings = unit['timings'] as List<WordTimingSegment>;
             final lineIndex = unit['lineIndex'] as int?;
 
+            final bool separateTafsir = isLineByLine && (config.showTafsir || config.showEnglishTranslation);
             final overlayCrop = await _overlayGenerator.generateVerseOverlayCrop(
               verse: verse,
               config: config,
@@ -409,6 +410,8 @@ class VideoExportService implements IVideoExportService {
               tafsirText: verse.tafsir,
               wordTimings: timings,
               overrideLineIndex: lineIndex,
+              renderVerseText: true,
+              renderTafsirAndTranslation: !separateTafsir,
             );
 
             if (overlayCrop == null) {
@@ -451,6 +454,49 @@ class VideoExportService implements IVideoExportService {
           return;
         }
 
+        // Generate per-Ayah Tafsir & Translation overlays in lineByLine mode so they remain steady
+        // across line transitions and only crossfade at Ayah boundaries.
+        final bool separateTafsir = isLineByLine && (config.showTafsir || config.showEnglishTranslation);
+        final tafsirOverlayConfigs = <Map<String, dynamic>>[];
+        if (separateTafsir) {
+          for (int v = 0; v < verses.length; v++) {
+            if (_isCancelled) break;
+            final vModel = verses[v];
+            final hasTafsir = config.showTafsir && (vModel.tafsir != null && vModel.tafsir!.isNotEmpty);
+            final hasTrans = config.showEnglishTranslation && (vModel.translation != null && vModel.translation!.isNotEmpty);
+            if (!hasTafsir && !hasTrans) continue;
+
+            final vTiming = timingResults[v];
+            final pageNum = vTiming['pageNum'] as int;
+            final timings = vTiming['timings'] as List<WordTimingSegment>;
+
+            final tafsirCrop = await _overlayGenerator.generateVerseOverlayCrop(
+              verse: vModel,
+              config: config,
+              pageNumber: pageNum,
+              translationText: vModel.translation,
+              tafsirText: vModel.tafsir,
+              wordTimings: timings,
+              overrideLineIndex: 0,
+              renderVerseText: false,
+              renderTafsirAndTranslation: true,
+            );
+
+            if (tafsirCrop != null) {
+              final tafsirFile = File('${sessionDir.path}/tafsir_unit_$v.png');
+              await tafsirFile.writeAsBytes(tafsirCrop.bytes);
+              tafsirOverlayConfigs.add({
+                'path': tafsirFile.path.replaceAll(r'\', '/'),
+                'cropY': tafsirCrop.cropY,
+                'startSec': verseStarts[v],
+                'durSec': verseDurs[v],
+                'verseIndex': v,
+              });
+            }
+          }
+        }
+        final effectiveTafsirCount = tafsirOverlayConfigs.length;
+
         // Phase 3: Ultra-Fast Segment Rendering & Instant Stream Copy Muxing (20% -> 99%)
         final validAudioFiles = <String>[];
         for (int i = 0; i < resolvedAudioPaths.length; i++) {
@@ -491,6 +537,11 @@ class VideoExportService implements IVideoExportService {
             ffmpegArgs.addAll(['-loop', '1', '-t', durSec, '-framerate', '30', '-i', badgeOverlayPaths[v]]);
           }
 
+          for (int t = 0; t < effectiveTafsirCount; t++) {
+            final durSec = (tafsirOverlayConfigs[t]['durSec'] as double).toStringAsFixed(3);
+            ffmpegArgs.addAll(['-loop', '1', '-t', durSec, '-framerate', '30', '-i', tafsirOverlayConfigs[t]['path'] as String]);
+          }
+
           for (int u = 0; u < totalUnits; u++) {
             final durSec = (unitConfigs[u]['durSec'] as double).toStringAsFixed(3);
             ffmpegArgs.addAll(['-loop', '1', '-t', durSec, '-framerate', '30', '-i', overlayPaths[u]]);
@@ -511,6 +562,22 @@ class VideoExportService implements IVideoExportService {
             currentCanvas = nextBadgeCanvas;
           }
 
+          for (int t = 0; t < effectiveTafsirCount; t++) {
+            final durSec = tafsirOverlayConfigs[t]['durSec'] as double;
+            final segStart = tafsirOverlayConfigs[t]['startSec'] as double;
+            final segEnd = segStart + durSec;
+            const fadeDur = 0.30;
+            final safeFade = min(fadeDur, durSec * 0.20).clamp(0.01, max(0.01, durSec));
+            final fadeOutStart = max(0.0, durSec - safeFade);
+            final nextTafsirCanvas = 'canvas_tf${t + 1}';
+            final cropY = tafsirOverlayConfigs[t]['cropY'] as int? ?? 0;
+            final inputIdx = 2 + effectiveBadgeCount + t;
+
+            filterChains.add('[$inputIdx:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toStringAsFixed(3)}/TB[ov_tf$t]');
+            filterChains.add('[$currentCanvas][ov_tf$t]overlay=0:$cropY:enable=\'between(t,${segStart.toStringAsFixed(3)},${segEnd.toStringAsFixed(3)})\'[$nextTafsirCanvas]');
+            currentCanvas = nextTafsirCanvas;
+          }
+
           double cumStart = 0.0;
           for (int u = 0; u < totalUnits; u++) {
             final durSec = unitConfigs[u]['durSec'] as double;
@@ -519,11 +586,11 @@ class VideoExportService implements IVideoExportService {
             cumStart += durSec;
 
             const fadeDur = 0.30;
-            final safeFade = fadeDur.clamp(0.05, durSec * 0.20);
-            final fadeOutStart = (durSec - safeFade).clamp(0.08, durSec);
+            final safeFade = min(fadeDur, durSec * 0.20).clamp(0.01, max(0.01, durSec));
+            final fadeOutStart = max(0.0, durSec - safeFade);
             final nextCanvas = (u == totalUnits - 1) ? 'v' : 'canvas_t${u + 1}';
             final cropY = unitConfigs[u]['cropY'] as int? ?? 0;
-            final inputIdx = 2 + effectiveBadgeCount + u;
+            final inputIdx = 2 + effectiveBadgeCount + effectiveTafsirCount + u;
 
             filterChains.add('[$inputIdx:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toStringAsFixed(3)}/TB[ov$u]');
             filterChains.add('[$currentCanvas][ov$u]overlay=0:$cropY:enable=\'between(t,${segStart.toStringAsFixed(3)},${segEnd.toStringAsFixed(3)})\'[$nextCanvas]');
@@ -535,6 +602,11 @@ class VideoExportService implements IVideoExportService {
           for (int v = 0; v < effectiveBadgeCount; v++) {
             final durSec = verseDurs[v].toStringAsFixed(3);
             ffmpegArgs.addAll(['-loop', '1', '-t', durSec, '-framerate', '30', '-i', badgeOverlayPaths[v]]);
+          }
+
+          for (int t = 0; t < effectiveTafsirCount; t++) {
+            final durSec = (tafsirOverlayConfigs[t]['durSec'] as double).toStringAsFixed(3);
+            ffmpegArgs.addAll(['-loop', '1', '-t', durSec, '-framerate', '30', '-i', tafsirOverlayConfigs[t]['path'] as String]);
           }
 
           for (int u = 0; u < totalUnits; u++) {
@@ -554,6 +626,22 @@ class VideoExportService implements IVideoExportService {
             currentCanvas = nextBadgeCanvas;
           }
 
+          for (int t = 0; t < effectiveTafsirCount; t++) {
+            final durSec = tafsirOverlayConfigs[t]['durSec'] as double;
+            final segStart = tafsirOverlayConfigs[t]['startSec'] as double;
+            final segEnd = segStart + durSec;
+            const fadeDur = 0.30;
+            final safeFade = min(fadeDur, durSec * 0.20).clamp(0.01, max(0.01, durSec));
+            final fadeOutStart = max(0.0, durSec - safeFade);
+            final nextTafsirCanvas = 'canvas_tf${t + 1}';
+            final cropY = tafsirOverlayConfigs[t]['cropY'] as int? ?? 0;
+            final inputIdx = 1 + effectiveBadgeCount + t;
+
+            filterChains.add('[$inputIdx:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toStringAsFixed(3)}/TB[ov_tf$t]');
+            filterChains.add('[$currentCanvas][ov_tf$t]overlay=0:$cropY:enable=\'between(t,${segStart.toStringAsFixed(3)},${segEnd.toStringAsFixed(3)})\'[$nextTafsirCanvas]');
+            currentCanvas = nextTafsirCanvas;
+          }
+
           double cumStart = 0.0;
           for (int u = 0; u < totalUnits; u++) {
             final durSec = unitConfigs[u]['durSec'] as double;
@@ -562,11 +650,11 @@ class VideoExportService implements IVideoExportService {
             cumStart += durSec;
 
             const fadeDur = 0.30;
-            final safeFade = fadeDur.clamp(0.05, durSec * 0.20);
-            final fadeOutStart = (durSec - safeFade).clamp(0.08, durSec);
+            final safeFade = min(fadeDur, durSec * 0.20).clamp(0.01, max(0.01, durSec));
+            final fadeOutStart = max(0.0, durSec - safeFade);
             final nextCanvas = (u == totalUnits - 1) ? 'v' : 'canvas_t${u + 1}';
             final cropY = unitConfigs[u]['cropY'] as int? ?? 0;
-            final inputIdx = 1 + effectiveBadgeCount + u;
+            final inputIdx = 1 + effectiveBadgeCount + effectiveTafsirCount + u;
 
             filterChains.add('[$inputIdx:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toStringAsFixed(3)}/TB[ov$u]');
             filterChains.add('[$currentCanvas][ov$u]overlay=0:$cropY:enable=\'between(t,${segStart.toStringAsFixed(3)},${segEnd.toStringAsFixed(3)})\'[$nextCanvas]');
@@ -576,7 +664,9 @@ class VideoExportService implements IVideoExportService {
 
         // Audio Input
         final hasAudio = validAudioFiles.isNotEmpty;
-        final audioInputIndex = isCustomVideo ? totalUnits + effectiveBadgeCount + 2 : totalUnits + effectiveBadgeCount + 1;
+        final audioInputIndex = isCustomVideo
+            ? totalUnits + effectiveBadgeCount + effectiveTafsirCount + 2
+            : totalUnits + effectiveBadgeCount + effectiveTafsirCount + 1;
         if (hasAudio) {
           if (validAudioFiles.length == 1) {
             ffmpegArgs.addAll(['-i', validAudioFiles.first]);

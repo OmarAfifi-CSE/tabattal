@@ -35,6 +35,9 @@ class _CachedDynamicLayout {
     required this.sectionGap,
     required this.totalContentHeight,
   });
+
+  double get verseHeight => versePainter.height;
+  double get tafsirAndTranslationHeight => (totalContentHeight - versePainter.height).clamp(0.0, totalContentHeight);
 }
 
 class VerseOverlayCropResult {
@@ -56,6 +59,7 @@ class CanvasOverlayGenerator {
 
   static void clearLayoutCache() {
     _dynamicLayoutCache.clear();
+    _lineFitScaleCache.clear();
   }
 
   /// Generates a full-resolution frame PNG for a single verse with customizable content opacity.
@@ -169,6 +173,8 @@ class CanvasOverlayGenerator {
     int playbackPositionMs = 0,
     List<WordTimingSegment>? wordTimings,
     int? overrideLineIndex,
+    bool renderVerseText = true,
+    bool renderTafsirAndTranslation = true,
   }) async {
     final int width = config.aspectRatio.getTargetWidth(config.videoQuality);
     final int height = config.aspectRatio.getTargetHeight(config.videoQuality);
@@ -187,12 +193,32 @@ class CanvasOverlayGenerator {
       playbackPositionMs: playbackPositionMs,
       wordTimings: wordTimings,
       overrideLineIndex: overrideLineIndex,
+      renderVerseText: renderVerseText,
+      renderTafsirAndTranslation: renderTafsirAndTranslation,
     );
 
     final picture = recorder.endRecording();
     final image = await picture.toImage(width, height);
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     return byteData?.buffer.asUint8List();
+  }
+
+  /// Builds a deterministic, shared cache key for dynamic layout measurements
+  /// so bounds computation and canvas rendering are guaranteed to hit the exact same cache entry.
+  static String buildDynamicLayoutCacheKey({
+    required VerseModel verse,
+    required VideoProjectConfig config,
+    required bool hasTafsir,
+    required bool hasTranslation,
+    required int? effectiveLineIndex,
+    required double width,
+    required double height,
+  }) {
+    return '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_'
+        '${config.backgroundType.name}_${config.textDisplayMode.name}_${config.languageCode}_'
+        '${hasTafsir}_${hasTranslation}_${config.showCardFrame}_${config.showSurahBadge}_'
+        '${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_'
+        '${config.backgroundDimming}_${effectiveLineIndex ?? -1}_${width.round()}_${height.round()}';
   }
 
   /// Generates an ultra-lightweight cropped transparent overlay PNG
@@ -206,28 +232,11 @@ class CanvasOverlayGenerator {
     int playbackPositionMs = 0,
     List<WordTimingSegment>? wordTimings,
     int? overrideLineIndex,
+    bool renderVerseText = true,
+    bool renderTafsirAndTranslation = true,
   }) async {
     final int width = config.aspectRatio.getTargetWidth(config.videoQuality);
     final int height = config.aspectRatio.getTargetHeight(config.videoQuality);
-
-    // Warm the layout cache with the EXACT same parameters first: the crop
-    // bounds below are read from this cache, and on a cold cache the 35%
-    // height guess would clip real content (first-export cropping bug).
-    // The dry run only measures (no rasterization of the result).
-    final warmRecorder = ui.PictureRecorder();
-    paintDynamicContent(
-      Canvas(warmRecorder, Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble())),
-      Size(width.toDouble(), height.toDouble()),
-      verse: verse,
-      config: config,
-      pageNumber: pageNumber,
-      translationText: translationText,
-      tafsirText: tafsirText,
-      playbackPositionMs: playbackPositionMs,
-      wordTimings: wordTimings,
-      overrideLineIndex: overrideLineIndex,
-    );
-    warmRecorder.endRecording();
 
     final bounds = computeDynamicContentBounds(
       Size(width.toDouble(), height.toDouble()),
@@ -237,10 +246,14 @@ class CanvasOverlayGenerator {
       translationText: translationText,
       tafsirText: tafsirText,
       overrideLineIndex: overrideLineIndex,
+      renderVerseText: renderVerseText,
+      renderTafsirAndTranslation: renderTafsirAndTranslation,
     );
 
     final int cropY = max(0, (bounds.top - 16).floor());
     final int cropHeight = min(height - cropY, (bounds.height + 32).ceil());
+
+    if (cropHeight <= 0) return null;
 
     final cropRecorder = ui.PictureRecorder();
     final cropCanvas = Canvas(cropRecorder, Rect.fromLTWH(0, 0, width.toDouble(), cropHeight.toDouble()));
@@ -257,6 +270,8 @@ class CanvasOverlayGenerator {
       playbackPositionMs: playbackPositionMs,
       wordTimings: wordTimings,
       overrideLineIndex: overrideLineIndex,
+      renderVerseText: renderVerseText,
+      renderTafsirAndTranslation: renderTafsirAndTranslation,
     );
 
     final picture = cropRecorder.endRecording();
@@ -282,6 +297,8 @@ class CanvasOverlayGenerator {
     String? translationText,
     String? tafsirText,
     int? overrideLineIndex,
+    bool renderVerseText = true,
+    bool renderTafsirAndTranslation = true,
   }) {
     final width = size.width;
     final height = size.height;
@@ -296,9 +313,6 @@ class CanvasOverlayGenerator {
         topLimit = height * 0.20;
         bottomLimit = height * 0.80;
       } else {
-        // 9:16 worst-case platform safe zone (1080x1920):
-        // top UI bar ends ~220px (Shorts), bottom tray starts ~1470px (Shorts/Reels)
-        // 9:16: zone symmetric around 0.50H — verse sits at the exact screen center
         topLimit = height * 0.29;
         bottomLimit = height * 0.71;
       }
@@ -310,8 +324,6 @@ class CanvasOverlayGenerator {
         topLimit = height * 0.15;
         bottomLimit = height * 0.85;
       } else {
-        // 9:16: reciter badge sits lower than surah badge — clear whichever shows
-        // 9:16: both variants symmetric around 0.50H — exact screen center
         if (config.showReciterName) {
           topLimit = height * 0.29;
           bottomLimit = height * 0.71;
@@ -328,8 +340,6 @@ class CanvasOverlayGenerator {
         topLimit = height * 0.10;
         bottomLimit = height * 0.87;
       } else {
-        // 9:16: stay below the top ornament (bottom edge ~0.127H)
-        // 9:16: zone symmetric around 0.50H — verse sits at the exact screen center
         topLimit = height * 0.20;
         bottomLimit = height * 0.80;
       }
@@ -339,13 +349,46 @@ class CanvasOverlayGenerator {
     final hasTafsir = (config.showTafsir && (tafsirText ?? verse.tafsir) != null && (tafsirText ?? verse.tafsir)!.isNotEmpty);
     final hasTranslation = (config.showEnglishTranslation && (translationText ?? verse.translation) != null && (translationText ?? verse.translation)!.isNotEmpty);
 
-    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.backgroundType.name}_${config.textDisplayMode.name}_${config.languageCode}_${hasTafsir}_${hasTranslation}_${config.showCardFrame}_${config.showSurahBadge}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}_${overrideLineIndex ?? 0}_${width.round()}_${height.round()}';
+    final cacheKey = buildDynamicLayoutCacheKey(
+      verse: verse,
+      config: config,
+      hasTafsir: hasTafsir,
+      hasTranslation: hasTranslation,
+      effectiveLineIndex: overrideLineIndex,
+      width: width,
+      height: height,
+    );
 
-    final cached = _dynamicLayoutCache[cacheKey];
+    var cached = _dynamicLayoutCache[cacheKey];
+    if (cached == null) {
+      final dryRecorder = ui.PictureRecorder();
+      paintDynamicContent(
+        Canvas(dryRecorder, Rect.fromLTWH(0, 0, width, height)),
+        size,
+        verse: verse,
+        config: config,
+        pageNumber: pageNumber,
+        translationText: translationText,
+        tafsirText: tafsirText,
+        overrideLineIndex: overrideLineIndex,
+      );
+      dryRecorder.endRecording();
+      cached = _dynamicLayoutCache[cacheKey];
+    }
+
     final double totalContentHeight = cached?.totalContentHeight ?? (height * 0.35);
     final double startY = topLimit + ((availableHeight - totalContentHeight) / 2);
 
-    return Rect.fromLTWH(0, startY, width, totalContentHeight);
+    if (renderVerseText && !renderTafsirAndTranslation) {
+      final double verseH = cached?.verseHeight ?? (totalContentHeight * 0.5);
+      return Rect.fromLTWH(0, startY, width, verseH);
+    } else if (!renderVerseText && renderTafsirAndTranslation) {
+      final double verseH = cached?.verseHeight ?? 0.0;
+      final double tafsirTransH = cached?.tafsirAndTranslationHeight ?? (totalContentHeight * 0.5);
+      return Rect.fromLTWH(0, startY + verseH, width, tafsirTransH);
+    } else {
+      return Rect.fromLTWH(0, startY, width, totalContentHeight);
+    }
   }
 
   /// Verse-level cache for the uniform line-by-line fit scale (one size for ALL lines).
@@ -495,6 +538,8 @@ class CanvasOverlayGenerator {
     bool isPlaying = false,
     List<WordTimingSegment>? wordTimings,
     int? overrideLineIndex,
+    bool renderVerseText = true,
+    bool renderTafsirAndTranslation = true,
   }) {
     if (contentOpacity <= 0.0) return;
 
@@ -532,6 +577,8 @@ class CanvasOverlayGenerator {
       isPlaying: isPlaying,
       wordTimings: wordTimings,
       overrideLineIndex: overrideLineIndex,
+      renderVerseText: renderVerseText,
+      renderTafsirAndTranslation: renderTafsirAndTranslation,
     );
 
     if (contentOpacity < 1.0) {
@@ -875,6 +922,8 @@ class CanvasOverlayGenerator {
     bool isPlaying = false,
     List<WordTimingSegment>? wordTimings,
     int? overrideLineIndex,
+    bool renderVerseText = true,
+    bool renderTafsirAndTranslation = true,
   }) {
     final theme = config.themePreset;
     final textColors = _resolveTextColors(config);
@@ -1062,10 +1111,33 @@ class CanvasOverlayGenerator {
       }
     }
 
+    // Ayah-level crossfade: stays 100% solid and steady across lines within the same Ayah,
+    // only fading at the beginning and ending boundaries of the entire Ayah.
+    final totalAyahMs = totalDurationMs ?? (timings.isNotEmpty ? timings.last.endMs : 4000);
+    final ayahDurSec = max(totalAyahMs, 400) / 1000.0;
+    final safeAyahFadeSec = 0.30.clamp(0.05, ayahDurSec * 0.20);
+    final ayahFadeMs = (safeAyahFadeSec * 1000).round();
+
+    double ayahCrossfadeOpacity = 1.0;
+    if (!isPlaying && playbackPositionMs == 0) {
+      ayahCrossfadeOpacity = 1.0;
+    } else if (playbackPositionMs < ayahFadeMs && ayahFadeMs > 0) {
+      final t = playbackPositionMs / ayahFadeMs;
+      ayahCrossfadeOpacity = Curves.easeInOutCubic.transform(t.clamp(0.0, 1.0));
+    } else if (playbackPositionMs > totalAyahMs - ayahFadeMs && ayahFadeMs > 0 && totalAyahMs > ayahFadeMs * 2) {
+      final t = (totalAyahMs - playbackPositionMs) / ayahFadeMs;
+      ayahCrossfadeOpacity = Curves.easeInOutCubic.transform(t.clamp(0.0, 1.0));
+    } else {
+      ayahCrossfadeOpacity = 1.0;
+    }
+
     // One uniform size for ALL line-by-line lines: derived once per verse from
     // the widest segment so transitions never jump between font sizes.
     double uniformLineScale = 1.0;
     if (isLineByLine && lineSegments.isNotEmpty) {
+      if (_lineFitScaleCache.length > 200) {
+        _lineFitScaleCache.clear();
+      }
       final fitKey =
           '${verse.verseKey}_${config.aspectRatio.name}_${config.textDisplayMode.name}_${config.themePreset.id}_${pageNumber}_${hasTafsir ? 1 : 0}_${hasTranslation ? 1 : 0}_${width.round()}x${height.round()}';
       uniformLineScale = _lineFitScaleCache.putIfAbsent(
@@ -1325,7 +1397,20 @@ class CanvasOverlayGenerator {
       );
     }
 
-    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.backgroundType.name}_${config.textDisplayMode.name}_${config.languageCode}_${hasTafsir}_${hasTranslation}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}_${overrideLineIndex ?? activeLine?.lineNumber ?? 0}_${width.round()}_${height.round()}';
+    final int effectiveLineIndex = overrideLineIndex ?? (isLineByLine && activeLine != null && lineSegments.isNotEmpty ? lineSegments.indexOf(activeLine) : -1);
+    final cacheKey = buildDynamicLayoutCacheKey(
+      verse: verse,
+      config: config,
+      hasTafsir: hasTafsir,
+      hasTranslation: hasTranslation,
+      effectiveLineIndex: effectiveLineIndex,
+      width: width,
+      height: height,
+    );
+
+    if (_dynamicLayoutCache.length > 200) {
+      _dynamicLayoutCache.clear();
+    }
 
     final cached = _dynamicLayoutCache.putIfAbsent(cacheKey, () {
       var layout = computeLayout(currentScaleMultiplier);
@@ -1349,107 +1434,140 @@ class CanvasOverlayGenerator {
     final double startY = topLimit + ((availableHeight - cached.totalContentHeight) / 2);
     double currentY = startY;
 
-    // Wrap entire center content block (verse, tafsir, translation) in saveLayer for clean, unified crossfade
-    final bool isContentFading = lineCrossfadeOpacity < 0.999;
-    if (isContentFading) {
+    // In whole verse mode: wrap entire center content block (verse, tafsir, translation) for clean crossfade.
+    // In lineByLine mode: ONLY the Quran line fades across line transitions; Tafsir & Translation belong
+    // to the whole Ayah and stay steady without fading between lines, fading only at Ayah boundaries.
+    final bool isWholeContentFading = !isLineByLine && lineCrossfadeOpacity < 0.999;
+    if (isWholeContentFading) {
       canvas.saveLayer(
         Rect.fromLTWH(0, startY - 20, width, cached.totalContentHeight + 40),
         Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: lineCrossfadeOpacity.clamp(0.0, 1.0)),
       );
     }
 
-    cached.versePainter.paint(
-      canvas,
-      Offset((width - cached.versePainter.width) / 2, currentY),
-    );
+    if (renderVerseText) {
+      final bool isLineFading = isLineByLine && lineCrossfadeOpacity < 0.999;
+      if (isLineFading) {
+        canvas.saveLayer(
+          Rect.fromLTWH(0, currentY - 10, width, cached.versePainter.height + 20),
+          Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: lineCrossfadeOpacity.clamp(0.0, 1.0)),
+        );
+      }
+
+      cached.versePainter.paint(
+        canvas,
+        Offset((width - cached.versePainter.width) / 2, currentY),
+      );
+
+      if (isLineFading) {
+        canvas.restore();
+      }
+    }
     currentY += cached.versePainter.height;
 
-    // Draw Tafsir
-    if (cached.tafsirTextPainter != null) {
-      currentY += cached.sectionGap;
-      if (cached.tafsirBadgePainter != null) {
-        final badgeW = cached.tafsirBadgePainter!.width + (baseScale * 0.04);
-        final badgeH = cached.tafsirBadgeHeight;
-        final badgeRect = RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: Offset(width / 2, currentY + (badgeH / 2)),
-            width: badgeW,
-            height: badgeH,
-          ),
-          Radius.circular(badgeH / 2),
+    if (renderTafsirAndTranslation) {
+      // Tafsir & Translation in lineByLine mode: wrap in ayah-level fade layer only when the entire Ayah is transitioning
+      final double tafsirTransHeight = (cached.totalContentHeight - cached.versePainter.height).clamp(0.0, height);
+      final bool hasTafsirOrTranslation = cached.tafsirTextPainter != null || cached.translationTextPainter != null;
+      final bool isAyahTafsirFading = isLineByLine && hasTafsirOrTranslation && ayahCrossfadeOpacity < 0.999;
+      if (isAyahTafsirFading) {
+        canvas.saveLayer(
+          Rect.fromLTWH(0, currentY - 10, width, tafsirTransHeight + 20),
+          Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: ayahCrossfadeOpacity.clamp(0.0, 1.0)),
         );
-
-        final badgePaint = Paint()
-          ..color = isFramelessCustom
-              ? badgeAccentColor.withValues(alpha: 0.16)
-              : theme.accentColor.withValues(alpha: 0.15);
-        final borderPaint = Paint()
-          ..color = isFramelessCustom
-              ? badgeAccentColor.withValues(alpha: 0.45)
-              : theme.accentColor.withValues(alpha: 0.40)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = baseScale * 0.0015;
-
-        canvas.drawRRect(badgeRect, badgePaint);
-        canvas.drawRRect(badgeRect, borderPaint);
-
-        cached.tafsirBadgePainter!.paint(
-          canvas,
-          Offset((width - cached.tafsirBadgePainter!.width) / 2, currentY + ((badgeH - cached.tafsirBadgePainter!.height) / 2)),
-        );
-        currentY += badgeH + (height * 0.008);
       }
 
-      cached.tafsirTextPainter!.paint(
-        canvas,
-        Offset((width - cached.tafsirTextPainter!.width) / 2, currentY),
-      );
-      currentY += cached.tafsirTextPainter!.height;
-    }
+      // Draw Tafsir
+      if (cached.tafsirTextPainter != null) {
+        currentY += cached.sectionGap;
+        if (cached.tafsirBadgePainter != null) {
+          final badgeW = cached.tafsirBadgePainter!.width + (baseScale * 0.04);
+          final badgeH = cached.tafsirBadgeHeight;
+          final badgeRect = RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: Offset(width / 2, currentY + (badgeH / 2)),
+              width: badgeW,
+              height: badgeH,
+            ),
+            Radius.circular(badgeH / 2),
+          );
 
-    // Draw Translation
-    if (cached.translationTextPainter != null) {
-      currentY += cached.sectionGap;
-      if (cached.translationBadgePainter != null) {
-        final badgeW = cached.translationBadgePainter!.width + (baseScale * 0.04);
-        final badgeH = cached.translationBadgeHeight;
-        final badgeRect = RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: Offset(width / 2, currentY + (badgeH / 2)),
-            width: badgeW,
-            height: badgeH,
-          ),
-          Radius.circular(badgeH / 2),
-        );
+          final badgePaint = Paint()
+            ..color = isFramelessCustom
+                ? badgeAccentColor.withValues(alpha: 0.16)
+                : theme.accentColor.withValues(alpha: 0.15);
+          final borderPaint = Paint()
+            ..color = isFramelessCustom
+                ? badgeAccentColor.withValues(alpha: 0.45)
+                : theme.accentColor.withValues(alpha: 0.40)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = baseScale * 0.0015;
 
-        final badgePaint = Paint()
-          ..color = isFramelessCustom
-              ? badgeAccentColor.withValues(alpha: 0.16)
-              : theme.accentColor.withValues(alpha: 0.15);
-        final borderPaint = Paint()
-          ..color = isFramelessCustom
-              ? badgeAccentColor.withValues(alpha: 0.45)
-              : theme.accentColor.withValues(alpha: 0.40)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = baseScale * 0.0015;
+          canvas.drawRRect(badgeRect, badgePaint);
+          canvas.drawRRect(badgeRect, borderPaint);
 
-        canvas.drawRRect(badgeRect, badgePaint);
-        canvas.drawRRect(badgeRect, borderPaint);
+          cached.tafsirBadgePainter!.paint(
+            canvas,
+            Offset((width - cached.tafsirBadgePainter!.width) / 2, currentY + ((badgeH - cached.tafsirBadgePainter!.height) / 2)),
+          );
+          currentY += badgeH + (height * 0.008);
+        }
 
-        cached.translationBadgePainter!.paint(
+        cached.tafsirTextPainter!.paint(
           canvas,
-          Offset((width - cached.translationBadgePainter!.width) / 2, currentY + ((badgeH - cached.translationBadgePainter!.height) / 2)),
+          Offset((width - cached.tafsirTextPainter!.width) / 2, currentY),
         );
-        currentY += badgeH + (height * 0.008);
+        currentY += cached.tafsirTextPainter!.height;
       }
 
-      cached.translationTextPainter!.paint(
-        canvas,
-        Offset((width - cached.translationTextPainter!.width) / 2, currentY),
-      );
+      // Draw Translation
+      if (cached.translationTextPainter != null) {
+        currentY += cached.sectionGap;
+        if (cached.translationBadgePainter != null) {
+          final badgeW = cached.translationBadgePainter!.width + (baseScale * 0.04);
+          final badgeH = cached.translationBadgeHeight;
+          final badgeRect = RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: Offset(width / 2, currentY + (badgeH / 2)),
+              width: badgeW,
+              height: badgeH,
+            ),
+            Radius.circular(badgeH / 2),
+          );
+
+          final badgePaint = Paint()
+            ..color = isFramelessCustom
+                ? badgeAccentColor.withValues(alpha: 0.16)
+                : theme.accentColor.withValues(alpha: 0.15);
+          final borderPaint = Paint()
+            ..color = isFramelessCustom
+                ? badgeAccentColor.withValues(alpha: 0.45)
+                : theme.accentColor.withValues(alpha: 0.40)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = baseScale * 0.0015;
+
+          canvas.drawRRect(badgeRect, badgePaint);
+          canvas.drawRRect(badgeRect, borderPaint);
+
+          cached.translationBadgePainter!.paint(
+            canvas,
+            Offset((width - cached.translationBadgePainter!.width) / 2, currentY + ((badgeH - cached.translationBadgePainter!.height) / 2)),
+          );
+          currentY += badgeH + (height * 0.008);
+        }
+
+        cached.translationTextPainter!.paint(
+          canvas,
+          Offset((width - cached.translationTextPainter!.width) / 2, currentY),
+        );
+      }
+
+      if (isAyahTafsirFading) {
+        canvas.restore();
+      }
     }
 
-    if (isContentFading) {
+    if (isWholeContentFading) {
       canvas.restore();
     }
   }

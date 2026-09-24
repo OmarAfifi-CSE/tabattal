@@ -252,6 +252,7 @@ class VideoExportService implements IVideoExportService {
             final timings = unit['timings'] as List<WordTimingSegment>;
             final lineIndex = unit['lineIndex'] as int?;
 
+            final bool separateTafsir = isLineByLine && (config.showTafsir || config.showEnglishTranslation);
             final overlayCrop = await _overlayGenerator.generateVerseOverlayCrop(
               verse: verse,
               config: config,
@@ -260,6 +261,8 @@ class VideoExportService implements IVideoExportService {
               tafsirText: verse.tafsir,
               wordTimings: timings,
               overrideLineIndex: lineIndex,
+              renderVerseText: true,
+              renderTafsirAndTranslation: !separateTafsir,
             );
 
             if (overlayCrop == null) {
@@ -299,6 +302,57 @@ class VideoExportService implements IVideoExportService {
           return;
         }
 
+        // Generate per-Ayah Tafsir & Translation overlays in lineByLine mode so they remain steady
+        // across line transitions and only crossfade at Ayah boundaries.
+        final bool separateTafsir = isLineByLine && (config.showTafsir || config.showEnglishTranslation);
+        final tafsirBytesList = <Uint8List>[];
+        final tafsirConfigs = <Map<String, dynamic>>[];
+        if (separateTafsir) {
+          double cumVStart = 0.0;
+          for (int v = 0; v < verses.length; v++) {
+            if (_isCancelled) break;
+            final verseUnits = unitConfigs.where((u) => u['verseIndex'] == v).toList();
+            double vDur = 0.0;
+            for (final u in verseUnits) {
+              vDur += (u['durSec'] as double);
+            }
+
+            final vModel = verses[v];
+            final hasTafsir = config.showTafsir && (vModel.tafsir != null && vModel.tafsir!.isNotEmpty);
+            final hasTrans = config.showEnglishTranslation && (vModel.translation != null && vModel.translation!.isNotEmpty);
+            if (hasTafsir || hasTrans) {
+              final vTiming = timingResults[v];
+              final pageNum = vTiming['pageNum'] as int;
+              final timings = vTiming['timings'] as List<WordTimingSegment>;
+
+              final tafsirCrop = await _overlayGenerator.generateVerseOverlayCrop(
+                verse: vModel,
+                config: config,
+                pageNumber: pageNum,
+                translationText: vModel.translation,
+                tafsirText: vModel.tafsir,
+                wordTimings: timings,
+                overrideLineIndex: 0,
+                renderVerseText: false,
+                renderTafsirAndTranslation: true,
+              );
+
+              if (tafsirCrop != null) {
+                tafsirBytesList.add(tafsirCrop.bytes);
+                tafsirConfigs.add({
+                  'verseIndex': v,
+                  'verseNumber': vModel.verseNumber,
+                  'startSec': cumVStart,
+                  'durSec': vDur,
+                  'cropY': tafsirCrop.cropY,
+                  'cropHeight': tafsirCrop.cropHeight,
+                });
+              }
+            }
+            cumVStart += vDur;
+          }
+        }
+
         // Phase 3: Uploading to Cloud FFmpeg Video Service (30% -> 50%)
         controller.add(const VideoRenderProgress(
           phase: VideoRenderPhase.encodingVideo,
@@ -325,6 +379,7 @@ class VideoExportService implements IVideoExportService {
               badgeBytesList.add(badgeBytes);
               badgeConfigs.add({
                 'verseIndex': v,
+                'verseNumber': verses[v].verseNumber,
                 'startSec': cumVStart,
                 'durSec': vDur,
               });
@@ -354,6 +409,7 @@ class VideoExportService implements IVideoExportService {
               ? config.customVideoPath!
               : null,
           'badgeConfigs': badgeConfigs,
+          'tafsirConfigs': tafsirConfigs,
           'unitConfigs': unitConfigs.map((u) => {
             'verseNumber': u['verseNumber'],
             'lineIndex': u['lineIndex'],
@@ -370,6 +426,10 @@ class VideoExportService implements IVideoExportService {
 
         for (int b = 0; b < badgeBytesList.length; b++) {
           formData.appendBlob('badge_unit_$b', html.Blob([badgeBytesList[b]], 'image/png'), 'badge_unit_$b.png');
+        }
+
+        for (int t = 0; t < tafsirBytesList.length; t++) {
+          formData.appendBlob('tafsir_unit_$t', html.Blob([tafsirBytesList[t]], 'image/png'), 'tafsir_unit_$t.png');
         }
 
         if (hasCustomVideo &&

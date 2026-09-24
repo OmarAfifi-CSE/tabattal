@@ -9,7 +9,9 @@ import 'package:tabattal/core/network/tafsir_download_service.dart';
 import 'package:tabattal/features/quran_reader/data/datasources/quran_local_data_source.dart';
 import 'package:tabattal/features/quran_reader/data/datasources/quran_remote_data_source.dart';
 import 'package:tabattal/features/quran_reader/data/models/verse_model.dart';
+import 'dart:ui' as ui;
 import 'package:tabattal/features/quran_video_studio/data/services/canvas_overlay_generator.dart';
+import 'package:tabattal/features/quran_video_studio/domain/entities/word_timing_segment.dart';
 import 'package:tabattal/features/quran_video_studio/domain/entities/video_enums.dart';
 import 'package:tabattal/features/quran_video_studio/domain/entities/video_project_config.dart';
 
@@ -125,4 +127,165 @@ void main() {
     expect(badge1.length, greaterThan(0));
     expect(badge2.length, greaterThan(0));
   });
+
+  test('Line-by-line mode with Tafsir and Translation renders smoothly across line boundaries', () {
+    const config = VideoProjectConfig(
+      surahNumber: 1,
+      startAyah: 1,
+      endAyah: 1,
+      textDisplayMode: VideoTextDisplayMode.lineByLine,
+      showTafsir: true,
+      showEnglishTranslation: true,
+    );
+
+    final verse = VerseModel(
+      id: 1,
+      verseNumber: 1,
+      verseKey: '1:1',
+      juzNumber: 1,
+      textUthmani: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+      words: const [
+        WordModel(id: 1, textUthmani: 'بِسْمِ', codeV2: 'بِسْمِ', lineNumber: 1, charTypeName: 'word', verseKey: '1:1', pageNumber: 1),
+        WordModel(id: 2, textUthmani: 'ٱللَّهِ', codeV2: 'ٱللَّهِ', lineNumber: 1, charTypeName: 'word', verseKey: '1:1', pageNumber: 1),
+        WordModel(id: 3, textUthmani: 'ٱلرَّحْمَٰنِ', codeV2: 'ٱلرَّحْمَٰنِ', lineNumber: 2, charTypeName: 'word', verseKey: '1:1', pageNumber: 1),
+        WordModel(id: 4, textUthmani: 'ٱلرَّحِيمِ', codeV2: 'ٱلرَّحِيمِ', lineNumber: 2, charTypeName: 'word', verseKey: '1:1', pageNumber: 1),
+      ],
+      tafsir: 'تفسير الآية الكريمة',
+      translation: 'In the name of Allah, the Entirely Merciful, the Especially Merciful.',
+    );
+
+    final timings = [
+      const WordTimingSegment(wordPosition: 1, startMs: 0, endMs: 1000),
+      const WordTimingSegment(wordPosition: 2, startMs: 1000, endMs: 2000),
+      const WordTimingSegment(wordPosition: 3, startMs: 2000, endMs: 3000),
+      const WordTimingSegment(wordPosition: 4, startMs: 3000, endMs: 4000),
+    ];
+
+    const size = Size(1080, 1920);
+
+    // Test line 1 active, line transition, line 2 active, and end of ayah
+    for (final pos in [0, 500, 1950, 2050, 3500, 3950]) {
+      final recorder = ui.PictureRecorder();
+      final canvas = ui.Canvas(recorder);
+
+      expect(
+        () => CanvasOverlayGenerator.paintDynamicContent(
+          canvas,
+          size,
+          verse: verse,
+          config: config,
+          pageNumber: 1,
+          playbackPositionMs: pos,
+          totalDurationMs: 4000,
+          isPlaying: true,
+          wordTimings: timings,
+        ),
+        returnsNormally,
+      );
+
+      final picture = recorder.endRecording();
+      expect(picture, isNotNull);
+      picture.dispose();
+    }
+  });
+
+  test('Decoupled line-by-line export generates separate verse-only and tafsir-only crops accurately', () async {
+    const generator = CanvasOverlayGenerator();
+    const config = VideoProjectConfig(
+      surahNumber: 2,
+      startAyah: 1,
+      endAyah: 1,
+      textDisplayMode: VideoTextDisplayMode.lineByLine,
+      showTafsir: true,
+      showEnglishTranslation: true,
+      showSurahBadge: true,
+    );
+
+    final verse = VerseModel(
+      id: 2,
+      verseNumber: 1,
+      verseKey: '2:1',
+      juzNumber: 1,
+      textUthmani: 'الۤمۤ',
+      words: const [
+        WordModel(id: 1, textUthmani: 'الۤمۤ', codeV2: 'الۤمۤ', lineNumber: 1, charTypeName: 'word', verseKey: '2:1', pageNumber: 2),
+      ],
+      tafsir: 'تفسير سورة البقرة الآية الأولى',
+      translation: 'Alif, Lam, Meem.',
+    );
+
+    // 1. Full content bounds
+    final fullBounds = CanvasOverlayGenerator.computeDynamicContentBounds(
+      const Size(1080, 1920),
+      verse: verse,
+      config: config,
+      pageNumber: 2,
+      translationText: verse.translation,
+      tafsirText: verse.tafsir,
+      overrideLineIndex: 0,
+      renderVerseText: true,
+      renderTafsirAndTranslation: true,
+    );
+    expect(fullBounds.height, greaterThan(0));
+
+    // 2. Verse-only bounds
+    final verseOnlyBounds = CanvasOverlayGenerator.computeDynamicContentBounds(
+      const Size(1080, 1920),
+      verse: verse,
+      config: config,
+      pageNumber: 2,
+      translationText: verse.translation,
+      tafsirText: verse.tafsir,
+      overrideLineIndex: 0,
+      renderVerseText: true,
+      renderTafsirAndTranslation: false,
+    );
+    expect(verseOnlyBounds.height, greaterThan(0));
+    expect(verseOnlyBounds.height, lessThan(fullBounds.height));
+
+    // 3. Tafsir-only bounds
+    final tafsirOnlyBounds = CanvasOverlayGenerator.computeDynamicContentBounds(
+      const Size(1080, 1920),
+      verse: verse,
+      config: config,
+      pageNumber: 2,
+      translationText: verse.translation,
+      tafsirText: verse.tafsir,
+      overrideLineIndex: 0,
+      renderVerseText: false,
+      renderTafsirAndTranslation: true,
+    );
+    expect(tafsirOnlyBounds.height, greaterThan(0));
+    expect(tafsirOnlyBounds.top, equals(verseOnlyBounds.top + verseOnlyBounds.height));
+
+    // 4. Crop generations
+    final verseCrop = await generator.generateVerseOverlayCrop(
+      verse: verse,
+      config: config,
+      pageNumber: 2,
+      translationText: verse.translation,
+      tafsirText: verse.tafsir,
+      overrideLineIndex: 0,
+      renderVerseText: true,
+      renderTafsirAndTranslation: false,
+    );
+    expect(verseCrop, isNotNull);
+    expect(verseCrop!.bytes.length, greaterThan(0));
+
+    final tafsirCrop = await generator.generateVerseOverlayCrop(
+      verse: verse,
+      config: config,
+      pageNumber: 2,
+      translationText: verse.translation,
+      tafsirText: verse.tafsir,
+      overrideLineIndex: 0,
+      renderVerseText: false,
+      renderTafsirAndTranslation: true,
+    );
+    expect(tafsirCrop, isNotNull);
+    expect(tafsirCrop!.bytes.length, greaterThan(0));
+    expect(tafsirCrop.cropY, greaterThan(verseCrop.cropY));
+  });
 }
+
+
