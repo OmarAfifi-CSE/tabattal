@@ -206,10 +206,12 @@ class VideoExportService implements IVideoExportService {
             config.customVideoPath != null &&
             config.customVideoPath!.isNotEmpty;
 
+        final bool hasMultipleBadges = verses.length > 1 && config.showSurahBadge;
         final rawBaseFrameBytes = await _overlayGenerator.generateStaticBaseFramePng(
           config: config,
           verse: verses.first,
           includeBackground: !hasCustomVideo,
+          includeSurahBadge: !hasMultipleBadges,
         );
 
         if (rawBaseFrameBytes == null) {
@@ -305,6 +307,32 @@ class VideoExportService implements IVideoExportService {
           uploadPercent: 0,
         ));
 
+        final badgeBytesList = <Uint8List>[];
+        final badgeConfigs = <Map<String, dynamic>>[];
+        if (hasMultipleBadges) {
+          double cumVStart = 0.0;
+          for (int v = 0; v < verses.length; v++) {
+            final verseUnits = unitConfigs.where((u) => u['verseIndex'] == v).toList();
+            double vDur = 0.0;
+            for (final u in verseUnits) {
+              vDur += (u['durSec'] as double);
+            }
+            final badgeBytes = await _overlayGenerator.generateSurahBadgeOverlayPng(
+              config: config,
+              verse: verses[v],
+            );
+            if (badgeBytes != null) {
+              badgeBytesList.add(badgeBytes);
+              badgeConfigs.add({
+                'verseIndex': v,
+                'startSec': cumVStart,
+                'durSec': vDur,
+              });
+            }
+            cumVStart += vDur;
+          }
+        }
+
         final formData = html.FormData();
         final jobId = 'web_job_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(999999)}';
         _activeJobId = jobId;
@@ -325,6 +353,7 @@ class VideoExportService implements IVideoExportService {
                       config.customVideoPath!.startsWith('https://')))
               ? config.customVideoPath!
               : null,
+          'badgeConfigs': badgeConfigs,
           'unitConfigs': unitConfigs.map((u) => {
             'verseNumber': u['verseNumber'],
             'lineIndex': u['lineIndex'],
@@ -338,6 +367,10 @@ class VideoExportService implements IVideoExportService {
         formData.append('jobId', jobId);
         formData.append('metadata', jsonEncode(metadataPayload));
         formData.appendBlob('base_frame', html.Blob([baseFrameBytes], baseFrameMime), 'base_frame.$baseFrameExt');
+
+        for (int b = 0; b < badgeBytesList.length; b++) {
+          formData.appendBlob('badge_unit_$b', html.Blob([badgeBytesList[b]], 'image/png'), 'badge_unit_$b.png');
+        }
 
         if (hasCustomVideo &&
             (config.customVideoPath!.startsWith('blob:') ||

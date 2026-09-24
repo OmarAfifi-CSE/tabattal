@@ -169,7 +169,7 @@ class VideoFullscreenPreviewModal extends StatelessWidget {
                                 child: CustomPaint(
                                   painter: VideoStaticFramePainter(
                                     config: config,
-                                    verse: verse,
+                                    verse: state.currentVerse ?? verse,
                                     includeBackground: config.backgroundType != VideoBackgroundType.customVideo,
                                   ),
                                 ),

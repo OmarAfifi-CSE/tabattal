@@ -108,6 +108,7 @@ class CanvasOverlayGenerator {
     required VideoProjectConfig config,
     VerseModel? verse,
     bool includeBackground = true,
+    bool includeSurahBadge = true,
   }) async {
     final int width = config.aspectRatio.getTargetWidth(config.videoQuality);
     final int height = config.aspectRatio.getTargetHeight(config.videoQuality);
@@ -126,7 +127,31 @@ class CanvasOverlayGenerator {
       config: config,
       verse: verse,
       includeBackground: includeBackground,
+      includeSurahBadge: includeSurahBadge,
     );
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(width, height);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    return byteData?.buffer.asUint8List();
+  }
+
+  /// Generates a transparent overlay PNG containing ONLY the Surah & Ayah badge.
+  /// Used for multi-verse video exports so the badge updates instantly at Ayah
+  /// boundaries without any fade/cross-dissolve animations, matching the preview.
+  Future<Uint8List?> generateSurahBadgeOverlayPng({
+    required VideoProjectConfig config,
+    required VerseModel verse,
+  }) async {
+    if (!config.showSurahBadge) return null;
+    final int width = config.aspectRatio.getTargetWidth(config.videoQuality);
+    final int height = config.aspectRatio.getTargetHeight(config.videoQuality);
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()));
+    final baseScale = min(width, height).toDouble();
+
+    _drawSurahBadge(canvas, width.toDouble(), height.toDouble(), config, verse, baseScale);
 
     final picture = recorder.endRecording();
     final image = await picture.toImage(width, height);
@@ -314,7 +339,7 @@ class CanvasOverlayGenerator {
     final hasTafsir = (config.showTafsir && (tafsirText ?? verse.tafsir) != null && (tafsirText ?? verse.tafsir)!.isNotEmpty);
     final hasTranslation = (config.showEnglishTranslation && (translationText ?? verse.translation) != null && (translationText ?? verse.translation)!.isNotEmpty);
 
-    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.backgroundType.name}_${config.textDisplayMode.name}_${config.languageCode}_${hasTafsir}_${hasTranslation}_${config.showCardFrame}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}_${overrideLineIndex ?? 0}_${width.round()}_${height.round()}';
+    final cacheKey = '${verse.verseKey}_${config.themePreset.id}_${config.aspectRatio.name}_${config.backgroundType.name}_${config.textDisplayMode.name}_${config.languageCode}_${hasTafsir}_${hasTranslation}_${config.showCardFrame}_${config.showSurahBadge}_${config.customImagePath ?? "no_img"}_${config.customVideoPath ?? "no_vid"}_${config.backgroundDimming}_${overrideLineIndex ?? 0}_${width.round()}_${height.round()}';
 
     final cached = _dynamicLayoutCache[cacheKey];
     final double totalContentHeight = cached?.totalContentHeight ?? (height * 0.35);
@@ -436,6 +461,7 @@ class CanvasOverlayGenerator {
     required VideoProjectConfig config,
     VerseModel? verse,
     bool includeBackground = true,
+    bool includeSurahBadge = true,
   }) {
     final width = size.width;
     final height = size.height;
@@ -447,7 +473,10 @@ class CanvasOverlayGenerator {
       _drawCardFrameAndOrnaments(canvas, width, height, config, baseScale);
     }
 
-    _drawHeaderBadges(canvas, width, height, config, verse, baseScale);
+    if (includeSurahBadge) {
+      _drawSurahBadge(canvas, width, height, config, verse, baseScale);
+    }
+    _drawReciterBadge(canvas, width, height, config, baseScale);
     _drawFooterBrand(canvas, width, height, config, baseScale);
   }
 
@@ -698,7 +727,7 @@ class CanvasOverlayGenerator {
     );
   }
 
-  static void _drawHeaderBadges(
+  static void _drawSurahBadge(
     Canvas canvas,
     double width,
     double height,
@@ -706,14 +735,13 @@ class CanvasOverlayGenerator {
     VerseModel? verse,
     double baseScale,
   ) {
-    if (!config.showSurahBadge && !config.showReciterName) return;
+    if (!config.showSurahBadge) return;
 
     final theme = config.themePreset;
     final isEn = config.isEnglish;
     final isId = config.isIndonesian;
     final langCode = config.languageCode;
     final surahName = QuranMetadata.getSurahNameForLocale(langCode, config.surahNumber);
-    final reciterName = ReciterCatalog.localizeForLocale(langCode, config.reciterName);
 
     final double cardMarginV = config.aspectRatio == VideoAspectRatio.portrait9x16
         ? height * 0.122
@@ -724,123 +752,112 @@ class CanvasOverlayGenerator {
             ? cardMarginV + (height * 0.100)
             : cardMarginV + (height * 0.088));
 
+    final bool hasCustomMedia = _hasCustomMedia(config);
+    final bool isFramelessCustom = hasCustomMedia && !config.showCardFrame;
+    final Color badgeAccentColor = _resolveAccentColor(config);
+
+    final ayahNum = verse?.verseNumber ?? config.startAyah;
+    final String surahText;
+    if (isId) {
+      surahText = 'Surah $surahName • Ayat $ayahNum';
+    } else if (isEn) {
+      surahText = 'Surah $surahName • Ayah $ayahNum';
+    } else {
+      final arabicAyahNum = VerseCardTextUtils.toArabicDigits(ayahNum);
+      surahText = 'سورة $surahName • الآية $arabicAyahNum';
+    }
+
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: surahText,
+        style: TextStyle(
+          color: isFramelessCustom ? badgeAccentColor : theme.accentColor,
+          fontSize: baseScale * 0.026,
+          fontWeight: FontWeight.w600,
+          fontFamily: (isEn || isId) ? null : 'Amiri',
+        ),
+      ),
+      textDirection: (isEn || isId) ? TextDirection.ltr : TextDirection.rtl,
+      textAlign: TextAlign.center,
+    )..layout();
+
+    // Proportions matching VerseCard generator (generous padding & rounded pill border)
+    final badgeW = textPainter.width + (baseScale * 0.08);
+    final badgeH = textPainter.height + (baseScale * 0.024);
+    final badgeRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(width / 2, surahCenterY),
+        width: badgeW,
+        height: badgeH,
+      ),
+      Radius.circular(badgeH / 2),
+    );
+
+    final badgePaint = Paint()
+      ..color = isFramelessCustom
+          ? badgeAccentColor.withValues(alpha: 0.16)
+          : theme.accentColor.withValues(alpha: 0.15);
+    final borderPaint = Paint()
+      ..color = isFramelessCustom
+          ? badgeAccentColor.withValues(alpha: 0.45)
+          : theme.accentColor.withValues(alpha: 0.40)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = baseScale * 0.002;
+
+    canvas.drawRRect(badgeRect, badgePaint);
+    canvas.drawRRect(badgeRect, borderPaint);
+
+    textPainter.paint(
+      canvas,
+      Offset((width - textPainter.width) / 2, surahCenterY - (textPainter.height / 2)),
+    );
+  }
+
+  static void _drawReciterBadge(
+    Canvas canvas,
+    double width,
+    double height,
+    VideoProjectConfig config,
+    double baseScale,
+  ) {
+    if (!config.showReciterName) return;
+
+    final isEn = config.isEnglish;
+    final isId = config.isIndonesian;
+    final langCode = config.languageCode;
+    final reciterName = ReciterCatalog.localizeForLocale(langCode, config.reciterName);
+
+    final double cardMarginV = config.aspectRatio == VideoAspectRatio.portrait9x16
+        ? height * 0.122
+        : height * 0.05;
     final double reciterCenterY = config.aspectRatio == VideoAspectRatio.landscape16x9
         ? cardMarginV + (height * 0.165)
         : (config.aspectRatio == VideoAspectRatio.square1x1
             ? cardMarginV + (height * 0.160)
             : cardMarginV + (height * 0.138));
 
-    final bool hasCustomMedia = _hasCustomMedia(config);
-    final bool isFramelessCustom = hasCustomMedia && !config.showCardFrame;
-    final Color badgeAccentColor = _resolveAccentColor(config);
-
-    if (config.showSurahBadge) {
-      final bool isLineByLine = config.textDisplayMode == VideoTextDisplayMode.lineByLine;
-      final String surahText;
-      if (isLineByLine) {
-        final ayahNum = verse?.verseNumber ?? config.startAyah;
-        if (isId) {
-          surahText = 'Surah $surahName • Ayat $ayahNum';
-        } else if (isEn) {
-          surahText = 'Surah $surahName • Ayah $ayahNum';
-        } else {
-          final arabicAyahNum = VerseCardTextUtils.toArabicDigits(ayahNum);
-          surahText = 'سورة $surahName • الآية $arabicAyahNum';
-        }
-      } else {
-        if (config.startAyah == config.endAyah) {
-          if (isId) {
-            surahText = 'Surah $surahName • Ayat ${config.startAyah}';
-          } else if (isEn) {
-            surahText = 'Surah $surahName • Ayah ${config.startAyah}';
-          } else {
-            final arabicAyahNum = VerseCardTextUtils.toArabicDigits(config.startAyah);
-            surahText = 'سورة $surahName • الآية $arabicAyahNum';
-          }
-        } else {
-          if (isId) {
-            surahText = 'Surah $surahName • Ayat ${config.startAyah}-${config.endAyah}';
-          } else if (isEn) {
-            surahText = 'Surah $surahName • Ayahs ${config.startAyah}-${config.endAyah}';
-          } else {
-            final startArabic = VerseCardTextUtils.toArabicDigits(config.startAyah);
-            final endArabic = VerseCardTextUtils.toArabicDigits(config.endAyah);
-            surahText = 'سورة $surahName • الآيات ($startArabic - $endArabic)';
-          }
-        }
-      }
-
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: surahText,
-          style: TextStyle(
-            color: isFramelessCustom ? badgeAccentColor : theme.accentColor,
-            fontSize: baseScale * 0.026,
-            fontWeight: FontWeight.w600,
-            fontFamily: (isEn || isId) ? null : 'Amiri',
-          ),
+    final textColors = _resolveTextColors(config);
+    final reciterText = isId
+        ? 'Qari: $reciterName'
+        : (isEn ? 'Recited by: $reciterName' : 'بصوت القارئ: $reciterName');
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: reciterText,
+        style: TextStyle(
+          color: textColors.secondaryTextColor,
+          fontSize: baseScale * 0.023,
+          fontWeight: FontWeight.w600,
+          fontFamily: (isEn || isId) ? null : 'Amiri',
         ),
-        textDirection: (isEn || isId) ? TextDirection.ltr : TextDirection.rtl,
-        textAlign: TextAlign.center,
-      )..layout();
+      ),
+      textDirection: (isEn || isId) ? TextDirection.ltr : TextDirection.rtl,
+      textAlign: TextAlign.center,
+    )..layout(maxWidth: width * 0.85);
 
-      // Proportions matching VerseCard generator (generous padding & rounded pill border)
-      final badgeW = textPainter.width + (baseScale * 0.08);
-      final badgeH = textPainter.height + (baseScale * 0.024);
-      final badgeRect = RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(width / 2, surahCenterY),
-          width: badgeW,
-          height: badgeH,
-        ),
-        Radius.circular(badgeH / 2),
-      );
-
-      final badgePaint = Paint()
-        ..color = isFramelessCustom
-            ? badgeAccentColor.withValues(alpha: 0.16)
-            : theme.accentColor.withValues(alpha: 0.15);
-      final borderPaint = Paint()
-        ..color = isFramelessCustom
-            ? badgeAccentColor.withValues(alpha: 0.45)
-            : theme.accentColor.withValues(alpha: 0.40)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = baseScale * 0.002;
-
-      canvas.drawRRect(badgeRect, badgePaint);
-      canvas.drawRRect(badgeRect, borderPaint);
-
-      textPainter.paint(
-        canvas,
-        Offset((width - textPainter.width) / 2, surahCenterY - (textPainter.height / 2)),
-      );
-    }
-
-    // Reciter Name
-    if (config.showReciterName) {
-      final textColors = _resolveTextColors(config);
-      final reciterText = isId
-          ? 'Qari: $reciterName'
-          : (isEn ? 'Recited by: $reciterName' : 'بصوت القارئ: $reciterName');
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: reciterText,
-          style: TextStyle(
-            color: textColors.secondaryTextColor,
-            fontSize: baseScale * 0.023,
-            fontWeight: FontWeight.w600,
-            fontFamily: (isEn || isId) ? null : 'Amiri',
-          ),
-        ),
-        textDirection: (isEn || isId) ? TextDirection.ltr : TextDirection.rtl,
-        textAlign: TextAlign.center,
-      )..layout(maxWidth: width * 0.85);
-
-      textPainter.paint(
-        canvas,
-        Offset((width - textPainter.width) / 2, reciterCenterY - (textPainter.height / 2)),
-      );
-    }
+    textPainter.paint(
+      canvas,
+      Offset((width - textPainter.width) / 2, reciterCenterY - (textPainter.height / 2)),
+    );
   }
 
   static void _drawCenterContent(

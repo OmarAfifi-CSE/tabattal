@@ -87,8 +87,9 @@ class VideoStaticFramePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant VideoStaticFramePainter oldDelegate) {
     return oldDelegate.config != config ||
-        oldDelegate.verse != verse ||
-        oldDelegate.includeBackground != includeBackground;
+        oldDelegate.includeBackground != includeBackground ||
+        oldDelegate.verse?.verseNumber != verse?.verseNumber ||
+        oldDelegate.verse?.surahNumber != verse?.surahNumber;
   }
 }
 

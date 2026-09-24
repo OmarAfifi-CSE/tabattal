@@ -475,6 +475,7 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
     const endAyah = parseInt(metadata.endAyah || 1, 10);
     const reciterPath = metadata.reciterPath || 'Minshawy_Murattal_128kbps';
     const unitConfigs = metadata.unitConfigs || [];
+    const badgeConfigs = Array.isArray(metadata.badgeConfigs) ? metadata.badgeConfigs : [];
     const crf = Math.min(Math.max(parseInt(metadata.crf || 22, 10), 16), 32);
 
     // Security constraints
@@ -728,6 +729,16 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
       ffmpegArgs.push('-stream_loop', '-1', '-i', customVideoDest);
       ffmpegArgs.push('-loop', '1', '-t', cumulativeStartSec.toFixed(3), '-framerate', '30', '-i', baseFrameDest);
 
+      for (let b = 0; b < badgeConfigs.length; b++) {
+        const badgeSrc = fileMap[`badge_unit_${b}`];
+        if (badgeSrc && fs.existsSync(badgeSrc)) {
+          const badgeDest = path.join(sessionDir, `badge_unit_${b}.png`);
+          fs.copyFileSync(badgeSrc, badgeDest);
+          const durSec = parseFloat(badgeConfigs[b].durSec);
+          ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', badgeDest);
+        }
+      }
+
       for (let u = 0; u < unitConfigs.length; u++) {
         const overlaySrc = fileMap[`overlay_unit_${u}`];
         if (!overlaySrc || !fs.existsSync(overlaySrc)) {
@@ -743,6 +754,15 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
       filterChains.push(`[bg][1:v]overlay=0:0[canvas0]`);
       let currentCanvas = 'canvas0';
 
+      for (let b = 0; b < badgeConfigs.length; b++) {
+        const bStart = parseFloat(badgeConfigs[b].startSec);
+        const bDur = parseFloat(badgeConfigs[b].durSec);
+        const bEnd = (b === badgeConfigs.length - 1) ? (bStart + bDur) : (bStart + bDur - 0.001);
+        const nextBadgeCanvas = `canvas_b${b + 1}`;
+        filterChains.push(`[${currentCanvas}][${b + 2}:v]overlay=0:0:enable='between(t,${bStart.toFixed(3)},${bEnd.toFixed(3)})'[${nextBadgeCanvas}]`);
+        currentCanvas = nextBadgeCanvas;
+      }
+
       for (let u = 0; u < unitConfigs.length; u++) {
         const segStart = unitConfigs[u].globalStartSec;
         const durSec = parseFloat(unitConfigs[u].durSec);
@@ -750,15 +770,26 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
         const fadeDur = 0.30;
         const safeFade = Math.min(Math.max(fadeDur, 0.05), durSec * 0.20);
         const fadeOutStart = Math.min(Math.max(durSec - safeFade, 0.08), durSec);
-        const nextCanvas = (u === unitConfigs.length - 1) ? 'v' : `canvas${u + 1}`;
+        const nextCanvas = (u === unitConfigs.length - 1) ? 'v' : `canvas_t${u + 1}`;
         const cropY = Math.max(0, parseInt(unitConfigs[u].cropY || 0, 10));
+        const inputIdx = 2 + badgeConfigs.length + u;
 
-        filterChains.push(`[${u + 2}:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toFixed(3)}/TB[ov${u}]`);
+        filterChains.push(`[${inputIdx}:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toFixed(3)}/TB[ov${u}]`);
         filterChains.push(`[${currentCanvas}][ov${u}]overlay=0:${cropY}:enable='between(t,${segStart.toFixed(3)},${segEnd.toFixed(3)})'[${nextCanvas}]`);
         currentCanvas = nextCanvas;
       }
     } else {
       ffmpegArgs.push('-loop', '1', '-t', cumulativeStartSec.toFixed(3), '-framerate', '30', '-i', baseFrameDest);
+
+      for (let b = 0; b < badgeConfigs.length; b++) {
+        const badgeSrc = fileMap[`badge_unit_${b}`];
+        if (badgeSrc && fs.existsSync(badgeSrc)) {
+          const badgeDest = path.join(sessionDir, `badge_unit_${b}.png`);
+          fs.copyFileSync(badgeSrc, badgeDest);
+          const durSec = parseFloat(badgeConfigs[b].durSec);
+          ffmpegArgs.push('-loop', '1', '-t', durSec.toFixed(3), '-framerate', '30', '-i', badgeDest);
+        }
+      }
 
       for (let u = 0; u < unitConfigs.length; u++) {
         const overlaySrc = fileMap[`overlay_unit_${u}`];
@@ -772,6 +803,15 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
       }
 
       let currentCanvas = '0:v';
+      for (let b = 0; b < badgeConfigs.length; b++) {
+        const bStart = parseFloat(badgeConfigs[b].startSec);
+        const bDur = parseFloat(badgeConfigs[b].durSec);
+        const bEnd = (b === badgeConfigs.length - 1) ? (bStart + bDur) : (bStart + bDur - 0.001);
+        const nextBadgeCanvas = `canvas_b${b + 1}`;
+        filterChains.push(`[${currentCanvas}][${b + 1}:v]overlay=0:0:enable='between(t,${bStart.toFixed(3)},${bEnd.toFixed(3)})'[${nextBadgeCanvas}]`);
+        currentCanvas = nextBadgeCanvas;
+      }
+
       for (let u = 0; u < unitConfigs.length; u++) {
         const segStart = unitConfigs[u].globalStartSec;
         const durSec = parseFloat(unitConfigs[u].durSec);
@@ -779,10 +819,11 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
         const fadeDur = 0.30;
         const safeFade = Math.min(Math.max(fadeDur, 0.05), durSec * 0.20);
         const fadeOutStart = Math.min(Math.max(durSec - safeFade, 0.08), durSec);
-        const nextCanvas = (u === unitConfigs.length - 1) ? 'v' : `canvas${u + 1}`;
+        const nextCanvas = (u === unitConfigs.length - 1) ? 'v' : `canvas_t${u + 1}`;
         const cropY = Math.max(0, parseInt(unitConfigs[u].cropY || 0, 10));
+        const inputIdx = 1 + badgeConfigs.length + u;
 
-        filterChains.push(`[${u + 1}:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toFixed(3)}/TB[ov${u}]`);
+        filterChains.push(`[${inputIdx}:v]fade=t=in:st=0:d=${safeFade.toFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toFixed(2)}:d=${safeFade.toFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toFixed(3)}/TB[ov${u}]`);
         filterChains.push(`[${currentCanvas}][ov${u}]overlay=0:${cropY}:enable='between(t,${segStart.toFixed(3)},${segEnd.toFixed(3)})'[${nextCanvas}]`);
         currentCanvas = nextCanvas;
       }
@@ -790,7 +831,7 @@ app.post('/api/export-video', handleVideoUpload, async (req, res) => {
 
     // Audio Input Integration
     const hasAudio = validAudioFiles.length > 0;
-    const audioInputIndex = isCustom ? unitConfigs.length + 2 : unitConfigs.length + 1;
+    const audioInputIndex = isCustom ? unitConfigs.length + badgeConfigs.length + 2 : unitConfigs.length + badgeConfigs.length + 1;
     if (hasAudio) {
       if (validAudioFiles.length === 1) {
         ffmpegArgs.push('-i', validAudioFiles[0]);

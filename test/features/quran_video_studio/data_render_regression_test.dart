@@ -66,4 +66,63 @@ void main() {
     final warm = (await generator.generateVerseOverlayCrop(verse: verse, config: config, pageNumber: 48))!;
     expect(cold.cropHeight, warm.cropHeight, reason: 'cold=${cold.cropHeight} at ${cold.cropY}; warm=${warm.cropHeight} at ${warm.cropY}');
   });
+  test('Dynamic content bounds quarantine center text and exclude badge area', () {
+    const configWithBadge = VideoProjectConfig(
+      surahNumber: 1,
+      startAyah: 1,
+      endAyah: 7,
+      showSurahBadge: true,
+      aspectRatio: VideoAspectRatio.portrait9x16,
+    );
+    final verse = VerseModel(
+      id: 1,
+      verseNumber: 1,
+      verseKey: '1:1',
+      juzNumber: 1,
+      textUthmani: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+      words: const [],
+    );
+    const size = Size(1080, 1920);
+    final bounds = CanvasOverlayGenerator.computeDynamicContentBounds(
+      size,
+      verse: verse,
+      config: configWithBadge,
+      pageNumber: 1,
+    );
+
+    // Dynamic content is quarantined to the card center and does not stretch to the top badge
+    expect(bounds.top, greaterThanOrEqualTo(1920 * 0.25));
+  });
+  test('generateSurahBadgeOverlayPng generates distinct non-fading overlays for different ayahs', () async {
+    const config = VideoProjectConfig(
+      surahNumber: 1,
+      startAyah: 1,
+      endAyah: 2,
+      showSurahBadge: true,
+      aspectRatio: VideoAspectRatio.portrait9x16,
+      videoQuality: VideoQuality.hd720p,
+    );
+    final verse1 = VerseModel(
+      id: 1,
+      verseNumber: 1,
+      verseKey: '1:1',
+      juzNumber: 1,
+      textUthmani: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+      words: const [],
+    );
+    final verse2 = VerseModel(
+      id: 2,
+      verseNumber: 2,
+      verseKey: '1:2',
+      juzNumber: 1,
+      textUthmani: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
+      words: const [],
+    );
+    const generator = CanvasOverlayGenerator();
+    final badge1 = (await generator.generateSurahBadgeOverlayPng(config: config, verse: verse1))!;
+    final badge2 = (await generator.generateSurahBadgeOverlayPng(config: config, verse: verse2))!;
+    expect(badge1, isNot(equals(badge2)));
+    expect(badge1.length, greaterThan(0));
+    expect(badge2.length, greaterThan(0));
+  });
 }

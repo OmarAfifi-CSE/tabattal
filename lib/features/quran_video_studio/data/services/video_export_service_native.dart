@@ -197,10 +197,12 @@ class VideoExportService implements IVideoExportService {
             File(config.customVideoPath!).existsSync();
 
         // Phase 2: Generating HD Base Frame and Transparent Overlays
+        final bool hasMultipleBadges = verses.length > 1 && config.showSurahBadge;
         final baseFrameBytes = await _overlayGenerator.generateStaticBaseFramePng(
           config: config,
           verse: verses.first,
           includeBackground: !isCustomVideo,
+          includeSurahBadge: !hasMultipleBadges,
         );
         if (baseFrameBytes == null) {
           throw Exception(config.isIndonesian
@@ -339,6 +341,38 @@ class VideoExportService implements IVideoExportService {
         totalUnits = unitConfigs.length;
         final totalDurationSec = unitConfigs.fold<double>(0.0, (sum, u) => sum + (u['durSec'] as double));
 
+        final verseStarts = <double>[];
+        final verseDurs = <double>[];
+        for (int v = 0; v < verses.length; v++) {
+          final verseUnits = unitConfigs.where((u) => u['verseIndex'] == v).toList();
+          double vDur = 0.0;
+          for (final u in verseUnits) {
+            vDur += (u['durSec'] as double);
+          }
+          verseDurs.add(vDur);
+        }
+        double cumVStart = 0.0;
+        for (int v = 0; v < verses.length; v++) {
+          verseStarts.add(cumVStart);
+          cumVStart += verseDurs[v];
+        }
+
+        final badgeOverlayPaths = <String>[];
+        if (hasMultipleBadges) {
+          for (int v = 0; v < verses.length; v++) {
+            final badgeBytes = await _overlayGenerator.generateSurahBadgeOverlayPng(
+              config: config,
+              verse: verses[v],
+            );
+            if (badgeBytes != null) {
+              final badgeFile = File('${sessionDir.path}/badge_overlay_$v.png');
+              await badgeFile.writeAsBytes(badgeBytes);
+              badgeOverlayPaths.add(badgeFile.path.replaceAll(r'\', '/'));
+            }
+          }
+        }
+        final effectiveBadgeCount = badgeOverlayPaths.length;
+
         // Phase 2: Generating HD Base Frame and Parallel Full-Frame Transparent Overlays (15% -> 30%)
         controller.add(VideoRenderProgress(
           phase: VideoRenderPhase.generatingOverlays,
@@ -452,6 +486,11 @@ class VideoExportService implements IVideoExportService {
           ffmpegArgs.addAll(['-stream_loop', '-1', '-i', bgVideoPath]);
           ffmpegArgs.addAll(['-loop', '1', '-t', totalDurationStr, '-framerate', '30', '-i', baseFramePath]);
 
+          for (int v = 0; v < effectiveBadgeCount; v++) {
+            final durSec = verseDurs[v].toStringAsFixed(3);
+            ffmpegArgs.addAll(['-loop', '1', '-t', durSec, '-framerate', '30', '-i', badgeOverlayPaths[v]]);
+          }
+
           for (int u = 0; u < totalUnits; u++) {
             final durSec = (unitConfigs[u]['durSec'] as double).toStringAsFixed(3);
             ffmpegArgs.addAll(['-loop', '1', '-t', durSec, '-framerate', '30', '-i', overlayPaths[u]]);
@@ -462,6 +501,16 @@ class VideoExportService implements IVideoExportService {
           filterChains.add('[bg][1:v]overlay=0:0[canvas0]');
           var currentCanvas = 'canvas0';
 
+          for (int v = 0; v < effectiveBadgeCount; v++) {
+            final vStart = verseStarts[v];
+            final vEnd = (v == effectiveBadgeCount - 1)
+                ? (vStart + verseDurs[v])
+                : (vStart + verseDurs[v] - 0.001);
+            final nextBadgeCanvas = 'canvas_b${v + 1}';
+            filterChains.add('[$currentCanvas][${v + 2}:v]overlay=0:0:enable=\'between(t,${vStart.toStringAsFixed(3)},${vEnd.toStringAsFixed(3)})\'[$nextBadgeCanvas]');
+            currentCanvas = nextBadgeCanvas;
+          }
+
           double cumStart = 0.0;
           for (int u = 0; u < totalUnits; u++) {
             final durSec = unitConfigs[u]['durSec'] as double;
@@ -472,15 +521,21 @@ class VideoExportService implements IVideoExportService {
             const fadeDur = 0.30;
             final safeFade = fadeDur.clamp(0.05, durSec * 0.20);
             final fadeOutStart = (durSec - safeFade).clamp(0.08, durSec);
-            final nextCanvas = (u == totalUnits - 1) ? 'v' : 'canvas${u + 1}';
+            final nextCanvas = (u == totalUnits - 1) ? 'v' : 'canvas_t${u + 1}';
             final cropY = unitConfigs[u]['cropY'] as int? ?? 0;
+            final inputIdx = 2 + effectiveBadgeCount + u;
 
-            filterChains.add('[${u + 2}:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toStringAsFixed(3)}/TB[ov$u]');
+            filterChains.add('[$inputIdx:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toStringAsFixed(3)}/TB[ov$u]');
             filterChains.add('[$currentCanvas][ov$u]overlay=0:$cropY:enable=\'between(t,${segStart.toStringAsFixed(3)},${segEnd.toStringAsFixed(3)})\'[$nextCanvas]');
             currentCanvas = nextCanvas;
           }
         } else {
           ffmpegArgs.addAll(['-loop', '1', '-t', totalDurationStr, '-framerate', '30', '-i', baseFramePath]);
+
+          for (int v = 0; v < effectiveBadgeCount; v++) {
+            final durSec = verseDurs[v].toStringAsFixed(3);
+            ffmpegArgs.addAll(['-loop', '1', '-t', durSec, '-framerate', '30', '-i', badgeOverlayPaths[v]]);
+          }
 
           for (int u = 0; u < totalUnits; u++) {
             final durSec = (unitConfigs[u]['durSec'] as double).toStringAsFixed(3);
@@ -488,6 +543,17 @@ class VideoExportService implements IVideoExportService {
           }
 
           var currentCanvas = '0:v';
+
+          for (int v = 0; v < effectiveBadgeCount; v++) {
+            final vStart = verseStarts[v];
+            final vEnd = (v == effectiveBadgeCount - 1)
+                ? (vStart + verseDurs[v])
+                : (vStart + verseDurs[v] - 0.001);
+            final nextBadgeCanvas = 'canvas_b${v + 1}';
+            filterChains.add('[$currentCanvas][${v + 1}:v]overlay=0:0:enable=\'between(t,${vStart.toStringAsFixed(3)},${vEnd.toStringAsFixed(3)})\'[$nextBadgeCanvas]');
+            currentCanvas = nextBadgeCanvas;
+          }
+
           double cumStart = 0.0;
           for (int u = 0; u < totalUnits; u++) {
             final durSec = unitConfigs[u]['durSec'] as double;
@@ -498,10 +564,11 @@ class VideoExportService implements IVideoExportService {
             const fadeDur = 0.30;
             final safeFade = fadeDur.clamp(0.05, durSec * 0.20);
             final fadeOutStart = (durSec - safeFade).clamp(0.08, durSec);
-            final nextCanvas = (u == totalUnits - 1) ? 'v' : 'canvas${u + 1}';
+            final nextCanvas = (u == totalUnits - 1) ? 'v' : 'canvas_t${u + 1}';
             final cropY = unitConfigs[u]['cropY'] as int? ?? 0;
+            final inputIdx = 1 + effectiveBadgeCount + u;
 
-            filterChains.add('[${u + 1}:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toStringAsFixed(3)}/TB[ov$u]');
+            filterChains.add('[$inputIdx:v]fade=t=in:st=0:d=${safeFade.toStringAsFixed(2)}:alpha=1,fade=t=out:st=${fadeOutStart.toStringAsFixed(2)}:d=${safeFade.toStringAsFixed(2)}:alpha=1,setpts=PTS-STARTPTS+${segStart.toStringAsFixed(3)}/TB[ov$u]');
             filterChains.add('[$currentCanvas][ov$u]overlay=0:$cropY:enable=\'between(t,${segStart.toStringAsFixed(3)},${segEnd.toStringAsFixed(3)})\'[$nextCanvas]');
             currentCanvas = nextCanvas;
           }
@@ -509,7 +576,7 @@ class VideoExportService implements IVideoExportService {
 
         // Audio Input
         final hasAudio = validAudioFiles.isNotEmpty;
-        final audioInputIndex = isCustomVideo ? totalUnits + 2 : totalUnits + 1;
+        final audioInputIndex = isCustomVideo ? totalUnits + effectiveBadgeCount + 2 : totalUnits + effectiveBadgeCount + 1;
         if (hasAudio) {
           if (validAudioFiles.length == 1) {
             ffmpegArgs.addAll(['-i', validAudioFiles.first]);
