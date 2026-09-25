@@ -55,13 +55,20 @@ Because the App does not collect any personal information and contains no advert
 
 ---
 
-### 7. Changes to This Privacy Policy
+### 7. Third-Party Content & Audio Recitations Disclaimer
+
+- **Quranic Audio Content:** Tabattal does not claim ownership of any Quranic audio recitations available within the App. All recitation streams and audio downloads are retrieved from publicly accessible, open-access Quranic archives and APIs (such as EveryAyah and MP3Quran) strictly for religious, educational, and non-commercial benefit. All master recording and vocal performance rights belong entirely to their respective reciters, estates, and original recording producers.
+- **Media Studio & Social Media Publishing:** Users utilizing the **Quran Video Studio**, **Verse Card Designer**, or any media export tools are solely responsible for how and where they publish, share, or monetize their rendered media. Certain recitations may be subject to third-party digital distribution agreements or automated platform policies (such as YouTube Content ID or Meta Rights Manager). Tabattal accepts no liability for claims, copyright strikes, or platform-level restrictions resulting from users publicly redistributing exported content on external platforms.
+
+---
+
+### 8. Changes to This Privacy Policy
 
 I may update this Privacy Policy from time to time to reflect new features or regulatory requirements. Any updates will be published in the App's official repository. Your continued use of the App following any changes indicates your acceptance of the updated policy.
 
 ---
 
-### 8. Contact Us
+### 9. Contact Us
 
 If you have any questions, suggestions, or concerns regarding this Privacy Policy or the App, please feel free to reach out:
 
