@@ -86,6 +86,7 @@ class VideoExportService implements IVideoExportService {
     _isCancelled = false;
 
     () async {
+      Timer? serverProgressPollTimer;
       try {
         // Phase 1: Preparing timings and calculating layout (0% -> 15%)
         controller.add(const VideoRenderProgress(
@@ -471,7 +472,7 @@ class VideoExportService implements IVideoExportService {
         request.responseType = 'blob';
         request.timeout = 900000; // 15 minutes timeout to ensure slow uploads complete successfully
 
-        Timer? serverProgressPollTimer;
+        serverProgressPollTimer = null;
         bool serverPollingStarted = false;
 
 
@@ -505,7 +506,7 @@ class VideoExportService implements IVideoExportService {
               final pollReq = html.HttpRequest();
               pollReq.open('GET', progressUrl);
               pollReq.send();
-              await pollReq.onLoad.first;
+              await pollReq.onLoadEnd.first.timeout(const Duration(seconds: 3));
               if (pollReq.status == 200 && pollReq.responseText != null && pollReq.responseText!.isNotEmpty) {
                 final data = jsonDecode(pollReq.responseText!) as Map<String, dynamic>;
                 if (data['status'] == 'encoding') {
@@ -695,6 +696,7 @@ class VideoExportService implements IVideoExportService {
           errorMessage: errorText,
         ));
       } finally {
+        serverProgressPollTimer?.cancel();
         _activeRequest = null;
         await controller.close();
       }

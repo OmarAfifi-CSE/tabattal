@@ -233,7 +233,7 @@ async def get_progress(job_id: str, request: Request):
     data = local_progress_store.get(job_id)
     if not data and progress_store is not None:
         try:
-            data = progress_store.get(job_id)
+            data = await progress_store.get.aio(job_id)
         except Exception:
             pass
     if data:
@@ -260,7 +260,7 @@ async def cancel_export(job_id: str, request: Request):
     local_progress_store.pop(job_id, None)
     if progress_store is not None:
         try:
-            del progress_store[job_id]
+            await progress_store.pop.aio(job_id, None)
         except Exception:
             pass
     return JSONResponse(content={"status": "cancelled", "jobId": job_id}, headers=cors)
@@ -313,6 +313,8 @@ async def handle_export_video(request: Request) -> Response:
             end_ayah = int(metadata.get("endAyah", 1))
             reciter_path = str(metadata.get("reciterPath", "Minshawy_Murattal_128kbps")).strip()
             unit_configs: List[dict] = metadata.get("unitConfigs", [])
+            badge_configs: List[dict] = metadata.get("badgeConfigs", [])
+            tafsir_configs: List[dict] = metadata.get("tafsirConfigs", [])
             initial_est_dur = sum(float(u.get("durSec", 4.0)) for u in unit_configs) if unit_configs else 30.0
             init_payload = {
                 "status": "encoding",
@@ -454,6 +456,21 @@ async def handle_export_video(request: Request) -> Response:
                             audio_map[v_num] = {"path": a_dest, "duration": dur}
                             valid_audio_files.append(a_dest)
 
+            # Ensure every verse has its audio file; missing audio would silently desynchronize later ayahs
+            missing_verses = [v for v in distinct_verses if v not in audio_map]
+            if missing_verses:
+                missing_v = missing_verses[0]
+                return JSONResponse(
+                    status_code=502,
+                    content={
+                        "code": "AUDIO_DOWNLOAD_FAILED",
+                        "message": f"Failed to download recitation audio for verse {missing_v} (Surah {surah_num}).",
+                        "messageEn": f"Failed to download recitation audio for verse {missing_v} (Surah {surah_num}).",
+                        "messageAr": f"تعذر تحميل تلاوة الآية {missing_v} (سورة {surah_num}) من السيرفر. يُرجى التحقق من الاتصال وإعادة المحاولة.",
+                    },
+                    headers=cors_headers,
+                )
+
             # 7. Normalize Segment Timings
             units_by_verse: Dict[int, List[dict]] = {}
             for idx, unit in enumerate(unit_configs):
@@ -477,6 +494,19 @@ async def handle_export_video(request: Request) -> Response:
 
             total_duration = max(cumulative_start_sec, 1.0)
 
+            # Re-align dynamic multi-verse badges and tafsir to normalized verse audio timings
+            for b in badge_configs:
+                b_verse = int(b.get("verseNumber", start_ayah + int(b.get("verseIndex", 0))))
+                if b_verse in units_by_verse and units_by_verse[b_verse]:
+                    b["startSec"] = units_by_verse[b_verse][0]["globalStartSec"]
+                    b["durSec"] = sum(float(u["durSec"]) for u in units_by_verse[b_verse])
+
+            for t in tafsir_configs:
+                t_verse = int(t.get("verseNumber", start_ayah + int(t.get("verseIndex", 0))))
+                if t_verse in units_by_verse and units_by_verse[t_verse]:
+                    t["startSec"] = units_by_verse[t_verse][0]["globalStartSec"]
+                    t["durSec"] = sum(float(u["durSec"]) for u in units_by_verse[t_verse])
+
             # Initialize live progress tracking for this export job
             init_payload = {
                 "status": "encoding",
@@ -492,7 +522,23 @@ async def handle_export_video(request: Request) -> Response:
                 except Exception:
                     pass
 
-            # 8. Stream Overlay Frames to disk
+            # 8. Stream Badge, Tafsir, and Overlay Frames to disk
+            badge_paths: List[str] = []
+            for b_idx in range(len(badge_configs)):
+                upload = form.get(f"badge_unit_{b_idx}")
+                if isinstance(upload, UploadFile):
+                    dest = os.path.join(session_dir, f"badge_unit_{b_idx}.png")
+                    await save_upload_stream(upload, dest, max_bytes=20 * 1024 * 1024)
+                    badge_paths.append(dest)
+
+            tafsir_paths: List[str] = []
+            for t_idx in range(len(tafsir_configs)):
+                upload = form.get(f"tafsir_unit_{t_idx}")
+                if isinstance(upload, UploadFile):
+                    dest = os.path.join(session_dir, f"tafsir_unit_{t_idx}.png")
+                    await save_upload_stream(upload, dest, max_bytes=20 * 1024 * 1024)
+                    tafsir_paths.append(dest)
+
             overlay_paths: List[str] = []
             for u_idx in range(len(unit_configs)):
                 upload = form.get(f"overlay_unit_{u_idx}")
@@ -516,25 +562,70 @@ async def handle_export_video(request: Request) -> Response:
             # 9. Build Single-Pass FFmpeg Filter Graph
             # ---------------------------------------------------------------
             output_mp4 = os.path.join(session_dir, "Tabattal_Render_Output.mp4")
-            ffmpeg_args = ["ffmpeg", "-y"]
+            ffmpeg_args = ["ffmpeg", "-y", "-nostdin", "-hide_banner", "-nostats"]
             filter_chains: List[str] = []
 
             if is_custom:
                 ffmpeg_args.extend(["-stream_loop", "-1", "-i", custom_video_path])
                 ffmpeg_args.extend(["-loop", "1", "-t", f"{total_duration:.3f}", "-framerate", "30", "-i", base_frame_path])
+                for b_path in badge_paths:
+                    ffmpeg_args.extend(["-loop", "1", "-t", f"{total_duration:.3f}", "-framerate", "30", "-i", b_path])
+                for idx, t_path in enumerate(tafsir_paths):
+                    dur_sec = float(tafsir_configs[idx].get("durSec", 4.0))
+                    ffmpeg_args.extend(["-loop", "1", "-t", f"{dur_sec:.3f}", "-framerate", "30", "-i", t_path])
                 for idx, o_path in enumerate(overlay_paths):
                     dur_sec = float(unit_configs[idx]["durSec"])
                     ffmpeg_args.extend(["-loop", "1", "-t", f"{dur_sec:.3f}", "-framerate", "30", "-i", o_path])
 
                 # Background scaling, aspect crop, and dimming box
-                filter_chains.append(
-                    f"[0:v]setpts=PTS-STARTPTS,scale={target_width}:{target_height}:force_original_aspect_ratio=increase,"
-                    f"crop={target_width}:{target_height},setsar=1,format=yuv420p,"
-                    f"drawbox=color=black@{bg_dimming:.2f}:t=fill[bg]"
+                dimming = max(0.0, min(0.95, bg_dimming))
+                rgb_mult = max(0.05, min(1.0, 1.0 - dimming))
+                dimming_filter = (
+                    f",colorchannelmixer=rr={rgb_mult:.3f}:gg={rgb_mult:.3f}:bb={rgb_mult:.3f}"
+                    if dimming > 0.001
+                    else ""
                 )
-                filter_chains.append("[bg][1:v]overlay=0:0[canvas0]")
-                current_canvas = "canvas0"
+                filter_chains.append(
+                    f"[0:v]setpts=PTS-STARTPTS,scale={target_width}:{target_height}:force_original_aspect_ratio=increase:flags=lanczos,"
+                    f"crop={target_width}:{target_height},setsar=1,format=rgba{dimming_filter}[bg]"
+                )
+                filter_chains.append("[bg][1:v]overlay=0:0:format=auto[canvas_base]")
+                current_canvas = "canvas_base"
 
+                # Badges
+                for b_idx in range(len(badge_paths)):
+                    b = badge_configs[b_idx]
+                    b_start = float(b.get("startSec", 0.0))
+                    b_dur = float(b.get("durSec", 0.0))
+                    next_canvas = f"canvas_b{b_idx + 1}"
+                    enable_expr = (
+                        f"gte(t,{b_start:.3f})"
+                        if b_idx == len(badge_paths) - 1
+                        else f"gte(t,{b_start:.3f})*lt(t,{(b_start + b_dur):.3f})"
+                    )
+                    badge_inp = 2 + b_idx
+                    filter_chains.append(f"[{current_canvas}][{badge_inp}:v]overlay=0:0:format=auto:enable='{enable_expr}'[{next_canvas}]")
+                    current_canvas = next_canvas
+
+                # Tafsir
+                for t_idx in range(len(tafsir_paths)):
+                    t = tafsir_configs[t_idx]
+                    t_start = float(t.get("startSec", 0.0))
+                    t_dur = float(t.get("durSec", 0.0))
+                    fade_dur = 0.30
+                    safe_fade = max(0.01, min(fade_dur, t_dur * 0.20))
+                    fade_out_start = max(0.0, t_dur - safe_fade)
+                    next_canvas = f"canvas_tf{t_idx + 1}"
+                    crop_y = max(0, int(t.get("cropY", 0)))
+                    t_inp = 2 + len(badge_paths) + t_idx
+                    filter_chains.append(
+                        f"[{t_inp}:v]fade=t=in:st=0:d={safe_fade:.2f}:alpha=1,fade=t=out:st={fade_out_start:.2f}:d={safe_fade:.2f}:alpha=1,"
+                        f"setpts=PTS-STARTPTS+{t_start:.3f}/TB[ov_tf{t_idx}]"
+                    )
+                    filter_chains.append(f"[{current_canvas}][ov_tf{t_idx}]overlay=0:{crop_y}:format=auto:enable='between(t,{t_start:.3f},{(t_start + t_dur):.3f})'[{next_canvas}]")
+                    current_canvas = next_canvas
+
+                # Verse line overlays
                 for u_idx, u in enumerate(unit_configs):
                     seg_start = float(u["globalStartSec"])
                     dur_sec = float(u["durSec"])
@@ -544,24 +635,64 @@ async def handle_export_video(request: Request) -> Response:
                     next_canvas = "v" if (u_idx == len(unit_configs) - 1) else f"canvas{u_idx + 1}"
                     crop_y = max(0, int(u.get("cropY", 0)))
 
-                    input_idx = u_idx + 2
+                    input_idx = 2 + len(badge_paths) + len(tafsir_paths) + u_idx
                     filter_chains.append(
                         f"[{input_idx}:v]fade=t=in:st=0:d={fade_dur:.2f}:alpha=1,"
                         f"fade=t=out:st={fade_out_start:.2f}:d={fade_dur:.2f}:alpha=1,"
                         f"setpts=PTS-STARTPTS+{seg_start:.3f}/TB[ov{u_idx}]"
                     )
                     filter_chains.append(
-                        f"[{current_canvas}][ov{u_idx}]overlay=0:{crop_y}:enable='between(t,{seg_start:.3f},{seg_end:.3f})'[{next_canvas}]"
+                        f"[{current_canvas}][ov{u_idx}]overlay=0:{crop_y}:format=auto:enable='between(t,{seg_start:.3f},{seg_end:.3f})'[{next_canvas}]"
                     )
                     current_canvas = next_canvas
             else:
                 # Still image background loop
                 ffmpeg_args.extend(["-loop", "1", "-t", f"{total_duration:.3f}", "-framerate", "30", "-i", base_frame_path])
+                for b_path in badge_paths:
+                    ffmpeg_args.extend(["-loop", "1", "-t", f"{total_duration:.3f}", "-framerate", "30", "-i", b_path])
+                for idx, t_path in enumerate(tafsir_paths):
+                    dur_sec = float(tafsir_configs[idx].get("durSec", 4.0))
+                    ffmpeg_args.extend(["-loop", "1", "-t", f"{dur_sec:.3f}", "-framerate", "30", "-i", t_path])
                 for idx, o_path in enumerate(overlay_paths):
                     dur_sec = float(unit_configs[idx]["durSec"])
                     ffmpeg_args.extend(["-loop", "1", "-t", f"{dur_sec:.3f}", "-framerate", "30", "-i", o_path])
 
                 current_canvas = "0:v"
+
+                # Badges
+                for b_idx in range(len(badge_paths)):
+                    b = badge_configs[b_idx]
+                    b_start = float(b.get("startSec", 0.0))
+                    b_dur = float(b.get("durSec", 0.0))
+                    next_canvas = f"canvas_b{b_idx + 1}"
+                    enable_expr = (
+                        f"gte(t,{b_start:.3f})"
+                        if b_idx == len(badge_paths) - 1
+                        else f"gte(t,{b_start:.3f})*lt(t,{(b_start + b_dur):.3f})"
+                    )
+                    badge_inp = 1 + b_idx
+                    filter_chains.append(f"[{current_canvas}][{badge_inp}:v]overlay=0:0:format=auto:enable='{enable_expr}'[{next_canvas}]")
+                    current_canvas = next_canvas
+
+                # Tafsir
+                for t_idx in range(len(tafsir_paths)):
+                    t = tafsir_configs[t_idx]
+                    t_start = float(t.get("startSec", 0.0))
+                    t_dur = float(t.get("durSec", 0.0))
+                    fade_dur = 0.30
+                    safe_fade = max(0.01, min(fade_dur, t_dur * 0.20))
+                    fade_out_start = max(0.0, t_dur - safe_fade)
+                    next_canvas = f"canvas_tf{t_idx + 1}"
+                    crop_y = max(0, int(t.get("cropY", 0)))
+                    t_inp = 1 + len(badge_paths) + t_idx
+                    filter_chains.append(
+                        f"[{t_inp}:v]fade=t=in:st=0:d={safe_fade:.2f}:alpha=1,fade=t=out:st={fade_out_start:.2f}:d={safe_fade:.2f}:alpha=1,"
+                        f"setpts=PTS-STARTPTS+{t_start:.3f}/TB[ov_tf{t_idx}]"
+                    )
+                    filter_chains.append(f"[{current_canvas}][ov_tf{t_idx}]overlay=0:{crop_y}:format=auto:enable='between(t,{t_start:.3f},{(t_start + t_dur):.3f})'[{next_canvas}]")
+                    current_canvas = next_canvas
+
+                # Verse line overlays
                 for u_idx, u in enumerate(unit_configs):
                     seg_start = float(u["globalStartSec"])
                     dur_sec = float(u["durSec"])
@@ -571,20 +702,24 @@ async def handle_export_video(request: Request) -> Response:
                     next_canvas = "v" if (u_idx == len(unit_configs) - 1) else f"canvas{u_idx + 1}"
                     crop_y = max(0, int(u.get("cropY", 0)))
 
-                    input_idx = u_idx + 1
+                    input_idx = 1 + len(badge_paths) + len(tafsir_paths) + u_idx
                     filter_chains.append(
                         f"[{input_idx}:v]fade=t=in:st=0:d={fade_dur:.2f}:alpha=1,"
                         f"fade=t=out:st={fade_out_start:.2f}:d={fade_dur:.2f}:alpha=1,"
                         f"setpts=PTS-STARTPTS+{seg_start:.3f}/TB[ov{u_idx}]"
                     )
                     filter_chains.append(
-                        f"[{current_canvas}][ov{u_idx}]overlay=0:{crop_y}:enable='between(t,{seg_start:.3f},{seg_end:.3f})'[{next_canvas}]"
+                        f"[{current_canvas}][ov{u_idx}]overlay=0:{crop_y}:format=auto:enable='between(t,{seg_start:.3f},{seg_end:.3f})'[{next_canvas}]"
                     )
                     current_canvas = next_canvas
 
             # Audio Input Concat
             has_audio = len(valid_audio_files) > 0
-            audio_input_idx = (len(unit_configs) + 2) if is_custom else (len(unit_configs) + 1)
+            audio_input_idx = (
+                (len(unit_configs) + len(badge_paths) + len(tafsir_paths) + 2)
+                if is_custom
+                else (len(unit_configs) + len(badge_paths) + len(tafsir_paths) + 1)
+            )
             if has_audio:
                 if len(valid_audio_files) == 1:
                     ffmpeg_args.extend(["-i", valid_audio_files[0]])
@@ -608,13 +743,24 @@ async def handle_export_video(request: Request) -> Response:
                 ffmpeg_args.extend(["-map", f"{audio_input_idx}:a"])
                 ffmpeg_args.extend(["-c:a", "aac", "-b:a", "192k", "-ar", "44100", "-shortest"])
 
-            # Turbo Encoding on 8 CPU Threads with x264
+            # Turbo Encoding on 8 CPU Threads with x264 matching Native Mobile/Windows standard
             ffmpeg_args.extend([
                 "-t", f"{total_duration:.3f}",
                 "-c:v", "libx264",
-                "-preset", "ultrafast",
+                "-preset", "veryfast",
+                "-profile:v", "high",
+                "-level", "4.1",
+            ])
+            if not is_custom:
+                ffmpeg_args.extend(["-tune", "stillimage"])
+            ffmpeg_args.extend([
                 "-crf", str(crf),
                 "-pix_fmt", "yuv420p",
+                "-color_primaries", "bt709",
+                "-color_trc", "bt709",
+                "-colorspace", "bt709",
+                "-color_range", "tv",
+                "-x264-params", "colorprim=bt709:transfer=bt709:colormatrix=bt709",
                 "-r", "30",
                 "-threads", "8",
                 "-movflags", "+faststart",
@@ -630,12 +776,14 @@ async def handle_export_video(request: Request) -> Response:
                 proc = await asyncio.create_subprocess_exec(
                     *ffmpeg_args,
                     cwd=session_dir,
+                    stdin=subprocess.DEVNULL,
                     stdout=ffmpeg_log_file,
                     stderr=ffmpeg_log_file,
                 )
 
                 async def _track_progress():
                     last_rendered = 0.0
+                    last_store_sync = 0.0
                     while proc.returncode is None:
                         try:
                             if os.path.exists(progress_file):
@@ -674,9 +822,11 @@ async def handle_export_video(request: Request) -> Response:
                                         "progress": round(progress_frac, 3),
                                     }
                                     local_progress_store[job_id] = payload
-                                    if progress_store is not None:
+                                    now = time.time()
+                                    if progress_store is not None and (now - last_store_sync >= 0.8):
+                                        last_store_sync = now
                                         try:
-                                            progress_store[job_id] = payload
+                                            await progress_store.put.aio(job_id, payload)
                                         except Exception:
                                             pass
                         except Exception:
@@ -684,8 +834,18 @@ async def handle_export_video(request: Request) -> Response:
                         await asyncio.sleep(0.2)
 
                 track_task = asyncio.create_task(_track_progress())
-                await proc.wait()
-                await track_task
+                try:
+                    await proc.wait()
+                    await track_task
+                finally:
+                    if proc.returncode is None:
+                        try:
+                            proc.kill()
+                            await proc.wait()
+                        except Exception:
+                            pass
+                    if not track_task.done():
+                        track_task.cancel()
 
             if proc.returncode != 0 or not os.path.exists(output_mp4):
                 stderr_tail = "Unknown FFmpeg error"
@@ -715,7 +875,7 @@ async def handle_export_video(request: Request) -> Response:
             local_progress_store[job_id] = completed_payload
             if progress_store is not None:
                 try:
-                    progress_store[job_id] = completed_payload
+                    await progress_store.put.aio(job_id, completed_payload)
                 except Exception:
                     pass
 
@@ -750,7 +910,7 @@ async def handle_export_video(request: Request) -> Response:
                 local_progress_store.pop(jid, None)
                 if progress_store is not None:
                     try:
-                        del progress_store[jid]
+                        await progress_store.pop.aio(jid, None)
                     except Exception:
                         pass
 
@@ -760,13 +920,13 @@ async def handle_export_video(request: Request) -> Response:
 # ---------------------------------------------------------------------------
 # 6. Modal ASGI Entrypoint
 # ---------------------------------------------------------------------------
-# Allocates 8 dedicated vCPUs and 16 GB RAM with 120-second timeout.
+# Allocates 8 dedicated vCPUs and 16 GB RAM with 900-second (15-minute) timeout.
 # Spins up in ~1 second, renders full 1080p MP4 in ~10-15s, then shuts down.
 @app.function(
     image=export_image,
     cpu=8.0,
     memory=16384,
-    timeout=120,
+    timeout=900,
 )
 @modal.asgi_app()
 def export_video():

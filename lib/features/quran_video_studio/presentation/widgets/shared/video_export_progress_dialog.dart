@@ -432,14 +432,16 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
       return l10n.videoStudioEtaMoments;
     }
     if (progress.step != VideoProgressStep.serverEncoding) return null;
-    if (totalSec <= 0 || renderedSec <= 0.0) return null;
+    if (totalSec <= 0 || renderedSec <= 0.0 || progress.speed == null || progress.speed! <= 0.05) {
+      return null;
+    }
     final remainingVideoSec = (totalSec - renderedSec).clamp(0.0, totalSec);
 
     if (remainingVideoSec <= 0.5) {
       return l10n.videoStudioEtaMoments;
     }
 
-    final speed = (progress.speed != null && progress.speed! > 0.05) ? progress.speed! : 3.5;
+    final speed = progress.speed!;
     final now = DateTime.now();
     final instantClockSec = remainingVideoSec / speed;
 
