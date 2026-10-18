@@ -1,25 +1,10 @@
 param (
-    [switch]$Release,
-    [switch]$KeepExportServer
+    [switch]$Release
 )
 
 # ==============================================================================
-# 🚀 Tabattal Web Runner with Auto-Spawn Local Video Export Microservice
+# 🚀 Tabattal Web Runner
 # ==============================================================================
-
-Write-Host "`n[TABATTAL] Checking Video Export Service on port 8080..." -ForegroundColor Cyan
-
-$spawnedProcess = $null
-$portInUse = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue
-
-if ($portInUse) {
-    Write-Host "[TABATTAL] Video Export Service is already running on port 8080." -ForegroundColor Green
-} else {
-    Write-Host "[TABATTAL] Spawning Video Export Microservice in background..." -ForegroundColor Yellow
-    $spawnedProcess = Start-Process -FilePath "node" -ArgumentList "index.js" -WorkingDirectory "$PSScriptRoot\server\video_export_service" -WindowStyle Hidden -PassThru
-    Start-Sleep -Seconds 1
-    Write-Host "[TABATTAL] Video Export Service started successfully on http://localhost:8080 (PID: $($spawnedProcess.Id))." -ForegroundColor Green
-}
 
 $pubspecPath = "pubspec.yaml"
 $pubspecBak = "pubspec.yaml.bak"
@@ -62,35 +47,38 @@ try {
     [System.IO.File]::WriteAllLines((Resolve-Path $pubspecPath).Path, $leanLines, [System.Text.UTF8Encoding]::new($false))
     Write-Host "[TABATTAL] Lean Web Environment configured (4 core fonts for fast boot)." -ForegroundColor Green
 
-    $modeText = if ($Release) { "RELEASE (Ultra Fast)" } else { "DEBUG" }
-    Write-Host "`n[TABATTAL] Launching Flutter Web ($modeText) on 127.0.0.1:3000..." -ForegroundColor Cyan
-
-    if ($Release) {
-        flutter run -d chrome --release --web-hostname 127.0.0.1 --web-port 3000
-    } else {
-        flutter run -d chrome --web-hostname 127.0.0.1 --web-port 3000
-    }
-} finally {
-    if (-not $KeepExportServer) {
-        if ($spawnedProcess -and -not $spawnedProcess.HasExited) {
-            Write-Host "[TABATTAL] Stopping Video Export Service (PID: $($spawnedProcess.Id))..." -ForegroundColor Yellow
-            Stop-Process -Id $spawnedProcess.Id -Force -ErrorAction SilentlyContinue
-        } else {
-            $activeConns = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue
-            if ($activeConns) {
-                $pids = $activeConns | Select-Object -ExpandProperty OwningProcess -Unique
-                foreach ($procId in $pids) {
-                    $p = Get-Process -Id $procId -ErrorAction SilentlyContinue
-                    if ($p -and $p.ProcessName -eq 'node') {
-                        Write-Host "[TABATTAL] Closing Video Export Service on port 8080 (PID: $procId)..." -ForegroundColor Yellow
-                        Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
-                    }
-                }
+    $videoExportApiUrl = ""
+    if (Test-Path ".env") {
+        $linesEnv = Get-Content ".env"
+        foreach ($l in $linesEnv) {
+            $t = $l.Trim()
+            if ($t.StartsWith("VIDEO_EXPORT_API_URL=")) {
+                $videoExportApiUrl = $t.Substring("VIDEO_EXPORT_API_URL=".Length).Trim().Trim('"').Trim("'")
+                break
             }
         }
-        Write-Host "[TABATTAL] Port 8080 released." -ForegroundColor Green
     }
 
+    $modeText = if ($Release) { "RELEASE (Ultra Fast)" } else { "DEBUG" }
+    Write-Host "`n[TABATTAL] Launching Flutter Web ($modeText) on 127.0.0.1:3000..." -ForegroundColor Cyan
+    if ($videoExportApiUrl) {
+        Write-Host "[TABATTAL] Injected Video Export API from .env" -ForegroundColor Green
+    }
+
+    if ($Release) {
+        if ($videoExportApiUrl) {
+            flutter run -d chrome --release --web-hostname 127.0.0.1 --web-port 3000 "--dart-define=VIDEO_EXPORT_API_URL=$videoExportApiUrl"
+        } else {
+            flutter run -d chrome --release --web-hostname 127.0.0.1 --web-port 3000
+        }
+    } else {
+        if ($videoExportApiUrl) {
+            flutter run -d chrome --web-hostname 127.0.0.1 --web-port 3000 "--dart-define=VIDEO_EXPORT_API_URL=$videoExportApiUrl"
+        } else {
+            flutter run -d chrome --web-hostname 127.0.0.1 --web-port 3000
+        }
+    }
+} finally {
     if (Test-Path $pubspecBak) {
         Copy-Item $pubspecBak -Destination $pubspecPath -Force
         Remove-Item $pubspecBak -Force

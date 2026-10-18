@@ -51,7 +51,10 @@ class VideoExportService implements IVideoExportService {
     } catch (_) {}
     if (_activeJobId != null) {
       try {
-        final cancelUrl = serverApiUrl.replaceAll('/api/export-video', '/api/cancel-export/$_activeJobId');
+        final String baseUrl = serverApiUrl.endsWith('/api/export-video')
+            ? serverApiUrl.substring(0, serverApiUrl.length - '/api/export-video'.length)
+            : (serverApiUrl.endsWith('/') ? serverApiUrl.substring(0, serverApiUrl.length - 1) : serverApiUrl);
+        final cancelUrl = '$baseUrl/api/cancel-export/$_activeJobId';
         final cancelReq = html.HttpRequest();
         cancelReq.open('POST', cancelUrl);
         cancelReq.send();
@@ -194,12 +197,19 @@ class VideoExportService implements IVideoExportService {
         final totalUnits = unitConfigs.length;
         final isEn = config.isEnglish;
 
-        // Phase 2: Generating HD Base Frame and Ultra-Lightweight Transparent Overlays (15% -> 30%)
+        final double totalRecitationSec = unitConfigs.fold<double>(
+          0.0,
+          (sum, u) => sum + (u['durSec'] as double? ?? 4.0),
+        );
+
+        // Phase 2: Generating HD Base Frame and Ultra-Lightweight Transparent Overlays (10% -> 30%)
         controller.add(VideoRenderProgress(
           phase: VideoRenderPhase.generatingOverlays,
           step: VideoProgressStep.creatingBaseFrame,
-          progress: 0.15,
+          progress: 0.10,
           totalAyahsCount: verses.length,
+          totalSeconds: totalRecitationSec,
+          renderedSeconds: 0.0,
         ));
 
         final hasCustomVideo = config.hasCustomVideo &&
@@ -277,16 +287,18 @@ class VideoExportService implements IVideoExportService {
             unit['cropHeight'] = overlayCrop.cropHeight;
 
             completedOverlayUnits++;
-            final overlayProgress = 0.15 + (completedOverlayUnits / totalUnits) * 0.15;
+            final overlayProgress = 0.10 + (completedOverlayUnits / totalUnits) * 0.20;
             controller.add(VideoRenderProgress(
               phase: VideoRenderPhase.generatingOverlays,
               step: isLineByLine ? VideoProgressStep.renderingLine : VideoProgressStep.renderingVerse,
-              progress: overlayProgress.clamp(0.15, 0.30),
+              progress: overlayProgress.clamp(0.10, 0.30),
               ayahNumber: verse.verseNumber,
               currentAyahIndex: verseIdx,
               totalAyahsCount: verses.length,
               currentLine: isLineByLine ? (unit['currentLine'] as int) : 1,
               totalLines: isLineByLine ? (unit['lineCount'] as int) : 1,
+              totalSeconds: totalRecitationSec,
+              renderedSeconds: 0.0,
             ));
           }
         }
@@ -355,12 +367,12 @@ class VideoExportService implements IVideoExportService {
           }
         }
 
-        // Phase 3: Uploading to Cloud FFmpeg Video Service (30% -> 50%)
-        controller.add(const VideoRenderProgress(
-          phase: VideoRenderPhase.encodingVideo,
-          step: VideoProgressStep.uploadingPayload,
+        // Phase 3: Preparing Payload & Uploading to Cloud FFmpeg Video Service (30% -> 50%)
+        controller.add(VideoRenderProgress(
+          phase: VideoRenderPhase.generatingOverlays,
+          step: isLineByLine ? VideoProgressStep.renderingLine : VideoProgressStep.renderingVerse,
           progress: 0.30,
-          uploadPercent: 0,
+          ayahNumber: verses.last.verseNumber,
         ));
 
         final badgeBytesList = <Uint8List>[];
@@ -462,12 +474,11 @@ class VideoExportService implements IVideoExportService {
         Timer? serverProgressPollTimer;
         bool serverPollingStarted = false;
 
-        final double totalRecitationSec = unitConfigs.fold<double>(
-          0.0,
-          (sum, u) => sum + (u['durSec'] as double? ?? 4.0),
-        );
 
-        final progressUrl = serverApiUrl.replaceAll('/api/export-video', '/api/export-progress/$jobId');
+        final String baseUrl = serverApiUrl.endsWith('/api/export-video')
+            ? serverApiUrl.substring(0, serverApiUrl.length - '/api/export-video'.length)
+            : (serverApiUrl.endsWith('/') ? serverApiUrl.substring(0, serverApiUrl.length - 1) : serverApiUrl);
+        final progressUrl = '$baseUrl/api/export-progress/$jobId';
 
         void startServerPolling() {
           if (serverPollingStarted) return;
@@ -480,10 +491,11 @@ class VideoExportService implements IVideoExportService {
             progress: 0.50,
             renderedSeconds: 0.0,
             totalSeconds: totalRecitationSec,
+            speed: null,
           ));
 
-          // Poll live hardware FFmpeg progress from the server every 250ms
-          serverProgressPollTimer = Timer.periodic(const Duration(milliseconds: 250), (timer) async {
+          // Poll live hardware FFmpeg progress from the server every 800ms
+          serverProgressPollTimer = Timer.periodic(const Duration(milliseconds: 800), (timer) async {
             if (_isCancelled) {
               timer.cancel();
               return;
@@ -498,17 +510,28 @@ class VideoExportService implements IVideoExportService {
                 final data = jsonDecode(pollReq.responseText!) as Map<String, dynamic>;
                 if (data['status'] == 'encoding') {
                   final renderedSec = (data['renderedSec'] as num?)?.toDouble() ?? 0.0;
-                  final totalSec = (data['totalSec'] as num?)?.toDouble() ?? totalRecitationSec;
+                  final rawTotal = (data['totalSec'] as num?)?.toDouble();
+                  final totalSec = (rawTotal != null && rawTotal > 0) ? rawTotal : totalRecitationSec;
                   final speed = (data['speed'] as num?)?.toDouble();
                   final progress = (data['progress'] as num?)?.toDouble() ?? 0.50;
 
                   controller.add(VideoRenderProgress(
                     phase: VideoRenderPhase.encodingVideo,
                     step: VideoProgressStep.serverEncoding,
-                    progress: progress.clamp(0.50, 0.99),
+                    progress: progress.clamp(0.50, 0.95),
                     renderedSeconds: renderedSec,
                     totalSeconds: totalSec,
                     speed: speed,
+                  ));
+                } else if (data['status'] == 'completed') {
+                  timer.cancel();
+                  controller.add(VideoRenderProgress(
+                    phase: VideoRenderPhase.encodingVideo,
+                    step: VideoProgressStep.preparingDownload,
+                    progress: 0.96,
+                    renderedSeconds: totalRecitationSec,
+                    totalSeconds: totalRecitationSec,
+                    speed: 1.5,
                   ));
                 }
               }
@@ -520,14 +543,16 @@ class VideoExportService implements IVideoExportService {
           if (event.lengthComputable && event.total != null && event.total! > 0) {
             final double uploadFraction = (event.loaded! / event.total!).clamp(0.0, 1.0);
             final double uploadProgress = 0.30 + (uploadFraction * 0.20);
-            final int percent = (uploadFraction * 100).toInt();
+            final int overallPercent = (uploadProgress * 100).toInt();
 
             if (uploadFraction < 1.0) {
               controller.add(VideoRenderProgress(
                 phase: VideoRenderPhase.encodingVideo,
                 step: VideoProgressStep.uploadingPayload,
                 progress: uploadProgress.clamp(0.30, 0.50),
-                uploadPercent: percent,
+                uploadPercent: overallPercent,
+                totalSeconds: totalRecitationSec,
+                renderedSeconds: 0.0,
               ));
             } else {
               startServerPolling();
@@ -537,6 +562,21 @@ class VideoExportService implements IVideoExportService {
 
         request.upload.onLoadEnd.listen((_) {
           startServerPolling();
+        });
+
+        // Track incoming MP4 download progress to seamlessly bridge 96% -> 99.5%
+        request.onProgress.listen((html.ProgressEvent event) {
+          if (event.lengthComputable && event.total != null && event.total! > 0) {
+            final double dlFraction = (event.loaded! / event.total!).clamp(0.0, 1.0);
+            final double dlProgress = 0.96 + (dlFraction * 0.035);
+            controller.add(VideoRenderProgress(
+              phase: VideoRenderPhase.encodingVideo,
+              step: VideoProgressStep.preparingDownload,
+              progress: dlProgress.clamp(0.96, 0.995),
+              renderedSeconds: totalRecitationSec,
+              totalSeconds: totalRecitationSec,
+            ));
+          }
         });
 
         request.onLoad.listen((event) async {
@@ -583,9 +623,11 @@ class VideoExportService implements IVideoExportService {
 
         request.onError.listen((event) {
           serverProgressPollTimer?.cancel();
-          requestCompleter.completeError(
-            'تعذر الاتصال بخادم تصدير الفيديو المحلي (المنفذ 8080). يُرجى التحقق من تشغيل السيرفر والمحاولة مجددًا.',
-          );
+          final bool isLocal = serverApiUrl.contains('localhost') || serverApiUrl.contains('127.0.0.1');
+          final String errMsg = isLocal
+              ? 'تعذر الاتصال بخادم تصدير الفيديو المحلي (المنفذ 8080). يُرجى التحقق من تشغيل السيرفر والمحاولة مجددًا.'
+              : 'تعذر الاتصال بخادم معالجة الفيديو السحابي أو انقطع الاتصال أثناء الرندرة. يُرجى التحقق من اتصال الإنترنت أو تقليل عدد الآيات والمحاولة مجددًا.';
+          requestCompleter.completeError(errMsg);
         });
 
         request.onTimeout.listen((event) {
@@ -595,6 +637,12 @@ class VideoExportService implements IVideoExportService {
           );
         });
 
+        controller.add(const VideoRenderProgress(
+          phase: VideoRenderPhase.encodingVideo,
+          step: VideoProgressStep.uploadingPayload,
+          progress: 0.30,
+          uploadPercent: 0,
+        ));
         request.send(formData);
 
         final mp4Blob = await requestCompleter.future;
@@ -624,6 +672,7 @@ class VideoExportService implements IVideoExportService {
 
         controller.add(VideoRenderProgress(
           phase: VideoRenderPhase.completed,
+          step: VideoProgressStep.completed,
           progress: 1.0,
           statusMessage: config.isIndonesian
               ? 'Video berhasil dibuat!'

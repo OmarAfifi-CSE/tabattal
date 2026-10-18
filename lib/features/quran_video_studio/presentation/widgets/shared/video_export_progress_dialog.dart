@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +28,37 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
   double? _smoothedRemainingSeconds;
   DateTime? _lastEtaUpdateTime;
   double _lastRenderedSeconds = 0.0;
+  double _lastTotalSeconds = 0.0;
   double _lastProgress = 0.0;
+  Timer? _countdownTicker;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.progress.progress > 0) {
+      _lastProgress = widget.progress.progress;
+    }
+    if (widget.progress.renderedSeconds != null && widget.progress.renderedSeconds! > 0) {
+      _lastRenderedSeconds = widget.progress.renderedSeconds!;
+    }
+    if (widget.progress.totalSeconds != null && widget.progress.totalSeconds! > 0) {
+      _lastTotalSeconds = widget.progress.totalSeconds!;
+    }
+    _countdownTicker = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      if (mounted &&
+          widget.progress.isRendering &&
+          _smoothedRemainingSeconds != null &&
+          _smoothedRemainingSeconds! > 0) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _countdownTicker?.cancel();
+    super.dispose();
+  }
 
   @override
   void didUpdateWidget(covariant VideoExportProgressDialog oldWidget) {
@@ -39,6 +70,10 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
         widget.progress.renderedSeconds! > _lastRenderedSeconds) {
       _lastRenderedSeconds = widget.progress.renderedSeconds!;
     }
+    if (widget.progress.totalSeconds != null &&
+        widget.progress.totalSeconds! > _lastTotalSeconds) {
+      _lastTotalSeconds = widget.progress.totalSeconds!;
+    }
   }
 
   @override
@@ -49,11 +84,14 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
     final displayRenderedSec = widget.progress.renderedSeconds != null
         ? max(_lastRenderedSeconds, widget.progress.renderedSeconds!)
         : _lastRenderedSeconds;
+    final displayTotalSec = (widget.progress.totalSeconds != null && widget.progress.totalSeconds! > 0)
+        ? max(_lastTotalSeconds, widget.progress.totalSeconds!)
+        : _lastTotalSeconds;
 
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop && widget.progress.isRendering) {
+        if (didPop && widget.progress.isRendering && !widget.progress.isCompleted) {
           widget.onCancel();
         }
       },
@@ -108,9 +146,18 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
                     ),
                   )
                 else
-                  SizedBox(
-                    width: 44.r,
-                    height: 44.r,
+                  Container(
+                    width: 52.r,
+                    height: 52.r,
+                    padding: EdgeInsets.all(4.r),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.accentGold.withValues(alpha: 0.08),
+                      border: Border.all(
+                        color: AppColors.accentGold.withValues(alpha: 0.18),
+                        width: 1.0,
+                      ),
+                    ),
                     child: TweenAnimationBuilder<double>(
                       tween: Tween<double>(begin: 0.0, end: displayProgress),
                       duration: const Duration(milliseconds: 350),
@@ -120,7 +167,7 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
                           value: animValue > 0 ? animValue : null,
                           strokeWidth: 3.5,
                           color: AppColors.accentGold,
-                          backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
+                          backgroundColor: AppColors.accentGold.withValues(alpha: 0.12),
                         );
                       },
                     ),
@@ -154,24 +201,55 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
                   ),
                 ),
 
-                Builder(
-                  builder: (context) {
-                    final eta = _getLocalizedEtaMessage(context, widget.progress, displayRenderedSec);
-                    if (eta == null) return const SizedBox.shrink();
-                    return Padding(
-                      padding: EdgeInsets.only(top: 4.h),
-                      child: Text(
-                        eta,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 11.5.sp,
-                          color: AppColors.accentGold.withValues(alpha: 0.95),
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Amiri',
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
+                  child: Builder(
+                    builder: (context) {
+                      final eta = _getLocalizedEtaMessage(
+                        context,
+                        widget.progress,
+                        displayRenderedSec,
+                        displayTotalSec,
+                      );
+                      if (eta == null) return const SizedBox.shrink();
+                      return Padding(
+                        padding: EdgeInsets.only(top: 6.h),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentGold.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                              color: AppColors.accentGold.withValues(alpha: 0.22),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.hourglass_top_rounded,
+                                size: 12.sp,
+                                color: AppColors.accentGold,
+                              ),
+                              SizedBox(width: 5.w),
+                              Text(
+                                eta,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 11.5.sp,
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Amiri',
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
 
                 if (widget.progress.isRendering) ...[
@@ -184,12 +262,26 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
                       return Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          LinearProgressIndicator(
-                            value: isIndeterminate ? null : animValue,
-                            minHeight: 6.h,
-                            borderRadius: BorderRadius.circular(8.r),
-                            color: AppColors.accentGold,
-                            backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.accentGold.withValues(alpha: 0.12),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8.r),
+                              child: LinearProgressIndicator(
+                                value: isIndeterminate ? null : animValue,
+                                minHeight: 7.h,
+                                color: AppColors.accentGold,
+                                backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
+                              ),
+                            ),
                           ),
                           if (!isIndeterminate) ...[
                             SizedBox(height: 8.h),
@@ -197,14 +289,14 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 SizedBox(
-                                  width: 46.w,
+                                  width: 48.w,
                                   child: Align(
                                     alignment: AlignmentDirectional.centerStart,
                                     child: Text(
                                       '${(animValue * 100).toInt()}%',
                                       style: TextStyle(
                                         fontSize: 13.sp,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.w700,
                                         color: AppColors.accentGold,
                                         fontFamily: 'Outfit',
                                         fontFeatures: const [FontFeature.tabularFigures()],
@@ -212,30 +304,44 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
                                     ),
                                   ),
                                 ),
-                                if (widget.progress.totalSeconds != null && widget.progress.totalSeconds! > 0)
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.movie_creation_outlined,
-                                        size: 13.sp,
-                                        color: AppColors.textSecondary.withValues(alpha: 0.8),
+                                if (displayTotalSec > 0 && displayRenderedSec > 0)
+                                  Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.accentGold.withValues(alpha: 0.08),
+                                      borderRadius: BorderRadius.circular(6.r),
+                                      border: Border.all(
+                                        color: AppColors.accentGold.withValues(alpha: 0.20),
+                                        width: 0.8,
                                       ),
-                                      SizedBox(width: 4.w),
-                                      Text(
-                                        l10n.videoStudioEncodingProgress(
-                                          _formatTime(displayRenderedSec),
-                                          _formatTime(widget.progress.totalSeconds!),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.movie_creation_outlined,
+                                          size: 13.sp,
+                                          color: AppColors.accentGold.withValues(alpha: 0.9),
                                         ),
-                                        style: TextStyle(
-                                          fontSize: 11.5.sp,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.textSecondary,
-                                          fontFamily: 'Outfit',
-                                          fontFeatures: const [FontFeature.tabularFigures()],
+                                        SizedBox(width: 5.w),
+                                        Directionality(
+                                          textDirection: TextDirection.ltr,
+                                          child: Text(
+                                            l10n.videoStudioEncodingProgress(
+                                              _formatTime(displayRenderedSec),
+                                              _formatTime(displayTotalSec),
+                                            ),
+                                            style: TextStyle(
+                                              fontSize: 11.5.sp,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.textPrimary,
+                                              fontFamily: 'Outfit',
+                                              fontFeatures: const [FontFeature.tabularFigures()],
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                               ],
                             ),
@@ -320,21 +426,20 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
   }
 
   String? _getLocalizedEtaMessage(
-      BuildContext context, VideoRenderProgress progress, double renderedSec) {
-    if (progress.step != VideoProgressStep.serverEncoding) return null;
-    final totalSec = progress.totalSeconds;
-    final speed = progress.speed;
-    if (totalSec == null || totalSec <= 0 || renderedSec <= 0 || speed == null || speed <= 0.05) {
-      return null;
-    }
-
+      BuildContext context, VideoRenderProgress progress, double renderedSec, double totalSec) {
     final l10n = AppLocalizations.of(context)!;
+    if (progress.step == VideoProgressStep.preparingDownload) {
+      return l10n.videoStudioEtaMoments;
+    }
+    if (progress.step != VideoProgressStep.serverEncoding) return null;
+    if (totalSec <= 0 || renderedSec <= 0.0) return null;
     final remainingVideoSec = (totalSec - renderedSec).clamp(0.0, totalSec);
 
     if (remainingVideoSec <= 0.5) {
       return l10n.videoStudioEtaMoments;
     }
 
+    final speed = (progress.speed != null && progress.speed! > 0.05) ? progress.speed! : 3.5;
     final now = DateTime.now();
     final instantClockSec = remainingVideoSec / speed;
 
@@ -351,7 +456,7 @@ class _VideoExportProgressDialogState extends State<VideoExportProgressDialog> {
       final wallDecayed = max(0.0, _smoothedRemainingSeconds! - elapsedSinceLastUpdate);
 
       // Smoothly blend with live hardware speed measurement (EMA)
-      _smoothedRemainingSeconds = (wallDecayed * 0.80) + (instantClockSec * 0.20);
+      _smoothedRemainingSeconds = (wallDecayed * 0.70) + (instantClockSec * 0.30);
     }
 
     final displaySec = _smoothedRemainingSeconds!.ceil().clamp(1, 9999);

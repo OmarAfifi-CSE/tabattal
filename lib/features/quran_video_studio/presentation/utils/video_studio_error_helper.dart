@@ -129,6 +129,19 @@ abstract final class VideoStudioErrorHelper {
       return l10n.videoStudioCustomImageNotFound;
     }
 
+    // 12b. Cloud video export service offline / connection failure
+    if (raw.contains('السحابي') ||
+        raw.contains('خادم معالجة الفيديو السحابي') ||
+        raw.contains('cloud export service') ||
+        raw.contains('cloud video service')) {
+      final langCode = Localizations.localeOf(context).languageCode;
+      return isArabicLocale
+          ? 'تعذر الاتصال بخادم معالجة الفيديو السحابي أو انقطع الاتصال أثناء الرندرة. يُرجى التحقق من اتصال الإنترنت أو تقليل عدد الآيات والمحاولة مجددًا.'
+          : (langCode == 'id'
+              ? 'Tidak dapat terhubung ke server video cloud. Periksa koneksi internet Anda dan coba lagi.'
+              : 'Could not connect to the cloud video export service. Please check your internet connection and try again.');
+    }
+
     // 13. Server connection / offline export microservice (Port 8080)
     if (raw.contains('8080') ||
         raw.contains('خادم تصدير الفيديو') ||

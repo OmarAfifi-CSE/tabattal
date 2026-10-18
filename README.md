@@ -240,7 +240,7 @@ All 604 page fonts pre-warmed in RAM — no zip extraction, no runtime layout ov
 - **Synchronized Recitation** — Precise EveryAyah audio sync with authentic line-by-line Madani vector typography
 - **Dual Media Backgrounds** — Custom gallery images or **animated video backgrounds** (local or direct URL) with audio mixing
 - **Adaptive Luminance Engine** — Auto-adjusts text colors (pure white / deep black) with adjustable dimming
-- **Hardware-Accelerated FFmpeg Export** — Crisp, high-fidelity video rendering with instant gallery indexing
+- **Hardware-Accelerated FFmpeg Export** — Crisp, high-fidelity video rendering (on-device hardware encoding for Native Mobile/Windows, and ultra-fast 8-core serverless compute on [Modal.com](server) for Web)
 
 </td>
 </tr>
@@ -334,7 +334,7 @@ All 604 page fonts pre-warmed in RAM — no zip extraction, no runtime layout ov
 | **Framework** | Flutter (Android, Windows, Web) |
 | **State Management** | BLoC / Cubit |
 | **Architecture** | Clean Architecture (Domain / Data / Presentation) |
-| **Video & Motion Engine** | Custom Canvas Rasterizer + `ffmpeg_kit_flutter_new_min_gpl` |
+| **Video & Motion Engine** | Custom Canvas Rasterizer + `ffmpeg_kit` (Native) / [Modal.com](server) 8-Core Serverless FFmpeg (Web) |
 | **Audio Pipeline** | `just_audio` + `audio_service` with MediaSession background sync |
 | **Database & Cache** | SQLite (`sqflite`) with indexed word-level spatial lookup |
 | **Typography** | 604 QCF V2 vector font families, natively managed |

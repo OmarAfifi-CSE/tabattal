@@ -226,6 +226,7 @@ class _VerseCardGeneratorSheetWebContentState
 
   bool _isExportDialogOpen = false;
   BuildContext? _dialogContext;
+  String? _lastCompletedOutputPath;
 
   VerseCardTheme get _activeTheme => VerseCardTheme.themes[_selectedThemeIndex];
   int get _surahNumber =>
@@ -856,11 +857,15 @@ class _VerseCardGeneratorSheetWebContentState
         } else if (videoState.exportProgress.isRendering && !_isExportDialogOpen) {
           _showExportDialog(context, context.read<VideoStudioBloc>());
         } else if (videoState.exportProgress.isCompleted &&
-            _isExportDialogOpen) {
-          _dismissExportDialog();
+            videoState.exportProgress.outputPath != null &&
+            videoState.exportProgress.outputPath!.isNotEmpty) {
+          final outputPath = videoState.exportProgress.outputPath!;
+          if (_isExportDialogOpen) {
+            _dismissExportDialog();
+          }
 
-          final outputPath = videoState.exportProgress.outputPath;
-          if (outputPath != null && outputPath.isNotEmpty) {
+          if (_lastCompletedOutputPath != outputPath) {
+            _lastCompletedOutputPath = outputPath;
             if (videoState.pendingExportAction == VideoExportAction.share) {
               await VideoExportService.shareOutput(
                 filePath: outputPath,
@@ -1034,6 +1039,7 @@ class _VerseCardGeneratorSheetWebContentState
                                   onSave: _saveCardImage,
                                   onCopyText: () => _copyTextToClipboard(context),
                                   onShareVideo: () {
+                                    _lastCompletedOutputPath = null;
                                     final bloc = context.read<VideoStudioBloc>();
                                     _showExportDialog(context, bloc);
                                     bloc.add(
@@ -1043,6 +1049,7 @@ class _VerseCardGeneratorSheetWebContentState
                                     );
                                   },
                                   onSaveVideo: () {
+                                    _lastCompletedOutputPath = null;
                                     final bloc = context.read<VideoStudioBloc>();
                                     _showExportDialog(context, bloc);
                                     bloc.add(
@@ -1171,6 +1178,7 @@ class _VerseCardGeneratorSheetWebContentState
                         onSave: _saveCardImage,
                         onCopyText: () => _copyTextToClipboard(context),
                         onShareVideo: () {
+                          _lastCompletedOutputPath = null;
                           final bloc = context.read<VideoStudioBloc>();
                           _showExportDialog(context, bloc);
                           bloc.add(
@@ -1180,6 +1188,7 @@ class _VerseCardGeneratorSheetWebContentState
                           );
                         },
                         onSaveVideo: () {
+                          _lastCompletedOutputPath = null;
                           final bloc = context.read<VideoStudioBloc>();
                           _showExportDialog(context, bloc);
                           bloc.add(

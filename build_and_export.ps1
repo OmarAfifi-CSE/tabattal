@@ -157,7 +157,7 @@ if ($buildAab) {
 
 # --- Build Web ---
 if ($buildWeb) {
-    $videoExportApiUrl = Get-EnvVariable "VIDEO_EXPORT_API_URL" "http://localhost:8080/api/export-video"
+    $videoExportApiUrl = Get-EnvVariable "VIDEO_EXPORT_API_URL" ""
     Write-Host "`n[BUILD] Building Flutter Web (Release for '$webBaseHref')..." -ForegroundColor Cyan
     
     $pubspecPath = "pubspec.yaml"
@@ -195,7 +195,7 @@ if ($buildWeb) {
         $leanLines | Out-File -FilePath $pubspecPath -Encoding utf8
         Write-Host "[BUILD] Web Build Environment Configured (Lean 4-Font Manifest for Instant Boot)." -ForegroundColor Green
 
-        if ($videoExportApiUrl -and $videoExportApiUrl -ne "http://localhost:8080/api/export-video") {
+        if ($videoExportApiUrl) {
             Write-Host "[ENV] Injected Video Export API: $videoExportApiUrl" -ForegroundColor Green
             flutter build web --release --base-href "$webBaseHref" --dart-define=VIDEO_EXPORT_API_URL="$videoExportApiUrl"
         } else {
